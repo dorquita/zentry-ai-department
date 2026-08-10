@@ -1,0 +1,16 @@
+{
+  "brand": "Zentry / Tukandado",
+  "updatedAt": "2026-08-01",
+  "keywords": [
+    { "keyword": "cerraduras inteligentes para taquillas", "type": "commercial", "priority": "high" },
+    { "keyword": "taquillas de melamina", "type": "commercial", "priority": "medium" },
+    { "keyword": "taquillas para gimnasios", "type": "commercial", "priority": "high" },
+    { "keyword": "taquillas escolares", "type": "commercial", "priority": "medium" },
+    { "keyword": "cerraduras inteligentes para centros deportivos", "type": "commercial", "priority": "high" },
+    { "keyword": "digitalizacion de taquillas", "type": "informational", "priority": "medium" },
+    { "keyword": "taquillas para empresas", "type": "commercial", "priority": "high" },
+    { "keyword": "lockers inteligentes", "type": "commercial", "priority": "high" },
+    { "keyword": "taquillas fenolicas", "type": "commercial", "priority": "medium" },
+    { "keyword": "taquillas metalicas", "type": "commercial", "priority": "medium" }
+  ]
+}

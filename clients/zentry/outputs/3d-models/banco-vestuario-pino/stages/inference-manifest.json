@@ -1,0 +1,52 @@
+{
+  "_instructions": "Documentacion formal verificado/inferido/supuesto/pendiente para banco-vestuario-pino, Fase O24.2. Ver docs/inference-policy.md.",
+  "verifiedFacts": [
+    { "fact": "Material del asiento: madera de pino de Suecia, cepillada.", "source": "producto-woocommerce-staging.md (ficha real WooCommerce staging, id 1988)" },
+    { "fact": "Grosor de cada listón del asiento: 25mm.", "source": "producto-woocommerce-staging.md" },
+    { "fact": "Patas de tubo de acero de sección CUADRADA 30x30x1.5mm, soldadas, pintura epoxi 60 micras.", "source": "producto-woocommerce-staging.md" },
+    { "fact": "Tacos antideslizantes en la base de las patas, herrajes de acero inoxidable.", "source": "producto-woocommerce-staging.md" },
+    { "fact": "El modelo simple lleva un refuerzo/listón metálico de unión entre patas (no lleva zapatero).", "source": "producto-woocommerce-staging.md" },
+    { "fact": "Longitudes reales disponibles: 1000mm, 1500mm, 2000mm.", "source": "producto-woocommerce-staging.md + atributo WooCommerce 'Longitud'" }
+  ],
+  "inferredFacts": [
+    {
+      "fact": "Altura del asiento sobre el suelo: ~450mm.",
+      "reasoning": "No confirmado en ninguna fuente real. Se usa el mismo valor que el prototipo JS de O23 (SEAT_HEIGHT=0.45m), que a su vez sigue la altura ergonómica estándar de un banco de vestuario (habitualmente 420-460mm) -- proporción visualmente compatible con la imagen de referencia no verificada.",
+      "confidenceRange": "420-460mm"
+    },
+    {
+      "fact": "Profundidad del asiento (frente a fondo): ~300mm.",
+      "reasoning": "No confirmado en ninguna fuente real. Se usa el mismo valor que el prototipo JS de O23 (SEAT_DEPTH=0.3m), proporción de anchura típica de banco de vestuario, visualmente compatible con la relación longitud:profundidad de la imagen de referencia no verificada (~5:1 en un banco de 1500mm).",
+      "confidenceRange": "280-320mm"
+    },
+    {
+      "fact": "El asiento tiene 4 listones de madera con un gap pequeño entre ellos.",
+      "reasoning": "Contado visualmente en referencia-visual-o21-NO-VERIFICADA.webp (imagen IA, no foto real) -- 4 listones claramente distinguibles con gap uniforme. Ancho de cada listón inferido dividiendo la profundidad total inferida entre 4 listones + 3 gaps pequeños.",
+      "confidenceRange": "3-5 listones"
+    }
+  ],
+  "assumptions": [
+    {
+      "assumption": "Las patas tienen sección CUADRADA (30x30mm, verificado por texto), no redonda como sugiere la imagen de referencia no verificada.",
+      "risk": "low"
+    },
+    {
+      "assumption": "El refuerzo/listón metálico de unión entre patas se modela como una barra horizontal a baja altura conectando los dos pares de patas a lo largo de la longitud del banco (posición/orientación no confirmada por ninguna foto).",
+      "risk": "medium"
+    },
+    {
+      "assumption": "Las patas están insertadas ligeramente hacia dentro desde cada extremo del asiento (no exactamente en el borde), siguiendo la proporción visual de la imagen de referencia no verificada.",
+      "risk": "low"
+    },
+    {
+      "assumption": "El acabado del pino es un tono claro/natural estándar (no se conoce el color exacto del barniz de poliuretano mencionado en la ficha).",
+      "risk": "low"
+    }
+  ],
+  "pendingValidation": [
+    "Confirmar con una foto real si las patas son de sección cuadrada (como dice el texto) o redonda (como muestra la imagen IA de marketing) -- discrepancia real detectada, no resuelta.",
+    "Confirmar altura y profundidad reales del banco (ninguna fuente oficial las especifica todavía).",
+    "Confirmar posición exacta y forma del refuerzo metálico entre patas -- ninguna imagen disponible lo muestra.",
+    "Confirmar número real de listones del asiento (4 es una cuenta visual sobre una imagen IA, no una foto real)."
+  ]
+}

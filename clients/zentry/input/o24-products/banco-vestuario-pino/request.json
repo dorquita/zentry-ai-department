@@ -1,0 +1,24 @@
+{
+  "client_id": "zentry",
+  "project_id": "zentry-lockers",
+  "product_slug": "banco-vestuario-pino",
+  "product_name": "Banco de vestuario de pino simple",
+  "target_website": "staging.zentrylockers.com",
+  "integration_target": "configurator",
+  "output_format": "glb",
+  "input_folder": "clients/zentry/input/o24-products/banco-vestuario-pino",
+  "known_dimensions": {
+    "length_mm": 1500,
+    "width_mm": null,
+    "height_mm": null,
+    "depth_mm": null
+  },
+  "known_materials": ["pino", "acero"],
+  "variants": [
+    { "type": "material", "options": ["pino", "fenolico", "melamina"] },
+    { "type": "longitud", "options": ["1000", "1500", "2000"] },
+    { "type": "configuracion", "options": ["simple", "perchero", "zapatero"] }
+  ],
+  "notes": "Producto real (WooCommerce staging id 1988, SKU VBANPSE). Ver producto-woocommerce-staging.md en esta misma carpeta para los hechos verificados (listón de pino de 25mm, patas de tubo de acero 30x30x1.5mm, longitudes 1000/1500/2000mm). Sin fotos todavia -- ver NEEDED-INPUTS.md. length_mm=1500 es la longitud por defecto del configurador de O23, no la unica opcion real (el producto real tiene 3 longitudes, igual que known variants.longitud). width_mm/height_mm/depth_mm no estan confirmados en ninguna fuente todavia -- no inferir sin foto real, dejar pending.",
+  "inference_tolerance": "medium"
+}

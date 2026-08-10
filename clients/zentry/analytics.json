@@ -1,0 +1,8 @@
+{
+  "note": "Fase O16: identificadores de cuenta GA4/GTM de 'zentry'. El Measurement ID y el Container ID son publicos por diseno (van embebidos en el HTML/gtag.js publico del sitio) -- no son secretos. El Property ID de GA4 tampoco es una credencial (es solo el numero de la propiedad, no permite acceso por si solo). El OAuth2 real que autentica la lectura sigue solo en .env (GOOGLE_ANALYTICS_OAUTH_CLIENT_ID/SECRET/REFRESH_TOKEN). Los adaptadores (src/adapters/google-analytics.ts y el lector GTM) siguen leyendo GA4_PROPERTY_ID/GA4_MEASUREMENT_ID/GTM_CONTAINER_ID/GTM_WORKSPACE_ID directamente de .env, sin cambios (Fase O16.1 pendiente).",
+  "ga4PropertyId": "544190531",
+  "ga4MeasurementId": "G-Z9TSGVENQY",
+  "gtmContainerId": "257386510",
+  "gtmWorkspaceId": "4",
+  "trackedEventsConfigPath": "config/analytics-key-events.json"
+}

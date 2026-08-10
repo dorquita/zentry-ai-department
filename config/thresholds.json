@@ -1,0 +1,11 @@
+{
+  "opportunityMinImpressions": 20,
+  "opportunityMinPosition": 8,
+  "opportunityMaxPosition": 30,
+  "lowCtrThreshold": 0.01,
+  "reviewCycleDays": 7,
+  "top10TargetPosition": 10,
+  "top3TargetPosition": 3,
+  "positionDropAlertDelta": 5,
+  "futureOpportunityMinPosition": 30
+}

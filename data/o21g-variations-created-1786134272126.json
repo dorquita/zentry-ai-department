@@ -1,0 +1,1910 @@
+[
+  {
+    "productSlug": "banco-vestuario-pino",
+    "productionProductId": 1988,
+    "sku": "VBANP200SE",
+    "regularPrice": "166",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      }
+    ],
+    "imageId": 1968,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1988,
+      "sku": "VBANP200SE",
+      "alreadyExists": false,
+      "createdId": 1997,
+      "payloadPreview": {
+        "sku": "VBANP200SE",
+        "regular_price": "166",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 460 mm, fondo 320 mm.</p>\n",
+        "image": {
+          "id": 1968
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino",
+    "productionProductId": 1988,
+    "sku": "VBANP150SE",
+    "regularPrice": "139",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      }
+    ],
+    "imageId": 1968,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1988,
+      "sku": "VBANP150SE",
+      "alreadyExists": false,
+      "createdId": 1998,
+      "payloadPreview": {
+        "sku": "VBANP150SE",
+        "regular_price": "139",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 460 mm, fondo 320 mm.</p>\n",
+        "image": {
+          "id": 1968
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino",
+    "productionProductId": 1988,
+    "sku": "VBANP100SE",
+    "regularPrice": "119",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      }
+    ],
+    "imageId": 1968,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1988,
+      "sku": "VBANP100SE",
+      "alreadyExists": false,
+      "createdId": 1999,
+      "payloadPreview": {
+        "sku": "VBANP100SE",
+        "regular_price": "119",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 460 mm, fondo 320 mm.</p>\n",
+        "image": {
+          "id": 1968
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-perchero",
+    "productionProductId": 1989,
+    "sku": "VBANP200PE-D",
+    "regularPrice": "666",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1969,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1989,
+      "sku": "VBANP200PE-D",
+      "alreadyExists": false,
+      "createdId": 2000,
+      "payloadPreview": {
+        "sku": "VBANP200PE-D",
+        "regular_price": "666",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 710 mm.</p>\n",
+        "image": {
+          "id": 1969
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-perchero",
+    "productionProductId": 1989,
+    "sku": "VBANP150PE-D",
+    "regularPrice": "496",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1969,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1989,
+      "sku": "VBANP150PE-D",
+      "alreadyExists": false,
+      "createdId": 2001,
+      "payloadPreview": {
+        "sku": "VBANP150PE-D",
+        "regular_price": "496",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 710 mm.</p>\n",
+        "image": {
+          "id": 1969
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-perchero",
+    "productionProductId": 1989,
+    "sku": "VBANP100PE-D",
+    "regularPrice": "412",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1969,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1989,
+      "sku": "VBANP100PE-D",
+      "alreadyExists": false,
+      "createdId": 2002,
+      "payloadPreview": {
+        "sku": "VBANP100PE-D",
+        "regular_price": "412",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 710 mm.</p>\n",
+        "image": {
+          "id": 1969
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-perchero",
+    "productionProductId": 1989,
+    "sku": "VBANP200PE",
+    "regularPrice": "333",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1969,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1989,
+      "sku": "VBANP200PE",
+      "alreadyExists": false,
+      "createdId": 2003,
+      "payloadPreview": {
+        "sku": "VBANP200PE",
+        "regular_price": "333",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 370 mm.</p>\n",
+        "image": {
+          "id": 1969
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-perchero",
+    "productionProductId": 1989,
+    "sku": "VBANP150PE",
+    "regularPrice": "248",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1969,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1989,
+      "sku": "VBANP150PE",
+      "alreadyExists": false,
+      "createdId": 2004,
+      "payloadPreview": {
+        "sku": "VBANP150PE",
+        "regular_price": "248",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 370 mm.</p>\n",
+        "image": {
+          "id": 1969
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-perchero",
+    "productionProductId": 1989,
+    "sku": "VBANP100PE",
+    "regularPrice": "206",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1969,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1989,
+      "sku": "VBANP100PE",
+      "alreadyExists": false,
+      "createdId": 2005,
+      "payloadPreview": {
+        "sku": "VBANP100PE",
+        "regular_price": "206",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 370 mm.</p>\n",
+        "image": {
+          "id": 1969
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-zapatero",
+    "productionProductId": 1990,
+    "sku": "VBANP200PZ-D",
+    "regularPrice": "788",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1970,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1990,
+      "sku": "VBANP200PZ-D",
+      "alreadyExists": false,
+      "createdId": 2006,
+      "payloadPreview": {
+        "sku": "VBANP200PZ-D",
+        "regular_price": "788",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 710 mm.</p>\n",
+        "image": {
+          "id": 1970
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-zapatero",
+    "productionProductId": 1990,
+    "sku": "VBANP150PZ-D",
+    "regularPrice": "575",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1970,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1990,
+      "sku": "VBANP150PZ-D",
+      "alreadyExists": false,
+      "createdId": 2007,
+      "payloadPreview": {
+        "sku": "VBANP150PZ-D",
+        "regular_price": "575",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 710 mm.</p>\n",
+        "image": {
+          "id": 1970
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-zapatero",
+    "productionProductId": 1990,
+    "sku": "VBANP100PZ-D",
+    "regularPrice": "481",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1970,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1990,
+      "sku": "VBANP100PZ-D",
+      "alreadyExists": false,
+      "createdId": 2008,
+      "payloadPreview": {
+        "sku": "VBANP100PZ-D",
+        "regular_price": "481",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 710 mm.</p>\n",
+        "image": {
+          "id": 1970
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-zapatero",
+    "productionProductId": 1990,
+    "sku": "VBANP200PZ",
+    "regularPrice": "394",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1970,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1990,
+      "sku": "VBANP200PZ",
+      "alreadyExists": false,
+      "createdId": 2009,
+      "payloadPreview": {
+        "sku": "VBANP200PZ",
+        "regular_price": "394",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 370 mm.</p>\n",
+        "image": {
+          "id": 1970
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-zapatero",
+    "productionProductId": 1990,
+    "sku": "VBANP150PZ",
+    "regularPrice": "288",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1970,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1990,
+      "sku": "VBANP150PZ",
+      "alreadyExists": false,
+      "createdId": 2010,
+      "payloadPreview": {
+        "sku": "VBANP150PZ",
+        "regular_price": "288",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 370 mm.</p>\n",
+        "image": {
+          "id": 1970
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-pino-zapatero",
+    "productionProductId": 1990,
+    "sku": "VBANP100PZ",
+    "regularPrice": "240",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1970,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1990,
+      "sku": "VBANP100PZ",
+      "alreadyExists": false,
+      "createdId": 2011,
+      "payloadPreview": {
+        "sku": "VBANP100PZ",
+        "regular_price": "240",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 370 mm.</p>\n",
+        "image": {
+          "id": 1970
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico",
+    "productionProductId": 1991,
+    "sku": "VBANFE200SE",
+    "regularPrice": "244",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      }
+    ],
+    "imageId": 1971,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1991,
+      "sku": "VBANFE200SE",
+      "alreadyExists": false,
+      "createdId": 2012,
+      "payloadPreview": {
+        "sku": "VBANFE200SE",
+        "regular_price": "244",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 445 mm, fondo 350 mm.</p>\n",
+        "image": {
+          "id": 1971
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico",
+    "productionProductId": 1991,
+    "sku": "VBANFE150SE",
+    "regularPrice": "196",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      }
+    ],
+    "imageId": 1971,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1991,
+      "sku": "VBANFE150SE",
+      "alreadyExists": false,
+      "createdId": 2013,
+      "payloadPreview": {
+        "sku": "VBANFE150SE",
+        "regular_price": "196",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 445 mm, fondo 350 mm.</p>\n",
+        "image": {
+          "id": 1971
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico",
+    "productionProductId": 1991,
+    "sku": "VBANFE100SE",
+    "regularPrice": "143",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      }
+    ],
+    "imageId": 1971,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1991,
+      "sku": "VBANFE100SE",
+      "alreadyExists": false,
+      "createdId": 2014,
+      "payloadPreview": {
+        "sku": "VBANFE100SE",
+        "regular_price": "143",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 445 mm, fondo 350 mm.</p>\n",
+        "image": {
+          "id": 1971
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-perchero",
+    "productionProductId": 1992,
+    "sku": "VBANFE200PE-D",
+    "regularPrice": "819",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1972,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1992,
+      "sku": "VBANFE200PE-D",
+      "alreadyExists": false,
+      "createdId": 2015,
+      "payloadPreview": {
+        "sku": "VBANFE200PE-D",
+        "regular_price": "819",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1972
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-perchero",
+    "productionProductId": 1992,
+    "sku": "VBANFE150PE-D",
+    "regularPrice": "704",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1972,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1992,
+      "sku": "VBANFE150PE-D",
+      "alreadyExists": false,
+      "createdId": 2016,
+      "payloadPreview": {
+        "sku": "VBANFE150PE-D",
+        "regular_price": "704",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1972
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-perchero",
+    "productionProductId": 1992,
+    "sku": "VBANFE100PE-D",
+    "regularPrice": "456",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1972,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1992,
+      "sku": "VBANFE100PE-D",
+      "alreadyExists": false,
+      "createdId": 2017,
+      "payloadPreview": {
+        "sku": "VBANFE100PE-D",
+        "regular_price": "456",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1972
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-perchero",
+    "productionProductId": 1992,
+    "sku": "VBANFE200PE",
+    "regularPrice": "410",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1972,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1992,
+      "sku": "VBANFE200PE",
+      "alreadyExists": false,
+      "createdId": 2018,
+      "payloadPreview": {
+        "sku": "VBANFE200PE",
+        "regular_price": "410",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1972
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-perchero",
+    "productionProductId": 1992,
+    "sku": "VBANFE150PE",
+    "regularPrice": "352",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1972,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1992,
+      "sku": "VBANFE150PE",
+      "alreadyExists": false,
+      "createdId": 2019,
+      "payloadPreview": {
+        "sku": "VBANFE150PE",
+        "regular_price": "352",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1972
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-perchero",
+    "productionProductId": 1992,
+    "sku": "VBANFE100PE",
+    "regularPrice": "228",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1972,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1992,
+      "sku": "VBANFE100PE",
+      "alreadyExists": false,
+      "createdId": 2020,
+      "payloadPreview": {
+        "sku": "VBANFE100PE",
+        "regular_price": "228",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1972
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-zapatero",
+    "productionProductId": 1993,
+    "sku": "VBANFE200PZ-D",
+    "regularPrice": "981",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1973,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1993,
+      "sku": "VBANFE200PZ-D",
+      "alreadyExists": false,
+      "createdId": 2021,
+      "payloadPreview": {
+        "sku": "VBANFE200PZ-D",
+        "regular_price": "981",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1973
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-zapatero",
+    "productionProductId": 1993,
+    "sku": "VBANFE150PZ-D",
+    "regularPrice": "842",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1973,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1993,
+      "sku": "VBANFE150PZ-D",
+      "alreadyExists": false,
+      "createdId": 2022,
+      "payloadPreview": {
+        "sku": "VBANFE150PZ-D",
+        "regular_price": "842",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1973
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-zapatero",
+    "productionProductId": 1993,
+    "sku": "VBANFE100PZ-D",
+    "regularPrice": "611",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1973,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1993,
+      "sku": "VBANFE100PZ-D",
+      "alreadyExists": false,
+      "createdId": 2023,
+      "payloadPreview": {
+        "sku": "VBANFE100PZ-D",
+        "regular_price": "611",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1973
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-zapatero",
+    "productionProductId": 1993,
+    "sku": "VBANFE200PZ",
+    "regularPrice": "490",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1973,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1993,
+      "sku": "VBANFE200PZ",
+      "alreadyExists": false,
+      "createdId": 2024,
+      "payloadPreview": {
+        "sku": "VBANFE200PZ",
+        "regular_price": "490",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1973
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-zapatero",
+    "productionProductId": 1993,
+    "sku": "VBANFE150PZ",
+    "regularPrice": "421",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1973,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1993,
+      "sku": "VBANFE150PZ",
+      "alreadyExists": false,
+      "createdId": 2025,
+      "payloadPreview": {
+        "sku": "VBANFE150PZ",
+        "regular_price": "421",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1973
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-fenolico-zapatero",
+    "productionProductId": 1993,
+    "sku": "VBANFE100PZ",
+    "regularPrice": "306",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1973,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1993,
+      "sku": "VBANFE100PZ",
+      "alreadyExists": false,
+      "createdId": 2026,
+      "payloadPreview": {
+        "sku": "VBANFE100PZ",
+        "regular_price": "306",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1973
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina",
+    "productionProductId": 1994,
+    "sku": "VBANME200SE",
+    "regularPrice": "146",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      }
+    ],
+    "imageId": 1974,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1994,
+      "sku": "VBANME200SE",
+      "alreadyExists": false,
+      "createdId": 2027,
+      "payloadPreview": {
+        "sku": "VBANME200SE",
+        "regular_price": "146",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 465 mm, fondo 350 mm.</p>\n",
+        "image": {
+          "id": 1974
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina",
+    "productionProductId": 1994,
+    "sku": "VBANME150SE",
+    "regularPrice": "123",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      }
+    ],
+    "imageId": 1974,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1994,
+      "sku": "VBANME150SE",
+      "alreadyExists": false,
+      "createdId": 2028,
+      "payloadPreview": {
+        "sku": "VBANME150SE",
+        "regular_price": "123",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 465 mm, fondo 350 mm.</p>\n",
+        "image": {
+          "id": 1974
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina",
+    "productionProductId": 1994,
+    "sku": "VBANME100SE",
+    "regularPrice": "92",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      }
+    ],
+    "imageId": 1974,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1994,
+      "sku": "VBANME100SE",
+      "alreadyExists": false,
+      "createdId": 2029,
+      "payloadPreview": {
+        "sku": "VBANME100SE",
+        "regular_price": "92",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 465 mm, fondo 350 mm.</p>\n",
+        "image": {
+          "id": 1974
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-perchero",
+    "productionProductId": 1995,
+    "sku": "VBANME200PE-D",
+    "regularPrice": "599",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1975,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1995,
+      "sku": "VBANME200PE-D",
+      "alreadyExists": false,
+      "createdId": 2030,
+      "payloadPreview": {
+        "sku": "VBANME200PE-D",
+        "regular_price": "599",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1975
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-perchero",
+    "productionProductId": 1995,
+    "sku": "VBANME150PE-D",
+    "regularPrice": "384",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1975,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1995,
+      "sku": "VBANME150PE-D",
+      "alreadyExists": false,
+      "createdId": 2031,
+      "payloadPreview": {
+        "sku": "VBANME150PE-D",
+        "regular_price": "384",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1975
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-perchero",
+    "productionProductId": 1995,
+    "sku": "VBANME100PE-D",
+    "regularPrice": "347",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1975,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1995,
+      "sku": "VBANME100PE-D",
+      "alreadyExists": false,
+      "createdId": 2032,
+      "payloadPreview": {
+        "sku": "VBANME100PE-D",
+        "regular_price": "347",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1975
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-perchero",
+    "productionProductId": 1995,
+    "sku": "VBANME200PE",
+    "regularPrice": "299",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1975,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1995,
+      "sku": "VBANME200PE",
+      "alreadyExists": false,
+      "createdId": 2033,
+      "payloadPreview": {
+        "sku": "VBANME200PE",
+        "regular_price": "299",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1975
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-perchero",
+    "productionProductId": 1995,
+    "sku": "VBANME150PE",
+    "regularPrice": "192",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1975,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1995,
+      "sku": "VBANME150PE",
+      "alreadyExists": false,
+      "createdId": 2034,
+      "payloadPreview": {
+        "sku": "VBANME150PE",
+        "regular_price": "192",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1975
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-perchero",
+    "productionProductId": 1995,
+    "sku": "VBANME100PE",
+    "regularPrice": "173",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1975,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1995,
+      "sku": "VBANME100PE",
+      "alreadyExists": false,
+      "createdId": 2035,
+      "payloadPreview": {
+        "sku": "VBANME100PE",
+        "regular_price": "173",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1975
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-zapatero",
+    "productionProductId": 1996,
+    "sku": "VBANME200PZ-D",
+    "regularPrice": "731",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1976,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1996,
+      "sku": "VBANME200PZ-D",
+      "alreadyExists": false,
+      "createdId": 2036,
+      "payloadPreview": {
+        "sku": "VBANME200PZ-D",
+        "regular_price": "731",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1976
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-zapatero",
+    "productionProductId": 1996,
+    "sku": "VBANME150PZ-D",
+    "regularPrice": "470",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1976,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1996,
+      "sku": "VBANME150PZ-D",
+      "alreadyExists": false,
+      "createdId": 2037,
+      "payloadPreview": {
+        "sku": "VBANME150PZ-D",
+        "regular_price": "470",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1976
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-zapatero",
+    "productionProductId": 1996,
+    "sku": "VBANME100PZ-D",
+    "regularPrice": "401",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Doble"
+      }
+    ],
+    "imageId": 1976,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1996,
+      "sku": "VBANME100PZ-D",
+      "alreadyExists": false,
+      "createdId": 2038,
+      "payloadPreview": {
+        "sku": "VBANME100PZ-D",
+        "regular_price": "401",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Doble"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 730 mm.</p>\n",
+        "image": {
+          "id": 1976
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-zapatero",
+    "productionProductId": 1996,
+    "sku": "VBANME200PZ",
+    "regularPrice": "365",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "2000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1976,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1996,
+      "sku": "VBANME200PZ",
+      "alreadyExists": false,
+      "createdId": 2039,
+      "payloadPreview": {
+        "sku": "VBANME200PZ",
+        "regular_price": "365",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "2000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1976
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-zapatero",
+    "productionProductId": 1996,
+    "sku": "VBANME150PZ",
+    "regularPrice": "235",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1500mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1976,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1996,
+      "sku": "VBANME150PZ",
+      "alreadyExists": false,
+      "createdId": 2040,
+      "payloadPreview": {
+        "sku": "VBANME150PZ",
+        "regular_price": "235",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1500mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1976
+        }
+      }
+    }
+  },
+  {
+    "productSlug": "banco-vestuario-melamina-zapatero",
+    "productionProductId": 1996,
+    "sku": "VBANME100PZ",
+    "regularPrice": "201",
+    "attributes": [
+      {
+        "id": 9,
+        "option": "1000mm"
+      },
+      {
+        "id": 10,
+        "option": "Única"
+      }
+    ],
+    "imageId": 1976,
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "productId": 1996,
+      "sku": "VBANME100PZ",
+      "alreadyExists": false,
+      "createdId": 2041,
+      "payloadPreview": {
+        "sku": "VBANME100PZ",
+        "regular_price": "201",
+        "attributes": [
+          {
+            "id": 9,
+            "option": "1000mm"
+          },
+          {
+            "id": 10,
+            "option": "Única"
+          }
+        ],
+        "stock_status": "instock",
+        "description": "<p>Medidas de catálogo: alto 1760 mm, fondo 380 mm.</p>\n",
+        "image": {
+          "id": 1976
+        }
+      }
+    }
+  }
+]

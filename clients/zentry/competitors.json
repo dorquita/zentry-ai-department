@@ -1,0 +1,58 @@
+{
+  "note": "Fase O16: copia inicial de config/competitors.json para el cliente 'zentry'. Todavia NO es la fuente que lee src/agents/competitor-intelligence.ts en tiempo de ejecucion -- ese modulo sigue leyendo config/competitors.json sin cambios (Fase O16.1 pendiente para rewire).",
+  "updatedAt": "2026-08-02",
+  "rateLimitMs": 2000,
+  "requestTimeoutMs": 10000,
+  "maxUrlsPerDomain": 4,
+  "userAgent": "ZentryCompetitorIntelBot/1.0 (+https://zentrylockers.com; solo lectura de paginas publicas, respeta robots.txt, contacto info@zentrylockers.com)",
+  "respectRobotsTxt": true,
+  "competitors": [
+    {
+      "name": "Marmataquillas",
+      "domain": "https://marmataquillasmetalicas.es",
+      "role": "competitor",
+      "notes": "Fabricante de taquillas metalicas (Zaragoza). Dominio verificado por busqueda web el 2026-08-02.",
+      "brandTokens": ["marma", "marmataquillas", "marmataquillasmetalicas"],
+      "urls": [
+        "https://marmataquillasmetalicas.es/",
+        "https://marmataquillasmetalicas.es/taquillas/taquillas-de-4-puertas",
+        "https://marmataquillasmetalicas.es/blog/taquillas"
+      ]
+    },
+    {
+      "name": "Taquiblok (Taquillas Blok)",
+      "domain": "https://taquillasblok.com",
+      "role": "competitor",
+      "notes": "\"Taquiblok\" corresponde a Taquillas Blok (taquillasblok.com), fabricante de taquillas fenolicas y metalicas. Dominio verificado por busqueda web el 2026-08-02.",
+      "brandTokens": ["blok", "taquiblok", "taquillasblok"],
+      "urls": [
+        "https://taquillasblok.com/",
+        "https://taquillasblok.com/taquillas/"
+      ]
+    },
+    {
+      "name": "Setroc",
+      "domain": "https://setrocmm.com",
+      "role": "competitor",
+      "notes": "Fabricante de taquillas metalicas y smart lockers (Zaragoza). Dominio verificado por busqueda web el 2026-08-02.",
+      "brandTokens": ["setroc", "setrocmm"],
+      "urls": [
+        "https://setrocmm.com/",
+        "https://setrocmm.com/setroc-fabricante-de-taquillas-inteligentes-innovacion-y-tecnologia/",
+        "https://setrocmm.com/taquillas-escolares-para-colegios-institutos-y-universidades-guia-completa-2026/"
+      ]
+    },
+    {
+      "name": "Ojmar",
+      "domain": "https://ojmar.com",
+      "role": "reference",
+      "notes": "Fabricante de cerraduras/sistemas de cierre para taquillas y mobiliario. Se trata como REFERENCIA de cerraduras/lockers, no como competidor identico de Zentry (Ojmar no fabrica el mueble). Util para vocabulario de cerraduras (Tukandado).",
+      "brandTokens": ["ojmar"],
+      "urls": [
+        "https://ojmar.com/es/",
+        "https://ojmar.com/es/cerraduras-electronicas-para-taquillas/",
+        "https://ojmar.com/es/soluciones-cerraduras-taquillas-mobiliario/"
+      ]
+    }
+  ]
+}

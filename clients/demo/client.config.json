@@ -1,0 +1,30 @@
+{
+  "clientId": "demo",
+  "clientName": "Cliente de demostracion (sandbox)",
+  "brandName": "Demo Brand",
+  "secondaryBrands": [],
+  "productionUrl": "https://demo-client.invalid",
+  "stagingUrl": "https://staging.demo-client.invalid",
+  "isSandbox": true,
+  "allowedServices": [],
+  "configPaths": {
+    "brandPositioning": "clients/demo/brand-positioning.json",
+    "competitors": "clients/demo/competitors.json",
+    "autonomyPolicy": "clients/demo/autonomy-policy.json",
+    "notificationPolicy": "clients/demo/notification-policy.json",
+    "templates": "clients/demo/templates.json",
+    "seo": "clients/demo/seo.json",
+    "analytics": "clients/demo/analytics.json",
+    "ads": "clients/demo/ads.json",
+    "wordpress": "clients/demo/wordpress.json"
+  },
+  "notificationSettings": {
+    "telegramEnabledEnvVar": "DEMO_TELEGRAM_APPROVALS_ENABLED",
+    "telegramBotTokenEnvVar": "DEMO_TELEGRAM_BOT_TOKEN",
+    "telegramChatIdEnvVar": "DEMO_TELEGRAM_CHAT_ID",
+    "reportEmailToEnvVar": "DEMO_REPORT_EMAIL_TO"
+  },
+  "wiringStatus": "not_wired",
+  "createdAt": "2026-08-05",
+  "notes": "Cliente de demostracion SIN credenciales de ningun tipo. Sirve para validar que la estructura multi-cliente funciona (clients:list, clients:validate, growth:daily --client demo --dry-run) sin poder ejecutar ninguna accion real: isSandbox=true bloquea que el orquestador diario invoque ningun agente para este cliente (ver runSandboxDryRunPass en scripts/run-daily-growth-department.ts). Las variables de entorno referenciadas en notificationSettings son nombres inventados a proposito (prefijo DEMO_) que nunca deberian existir en .env real -- si alguna vez existieran, isSandbox=true seguiria bloqueando cualquier uso real de todas formas."
+}

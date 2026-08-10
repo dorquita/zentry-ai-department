@@ -1,0 +1,1 @@
+Fase O16: carpeta de datos del cliente sandbox "demo". Se crea vacia; growth:daily --client demo --dry-run puede escribir aqui un marcador de dry-run, nunca datos de negocio reales (no hay negocio real detras de este cliente).

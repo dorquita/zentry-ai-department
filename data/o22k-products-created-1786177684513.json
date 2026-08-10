@@ -1,0 +1,114 @@
+[
+  {
+    "slug": "ares",
+    "name": "ARES",
+    "sku": "TKD-ARES",
+    "regularPrice": "51",
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "ares",
+      "alreadyExists": false,
+      "createdId": 2056,
+      "payloadPreview": {
+        "name": "ARES",
+        "slug": "ares",
+        "type": "simple",
+        "sku": "TKD-ARES",
+        "regular_price": "51",
+        "status": "publish",
+        "description": "Cerradura electrónica compatible con taquillas Zentry, tecnología Tukandado.",
+        "short_description": "",
+        "categories": [
+          {
+            "id": 118
+          }
+        ]
+      }
+    }
+  },
+  {
+    "slug": "orbis",
+    "name": "ORBIS",
+    "sku": "TKD-ORBIS",
+    "regularPrice": "39",
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "orbis",
+      "alreadyExists": false,
+      "createdId": 2057,
+      "payloadPreview": {
+        "name": "ORBIS",
+        "slug": "orbis",
+        "type": "simple",
+        "sku": "TKD-ORBIS",
+        "regular_price": "39",
+        "status": "publish",
+        "description": "Cerradura electrónica compatible con taquillas Zentry, tecnología Tukandado.",
+        "short_description": "",
+        "categories": [
+          {
+            "id": 118
+          }
+        ]
+      }
+    }
+  },
+  {
+    "slug": "boxis",
+    "name": "BOXIS",
+    "sku": "TKD-BOXIS",
+    "regularPrice": "54",
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "boxis",
+      "alreadyExists": false,
+      "createdId": 2058,
+      "payloadPreview": {
+        "name": "BOXIS",
+        "slug": "boxis",
+        "type": "simple",
+        "sku": "TKD-BOXIS",
+        "regular_price": "54",
+        "status": "publish",
+        "description": "Cerradura electrónica compatible con taquillas Zentry, tecnología Tukandado.",
+        "short_description": "",
+        "categories": [
+          {
+            "id": 118
+          }
+        ]
+      }
+    }
+  },
+  {
+    "slug": "neo",
+    "name": "NEO",
+    "sku": "TKD-NEO",
+    "regularPrice": "51",
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "neo",
+      "alreadyExists": false,
+      "createdId": 2059,
+      "payloadPreview": {
+        "name": "NEO",
+        "slug": "neo",
+        "type": "simple",
+        "sku": "TKD-NEO",
+        "regular_price": "51",
+        "status": "publish",
+        "description": "Cerradura electrónica compatible con taquillas Zentry, tecnología Tukandado.",
+        "short_description": "",
+        "categories": [
+          {
+            "id": 118
+          }
+        ]
+      }
+    }
+  }
+]

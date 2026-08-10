@@ -1,0 +1,11 @@
+{
+  "note": "Fase O16: identificadores de entorno WordPress de 'zentry', SIN credenciales (usuario/Application Password siguen solo en .env: WORDPRESS_USERNAME/WORDPRESS_APP_PASSWORD/WORDPRESS_PRODUCTION_USERNAME/WORDPRESS_PRODUCTION_APP_PASSWORD). Los gates de seguridad reales (WORDPRESS_ENV, WORDPRESS_BACKEND, PRODUCTION_EXECUTION_ENABLED, PRODUCTION_DRAFTS_ENABLED, STAGING_EXECUTION_ENABLED, WORDPRESS_DRAFTS_ENABLED) SIGUEN viviendo solo en .env y siendo evaluados por src/adapters/wordpress-backend.ts -- este fichero es informativo/documental en la Fase O16, todavia no sustituye esas variables (Fase O16.1 pendiente).",
+  "productionUrl": "https://zentrylockers.com",
+  "stagingUrl": "https://staging.zentrylockers.com",
+  "productionUsernameEnvVar": "WORDPRESS_PRODUCTION_USERNAME",
+  "productionAppPasswordEnvVar": "WORDPRESS_PRODUCTION_APP_PASSWORD",
+  "stagingUsernameEnvVar": "WORDPRESS_USERNAME",
+  "stagingAppPasswordEnvVar": "WORDPRESS_APP_PASSWORD",
+  "defaultBackend": "local_preview",
+  "defaultEnv": "staging"
+}

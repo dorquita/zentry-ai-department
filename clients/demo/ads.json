@@ -1,0 +1,7 @@
+{
+  "note": "Cliente sandbox. Sin cuenta de Google Ads real -- isSandbox=true impide que SEM Watcher llegue a ejecutarse para este cliente de todas formas.",
+  "customerId": null,
+  "loginCustomerId": null,
+  "apiVersion": "v24",
+  "campaignStateConfigPath": null
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "3d-model-factory/request.schema.json",
+  "title": "3D Model Factory - Request",
+  "description": "Solicitud estandar para generar un activo 3D reutilizable de un producto. Un fichero request.json vive junto a los inputs del producto en clients/<client_id>/input/o24-products/<product_slug>/request.json.",
+  "type": "object",
+  "required": ["client_id", "project_id", "product_slug", "product_name", "input_folder"],
+  "additionalProperties": false,
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Debe coincidir con un clientId real ya registrado en clients/<client_id>/client.config.json. La factory no inventa clientes nuevos por su cuenta."
+    },
+    "project_id": {
+      "type": "string",
+      "description": "Identificador libre del proyecto/marca dentro del cliente (ej. 'zentry-lockers'). Un mismo client_id puede tener varios project_id (ej. Zentry y Tukandado bajo el mismo cliente hoy)."
+    },
+    "product_slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Slug kebab-case, usado como nombre de carpeta de input/output y como prefijo de todos los ficheros generados."
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Nombre legible del producto, para informes y metadatos del GLB."
+    },
+    "target_website": {
+      "type": ["string", "null"],
+      "description": "Dominio donde se usara el modelo (ej. 'staging.zentrylockers.com'). Opcional -- puede no saberse todavia en fase de generacion."
+    },
+    "integration_target": {
+      "type": ["string", "null"],
+      "enum": ["configurator", "product_page", "standalone_embed", "wordpress_media", null],
+      "description": "Como se integrara el modelo. Determina las notas que genera el Web Integration Agent."
+    },
+    "output_format": {
+      "type": "string",
+      "enum": ["glb", "gltf"],
+      "default": "glb"
+    },
+    "input_folder": {
+      "type": "string",
+      "description": "Ruta relativa a la raiz del repo (ej. 'clients/zentry/input/o24-products/banco-vestuario-pino')."
+    },
+    "known_dimensions": {
+      "type": "object",
+      "description": "Medidas YA confirmadas (nunca inventadas aqui). Cualquier campo null se trata como pendiente de verificar/inferir.",
+      "additionalProperties": false,
+      "properties": {
+        "length_mm": { "type": ["number", "null"] },
+        "width_mm": { "type": ["number", "null"] },
+        "height_mm": { "type": ["number", "null"] },
+        "depth_mm": { "type": ["number", "null"] }
+      }
+    },
+    "known_materials": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Materiales ya confirmados (ej. ['pino', 'metal']). No es una lista exhaustiva de opciones configurables -- solo lo que se sabe con certeza del producto de referencia."
+    },
+    "variants": {
+      "type": "array",
+      "description": "Variantes configurables conocidas de antemano (opcional). Si se omite, el Geometry Planner Agent las propone a partir del input disponible.",
+      "items": {
+        "type": "object",
+        "required": ["type", "options"],
+        "properties": {
+          "type": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Instrucciones libres en lenguaje natural para quien procese la solicitud (humano o IA)."
+    },
+    "inference_tolerance": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "default": "medium",
+      "description": "low: solo generar con datos verificados, bloquear si falta demasiado. medium: inferir con prudencia y documentar. high: permitir mas supuestos, siempre documentados igualmente -- nunca se salta el etiquetado verificado/inferido/supuesto, cambia solo cuanto se esta dispuesto a asumir antes de bloquear."
+    }
+  }
+}

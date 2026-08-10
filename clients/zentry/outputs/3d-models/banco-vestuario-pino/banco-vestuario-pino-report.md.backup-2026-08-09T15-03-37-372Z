@@ -1,0 +1,34 @@
+# Informe de pipeline -- Banco de vestuario de pino simple (banco-vestuario-pino)
+
+Cliente: `zentry` · Proyecto: `zentry-lockers` · Generado: 2026-08-09T14:49:27.715Z
+
+**qaStatus actual:** pending_generation · **confidence:** low
+
+## Etapas
+
+| # | Etapa | Estado | Resumen |
+|---|---|---|---|
+| 1 | intake | done | 3 ficheros encontrados (0 fotos, 0 PDFs, 2 notas, 0 de medidas, 1 otros). |
+| 2 | product_understanding | pending_input | Requiere analisis visual/de contenido (humano o IA con vision) que esta fase no automatiza todavia. Plantilla creada en /opt/zentry-ai-department/clients/zentry/outputs/3d-models/banco-vestuario-pino/stages/product-understanding.json -- rellenar y volver a ejecutar. |
+| 3 | research | blocked | Depende de product_understanding, que todavia no esta "done". |
+| 4 | geometry_planner | blocked | Depende de product_understanding. |
+| 5 | inference | blocked | Depende de geometry_planner. |
+| 6 | material | done | 2/2 materiales resueltos contra presets conocidos. |
+| 7 | blender_generation | blocked | Blender no esta instalado en esta maquina. Ver docs/blender-setup.md para la propuesta de instalacion (requiere aprobacion antes de ejecutarla). |
+| 8 | glb_export | blocked | Depende de blender_generation. |
+| 9 | optimization | blocked | Depende de glb_export. |
+| 10 | visual_qa | blocked | Necesita un .glb real para generar capturas -- depende de glb_export. |
+| 11 | web_integration | done | Notas de integracion generadas para integration_target="configurator". |
+| 12 | human_approval_gate | pending_input | Ningun modelo pasa a "approved_staging" sin que un humano lo confirme explicitamente. Nunca se auto-aprueba en esta fase. |
+
+## Siguientes acciones
+
+- [product_understanding] Requiere analisis visual/de contenido (humano o IA con vision) que esta fase no automatiza todavia. Plantilla creada en /opt/zentry-ai-department/clients/zentry/outputs/3d-models/banco-vestuario-pino/stages/product-understanding.json -- rellenar y volver a ejecutar.
+- [research] Depende de product_understanding, que todavia no esta "done".
+- [geometry_planner] Depende de product_understanding.
+- [inference] Depende de geometry_planner.
+- [blender_generation] Blender no esta instalado en esta maquina. Ver docs/blender-setup.md para la propuesta de instalacion (requiere aprobacion antes de ejecutarla).
+- [glb_export] Depende de blender_generation.
+- [optimization] Depende de glb_export.
+- [visual_qa] Necesita un .glb real para generar capturas -- depende de glb_export.
+- [human_approval_gate] Ningun modelo pasa a "approved_staging" sin que un humano lo confirme explicitamente. Nunca se auto-aprueba en esta fase.

@@ -1,0 +1,30 @@
+# Informe de pipeline -- Banco de vestuario de pino simple (banco-vestuario-pino)
+
+Cliente: `zentry` · Proyecto: `zentry-lockers` · Generado: 2026-08-09T15:03:37.372Z
+
+**qaStatus actual:** pending_generation · **confidence:** medium
+
+## Etapas
+
+| # | Etapa | Estado | Resumen |
+|---|---|---|---|
+| 1 | intake | done | 4 ficheros encontrados (1 fotos, 0 PDFs, 2 notas, 0 de medidas, 1 otros). |
+| 2 | product_understanding | done | Analisis de producto completado (product-understanding.json rellenado -- productType: "banco de vestuario (mobiliario, listones de madera + estructura metalica)"). |
+| 3 | research | skipped | Sin research-notes.md -- se asume que no hizo falta buscar informacion externa (todos los datos necesarios ya estaban en el input). Si no es el caso, crea ese fichero documentando fuentes consultadas. |
+| 4 | geometry_planner | done | Plan de piezas/componentes definido (8 componentes en geometry-plan.json). |
+| 5 | inference | done | Inferencias documentadas en inference-manifest.json. |
+| 6 | material | done | 2/2 materiales resueltos contra presets conocidos. |
+| 7 | blender_generation | pending_input | Blender disponible (Blender 5.2.0 LTS) y datos de inferencia listos -- generacion real del script/geometria pendiente de implementar (fuera de alcance de O24.1, ver docs/pipeline.md). |
+| 8 | glb_export | blocked | Depende de blender_generation. |
+| 9 | optimization | blocked | Depende de glb_export. |
+| 10 | visual_qa | blocked | Necesita un .glb real para generar capturas -- depende de glb_export. |
+| 11 | web_integration | done | Notas de integracion generadas para integration_target="configurator". |
+| 12 | human_approval_gate | pending_input | Ningun modelo pasa a "approved_staging" sin que un humano lo confirme explicitamente. Nunca se auto-aprueba en esta fase. |
+
+## Siguientes acciones
+
+- [blender_generation] Blender disponible (Blender 5.2.0 LTS) y datos de inferencia listos -- generacion real del script/geometria pendiente de implementar (fuera de alcance de O24.1, ver docs/pipeline.md).
+- [glb_export] Depende de blender_generation.
+- [optimization] Depende de glb_export.
+- [visual_qa] Necesita un .glb real para generar capturas -- depende de glb_export.
+- [human_approval_gate] Ningun modelo pasa a "approved_staging" sin que un humano lo confirme explicitamente. Nunca se auto-aprueba en esta fase.

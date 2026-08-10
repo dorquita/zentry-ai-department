@@ -1,0 +1,106 @@
+{
+  "productName": "Banco de vestuario de pino simple",
+  "slug": "banco-vestuario-pino",
+  "clientId": "zentry",
+  "projectId": "zentry-lockers",
+  "generatedAt": "2026-08-09T15:03:37.371Z",
+  "requestPath": "clients/zentry/input/o24-products/banco-vestuario-pino/request.json",
+  "sourceFiles": [
+    {
+      "file": "NEEDED-INPUTS.md",
+      "type": "notes",
+      "sizeBytes": 2975
+    },
+    {
+      "file": "producto-woocommerce-staging.md",
+      "type": "notes",
+      "sizeBytes": 2542
+    },
+    {
+      "file": "referencia-visual-o21-NO-VERIFICADA.webp",
+      "type": "photo",
+      "sizeBytes": 20994
+    },
+    {
+      "file": "request.json",
+      "type": "other",
+      "sizeBytes": 1358
+    }
+  ],
+  "verifiedFacts": [],
+  "inferredFacts": [],
+  "assumptions": [],
+  "pendingValidation": [
+    "[blender_generation] Blender disponible (Blender 5.2.0 LTS) y datos de inferencia listos -- generacion real del script/geometria pendiente de implementar (fuera de alcance de O24.1, ver docs/pipeline.md).",
+    "[glb_export] Depende de blender_generation.",
+    "[optimization] Depende de glb_export.",
+    "[visual_qa] Necesita un .glb real para generar capturas -- depende de glb_export.",
+    "[human_approval_gate] Ningun modelo pasa a \"approved_staging\" sin que un humano lo confirme explicitamente. Nunca se auto-aprueba en esta fase."
+  ],
+  "dimensions": {
+    "length_mm": 1500,
+    "width_mm": null,
+    "height_mm": null,
+    "depth_mm": null,
+    "source": "pending"
+  },
+  "materials": [
+    {
+      "name": "pino",
+      "appliesToComponents": [],
+      "configurable": true,
+      "source": "assumed"
+    },
+    {
+      "name": "acero",
+      "appliesToComponents": [],
+      "configurable": true,
+      "source": "assumed"
+    }
+  ],
+  "components": [],
+  "variants": [
+    {
+      "type": "material",
+      "options": [
+        "pino",
+        "fenolico",
+        "melamina"
+      ]
+    },
+    {
+      "type": "longitud",
+      "options": [
+        "1000",
+        "1500",
+        "2000"
+      ]
+    },
+    {
+      "type": "configuracion",
+      "options": [
+        "simple",
+        "perchero",
+        "zapatero"
+      ]
+    }
+  ],
+  "modelingStrategy": "blender_parametric",
+  "outputFiles": {
+    "glb": null,
+    "sourceScript": null,
+    "report": "clients/zentry/outputs/3d-models/banco-vestuario-pino/banco-vestuario-pino-report.md",
+    "previews": []
+  },
+  "fileSize": null,
+  "polygonCount": null,
+  "confidence": "medium",
+  "qaStatus": "pending_generation",
+  "nextActions": [
+    "[blender_generation] Blender disponible (Blender 5.2.0 LTS) y datos de inferencia listos -- generacion real del script/geometria pendiente de implementar (fuera de alcance de O24.1, ver docs/pipeline.md).",
+    "[glb_export] Depende de blender_generation.",
+    "[optimization] Depende de glb_export.",
+    "[visual_qa] Necesita un .glb real para generar capturas -- depende de glb_export.",
+    "[human_approval_gate] Ningun modelo pasa a \"approved_staging\" sin que un humano lo confirme explicitamente. Nunca se auto-aprueba en esta fase."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "_instructions": "Definido en Fase O24.2 a partir de product-understanding.json. Nombres de nodos pensados para ser legibles en Three.js/el configurador (minusculas, guiones bajos, sin espacios).",
+  "components": [
+    {
+      "name": "asiento",
+      "type": "grupo",
+      "configurable": true,
+      "notes": "Grupo padre que agrupa los listones -- escalar este grupo en X escala la longitud completa, igual que el prototipo JS de O23 (seatGroup.scale.x)."
+    },
+    {
+      "name": "asiento_liston_1",
+      "type": "listón de madera",
+      "configurable": false,
+      "notes": "Hijo de 'asiento'. 4 listones en total (asiento_liston_1..4), 25mm de espesor (verificado), separados por un gap pequeno inferido."
+    },
+    {
+      "name": "asiento_liston_2",
+      "type": "listón de madera",
+      "configurable": false
+    },
+    {
+      "name": "asiento_liston_3",
+      "type": "listón de madera",
+      "configurable": false
+    },
+    {
+      "name": "asiento_liston_4",
+      "type": "listón de madera",
+      "configurable": false
+    },
+    {
+      "name": "pata_izquierda",
+      "type": "pata metalica (tubo cuadrado)",
+      "configurable": false,
+      "notes": "Tubo de acero de seccion CUADRADA 30x30x1.5mm (verificado), con taco antideslizante en la base. Se reposiciona en X segun la longitud elegida, igual que 'legs' en el prototipo JS."
+    },
+    {
+      "name": "pata_derecha",
+      "type": "pata metalica (tubo cuadrado)",
+      "configurable": false
+    },
+    {
+      "name": "refuerzo_metalico",
+      "type": "listón metálico de unión entre patas",
+      "configurable": false,
+      "notes": "Pieza EXISTENTE segun la ficha verificada pero SIN foto que confirme su posicion exacta -- geometria/posicion inferida (ver inference-manifest.json). Nodo separado para poder ocultarlo/ajustarlo despues sin tocar el resto."
+    }
+  ],
+  "materialsAssignment": [
+    { "component": "asiento_liston_1..4", "material": "pino" },
+    { "component": "pata_izquierda, pata_derecha, refuerzo_metalico", "material": "metal" }
+  ],
+  "configurableSummary": "Para el MVP de O24.2 solo 'asiento' (grupo, escala de longitud) se trata como configurable a nivel de nodo -- coincide exactamente con lo que el configurador de O23 ya sabe hacer (escalar longitud, no partes individuales). Los listones/patas/refuerzo son piezas fijas del modelo, no nodos que el usuario active/desactive en este MVP (a diferencia de perchero/zapatero, que son variantes de PRODUCTO distintas, no piezas de este mismo GLB)."
+}

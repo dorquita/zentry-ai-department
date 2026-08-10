@@ -1,0 +1,30 @@
+{
+  "_instructions": "Rellenado en Fase O24.2 a partir de: (1) producto-woocommerce-staging.md (fuente verificada, texto real de la ficha), (2) referencia-visual-o21-NO-VERIFICADA.webp (imagen generada por IA para marketing en O21, NO una foto real del producto fisico -- tratada como referencia visual no verificada).",
+  "productType": "banco de vestuario (mobiliario, listones de madera + estructura metalica)",
+  "visibleComponents": [
+    "asiento de listones de madera (4 listones visibles en la imagen de referencia, gap uniforme entre ellos)",
+    "4 patas (2 pares, una en cada extremo)",
+    "tacos/pies antideslizantes en la base de cada pata"
+  ],
+  "visualNotesPerPhoto": [
+    {
+      "file": "referencia-visual-o21-NO-VERIFICADA.webp",
+      "type": "referencia visual NO verificada (imagen generada por IA en O21 para marketing, no una foto real)",
+      "notes": "Vista de 3/4 sobre fondo neutro. Muestra 4 listones de madera clara con vetas visibles, gap uniforme entre listones. 4 patas cilindricas/redondas de color gris con pies de goma oscuros. NO se ve ningun refuerzo/barra entre patas en este angulo. Proporcion longitud:profundidad visualmente compatible con un banco de ~1500mm de largo."
+    }
+  ],
+  "conflictsFound": [
+    {
+      "topic": "forma de la seccion de las patas",
+      "verifiedSource": "producto-woocommerce-staging.md: \"tubo de acero de 30x30x1,5 mm\" -- seccion CUADRADA.",
+      "unverifiedSource": "referencia-visual-o21-NO-VERIFICADA.webp muestra patas de seccion REDONDA/cilindrica.",
+      "resolution": "Se modela con seccion CUADRADA (fuente verificada, texto oficial del producto). La imagen es un asset de marketing generado por IA en una fase anterior (O21), no una foto real del producto fisico -- no se trata como dato tecnico fiable cuando contradice la ficha oficial. Queda como discrepancia documentada, pendiente de confirmar con una foto real."
+    },
+    {
+      "topic": "refuerzo metalico entre patas",
+      "verifiedSource": "producto-woocommerce-staging.md: \"Modelo sin zapatero, con refuerzo/liston metalico de union entre patas.\"",
+      "unverifiedSource": "No visible en referencia-visual-o21-NO-VERIFICADA.webp en el angulo mostrado.",
+      "resolution": "Se modela igualmente (la fuente verificada es explicita), documentado como pieza con posicion/orientacion INFERIDA porque no hay ninguna imagen que la muestre."
+    }
+  ]
+}

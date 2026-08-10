@@ -1,0 +1,64 @@
+{
+  "_disclaimer": "Ejemplo ILUSTRATIVO de como se ve un manifest.json completo tras terminar TODAS las etapas del pipeline (incluida generacion real con Blender). Producto ficticio ('taquilla-demo-1puerta') -- no corresponde a ningun modelo generado de verdad. Sirve para entender el formato final, no como dato real.",
+  "productName": "Taquilla demo de 1 puerta",
+  "slug": "taquilla-demo-1puerta",
+  "clientId": "demo",
+  "projectId": "demo-catalogo",
+  "generatedAt": "2026-08-09T12:00:00.000Z",
+  "requestPath": "clients/demo/input/o24-products/taquilla-demo-1puerta/request.json",
+
+  "sourceFiles": [
+    { "file": "foto-frontal.jpg", "type": "photo", "sizeBytes": 2456123 },
+    { "file": "foto-lateral.jpg", "type": "photo", "sizeBytes": 2210044 },
+    { "file": "medidas.txt", "type": "measurements", "sizeBytes": 312 }
+  ],
+
+  "verifiedFacts": [
+    { "fact": "La puerta tiene rejillas de ventilación horizontales en el tercio superior.", "source": "foto-frontal.jpg" },
+    { "fact": "Altura total: 1800mm.", "source": "medidas.txt (aportado por el cliente)" }
+  ],
+  "inferredFacts": [
+    {
+      "fact": "La profundidad es aproximadamente 500mm.",
+      "reasoning": "Proporción visual puerta/profundidad en foto-lateral.jpg comparada con la altura verificada de 1800mm.",
+      "confidenceRange": "480-520mm"
+    }
+  ],
+  "assumptions": [
+    { "assumption": "El interior tiene una balda intermedia (no visible en ninguna foto aportada).", "risk": "medium" }
+  ],
+  "pendingValidation": ["Confirmar si la cerradura es de llave o de código -- no distinguible en las fotos aportadas."],
+
+  "dimensions": { "length_mm": 400, "width_mm": 500, "height_mm": 1800, "depth_mm": 500, "source": "inferred" },
+  "materials": [
+    { "name": "metal", "appliesToComponents": ["cuerpo", "puerta"], "configurable": true, "source": "verified" }
+  ],
+  "components": [
+    { "name": "cuerpo", "configurable": false, "visibleByDefault": true, "notes": "Malla base, no configurable en el MVP." },
+    { "name": "puerta", "configurable": true, "visibleByDefault": true, "notes": "Nodo separado para poder animarse (abrir/cerrar) en el configurador." },
+    { "name": "cerradura", "configurable": true, "visibleByDefault": true, "notes": "Pendiente de confirmar tipo -- ver pendingValidation." }
+  ],
+  "variants": [{ "type": "color", "options": ["gris", "azul", "verde"] }],
+
+  "modelingStrategy": "blender_parametric",
+
+  "outputFiles": {
+    "glb": "clients/demo/outputs/3d-models/taquilla-demo-1puerta/taquilla-demo-1puerta.glb",
+    "sourceScript": "clients/demo/outputs/3d-models/taquilla-demo-1puerta/source/blender-generate.py",
+    "report": "clients/demo/outputs/3d-models/taquilla-demo-1puerta/taquilla-demo-1puerta-report.md",
+    "previews": [
+      "clients/demo/outputs/3d-models/taquilla-demo-1puerta/previews/front.png",
+      "clients/demo/outputs/3d-models/taquilla-demo-1puerta/previews/side.png",
+      "clients/demo/outputs/3d-models/taquilla-demo-1puerta/previews/perspective.png"
+    ]
+  },
+  "fileSize": 184320,
+  "polygonCount": 1240,
+
+  "confidence": "medium",
+  "qaStatus": "pending_human_approval",
+  "nextActions": [
+    "Confirmar tipo de cerradura (llave vs código) antes de aprobar.",
+    "Revisar visualmente previews/*.png contra las fotos originales."
+  ]
+}

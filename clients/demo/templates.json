@@ -1,0 +1,6 @@
+{
+  "note": "Cliente sandbox. Referencia al mismo catalogo de plantillas del core (src/core/visual-templates.ts es codigo compartido, no especifico de un cliente).",
+  "visualTemplateCatalog": "src/core/visual-templates.ts",
+  "defaultTemplate": "seo_landing",
+  "brandStyleGuides": ["generic"]
+}

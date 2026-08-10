@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "phase": "O27",
+  "updatedAt": "2026-08-10",
+  "description": "Politica de autonomia del Carril A (ejecucion segura en staging). Decide, por changeType de un change pack ya approved_to_execute, si el Staging Executor puede aplicarlo sin esperar una aprobacion de Telegram por ejecucion (Carril A), o si sigue necesitando esa aprobacion humana (Carril B / cualquier changeType no reconocido). NUNCA decide sobre produccion: eso sigue exigiendo SIEMPRE las 2 aprobaciones de Telegram de production-deployment-planner.ts + production-draft-executor.ts, sin excepcion, pase lo que pase con este fichero.",
+  "defaultForUnknownChangeType": "requiresTelegramApproval",
+  "autoApproveInStaging": {
+    "enabled": true,
+    "reason": "El Staging Executor NUNCA publica (status siempre draft, forzado en el adaptador) y NUNCA toca produccion (bloqueo incondicional independiente de este fichero) -- por eso las 4 familias de cambio que existen hoy pueden aplicarse en staging sin esperar aprobacion diaria de Pau, siempre que el change pack de origen ya este approved_to_execute (aprobacion de la politica de autonomia general, config/autonomy-policy.json) y quede registrado con QA + rollback. Ver docs/opportunity-states.md y docs/staging-execution.md.",
+    "changeTypePatterns": [
+      "seo_on_page_update",
+      "content_update",
+      "new_content_page",
+      "cro_conversion_update"
+    ]
+  },
+  "guardrails": {
+    "neverAffects": ["produccion", "WooCommerce", "precios", "O19", "theme", "functions.php", "WPCode", "credenciales"],
+    "alwaysStaysAsDraft": true,
+    "alwaysNotifiesTelegram": "Aunque no se pida aprobacion, cada ejecucion auto-aplicada en Carril A manda un mensaje informativo (no bloqueante) por Telegram con la URL del borrador de staging -- Pau se entera siempre, solo no tiene que aprobar cada una.",
+    "note": "Si en el futuro se anade un changeType nuevo que SI deba tocar algo mas sensible en staging (formularios, precios de prueba, WooCommerce de staging), anadirlo aqui explicitamente NO es suficiente -- primero hay que decidir si de verdad pertenece a autoApproveInStaging o si debe quedarse en HUMAN_APPROVAL_REQUIRED (config/autonomy-policy.json) desde el origen."
+  },
+  "howToChange": "Editar changeTypePatterns para anadir/quitar tipos del Carril A, o poner enabled:false para volver a exigir aprobacion de Telegram por cada ejecucion de staging (comportamiento anterior a la Fase O27). src/agents/staging-executor.ts lee este fichero en cada llamada, sin cache -- un cambio aqui se aplica en la siguiente ejecucion sin recompilar."
+}

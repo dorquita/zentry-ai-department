@@ -1,0 +1,15 @@
+{
+  "note": "Estado CONOCIDO de la campana de Google Ads, documentado a mano como RESPALDO para cuando SEM Watcher no tiene credenciales conectadas (ver .env.example, seccion Google Ads) o la lectura real falla. Cuando hay credenciales, src/adapters/google-ads.ts lee el estado real y este fichero deja de usarse en ese pase. Actualizar aqui solo si cambia el estado real y todavia no hay credenciales conectadas.",
+  "updatedAt": "2026-08-03",
+  "campaign": {
+    "name": "Zentry Lockers - Search ES - Leads B2B",
+    "type": "Search",
+    "status": "PAUSED",
+    "statusReason": "Pausada a proposito: no se quiere activar la campana todavia. No activar sin confirmacion explicita del cliente.",
+    "dailyBudgetEur": 10,
+    "adGroups": 3,
+    "positiveKeywords": 17,
+    "negativeKeywords": 47,
+    "responsiveSearchAds": 3
+  }
+}

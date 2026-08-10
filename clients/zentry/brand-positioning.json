@@ -1,0 +1,41 @@
+{
+  "note": "Fase O16: copia inicial de config/brand-positioning.json para el cliente 'zentry'. Todavia NO es la fuente que lee src/core/brand-intent-router.ts en tiempo de ejecucion -- ese modulo sigue leyendo config/brand-positioning.json sin cambios (Fase O16.1 pendiente para rewire). Mantener ambos ficheros sincronizados a mano hasta entonces si se edita el vocabulario.",
+  "updatedAt": "2026-08-02",
+  "brands": {
+    "zentry": {
+      "name": "Zentry",
+      "focus": "Vende principalmente taquillas, lockers y mobiliario. Tambien ofrece cerraduras electronicas/inteligentes como parte de la solucion completa."
+    },
+    "tukandado": {
+      "name": "Tukandado",
+      "focus": "Vende principalmente la cerradura electronica/inteligente. Puede captar fabricantes de taquillas, integradores o clientes que solo quieren la cerradura."
+    }
+  },
+  "locker_terms": [
+    "taquilla", "taquillas", "locker", "lockers", "casillero", "casilleros",
+    "armario", "armarios", "vestuario", "vestuarios", "mobiliario"
+  ],
+  "lock_terms": [
+    "cerradura", "cerraduras", "cerrojo", "cerrojos",
+    "control de acceso", "control de accesos", "sistema de cierre", "sistemas de cierre"
+  ],
+  "smart_terms": [
+    "inteligente", "inteligentes", "electronica", "electronico", "electronicas",
+    "electronicos", "digital", "digitales", "smart", "digitalizacion", "automatica", "automaticas"
+  ],
+  "b2b_sector_terms": [
+    "empresa", "empresas", "gimnasio", "gimnasios", "colegio", "colegios",
+    "centro deportivo", "centros deportivos", "oficina", "oficinas",
+    "hotel", "hoteles", "hosteleria", "industrial", "polideportivo",
+    "universidad", "universidades", "hospital", "hospitales", "piscina", "piscinas"
+  ],
+  "material_terms": [
+    "melamina", "fenolica", "fenolicas", "fenolico", "metalica", "metalicas",
+    "metalico", "madera"
+  ],
+  "low_fit_terms": [
+    "gratis", "segunda mano", "manual de instrucciones", "como abrir sin llave",
+    "olvide la clave", "olvide mi clave", "resetear clave", "instrucciones de uso",
+    "manual pdf"
+  ]
+}

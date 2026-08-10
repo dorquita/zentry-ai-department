@@ -1,0 +1,7 @@
+{
+  "note": "Fase O16.3 -- lista de clientes que npm run growth:daily:all ejecuta en cada pasada. 'enabled':false salta el cliente sin contarlo como fallo. 'dryRun':true fuerza modo seco explicitamente -- pero OJO: isSandbox:true en clients/<id>/client.config.json SIEMPRE fuerza dry-run de todas formas, sin excepcion, independientemente de lo que diga este fichero (invariante de seguridad, ver scripts/run-daily-growth-department-all.ts).",
+  "clients": [
+    { "clientId": "zentry", "enabled": true, "dryRun": false },
+    { "clientId": "demo", "enabled": true, "dryRun": true }
+  ]
+}

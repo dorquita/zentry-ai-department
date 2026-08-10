@@ -1,0 +1,8 @@
+{
+  "note": "Cliente sandbox. Sin cuenta GA4/GTM real -- isSandbox=true impide que Analytics Watcher llegue a ejecutarse para este cliente de todas formas.",
+  "ga4PropertyId": null,
+  "ga4MeasurementId": null,
+  "gtmContainerId": null,
+  "gtmWorkspaceId": null,
+  "trackedEventsConfigPath": null
+}

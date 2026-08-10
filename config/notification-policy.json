@@ -1,0 +1,85 @@
+{
+  "version": "1.0",
+  "phase": "O8",
+  "updatedAt": "2026-08-03",
+  "description": "Politica de notificacion del departamento Web & Growth. Decide, para cualquier accion/work order del sistema, si hace falta avisar a Pau y por que canal. Nunca decide sobre ejecucion real: eso lo sigue decidiendo la politica de autonomia (config/autonomy-policy.json, ver docs/autonomy-policy.md). Esta politica solo decide CUANDO molestar a un humano, no QUE se le permite auto-procesar.",
+  "defaultLevel": "INSTANT_APPROVAL_REQUIRED",
+  "levels": {
+    "NO_NOTIFICATION": {
+      "label": "Sin notificacion",
+      "channel": "none",
+      "requiresResponse": false,
+      "description": "El departamento avanza solo, sin avisar a Pau de ninguna forma: mecanica interna (AUTO_INTERNAL), planificacion de riesgo bajo/medio (AUTO_PLAN: acciones auto_approved_for_planning), informes generados, jobs y acciones/work orders puramente internos.",
+      "operations": [
+        "AUTO_INTERNAL",
+        "AUTO_PLAN",
+        "generar_informes",
+        "crear_jobs",
+        "crear_o_actualizar_acciones_auto_planificadas",
+        "work_orders_en_borrador_interno"
+      ]
+    },
+    "DAILY_SUMMARY_ONLY": {
+      "label": "Solo en el resumen diario",
+      "channel": "email_digest",
+      "requiresResponse": false,
+      "description": "Se menciona en el email diario de Growth Director, pero NUNCA interrumpe con un aviso instantaneo de Telegram. Pau se entera al leer el correo, no en tiempo real.",
+      "operations": [
+        "work_orders_auto_prepared",
+        "work_orders_ready_for_review",
+        "change_packs_ready_for_review",
+        "warnings_menores"
+      ],
+      "note": "Los 'change packs' son una categoria reservada para una fase futura (agrupar varias work orders relacionadas en un unico paquete de cambio) — hoy no existe ningun agente que genere change packs, asi que esta entrada no tiene ningun efecto todavia. Se deja documentada para no tener que volver a tocar esta politica cuando se implemente."
+    },
+    "INSTANT_APPROVAL_REQUIRED": {
+      "label": "Aprobacion instantanea requerida (Telegram)",
+      "channel": "telegram",
+      "requiresResponse": true,
+      "description": "Cualquier accion que vaya a PREPARAR o EJECUTAR algo con impacto real: envia un mensaje de Telegram inmediato (si TELEGRAM_APPROVALS_ENABLED=true) y crea una solicitud de aprobacion que se queda 'pending' hasta que Pau responda explicitamente. Si Telegram esta desactivado, la solicitud igualmente se crea localmente (para que quede constancia y aparezca en el email diario) pero no se envia ningun mensaje.",
+      "actionTypePatterns": [
+        "wordpress:draft*",
+        "wordpress:publish*",
+        "wordpress:modify_live*",
+        "ads:*",
+        "ga4:*",
+        "gtm:*",
+        "form:*"
+      ],
+      "operations": [
+        "cualquier_actionType_de_wordpress_draft_futuro",
+        "cualquier_cambio_ads_real_aunque_este_paused",
+        "cualquier_modificacion_ga4_gtm",
+        "cualquier_cambio_de_formularios",
+        "cualquier_accion_con_riskLevel_high"
+      ]
+    },
+    "BLOCKED": {
+      "label": "Bloqueado (nunca automatico, nunca notificado)",
+      "channel": "none",
+      "requiresResponse": false,
+      "blocked": true,
+      "description": "Nunca se envia ningun aviso por ningun canal y nunca se ejecuta nada: son las mismas operaciones prohibidas por el nivel FORBIDDEN de la politica de autonomia (riesgo critico). No es un caso de 'pedir permiso' — es un caso de 'esto no se hace automaticamente, punto', y ademas no se molesta a nadie con un mensaje sobre ello (queda solo en los informes locales).",
+      "operations": [
+        "publicar_paginas",
+        "activar_campanas",
+        "subir_presupuestos",
+        "borrar_datos",
+        "imprimir_secretos",
+        "modificar_env_sin_confirmacion"
+      ]
+    }
+  },
+  "channels": {
+    "telegram": {
+      "status": "MVP activo, opt-in (TELEGRAM_APPROVALS_ENABLED=true en .env)",
+      "responseMode": "CLI (npm run approvals:update) es el mecanismo implementado en esta fase. El polling manual (npm run approvals:listen) y un bot con listener respondiendo directamente en el chat quedan documentados como trabajo futuro — ver docs/telegram-approvals.md.",
+      "safety": "sanitizeOutgoingText() en src/core/telegram-gateway.ts redacta cualquier valor de variable de entorno 'secreta' que apareciera literalmente en un mensaje, y nunca se registra ni se imprime TELEGRAM_BOT_TOKEN en ningun log."
+    },
+    "whatsapp": {
+      "status": "no implementado",
+      "note": "Documentado como fase futura en docs/telegram-approvals.md (seccion 'WhatsApp — fase futura'). No se ha creado ningun codigo, variable de entorno ni dependencia de WhatsApp en esta fase."
+    }
+  },
+  "howToChange": "Editar config/notification-policy.json para mover un actionType entre niveles (anadir/quitar su patron en actionTypePatterns de INSTANT_APPROVAL_REQUIRED, con comodin final tipo 'ads:*'), o para ajustar que estados de work order caen en DAILY_SUMMARY_ONLY. Los cambios se aplican en la siguiente ejecucion (src/core/notification-policy.ts relee el JSON en cada llamada, sin cache). Para desactivar TODOS los avisos instantaneos por Telegram sin tocar el JSON, basta con dejar TELEGRAM_APPROVALS_ENABLED=false (o no definir la variable) en .env — las solicitudes se seguiran creando localmente (para no perder trazabilidad) pero nunca se enviara ningun mensaje."
+}

@@ -1,0 +1,41 @@
+{
+  "note": "Vocabulario editable para el Brand/Intent Router (src/core/brand-intent-router.ts). La logica de decision vive en el codigo; estas listas se pueden ajustar sin tocar TypeScript. Los terminos se comparan sin distinguir mayusculas ni acentos.",
+  "updatedAt": "2026-08-02",
+  "brands": {
+    "zentry": {
+      "name": "Zentry",
+      "focus": "Vende principalmente taquillas, lockers y mobiliario. Tambien ofrece cerraduras electronicas/inteligentes como parte de la solucion completa."
+    },
+    "tukandado": {
+      "name": "Tukandado",
+      "focus": "Vende principalmente la cerradura electronica/inteligente. Puede captar fabricantes de taquillas, integradores o clientes que solo quieren la cerradura."
+    }
+  },
+  "locker_terms": [
+    "taquilla", "taquillas", "locker", "lockers", "casillero", "casilleros",
+    "armario", "armarios", "vestuario", "vestuarios", "mobiliario"
+  ],
+  "lock_terms": [
+    "cerradura", "cerraduras", "cerrojo", "cerrojos",
+    "control de acceso", "control de accesos", "sistema de cierre", "sistemas de cierre"
+  ],
+  "smart_terms": [
+    "inteligente", "inteligentes", "electronica", "electronico", "electronicas",
+    "electronicos", "digital", "digitales", "smart", "digitalizacion", "automatica", "automaticas"
+  ],
+  "b2b_sector_terms": [
+    "empresa", "empresas", "gimnasio", "gimnasios", "colegio", "colegios",
+    "centro deportivo", "centros deportivos", "oficina", "oficinas",
+    "hotel", "hoteles", "hosteleria", "industrial", "polideportivo",
+    "universidad", "universidades", "hospital", "hospitales", "piscina", "piscinas"
+  ],
+  "material_terms": [
+    "melamina", "fenolica", "fenolicas", "fenolico", "metalica", "metalicas",
+    "metalico", "madera"
+  ],
+  "low_fit_terms": [
+    "gratis", "segunda mano", "manual de instrucciones", "como abrir sin llave",
+    "olvide la clave", "olvide mi clave", "resetear clave", "instrucciones de uso",
+    "manual pdf"
+  ]
+}

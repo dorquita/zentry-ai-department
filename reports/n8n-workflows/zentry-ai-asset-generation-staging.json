@@ -1,0 +1,122 @@
+{
+  "name": "Zentry - AI Asset Generation - Staging",
+  "active": false,
+  "nodes": [
+    {
+      "id": "d8d3263e-d52e-4e09-a128-67faedb098ff",
+      "name": "Receive Asset Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zentry-ai-asset-generation-staging",
+        "authentication": "none",
+        "responseMode": "responseNode"
+      },
+      "webhookId": "71d1de74-f1f0-471e-b08d-0e24ffca6c9e"
+    },
+    {
+      "id": "aadf5f3f-3073-47c0-94db-6d5a14126607",
+      "name": "Validar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const item = $input.first().json;\nconst body = item.body ?? item;\nconst required = ['assetRequestId', 'prompt', 'negativePrompt', 'dimensions', 'filenameSuggestion', 'altText', 'targetEnv', 'targetWordPress'];\nconst missing = required.filter((key) => body[key] === undefined || body[key] === null || body[key] === '');\nif (missing.length > 0) {\n  throw new Error('Payload invalido, faltan campos: ' + missing.join(', '));\n}\nif (body.targetEnv !== 'staging') {\n  throw new Error('targetEnv debe ser \"staging\" -- bloqueado por seguridad, nunca produccion.');\n}\nif (!body.dimensions || typeof body.dimensions.width !== 'number' || typeof body.dimensions.height !== 'number') {\n  throw new Error('dimensions.width y dimensions.height son obligatorios y deben ser numeros.');\n}\nreturn [{ json: {\n  assetRequestId: body.assetRequestId,\n  prompt: body.prompt,\n  negativePrompt: body.negativePrompt,\n  dimensions: body.dimensions,\n  filenameSuggestion: body.filenameSuggestion,\n  altText: body.altText,\n  targetEnv: body.targetEnv,\n  targetWordPress: body.targetWordPress,\n} }];"
+      }
+    },
+    {
+      "id": "e73e432c-b08a-4179-8fc9-43190e97ff21",
+      "name": "Generar Imagen (no configurado)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [840, 300],
+      "disabled": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://TODO-configurar-proveedor-de-imagenes.example/",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"prompt\": $json.prompt, \"negativePrompt\": $json.negativePrompt, \"width\": $json.dimensions.width, \"height\": $json.dimensions.height } }}"
+      }
+    },
+    {
+      "id": "0a9b41ad-8f58-4e74-bc7f-8a39a74578e9",
+      "name": "Guardar Binario/URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1140, 300],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            { "id": "assetRequestId", "name": "assetRequestId", "value": "={{ $('Validar Payload').item.json.assetRequestId }}", "type": "string" },
+            { "id": "status", "name": "status", "value": "failed", "type": "string" },
+            { "id": "error", "name": "error", "value": "Generacion de imagen no configurada todavia (Fase O12.5, nodo Generar Imagen desactivado a proposito). Ver docs/asset-generation-workflow.md.", "type": "string" },
+            { "id": "altText", "name": "altText", "value": "={{ $('Validar Payload').item.json.altText }}", "type": "string" },
+            { "id": "filenameSuggestionRaw", "name": "filenameSuggestionRaw", "value": "={{ $('Validar Payload').item.json.filenameSuggestion }}", "type": "string" },
+            { "id": "width", "name": "width", "value": "={{ $('Validar Payload').item.json.dimensions.width }}", "type": "number" },
+            { "id": "height", "name": "height", "value": "={{ $('Validar Payload').item.json.dimensions.height }}", "type": "number" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bed04ca8-8bcf-47d3-a10a-54a9ab20fd9a",
+      "name": "Optimizar Nombre de Archivo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 300],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const item = $input.first().json;\nconst raw = (item.filenameSuggestionRaw || 'asset').toString();\nconst base = raw.toLowerCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[^a-z0-9.]+/g, '-')\n  .replace(/^-+|-+$/g, '');\nconst hasExtension = /\\.(jpg|jpeg|png|webp)$/i.test(base);\nconst finalFilename = hasExtension ? base : base + '.jpg';\nreturn [{ json: { ...item, finalFilename } }];"
+      }
+    },
+    {
+      "id": "fa9e4bb7-3f9e-49ac-a33d-9eacb6d1dca2",
+      "name": "Responder JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1740, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"assetRequestId\": $json.assetRequestId, \"status\": $json.status, \"altText\": $json.altText, \"width\": $json.width, \"height\": $json.height, \"filenameSuggestion\": $json.finalFilename, \"error\": $json.error } }}",
+        "options": { "responseCode": 200 }
+      }
+    },
+    {
+      "id": "bd3b1ea8-6877-4172-9211-b9b70b8729fb",
+      "name": "Sticky Note f7def6dc",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [190, 250],
+      "parameters": {
+        "content": "## Zentry - AI Asset Generation - Staging (Fase O12.5)\n\nWorkflow creado en modo SEGURO: el nodo \"Generar Imagen\" esta DESHABILITADO a proposito (no hay proveedor de imagenes IA decidido todavia). Mientras este deshabilitado, cualquier llamada a este webhook responde siempre status:\"failed\" sin generar ninguna imagen real y sin tocar WordPress. Ver docs/n8n-asset-generation.md antes de activar este workflow o habilitar el nodo de generacion.",
+        "color": 5,
+        "width": 900,
+        "height": 200
+      }
+    }
+  ],
+  "connections": {
+    "Receive Asset Request": { "main": [[{ "node": "Validar Payload", "type": "main", "index": 0 }]] },
+    "Validar Payload": { "main": [[{ "node": "Generar Imagen (no configurado)", "type": "main", "index": 0 }]] },
+    "Generar Imagen (no configurado)": { "main": [[{ "node": "Guardar Binario/URL", "type": "main", "index": 0 }]] },
+    "Guardar Binario/URL": { "main": [[{ "node": "Optimizar Nombre de Archivo", "type": "main", "index": 0 }]] },
+    "Optimizar Nombre de Archivo": { "main": [[{ "node": "Responder JSON", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "note": "Fase O12.5 - exportado como copia de referencia del workflow real ya creado (inactivo) en la instancia n8n del cliente, workflowId BbPipJYbV3YD84gM, proyecto personal 'Pau Dorca <info@tukandado.com>'. Importar este JSON en n8n (Import from File) SOLO si se necesita una copia adicional o restaurar -- el workflow real ya existe y no hace falta reimportarlo.",
+    "productionWebhookUrl": "https://srv1777637.hstgr.cloud/webhook/zentry-ai-asset-generation-staging",
+    "testWebhookUrl": "https://srv1777637.hstgr.cloud/webhook-test/zentry-ai-asset-generation-staging"
+  }
+}

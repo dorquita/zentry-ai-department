@@ -1,0 +1,564 @@
+import { logger } from "../core/logger";
+import { assertWordpressWriteAllowed, resolveWordpressEnv, resolveWordpressTargetUrl, WordpressEnv } from "./wordpress-backend";
+import { resolveActiveClientId, resolveClientEnvVar, resolveClientSecret } from "../core/client-config";
+
+/**
+ * WordPress Adapter — WordPress Draft Agent / Staging Executor / Visual
+ * Asset Uploader. Unico punto de contacto real con la API REST de
+ * WordPress en todo el proyecto. Deliberadamente minimo: sabe CREAR una
+ * pagina nueva en `draft` (Fase O10), ACTUALIZAR una pagina que ya este
+ * en `draft` (Fase O12, nunca una publicada), y desde la Fase O12.7
+ * SUBIR un archivo a la Media Library (create-only: nunca borra media,
+ * nunca inserta la media en ninguna pagina/post). No existe ninguna
+ * funcion aqui para publicar, borrar, ni tocar WooCommerce/formularios/
+ * Google Ads/GA4/GTM/n8n/qdrant — eso no es una omision, es la garantia
+ * de seguridad de esta fase (ver docs/wordpress-safety-policy.md).
+ *
+ * Fase O10.6: el destino real (`baseUrl`) ya NO es una unica variable
+ * fija — se resuelve segun `WORDPRESS_ENV` (`staging` o `production`,
+ * ver src/adapters/wordpress-backend.ts). Toda funcion de escritura de
+ * este fichero llama a `assertWordpressWriteAllowed()` ANTES de tocar la
+ * red: si `WORDPRESS_ENV="production"`, lanza siempre, sin excepcion —
+ * produccion nunca es un destino de escritura valido en este sistema.
+ *
+ * Quien llama a este modulo (src/agents/wordpress-draft-agent.ts,
+ * src/agents/staging-executor.ts) es responsable de comprobar
+ * `isWordpressDraftsEnabled()` Y de tener ya una aprobacion explicita de
+ * Telegram para ESE borrador/ejecucion concreta ANTES de llamar a
+ * cualquier funcion de escritura de este fichero.
+ */
+
+const WORDPRESS_API_PAGES_PATH = "/wp-json/wp/v2/pages";
+const WORDPRESS_API_MEDIA_PATH = "/wp-json/wp/v2/media";
+
+// Palabras que, si aparecieran en un slug/title propuesto, delatarian que
+// se esta intentando tocar una pagina protegida (home, checkout, carrito,
+// cuenta, tienda...). Defensa en profundidad: esta fase de todos modos
+// solo sabe CREAR paginas nuevas o ACTUALIZAR paginas ya en borrador
+// (nunca una pagina publicada existente), pero esta lista bloquea
+// tambien que una de esas operaciones pretenda suplantar o imitar una de
+// esas rutas.
+const PROTECTED_SLUG_TERMS = [
+  "checkout",
+  "cart",
+  "carrito",
+  "my-account",
+  "mi-cuenta",
+  "pago",
+  "tienda",
+  "shop",
+  "home",
+  "inicio",
+];
+
+export function isWordpressDraftsEnabled(): boolean {
+  return (process.env.WORDPRESS_DRAFTS_ENABLED ?? "").trim().toLowerCase() === "true";
+}
+
+interface WordpressConfig {
+  baseUrl: string;
+  username: string;
+  appPassword: string;
+}
+
+/**
+ * Nunca loguea ni expone WORDPRESS_APP_PASSWORD fuera de esta funcion.
+ * Fase O16.2: prefiere `<CLIENTID>_WORDPRESS_USERNAME`/
+ * `<CLIENTID>_WORDPRESS_APP_PASSWORD`, cae a las variables sin prefijo
+ * solo para "zentry".
+ */
+function resolveWordpressConfig(): WordpressConfig {
+  const activeClientId = resolveActiveClientId();
+  const baseUrl = resolveWordpressTargetUrl();
+  const username = resolveClientSecret(activeClientId, "WORDPRESS_USERNAME");
+  const appPassword = resolveClientSecret(activeClientId, "WORDPRESS_APP_PASSWORD");
+  return { baseUrl, username, appPassword };
+}
+
+/**
+ * Para informes/CLI/logs: nunca devuelve las credenciales, solo si estan
+ * presentes. `targetUrl` es la URL base publica del entorno activo (no es
+ * un secreto) — `undefined` si falta la variable correspondiente para
+ * `WORDPRESS_ENV`.
+ */
+export function getWordpressStatusForReport(): {
+  enabled: boolean;
+  configured: boolean;
+  environment: WordpressEnv;
+  targetUrl?: string;
+} {
+  const enabled = isWordpressDraftsEnabled();
+  const environment = resolveWordpressEnv();
+  let targetUrl: string | undefined;
+  try {
+    targetUrl = resolveWordpressTargetUrl();
+  } catch {
+    targetUrl = undefined;
+  }
+  const activeClientId = resolveActiveClientId();
+  const configured =
+    Boolean(targetUrl) &&
+    Boolean(resolveClientEnvVar(activeClientId, "WORDPRESS_USERNAME")) &&
+    Boolean(resolveClientEnvVar(activeClientId, "WORDPRESS_APP_PASSWORD"));
+  return { enabled, configured, environment, targetUrl };
+}
+
+function sanitizeWordpressError(raw: string, appPassword: string): string {
+  const withoutPassword = appPassword ? raw.split(appPassword).join("[REDACTED]") : raw;
+  return withoutPassword.length > 500 ? withoutPassword.slice(0, 500) + "...[truncated]" : withoutPassword;
+}
+
+export interface CreateWordpressDraftInput {
+  title: string;
+  contentHtml: string;
+  excerpt?: string;
+  slug?: string;
+}
+
+export interface CreateWordpressDraftResult {
+  wordpressDraftId: number;
+  wordpressDraftUrl: string;
+}
+
+function assertSlugNotProtected(input: { title: string; slug?: string }): void {
+  const haystack = `${input.title} ${input.slug ?? ""}`.toLowerCase();
+  const hit = PROTECTED_SLUG_TERMS.find((term) => haystack.includes(term));
+  if (hit) {
+    throw new Error(
+      `Titulo/slug propuesto contiene el termino protegido "${hit}" (home/checkout/carrito/cuenta/tienda). Bloqueado por seguridad: no se crea/actualiza ningun borrador. Revisa el change pack origen.`
+    );
+  }
+}
+
+/**
+ * Crea una pagina NUEVA en WordPress con `status: "draft"`. Nunca publica
+ * (nunca envia `status: "publish"`), nunca actualiza una pagina existente
+ * (nunca envia un `id`), nunca borra, nunca sube media. Lanza si
+ * WORDPRESS_DRAFTS_ENABLED no esta activo — defensa en profundidad,
+ * ademas del gate que ya deberia haber hecho quien llama.
+ */
+export async function createWordpressDraftPage(
+  input: CreateWordpressDraftInput
+): Promise<CreateWordpressDraftResult> {
+  if (!isWordpressDraftsEnabled()) {
+    throw new Error("createWordpressDraftPage() llamado con WORDPRESS_DRAFTS_ENABLED != true. Bloqueado.");
+  }
+  // Fase O10.6: guardrail incondicional de entorno, ANTES de resolver
+  // config o tocar la red. Lanza siempre si WORDPRESS_ENV="production".
+  assertWordpressWriteAllowed();
+  assertSlugNotProtected(input);
+
+  const config = resolveWordpressConfig();
+  logger.info("WordPress adapter: creando borrador real (entorno permitido, verificado)", {
+    environment: resolveWordpressEnv(),
+    targetUrl: config.baseUrl,
+  });
+  const authHeader = "Basic " + Buffer.from(`${config.username}:${config.appPassword}`).toString("base64");
+
+  // Deliberadamente SOLO estos 4 campos. Nunca "id" (crearia un update en
+  // vez de una pagina nueva). Nunca "status" distinto de "draft".
+  const body = {
+    title: input.title,
+    content: input.contentHtml,
+    excerpt: input.excerpt ?? "",
+    status: "draft" as const,
+    ...(input.slug ? { slug: input.slug } : {}),
+  };
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}${WORDPRESS_API_PAGES_PATH}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new Error(`Fallo de red creando el borrador en WordPress: ${sanitizeWordpressError(raw, config.appPassword)}`);
+  }
+
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = "";
+    }
+    throw new Error(
+      `WordPress REST API respondio ${response.status}: ${sanitizeWordpressError(bodyText, config.appPassword)}`
+    );
+  }
+
+  const json = (await response.json()) as { id?: number; link?: string; status?: string };
+  if (typeof json.id !== "number" || json.status !== "draft") {
+    throw new Error(
+      `Respuesta inesperada de WordPress al crear el borrador (sin id numerico o status != "draft"). No se puede confirmar que quedo como borrador; tratar como fallo.`
+    );
+  }
+
+  logger.info("Borrador creado en WordPress", { wordpressDraftId: json.id, status: json.status });
+  return { wordpressDraftId: json.id, wordpressDraftUrl: json.link ?? "" };
+}
+
+export interface WordpressPageInfo {
+  id: number;
+  status: string;
+  title: string;
+  contentHtml: string;
+  excerpt: string;
+  link: string;
+}
+
+/**
+ * Lee una pagina existente (GET, solo lectura — `context=edit` para
+ * recibir el contenido "raw", no el HTML ya renderizado por temas/
+ * shortcodes). Usado por Staging Executor para el snapshot previo antes
+ * de actualizar, y por `updateWordpressDraftPage()` para verificar que
+ * el status actual es "draft" antes de tocar nada.
+ */
+export async function getWordpressPage(pageId: number): Promise<WordpressPageInfo> {
+  const config = resolveWordpressConfig();
+  const authHeader = "Basic " + Buffer.from(`${config.username}:${config.appPassword}`).toString("base64");
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}${WORDPRESS_API_PAGES_PATH}/${pageId}?context=edit`, {
+      method: "GET",
+      headers: { Authorization: authHeader },
+    });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new Error(`Fallo de red leyendo la pagina de WordPress: ${sanitizeWordpressError(raw, config.appPassword)}`);
+  }
+
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = "";
+    }
+    throw new Error(
+      `WordPress REST API respondio ${response.status} leyendo la pagina ${pageId}: ${sanitizeWordpressError(bodyText, config.appPassword)}`
+    );
+  }
+
+  const json = (await response.json()) as {
+    id?: number;
+    status?: string;
+    title?: { raw?: string; rendered?: string };
+    content?: { raw?: string; rendered?: string };
+    excerpt?: { raw?: string; rendered?: string };
+    link?: string;
+  };
+  if (typeof json.id !== "number") {
+    throw new Error(`Respuesta inesperada de WordPress leyendo la pagina ${pageId} (sin id numerico).`);
+  }
+
+  return {
+    id: json.id,
+    status: json.status ?? "",
+    title: json.title?.raw ?? json.title?.rendered ?? "",
+    contentHtml: json.content?.raw ?? json.content?.rendered ?? "",
+    excerpt: json.excerpt?.raw ?? json.excerpt?.rendered ?? "",
+    link: json.link ?? "",
+  };
+}
+
+export interface UpdateWordpressDraftInput {
+  pageId: number;
+  title: string;
+  contentHtml: string;
+  excerpt?: string;
+}
+
+/**
+ * Actualiza una pagina EXISTENTE — SOLO si su status ACTUAL (verificado
+ * con un GET justo antes, en la misma llamada) es "draft". Si esta en
+ * cualquier otro estado (publish, trash, private...), rechaza sin tocar
+ * nada: este adaptador nunca actualiza una pagina publicada. El PATCH
+ * fuerza siempre `status: "draft"` (defensa en profundidad: aunque el
+ * contenido propuesto intentara colar otro status, se sobrescribe).
+ * Mismas garantias que `createWordpressDraftPage()`: no borra, no
+ * publica, no sube media.
+ *
+ * Unico consumidor previsto: Staging Executor, para aplicar una
+ * actualizacion sobre un draft que el propio sistema creo antes, o para
+ * ejecutar un rollback restaurando el contenido anterior (ver
+ * docs/staging-rollback.md).
+ */
+export async function updateWordpressDraftPage(input: UpdateWordpressDraftInput): Promise<CreateWordpressDraftResult> {
+  if (!isWordpressDraftsEnabled()) {
+    throw new Error("updateWordpressDraftPage() llamado con WORDPRESS_DRAFTS_ENABLED != true. Bloqueado.");
+  }
+  assertWordpressWriteAllowed();
+  assertSlugNotProtected(input);
+
+  const current = await getWordpressPage(input.pageId);
+  if (current.status !== "draft") {
+    throw new Error(
+      `La pagina ${input.pageId} tiene status "${current.status}" (no "draft"). Bloqueado: updateWordpressDraftPage() SOLO actualiza paginas que ya estan en borrador, nunca una publicada.`
+    );
+  }
+
+  const config = resolveWordpressConfig();
+  logger.info("WordPress adapter: actualizando borrador existente (status draft verificado antes de escribir)", {
+    environment: resolveWordpressEnv(),
+    targetUrl: config.baseUrl,
+    pageId: input.pageId,
+  });
+  const authHeader = "Basic " + Buffer.from(`${config.username}:${config.appPassword}`).toString("base64");
+
+  // La API REST de WordPress usa POST tambien para actualizar (no
+  // PUT/PATCH) — el "id" en la URL es lo que determina que es un update
+  // y no una creacion.
+  const body = {
+    title: input.title,
+    content: input.contentHtml,
+    excerpt: input.excerpt ?? "",
+    status: "draft" as const,
+  };
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}${WORDPRESS_API_PAGES_PATH}/${input.pageId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new Error(`Fallo de red actualizando el borrador en WordPress: ${sanitizeWordpressError(raw, config.appPassword)}`);
+  }
+
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = "";
+    }
+    throw new Error(
+      `WordPress REST API respondio ${response.status} actualizando la pagina ${input.pageId}: ${sanitizeWordpressError(bodyText, config.appPassword)}`
+    );
+  }
+
+  const json = (await response.json()) as { id?: number; link?: string; status?: string };
+  if (typeof json.id !== "number" || json.status !== "draft") {
+    throw new Error(
+      `Respuesta inesperada de WordPress al actualizar el borrador (sin id numerico o status != "draft"). No se puede confirmar que sigue como borrador; tratar como fallo.`
+    );
+  }
+
+  logger.info("Borrador actualizado en WordPress (sigue sin publicar)", { wordpressDraftId: json.id, status: json.status });
+  return { wordpressDraftId: json.id, wordpressDraftUrl: json.link ?? "" };
+}
+
+export interface WordpressMediaInfo {
+  id: number;
+  status: string;
+  mimeType: string;
+  altText: string;
+  sourceUrl: string;
+  fileSize?: number;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Lee un item de la Media Library (GET, solo lectura -- sin gate de
+ * WORDPRESS_DRAFTS_ENABLED, igual que getWordpressPage()). Usado por el
+ * Visual QA (Fase O12.9) para revisar peso/formato/alt text de una
+ * imagen ya subida, sin tocar nada.
+ */
+export async function getWordpressMedia(mediaId: number): Promise<WordpressMediaInfo> {
+  const config = resolveWordpressConfig();
+  const authHeader = "Basic " + Buffer.from(`${config.username}:${config.appPassword}`).toString("base64");
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}${WORDPRESS_API_MEDIA_PATH}/${mediaId}?context=edit`, {
+      method: "GET",
+      headers: { Authorization: authHeader },
+    });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new Error(`Fallo de red leyendo media de WordPress: ${sanitizeWordpressError(raw, config.appPassword)}`);
+  }
+
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = "";
+    }
+    throw new Error(
+      `WordPress REST API respondio ${response.status} leyendo la media ${mediaId}: ${sanitizeWordpressError(bodyText, config.appPassword)}`
+    );
+  }
+
+  const json = (await response.json()) as {
+    id?: number;
+    status?: string;
+    mime_type?: string;
+    alt_text?: string;
+    source_url?: string;
+    media_details?: { width?: number; height?: number; filesize?: number };
+  };
+  if (typeof json.id !== "number") {
+    throw new Error(`Respuesta inesperada de WordPress leyendo la media ${mediaId} (sin id numerico).`);
+  }
+
+  return {
+    id: json.id,
+    status: json.status ?? "",
+    mimeType: json.mime_type ?? "",
+    altText: json.alt_text ?? "",
+    sourceUrl: json.source_url ?? "",
+    fileSize: json.media_details?.filesize,
+    width: json.media_details?.width,
+    height: json.media_details?.height,
+  };
+}
+
+export interface UploadMediaInput {
+  /** Bytes reales del archivo (ya decodificados, nunca un data URI aqui). */
+  fileBuffer: Buffer;
+  /** Nombre sugerido -- se sanea (minusculas, sin acentos, slug) antes de enviarlo. */
+  filename: string;
+  mimeType: string;
+  altText: string;
+}
+
+export interface UploadMediaResult {
+  wordpressMediaId: number;
+  wordpressMediaUrl: string;
+  width?: number;
+  height?: number;
+  fileSize: number;
+}
+
+function sanitizeMediaFilename(raw: string, mimeType: string): string {
+  const base = raw
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9.]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const extension = mimeType === "image/png" ? ".png" : mimeType === "image/webp" ? ".webp" : ".jpg";
+  const hasKnownExtension = /\.(jpg|jpeg|png|webp)$/i.test(base);
+  const safe = base || `asset-${Date.now()}`;
+  return hasKnownExtension ? safe : `${safe}${extension}`;
+}
+
+/**
+ * Sube un archivo NUEVO a la Media Library de WordPress (POST binario +
+ * un segundo POST para fijar `alt_text`, ya que la API REST no acepta
+ * ambos en la misma llamada cuando el body es el binario crudo). Nunca
+ * borra media existente, nunca la asocia a ninguna pagina/post -- eso es
+ * responsabilidad de quien llame a esta funcion en una fase posterior
+ * (ver Fase O12.8, todavia no implementada). Mismas garantias que el
+ * resto de este fichero: bloqueado si WORDPRESS_DRAFTS_ENABLED != true,
+ * y `assertWordpressWriteAllowed()` bloquea produccion incondicionalmente
+ * antes de tocar la red.
+ */
+export async function uploadMediaToWordpress(input: UploadMediaInput): Promise<UploadMediaResult> {
+  if (!isWordpressDraftsEnabled()) {
+    throw new Error("uploadMediaToWordpress() llamado con WORDPRESS_DRAFTS_ENABLED != true. Bloqueado.");
+  }
+  assertWordpressWriteAllowed();
+
+  const config = resolveWordpressConfig();
+  const safeFilename = sanitizeMediaFilename(input.filename, input.mimeType);
+  logger.info("WordPress adapter: subiendo media real a la Media Library (entorno permitido, verificado)", {
+    environment: resolveWordpressEnv(),
+    targetUrl: config.baseUrl,
+    filename: safeFilename,
+    fileSize: input.fileBuffer.length,
+  });
+  const authHeader = "Basic " + Buffer.from(`${config.username}:${config.appPassword}`).toString("base64");
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}${WORDPRESS_API_MEDIA_PATH}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": input.mimeType,
+        "Content-Disposition": `attachment; filename="${safeFilename}"`,
+        Authorization: authHeader,
+      },
+      body: input.fileBuffer,
+    });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new Error(`Fallo de red subiendo media a WordPress: ${sanitizeWordpressError(raw, config.appPassword)}`);
+  }
+
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = "";
+    }
+    throw new Error(
+      `WordPress REST API respondio ${response.status} subiendo media: ${sanitizeWordpressError(bodyText, config.appPassword)}`
+    );
+  }
+
+  const json = (await response.json()) as {
+    id?: number;
+    source_url?: string;
+    media_details?: { width?: number; height?: number; filesize?: number };
+  };
+  if (typeof json.id !== "number" || !json.source_url) {
+    throw new Error(
+      `Respuesta inesperada de WordPress al subir media (sin id numerico o source_url). No se puede confirmar la subida; tratar como fallo.`
+    );
+  }
+
+  // Segundo POST: fija alt_text (la API no lo acepta en el mismo POST binario).
+  try {
+    const altResponse = await fetch(`${config.baseUrl}${WORDPRESS_API_MEDIA_PATH}/${json.id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      },
+      body: JSON.stringify({ alt_text: input.altText }),
+    });
+    if (!altResponse.ok) {
+      logger.warn("WordPress adapter: la media se subio pero no se pudo fijar alt_text", {
+        wordpressMediaId: json.id,
+        status: altResponse.status,
+      });
+    }
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    logger.warn("WordPress adapter: la media se subio pero fallo la llamada de alt_text", {
+      wordpressMediaId: json.id,
+      error: sanitizeWordpressError(raw, config.appPassword),
+    });
+  }
+
+  logger.info("Media subida a WordPress (Media Library, sin asociar a ninguna pagina)", {
+    wordpressMediaId: json.id,
+    width: json.media_details?.width,
+    height: json.media_details?.height,
+  });
+
+  return {
+    wordpressMediaId: json.id,
+    wordpressMediaUrl: json.source_url,
+    width: json.media_details?.width,
+    height: json.media_details?.height,
+    fileSize: json.media_details?.filesize ?? input.fileBuffer.length,
+  };
+}

@@ -1,0 +1,166 @@
+{
+  "version": "1.0",
+  "phase": "O14",
+  "updatedAt": "2026-08-05",
+  "description": "Allowlist de seguridad para el MCP de Novamira (WordPress). Novamira declara explicitamente 'unrestricted control over this WordPress installation' -- este fichero es la unica fuente de verdad sobre que ability puede usarse, desde donde, y bajo que condiciones. Cualquier ability que no aparezca aqui se trata como dangerous_forbidden por defecto (fail-closed), incluidas abilities nuevas que Novamira anada en el futuro.",
+  "auditedAgainst": "zentry-novamira-staging (MCP de STAGING, unico conectado y respondiendo en el momento de esta auditoria: 30 abilities via mcp-adapter/discover-abilities). El MCP de PRODUCCION (novamira-zentrylockers-co) aparecia como 'Connection Failed' -- nunca se ha podido enumerar ni ejecutar nada ahi. Esta politica bloquea produccion de todas formas, de forma incondicional, independientemente de si esa conexion llega a estar disponible en el futuro.",
+  "riskLevels": {
+    "safe_read": {
+      "label": "Lectura segura",
+      "allowedByDefault": true,
+      "requiresEnvironment": null,
+      "requiresFlag": null,
+      "requiresApprovalDefault": false,
+      "description": "No muta ningun estado de WordPress ni del servidor. Permitida siempre, en cualquier entorno (staging o produccion), sin flag ni aprobacion."
+    },
+    "safe_write_staging_only": {
+      "label": "Escritura de contenido, solo staging, bajo gate",
+      "allowedByDefault": false,
+      "requiresEnvironment": "staging",
+      "requiresFlag": "NOVAMIRA_STAGING_WRITES_ENABLED",
+      "requiresApprovalDefault": false,
+      "description": "Muta contenido (nunca codigo/filesystem). Nunca permitida por defecto ni en produccion. En staging, requiere WORDPRESS_ENV=staging + NOVAMIRA_STAGING_WRITES_ENABLED=true + la ability listada aqui + (si esa ability concreta tiene requiresApproval:true) una aprobacion humana explicita ya concedida. Hoy (Fase O14) NOVAMIRA_STAGING_WRITES_ENABLED no existe en ningun .env real -- todo bloqueado en la practica."
+    },
+    "dangerous_forbidden": {
+      "label": "Bloqueada permanentemente",
+      "allowedByDefault": false,
+      "hardBlock": true,
+      "description": "Ejecucion de codigo arbitrario, escritura/borrado de filesystem, creacion de accesos de administrador, o mutacion de las skills que se auto-cargan como instrucciones futuras del propio agente. Ninguna combinacion de flags/entorno/aprobacion la desbloquea -- el guard la rechaza incondicionalmente, para siempre, desde el pipeline automatico."
+    },
+    "manual_only": {
+      "label": "Solo uso humano directo",
+      "allowedByDefault": false,
+      "hardBlock": true,
+      "description": "No es tan peligrosa como dangerous_forbidden, pero no tiene ningun caso de uso legitimo dentro del pipeline automatico (lectura de filesystem arbitraria, listados de directorios, o companeras de una ability ya bloqueada). Un humano puede seguir usandola manualmente en un chat con Novamira fuera de este codebase -- el guard bloquea SIEMPRE la llamada programatica, exactamente igual que dangerous_forbidden."
+    }
+  },
+  "defaultRiskForUnknownAbility": "dangerous_forbidden",
+  "abilities": {
+    "novamira/execute-php": {
+      "risk": "dangerous_forbidden",
+      "reason": "Ejecuta PHP arbitrario con acceso completo a $wpdb y WordPress. Bloqueada explicitamente por el cliente (Fase O14)."
+    },
+    "novamira/run-wp-cli": {
+      "risk": "dangerous_forbidden",
+      "reason": "Ejecuta cualquier comando wp-cli arbitrario, sin lista blanca de subcomandos. Bloqueada explicitamente por el cliente (Fase O14)."
+    },
+    "novamira/write-file": {
+      "risk": "dangerous_forbidden",
+      "reason": "Escribe cualquier fichero bajo ABSPATH (incluido PHP fuera del sandbox en algunos casos). Bloqueada explicitamente por el cliente (Fase O14)."
+    },
+    "novamira/edit-file": {
+      "risk": "dangerous_forbidden",
+      "reason": "Edita cualquier fichero existente por reemplazo de texto. Bloqueada explicitamente por el cliente (Fase O14)."
+    },
+    "novamira/delete-file": {
+      "risk": "dangerous_forbidden",
+      "reason": "Borra ficheros/directorios del servidor. Bloqueada explicitamente por el cliente (Fase O14)."
+    },
+    "novamira/create-admin-access-link": {
+      "risk": "dangerous_forbidden",
+      "reason": "Genera un login de administrador de un solo uso. Bloqueada explicitamente por el cliente (Fase O14)."
+    },
+    "novamira/create-upload-link": {
+      "risk": "dangerous_forbidden",
+      "reason": "Crea un endpoint temporal de subida de ficheros con token bearer -- mismo riesgo que write-file (permite subir cualquier fichero al servidor), aunque el cliente no lo nombro explicitamente."
+    },
+    "novamira/disable-file": {
+      "risk": "dangerous_forbidden",
+      "reason": "Muta que codigo PHP del sandbox se carga o no -- pertenece a la misma familia de riesgo que execute-php (control de ejecucion de codigo)."
+    },
+    "novamira/enable-file": {
+      "risk": "dangerous_forbidden",
+      "reason": "Igual que disable-file: controla ejecucion de codigo PHP del sandbox."
+    },
+    "novamira/skill-write": {
+      "risk": "dangerous_forbidden",
+      "reason": "Escribe una skill que se AUTO-CARGA como instrucciones para futuras sesiones del agente -- riesgo de inyeccion de instrucciones persistente, no solo de WordPress."
+    },
+    "novamira/skill-edit": {
+      "risk": "dangerous_forbidden",
+      "reason": "Igual que skill-write: modifica instrucciones que se auto-cargan en el futuro."
+    },
+    "novamira/skill-delete": {
+      "risk": "dangerous_forbidden",
+      "reason": "Borra una skill almacenada. Se agrupa con las demas operaciones de borrado -- ninguna ability *-delete-* se permite desde el pipeline automatico."
+    },
+    "novamira/read-file": {
+      "risk": "manual_only",
+      "reason": "Lee cualquier fichero del servidor, incluidos wp-config.php u otros con secretos -- riesgo de fuga de credenciales si se automatiza. Un humano puede usarla con criterio; el pipeline nunca."
+    },
+    "novamira/list-directory": {
+      "risk": "manual_only",
+      "reason": "Lista rutas arbitrarias bajo ABSPATH. No expone contenido, pero revela estructura/superficie de ataque sin necesidad real en el pipeline."
+    },
+    "novamira/get-wp-cli-job": {
+      "risk": "manual_only",
+      "reason": "Consulta el estado de un job de wp-cli -- inutil sin run-wp-cli (bloqueada), ningun caso de uso automatico legitimo."
+    },
+    "mcp-adapter/discover-abilities": {
+      "risk": "safe_read",
+      "reason": "Enumera las abilities registradas. Puramente informativa, es la propia base de esta auditoria."
+    },
+    "novamira/gutenberg-get-finalizer-runtime": {
+      "risk": "safe_read",
+      "reason": "Consulta si la cola del editor de bloques esta activa. Solo lectura de estado."
+    },
+    "novamira/gutenberg-get-content": {
+      "risk": "safe_read",
+      "reason": "Lee el post_content Gutenberg ya guardado de una pagina/entrada, en forma de arbol de bloques. Ejemplo explicito del cliente de lectura permitida (Fase O14)."
+    },
+    "novamira/gutenberg-get-pending-batch": {
+      "risk": "safe_read",
+      "reason": "Consulta el estado de un lote de cambios en cola. Solo lectura."
+    },
+    "novamira/gutenberg-list-pending-batches": {
+      "risk": "safe_read",
+      "reason": "Lista todos los lotes en cola. Solo lectura, no expone contenido completo."
+    },
+    "novamira/gutenberg-get-finalization-url": {
+      "risk": "safe_read",
+      "reason": "Devuelve la URL normal del panel de administracion (no un enlace de acceso privilegiado como create-admin-access-link) para que un humano YA logueado la abra."
+    },
+    "novamira/skill-get": {
+      "risk": "safe_read",
+      "reason": "Lee el contenido de una skill ya almacenada. Informativo, sin efectos secundarios, sin datos de WordPress ni secretos."
+    },
+    "yoast-seo/get-seo-scores": {
+      "risk": "safe_read",
+      "reason": "Lee puntuaciones SEO de Yoast. Ejemplo explicito del cliente de lectura permitida (Fase O14)."
+    },
+    "yoast-seo/get-readability-scores": {
+      "risk": "safe_read",
+      "reason": "Lee puntuaciones de legibilidad de Yoast. Solo lectura."
+    },
+    "novamira/gutenberg-write-content": {
+      "risk": "safe_write_staging_only",
+      "requiresApproval": true,
+      "reason": "Escribe post_content EN VIVO de inmediato (solo bloques Novamira-owned dinamicos) -- sin mecanismo de snapshot propio, a diferencia de nuestros adaptadores REST (production-draft-edits.ts). Requiere aprobacion humana ademas del flag por no tener red de seguridad propia."
+    },
+    "novamira/gutenberg-create-pending-batch": {
+      "risk": "safe_write_staging_only",
+      "requiresApproval": false,
+      "reason": "Crea un lote DRAFT vacio -- nada queda en vivo hasta finalizarlo. Bajo riesgo."
+    },
+    "novamira/gutenberg-add-pending-change": {
+      "risk": "safe_write_staging_only",
+      "requiresApproval": false,
+      "reason": "Encola un cambio dentro de un lote draft -- sigue sin estar en vivo hasta la finalizacion."
+    },
+    "novamira/gutenberg-enable-batch-finalization": {
+      "risk": "safe_write_staging_only",
+      "requiresApproval": true,
+      "reason": "Paso que puede publicar el lote EN VIVO si la pagina de cola esta abierta -- el paso de mayor riesgo de toda la familia gutenberg-*, requiere aprobacion humana explicita ademas del flag."
+    },
+    "novamira/gutenberg-delete-pending-batch": {
+      "risk": "safe_write_staging_only",
+      "requiresApproval": false,
+      "reason": "Cancela un lote NO publicado, sin tocar contenido en vivo. Reversible por diseno."
+    },
+    "novamira/gutenberg-delete-pending-change": {
+      "risk": "safe_write_staging_only",
+      "requiresApproval": false,
+      "reason": "Cancela un cambio en cola individual, sin tocar contenido en vivo. Reversible por diseno."
+    }
+  }
+}

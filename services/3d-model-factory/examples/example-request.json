@@ -1,0 +1,24 @@
+{
+  "client_id": "zentry",
+  "project_id": "zentry-lockers",
+  "product_slug": "banco-vestuario-pino",
+  "product_name": "Banco de vestuario de pino",
+  "target_website": "staging.zentrylockers.com",
+  "integration_target": "configurator",
+  "output_format": "glb",
+  "input_folder": "clients/zentry/input/o24-products/banco-vestuario-pino",
+  "known_dimensions": {
+    "length_mm": 1500,
+    "width_mm": null,
+    "height_mm": null,
+    "depth_mm": null
+  },
+  "known_materials": ["pino", "metal"],
+  "variants": [
+    { "type": "material", "options": ["pino", "fenolico", "melamina"] },
+    { "type": "longitud", "options": ["1000", "1500", "2000"] },
+    { "type": "configuracion", "options": ["simple", "perchero", "zapatero"] }
+  ],
+  "notes": "Si faltan medidas, inferir con prudencia y documentarlo. Este producto ya existe como prototipo parametrico en Three.js (O23) -- el modelo GLB generado por la factory deberia poder sustituir esa geometria sin cambiar la logica de UI/URL/CTA ya construida.",
+  "inference_tolerance": "medium"
+}

@@ -1,0 +1,11 @@
+{
+  "note": "Cliente sandbox. Dominios .invalid a proposito -- nunca resuelven a un sitio real. Sin credenciales de ningun tipo.",
+  "productionUrl": "https://demo-client.invalid",
+  "stagingUrl": "https://staging.demo-client.invalid",
+  "productionUsernameEnvVar": "DEMO_WORDPRESS_PRODUCTION_USERNAME",
+  "productionAppPasswordEnvVar": "DEMO_WORDPRESS_PRODUCTION_APP_PASSWORD",
+  "stagingUsernameEnvVar": "DEMO_WORDPRESS_USERNAME",
+  "stagingAppPasswordEnvVar": "DEMO_WORDPRESS_APP_PASSWORD",
+  "defaultBackend": "local_preview",
+  "defaultEnv": "staging"
+}

@@ -1,0 +1,17 @@
+{
+  "longitud": {
+    "attributeId": 9,
+    "terms": {
+      "1000mm": 112,
+      "1500mm": 113,
+      "2000mm": 114
+    }
+  },
+  "cara": {
+    "attributeId": 10,
+    "terms": {
+      "unica": 115,
+      "doble": 116
+    }
+  }
+}

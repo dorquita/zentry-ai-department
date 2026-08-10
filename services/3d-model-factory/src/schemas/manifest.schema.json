@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "3d-model-factory/manifest.schema.json",
+  "title": "3D Model Factory - Manifest",
+  "description": "Salida estandar de una ejecucion de la factory para un producto. Vive en clients/<client_id>/outputs/3d-models/<product_slug>/manifest.json. Es el documento de referencia para saber que esta verificado, que es inferido y que sigue pendiente -- nunca debe presentar una inferencia como si fuera un dato confirmado.",
+  "type": "object",
+  "required": ["productName", "slug", "clientId", "confidence", "qaStatus", "modelingStrategy"],
+  "properties": {
+    "productName": { "type": "string" },
+    "slug": { "type": "string" },
+    "clientId": { "type": "string" },
+    "projectId": { "type": "string" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "requestPath": { "type": "string", "description": "Ruta al request.json que origino esta ejecucion." },
+
+    "sourceFiles": {
+      "type": "array",
+      "description": "Inventario de TODOS los ficheros de input usados, con su tipo detectado.",
+      "items": {
+        "type": "object",
+        "required": ["file", "type"],
+        "properties": {
+          "file": { "type": "string" },
+          "type": { "type": "string", "enum": ["photo", "pdf", "notes", "measurements", "other"] },
+          "sizeBytes": { "type": "number" }
+        }
+      }
+    },
+
+    "verifiedFacts": {
+      "type": "array",
+      "description": "Datos confirmados por una fuente directa (foto clara, medida real dada por el cliente, ficha tecnica oficial). Cada entrada debe poder trazarse a una fuente.",
+      "items": {
+        "type": "object",
+        "required": ["fact", "source"],
+        "properties": {
+          "fact": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "inferredFacts": {
+      "type": "array",
+      "description": "Deducciones razonadas a partir de datos parciales (ej. proporciones tipicas del sector, simetria visual). Siempre con el razonamiento explicito.",
+      "items": {
+        "type": "object",
+        "required": ["fact", "reasoning"],
+        "properties": {
+          "fact": { "type": "string" },
+          "reasoning": { "type": "string" },
+          "confidenceRange": { "type": "string", "description": "Ej. '350-450mm' cuando aplica un rango en vez de un valor unico." }
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "Supuestos de trabajo sin evidencia directa (ej. 'la parte trasera replica la estructura frontal'). Deben poder revisarse/descartarse sin rehacer todo el modelo.",
+      "items": {
+        "type": "object",
+        "required": ["assumption", "risk"],
+        "properties": {
+          "assumption": { "type": "string" },
+          "risk": { "type": "string", "enum": ["low", "medium", "high"] }
+        }
+      }
+    },
+    "pendingValidation": {
+      "type": "array",
+      "description": "Preguntas abiertas que requieren que un humano las confirme antes de dar el modelo por definitivo.",
+      "items": { "type": "string" }
+    },
+
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "length_mm": { "type": ["number", "null"] },
+        "width_mm": { "type": ["number", "null"] },
+        "height_mm": { "type": ["number", "null"] },
+        "depth_mm": { "type": ["number", "null"] },
+        "source": { "type": "string", "enum": ["verified", "inferred", "assumed", "pending"] }
+      }
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "appliesToComponents": { "type": "array", "items": { "type": "string" } },
+          "configurable": { "type": "boolean" },
+          "source": { "type": "string", "enum": ["verified", "inferred", "assumed", "pending"] }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Piezas/nodos del modelo (ej. asiento, pata-0, pata-1, perchero, zapatero).",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "configurable": { "type": "boolean" },
+          "visibleByDefault": { "type": "boolean" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+
+    "modelingStrategy": {
+      "type": "string",
+      "enum": ["blender_parametric", "image_to_3d_external", "hybrid", "manual_designer", "not_yet_determined"],
+      "description": "Via tecnica usada/prevista. Ver docs/architecture.md seccion 4."
+    },
+
+    "outputFiles": {
+      "type": "object",
+      "properties": {
+        "glb": { "type": ["string", "null"] },
+        "sourceScript": { "type": ["string", "null"] },
+        "report": { "type": ["string", "null"] },
+        "previews": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "fileSize": { "type": ["number", "null"], "description": "Bytes del .glb final, si existe." },
+    "polygonCount": { "type": ["number", "null"] },
+
+    "confidence": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Confianza global del modelo resultante, derivada de la proporcion de verifiedFacts vs inferredFacts/assumptions."
+    },
+    "qaStatus": {
+      "type": "string",
+      "enum": ["not_started", "pending_generation", "pending_visual_qa", "pending_human_approval", "approved_staging", "rejected"],
+      "description": "'approved_staging' es el maximo posible en este sistema -- nunca 'approved_production', que no existe: todo pasa primero por staging con aprobacion humana (Agente 12)."
+    },
+    "nextActions": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

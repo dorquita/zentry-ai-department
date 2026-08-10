@@ -1,0 +1,1 @@
+Fase O16: carpeta reservada por estructura, no usada hoy. El cliente "zentry" sigue usando /opt/zentry-ai-department/data/ (raiz del proyecto) por compatibilidad -- ver src/core/client-paths.ts. No colocar aqui ningun dato real sin actualizar primero ese modulo.

@@ -1,0 +1,19 @@
+{
+  "note": "Cliente sandbox. Mismo esquema que clients/zentry/notification-policy.json, con NO_NOTIFICATION global -- irrelevante en la practica porque isSandbox=true ya impide que se genere ninguna notificacion real para este cliente.",
+  "version": "1.0",
+  "phase": "O16-demo",
+  "updatedAt": "2026-08-05",
+  "description": "Politica de notificacion de ejemplo para el cliente sandbox. No se consulta en tiempo de ejecucion mientras isSandbox=true bloquee toda ejecucion real.",
+  "defaultLevel": "NO_NOTIFICATION",
+  "levels": {
+    "NO_NOTIFICATION": { "channel": "none", "requiresResponse": false, "operations": ["*"] },
+    "DAILY_SUMMARY_ONLY": { "channel": "email_digest", "requiresResponse": false, "operations": [] },
+    "INSTANT_APPROVAL_REQUIRED": { "channel": "telegram", "requiresResponse": true, "operations": [] },
+    "BLOCKED": { "channel": "none", "requiresResponse": false, "blocked": true, "operations": [] }
+  },
+  "channels": {
+    "telegram": { "status": "no configurado para este cliente" },
+    "whatsapp": { "status": "no implementado" }
+  },
+  "howToChange": "Este cliente es un sandbox de demostracion. Si un cliente real se crea copiando esta plantilla, revisar clients/zentry/notification-policy.json como referencia de una politica activa."
+}

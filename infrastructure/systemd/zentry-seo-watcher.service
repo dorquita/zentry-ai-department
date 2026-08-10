@@ -1,0 +1,26 @@
+[Unit]
+Description=Zentry AI Department - Web & Growth Department (pase diario completo, 8 agentes + email unico)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/zentry-ai-department
+EnvironmentFile=/opt/zentry-ai-department/.env
+# Actualizado en la Fase O4 (2026-08-02): antes ejecutaba solo
+# "npm run seo:daily" (SEO Watcher + email simple). Ahora ejecuta el pase
+# diario completo del departamento Web & Growth (8 agentes + un unico
+# email consolidado del Growth Director). Ver docs/daily-growth-report.md.
+# El nombre del unit NO se ha cambiado en esta fase (se mantiene
+# "zentry-seo-watcher" a proposito; renombrar es una propuesta separada).
+ExecStart=/usr/bin/npm run growth:daily
+User=root
+
+# Logs a journald (no a un fichero aparte); consultar con:
+#   journalctl -u zentry-seo-watcher.service --no-pager -n 100
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=zentry-seo-watcher
+
+# Todo el departamento opera en modo lectura + propuesta. No modifica
+# WordPress, Google Ads, GA4, GTM, n8n ni qdrant.

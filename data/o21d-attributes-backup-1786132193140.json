@@ -1,0 +1,234 @@
+[
+  {
+    "id": 3,
+    "name": "Anchura",
+    "slug": "pa_anchura",
+    "type": "button",
+    "order_by": "menu_order",
+    "has_archives": false,
+    "_links": {
+      "self": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes/3",
+          "targetHints": {
+            "allow": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes"
+        }
+      ]
+    }
+  },
+  {
+    "id": 7,
+    "name": "Color cuerpo fuera de stock (RAL)",
+    "slug": "pa_color-cuerpo-sin-stock",
+    "type": "select",
+    "order_by": "menu_order",
+    "has_archives": false,
+    "_links": {
+      "self": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes/7",
+          "targetHints": {
+            "allow": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes"
+        }
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "name": "Color cuerpo en stock (RAL)",
+    "slug": "pa_color-cuerpo-stock",
+    "type": "color",
+    "order_by": "menu_order",
+    "has_archives": false,
+    "_links": {
+      "self": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes/5",
+          "targetHints": {
+            "allow": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes"
+        }
+      ]
+    }
+  },
+  {
+    "id": 8,
+    "name": "Color puerta fuera de stock (RAL)",
+    "slug": "pa_color-puerta-sin-stock",
+    "type": "select",
+    "order_by": "menu_order",
+    "has_archives": false,
+    "_links": {
+      "self": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes/8",
+          "targetHints": {
+            "allow": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes"
+        }
+      ]
+    }
+  },
+  {
+    "id": 6,
+    "name": "Color puerta en stock (RAL)",
+    "slug": "pa_color-puerta-stock",
+    "type": "color",
+    "order_by": "menu_order",
+    "has_archives": false,
+    "_links": {
+      "self": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes/6",
+          "targetHints": {
+            "allow": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes"
+        }
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "name": "Columnas",
+    "slug": "pa_columnas",
+    "type": "select",
+    "order_by": "menu_order",
+    "has_archives": false,
+    "_links": {
+      "self": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes/2",
+          "targetHints": {
+            "allow": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes"
+        }
+      ]
+    }
+  },
+  {
+    "id": 1,
+    "name": "Material",
+    "slug": "pa_material",
+    "type": "select",
+    "order_by": "menu_order",
+    "has_archives": false,
+    "_links": {
+      "self": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes/1",
+          "targetHints": {
+            "allow": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes"
+        }
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "name": "Tipo de cerradura",
+    "slug": "pa_tipo-de-cerradura",
+    "type": "button",
+    "order_by": "menu_order",
+    "has_archives": false,
+    "_links": {
+      "self": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes/4",
+          "targetHints": {
+            "allow": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          }
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://zentrylockers.com/wp-json/wc/v3/products/attributes"
+        }
+      ]
+    }
+  }
+]

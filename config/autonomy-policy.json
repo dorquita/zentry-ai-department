@@ -1,0 +1,138 @@
+{
+  "version": "1.0",
+  "phase": "O7",
+  "updatedAt": "2026-08-03",
+  "description": "Politica de autonomia del departamento Web & Growth. Decide, por tipo de accion (actionType del Action Backlog), si el sistema puede auto-procesarla, auto-prepararla para planificacion, o si necesita aprobacion humana. NUNCA decide sobre ejecucion real en produccion: eso sigue siendo, sin excepcion, manual y fuera de este sistema.",
+  "defaultLevelForUnknownActionType": "HUMAN_APPROVAL_REQUIRED",
+  "levels": {
+    "AUTO_INTERNAL": {
+      "label": "Automatico interno (mecanica de pipeline)",
+      "riskLevel": "none",
+      "enabled": true,
+      "requiresApproval": false,
+      "backlogStatus": "auto_processed",
+      "description": "Operaciones internas del propio sistema, sin contenido de negocio: no representan una recomendacion sobre la que decidir, son la mecanica que mantiene el backlog al dia.",
+      "operations": [
+        "create_event",
+        "create_job",
+        "create_action",
+        "dedupe_backlog",
+        "update_seen_count",
+        "prioritize",
+        "generate_report",
+        "send_internal_daily_email"
+      ],
+      "actionTypePatterns": []
+    },
+    "AUTO_PLAN": {
+      "label": "Automatico de planificacion (riesgo bajo/medio)",
+      "riskLevel": "low_medium",
+      "enabled": true,
+      "requiresApproval": false,
+      "backlogStatus": "auto_approved_for_planning",
+      "description": "Recomendaciones de SEO/contenido/CRO/SEM/Analytics/competencia: el sistema puede convertirlas en un plan de ejecucion detallado (work order) sin esperar aprobacion humana, porque preparar el plan no ejecuta nada real. La aprobacion humana sigue siendo obligatoria antes de aplicar cualquier cosa en WordPress, Ads, GA4 o GTM.",
+      "operations": [
+        "convert_open_recurring_action_to_plan",
+        "create_internal_work_order",
+        "generate_seo_brief",
+        "generate_content_brief",
+        "generate_cro_proposal",
+        "prepare_sem_recommendation",
+        "prepare_analytics_recommendation",
+        "mark_work_order_auto_prepared_or_ready_for_review"
+      ],
+      "actionTypePatterns": [
+        "seo:*",
+        "content:*",
+        "cro:*",
+        "competitor:*",
+        "sem:*",
+        "analytics:*"
+      ]
+    },
+    "AUTO_DRAFT": {
+      "label": "Automatico de borrador (desactivado en esta fase)",
+      "riskLevel": "medium",
+      "enabled": false,
+      "requiresApproval": false,
+      "backlogStatus": "auto_approved_for_planning",
+      "description": "Permitido en una fase futura, pero desactivado hoy a proposito (enabled=false). Cuando se active, permitira crear borradores WordPress sin publicar y preparar cambios de Ads/GTM/GA4 en modo propuesta (Ads en PAUSED, GTM/GA4 en modo 'propose'). Mientras enabled=false, cualquier actionType que coincida con este nivel cae automaticamente a HUMAN_APPROVAL_REQUIRED (ver autonomy-policy.ts).",
+      "operations": [
+        "create_wordpress_draft_unpublished",
+        "prepare_ads_change_in_paused_state",
+        "prepare_gtm_ga4_change_in_propose_mode"
+      ],
+      "actionTypePatterns": [
+        "wordpress:draft*",
+        "ads:prepare_paused*",
+        "gtm:propose*",
+        "ga4:propose*"
+      ]
+    },
+    "HUMAN_APPROVAL_REQUIRED": {
+      "label": "Requiere aprobacion humana",
+      "riskLevel": "high",
+      "enabled": true,
+      "requiresApproval": true,
+      "backlogStatus": "waiting_approval",
+      "description": "Cualquier cosa que toque produccion real: publicar/modificar WordPress, campanas, presupuesto, anuncios, keywords reales, conversiones, formularios criticos, WooCommerce/precios o email comercial. Hoy ningun agente del departamento genera acciones de este tipo (todos son READ+PROPOSE), pero la politica queda lista para cuando exista un actionType de produccion.",
+      "operations": [
+        "publish_or_modify_real_wordpress_page",
+        "activate_campaign",
+        "change_budget",
+        "create_real_ad",
+        "create_real_keyword",
+        "modify_conversion",
+        "change_critical_form",
+        "touch_woocommerce_pricing",
+        "send_commercial_email"
+      ],
+      "actionTypePatterns": [
+        "wordpress:publish*",
+        "wordpress:modify_live*",
+        "ads:activate*",
+        "ads:budget*",
+        "ads:create_ad*",
+        "ads:create_keyword*",
+        "ga4:modify_conversion*",
+        "gtm:modify*",
+        "form:critical*",
+        "woocommerce:*",
+        "email:commercial*"
+      ]
+    },
+    "FORBIDDEN": {
+      "label": "Prohibido (nunca automatico, ni con aprobacion por defecto)",
+      "riskLevel": "critical",
+      "enabled": true,
+      "requiresApproval": true,
+      "backlogStatus": "blocked",
+      "description": "Nunca se ejecuta automaticamente, pase lo que pase. Si un actionType futuro cae aqui, la accion queda bloqueada (status blocked) y necesita una decision explicita y documentada fuera de este sistema, no un simple 'approved' por CLI.",
+      "operations": [
+        "delete_history",
+        "delete_logs",
+        "print_secrets",
+        "modify_env_without_confirmation",
+        "disable_backups",
+        "touch_production_without_rollback",
+        "activate_campaign_without_approval",
+        "publish_page_without_approval"
+      ],
+      "actionTypePatterns": [
+        "*:delete_history*",
+        "*:delete_logs*",
+        "secret:*",
+        "env:modify_unconfirmed*",
+        "backup:disable*"
+      ]
+    }
+  },
+  "guardrails": {
+    "neverTouch": ["wordpress", "google_ads", "ga4", "gtm", "n8n", "qdrant", "woocommerce"],
+    "neverPrint": ["env_full", "secrets", "SMTP_PASS"],
+    "neverOverwrite": ["data/*.jsonl", "reports/"],
+    "neverDeployVia": ["scp -r del proyecto completo"],
+    "note": "Estos guardrails son organizativos (para quien opera el sistema, incluyendo despliegues), no se evaluan por actionType. La clasificacion automatica en autonomy-policy.ts solo decide sobre acciones del Action Backlog / Work Orders, nunca sobre estas operaciones de infraestructura."
+  },
+  "howToChange": "Editar este fichero para anadir/mover actionTypePatterns entre niveles, o cambiar 'enabled' de AUTO_DRAFT cuando se decida activarlo. src/core/autonomy-policy.ts lee este fichero en cada llamada (sin cache entre procesos), asi que un cambio aqui se aplica en la siguiente ejecucion sin recompilar. Para desactivar toda la autonomia y volver a exigir aprobacion manual de todo, poner 'enabled: false' en AUTO_PLAN (y AUTO_INTERNAL si se quiere ser extremo) — con AUTO_PLAN desactivado, todas las acciones caen a HUMAN_APPROVAL_REQUIRED igual que antes de la Fase O7."
+}

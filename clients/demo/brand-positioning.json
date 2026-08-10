@@ -1,0 +1,16 @@
+{
+  "note": "Cliente sandbox. Vocabulario de ejemplo minimo, no usado por ningun agente real (isSandbox=true).",
+  "updatedAt": "2026-08-05",
+  "brands": {
+    "demo": {
+      "name": "Demo Brand",
+      "focus": "Marca de ejemplo para validar la estructura multi-cliente. Sin negocio real detras."
+    }
+  },
+  "locker_terms": ["producto de ejemplo", "productos de ejemplo"],
+  "lock_terms": [],
+  "smart_terms": [],
+  "b2b_sector_terms": [],
+  "material_terms": [],
+  "low_fit_terms": ["gratis", "segunda mano"]
+}

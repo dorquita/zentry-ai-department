@@ -1,0 +1,623 @@
+[
+  {
+    "stagingId": 1966,
+    "slug": "banco-vestuario-pino",
+    "name": "Banco de vestuario de pino",
+    "sku": "VBANPSE",
+    "status": "publish",
+    "categoryIds": [
+      110,
+      108
+    ],
+    "attributeNames": [
+      "Longitud"
+    ],
+    "imageIds": [
+      1968
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-pino",
+      "alreadyExists": false,
+      "createdId": 1988,
+      "payloadPreview": {
+        "name": "Banco de vestuario de pino",
+        "slug": "banco-vestuario-pino",
+        "type": "variable",
+        "sku": "VBANPSE",
+        "status": "publish",
+        "description": "<p>Banco de vestuario pino Zentry. Fabricado en madera de pino de Suecia cepillado, con listones de 25&nbsp;mm de espesor, cantos biselados y barnizados con poliuretano. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Modelo sin zapatero, con refuerzo/listón metálico de unión entre patas.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario pino, modelo sencillo.</p>\n",
+        "categories": [
+          {
+            "id": 110
+          },
+          {
+            "id": 108
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1968
+          }
+        ]
+      }
+    }
+  },
+  {
+    "stagingId": 1970,
+    "slug": "banco-vestuario-pino-perchero",
+    "name": "Banco de vestuario de pino con respaldo y perchero",
+    "sku": "VBANPPE",
+    "status": "publish",
+    "categoryIds": [
+      110,
+      108
+    ],
+    "attributeNames": [
+      "Longitud",
+      "Cara"
+    ],
+    "imageIds": [
+      1969,
+      1977
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-pino-perchero",
+      "alreadyExists": false,
+      "createdId": 1989,
+      "payloadPreview": {
+        "name": "Banco de vestuario de pino con respaldo y perchero",
+        "slug": "banco-vestuario-pino-perchero",
+        "type": "variable",
+        "sku": "VBANPPE",
+        "status": "publish",
+        "description": "<p>Banco de vestuario pino Zentry. Fabricado en madera de pino de Suecia cepillado, con listones de 25&nbsp;mm de espesor, cantos biselados y barnizados con poliuretano. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Incluye respaldo y barra con perchas dobles en forma de J para colgar ropa.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm, a una o dos caras. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario pino con respaldo y perchero.</p>\n",
+        "categories": [
+          {
+            "id": 110
+          },
+          {
+            "id": 108
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          },
+          {
+            "id": 10,
+            "name": "Cara",
+            "options": [
+              "Doble",
+              "Única"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1969
+          },
+          {
+            "id": 1977
+          }
+        ]
+      }
+    }
+  },
+  {
+    "stagingId": 1977,
+    "slug": "banco-vestuario-pino-zapatero",
+    "name": "Banco de vestuario de pino con respaldo, perchero y zapatero",
+    "sku": "VBANPPZ",
+    "status": "publish",
+    "categoryIds": [
+      110,
+      108
+    ],
+    "attributeNames": [
+      "Longitud",
+      "Cara"
+    ],
+    "imageIds": [
+      1970,
+      1978
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-pino-zapatero",
+      "alreadyExists": false,
+      "createdId": 1990,
+      "payloadPreview": {
+        "name": "Banco de vestuario de pino con respaldo, perchero y zapatero",
+        "slug": "banco-vestuario-pino-zapatero",
+        "type": "variable",
+        "sku": "VBANPPZ",
+        "status": "publish",
+        "description": "<p>Banco de vestuario pino Zentry. Fabricado en madera de pino de Suecia cepillado, con listones de 25&nbsp;mm de espesor, cantos biselados y barnizados con poliuretano. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Incluye respaldo, barra con perchas dobles en forma de J y zapatero inferior para calzado.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm, a una o dos caras. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario pino completo, con perchero y zapatero.</p>\n",
+        "categories": [
+          {
+            "id": 110
+          },
+          {
+            "id": 108
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          },
+          {
+            "id": 10,
+            "name": "Cara",
+            "options": [
+              "Doble",
+              "Única"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1970
+          },
+          {
+            "id": 1978
+          }
+        ]
+      }
+    }
+  },
+  {
+    "stagingId": 1984,
+    "slug": "banco-vestuario-fenolico",
+    "name": "Banco de vestuario fenólico",
+    "sku": "VBANFESE",
+    "status": "publish",
+    "categoryIds": [
+      108,
+      111
+    ],
+    "attributeNames": [
+      "Longitud"
+    ],
+    "imageIds": [
+      1971
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-fenolico",
+      "alreadyExists": false,
+      "createdId": 1991,
+      "payloadPreview": {
+        "name": "Banco de vestuario fenólico",
+        "slug": "banco-vestuario-fenolico",
+        "type": "variable",
+        "sku": "VBANFESE",
+        "status": "publish",
+        "description": "<p>Banco de vestuario fenólico Zentry. Fabricado en tablero compacto fenólico, con listones de 10&nbsp;mm de espesor y cantos biselados. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Modelo sin zapatero, con refuerzo/listón metálico de unión entre patas.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario fenólico, modelo sencillo.</p>\n",
+        "categories": [
+          {
+            "id": 108
+          },
+          {
+            "id": 111
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1971
+          }
+        ]
+      }
+    }
+  },
+  {
+    "stagingId": 1988,
+    "slug": "banco-vestuario-fenolico-perchero",
+    "name": "Banco de vestuario fenólico con respaldo y perchero",
+    "sku": "VBANFEPE",
+    "status": "publish",
+    "categoryIds": [
+      108,
+      111
+    ],
+    "attributeNames": [
+      "Longitud",
+      "Cara"
+    ],
+    "imageIds": [
+      1972,
+      1982
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-fenolico-perchero",
+      "alreadyExists": false,
+      "createdId": 1992,
+      "payloadPreview": {
+        "name": "Banco de vestuario fenólico con respaldo y perchero",
+        "slug": "banco-vestuario-fenolico-perchero",
+        "type": "variable",
+        "sku": "VBANFEPE",
+        "status": "publish",
+        "description": "<p>Banco de vestuario fenólico Zentry. Fabricado en tablero compacto fenólico, con listones de 10&nbsp;mm de espesor y cantos biselados. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Incluye respaldo y barra con perchas dobles en forma de J para colgar ropa.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm, a una o dos caras. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario fenólico con respaldo y perchero.</p>\n",
+        "categories": [
+          {
+            "id": 108
+          },
+          {
+            "id": 111
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          },
+          {
+            "id": 10,
+            "name": "Cara",
+            "options": [
+              "Doble",
+              "Única"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1972
+          },
+          {
+            "id": 1982
+          }
+        ]
+      }
+    }
+  },
+  {
+    "stagingId": 1995,
+    "slug": "banco-vestuario-fenolico-zapatero",
+    "name": "Banco de vestuario fenólico con respaldo, perchero y zapatero",
+    "sku": "VBANFEPZ",
+    "status": "publish",
+    "categoryIds": [
+      108,
+      111
+    ],
+    "attributeNames": [
+      "Longitud",
+      "Cara"
+    ],
+    "imageIds": [
+      1973,
+      1979
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-fenolico-zapatero",
+      "alreadyExists": false,
+      "createdId": 1993,
+      "payloadPreview": {
+        "name": "Banco de vestuario fenólico con respaldo, perchero y zapatero",
+        "slug": "banco-vestuario-fenolico-zapatero",
+        "type": "variable",
+        "sku": "VBANFEPZ",
+        "status": "publish",
+        "description": "<p>Banco de vestuario fenólico Zentry. Fabricado en tablero compacto fenólico, con listones de 10&nbsp;mm de espesor y cantos biselados. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Incluye respaldo, barra con perchas dobles en forma de J y zapatero inferior para calzado.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm, a una o dos caras. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario fenólico completo, con perchero y zapatero.</p>\n",
+        "categories": [
+          {
+            "id": 108
+          },
+          {
+            "id": 111
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          },
+          {
+            "id": 10,
+            "name": "Cara",
+            "options": [
+              "Doble",
+              "Única"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1973
+          },
+          {
+            "id": 1979
+          }
+        ]
+      }
+    }
+  },
+  {
+    "stagingId": 2002,
+    "slug": "banco-vestuario-melamina",
+    "name": "Banco de vestuario de melamina",
+    "sku": "VBANMESE",
+    "status": "publish",
+    "categoryIds": [
+      109,
+      108
+    ],
+    "attributeNames": [
+      "Longitud"
+    ],
+    "imageIds": [
+      1974
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-melamina",
+      "alreadyExists": false,
+      "createdId": 1994,
+      "payloadPreview": {
+        "name": "Banco de vestuario de melamina",
+        "slug": "banco-vestuario-melamina",
+        "type": "variable",
+        "sku": "VBANMESE",
+        "status": "publish",
+        "description": "<p>Banco de vestuario de melamina Zentry. Fabricado en tablero melaminizado de 30&nbsp;mm con cantos en ABS y cola PUR. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Modelo sin zapatero, con refuerzo/listón metálico de unión entre patas.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario de melamina, modelo sencillo.</p>\n",
+        "categories": [
+          {
+            "id": 109
+          },
+          {
+            "id": 108
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1974
+          }
+        ]
+      }
+    }
+  },
+  {
+    "stagingId": 2006,
+    "slug": "banco-vestuario-melamina-perchero",
+    "name": "Banco de vestuario de melamina con respaldo y perchero",
+    "sku": "VBANMEPE",
+    "status": "publish",
+    "categoryIds": [
+      109,
+      108
+    ],
+    "attributeNames": [
+      "Longitud",
+      "Cara"
+    ],
+    "imageIds": [
+      1975,
+      1980
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-melamina-perchero",
+      "alreadyExists": false,
+      "createdId": 1995,
+      "payloadPreview": {
+        "name": "Banco de vestuario de melamina con respaldo y perchero",
+        "slug": "banco-vestuario-melamina-perchero",
+        "type": "variable",
+        "sku": "VBANMEPE",
+        "status": "publish",
+        "description": "<p>Banco de vestuario de melamina Zentry. Fabricado en tablero melaminizado de 30&nbsp;mm con cantos en ABS y cola PUR. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Incluye respaldo y barra con perchas dobles en forma de J para colgar ropa.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm, a una o dos caras. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario de melamina con respaldo y perchero.</p>\n",
+        "categories": [
+          {
+            "id": 109
+          },
+          {
+            "id": 108
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          },
+          {
+            "id": 10,
+            "name": "Cara",
+            "options": [
+              "Doble",
+              "Única"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1975
+          },
+          {
+            "id": 1980
+          }
+        ]
+      }
+    }
+  },
+  {
+    "stagingId": 2013,
+    "slug": "banco-vestuario-melamina-zapatero",
+    "name": "Banco de vestuario de melamina con respaldo, perchero y zapatero",
+    "sku": "VBANMEPZ",
+    "status": "publish",
+    "categoryIds": [
+      109,
+      108
+    ],
+    "attributeNames": [
+      "Longitud",
+      "Cara"
+    ],
+    "imageIds": [
+      1976,
+      1981
+    ],
+    "result": {
+      "dryRun": false,
+      "applied": true,
+      "slug": "banco-vestuario-melamina-zapatero",
+      "alreadyExists": false,
+      "createdId": 1996,
+      "payloadPreview": {
+        "name": "Banco de vestuario de melamina con respaldo, perchero y zapatero",
+        "slug": "banco-vestuario-melamina-zapatero",
+        "type": "variable",
+        "sku": "VBANMEPZ",
+        "status": "publish",
+        "description": "<p>Banco de vestuario de melamina Zentry. Fabricado en tablero melaminizado de 30&nbsp;mm con cantos en ABS y cola PUR. Estructura de patas independientes en tubo de acero de 30x30x1,5&nbsp;mm, soldada y pintada en epoxi (60 micras). Tacos antideslizantes y herrajes de acero inoxidable.</p>\n<p>Incluye respaldo, barra con perchas dobles en forma de J y zapatero inferior para calzado.</p>\n<p>Disponible en longitudes de 1000, 1500 y 2000&nbsp;mm, a una o dos caras. Recomendado para vestuarios de gimnasios, colegios, empresas y centros deportivos. Combina con las taquillas Zentry del mismo acabado.</p>\n",
+        "short_description": "<p>Banco de vestuario de melamina completo, con perchero y zapatero.</p>\n",
+        "categories": [
+          {
+            "id": 109
+          },
+          {
+            "id": 108
+          }
+        ],
+        "attributes": [
+          {
+            "id": 9,
+            "name": "Longitud",
+            "options": [
+              "1000mm",
+              "1500mm",
+              "2000mm"
+            ],
+            "variation": true,
+            "visible": true
+          },
+          {
+            "id": 10,
+            "name": "Cara",
+            "options": [
+              "Doble",
+              "Única"
+            ],
+            "variation": true,
+            "visible": true
+          }
+        ],
+        "images": [
+          {
+            "id": 1976
+          },
+          {
+            "id": 1981
+          }
+        ]
+      }
+    }
+  }
+]

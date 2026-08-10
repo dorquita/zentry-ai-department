@@ -1,0 +1,10 @@
+{
+  "note": "Cliente sandbox. Sin competidores reales configurados -- isSandbox=true impide que Competitor Intelligence llegue a ejecutarse para este cliente de todas formas.",
+  "updatedAt": "2026-08-05",
+  "rateLimitMs": 2000,
+  "requestTimeoutMs": 10000,
+  "maxUrlsPerDomain": 4,
+  "userAgent": "DemoClientBot/1.0 (sandbox, nunca se ejecuta de verdad)",
+  "respectRobotsTxt": true,
+  "competitors": []
+}

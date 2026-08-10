@@ -1,0 +1,7 @@
+{
+  "note": "Cliente sandbox. Sin propiedad de Search Console real -- isSandbox=true impide que SEO Watcher llegue a ejecutarse para este cliente de todas formas.",
+  "searchConsoleSiteUrl": null,
+  "lookbackDays": 28,
+  "targetKeywordsConfigPath": null,
+  "thresholdsConfigPath": null
+}

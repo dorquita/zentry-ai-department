@@ -1,0 +1,7 @@
+{
+  "note": "Fase O16: identificadores de cuenta Google Ads de 'zentry'. El Customer ID (y el Login Customer ID de la cuenta MCC) NO son la credencial en si -- son solo el numero de cuenta, visible en la propia UI de Ads. El developer token y el OAuth2 real siguen solo en .env (GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_OAUTH_CLIENT_ID/SECRET/REFRESH_TOKEN). src/adapters/google-ads.ts sigue leyendo GOOGLE_ADS_CUSTOMER_ID/GOOGLE_ADS_LOGIN_CUSTOMER_ID/GOOGLE_ADS_API_VERSION directamente de .env, sin cambios (Fase O16.1 pendiente).",
+  "customerId": "8369126564",
+  "loginCustomerId": "3080169697",
+  "apiVersion": "v24",
+  "campaignStateConfigPath": "config/sem-campaign-state.json"
+}

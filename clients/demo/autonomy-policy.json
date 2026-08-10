@@ -1,0 +1,21 @@
+{
+  "note": "Cliente sandbox. Mismo esquema que clients/zentry/autonomy-policy.json, pero todo cae a HUMAN_APPROVAL_REQUIRED -- irrelevante en la practica porque isSandbox=true ya impide que se genere ninguna accion real para este cliente.",
+  "version": "1.0",
+  "phase": "O16-demo",
+  "updatedAt": "2026-08-05",
+  "description": "Politica de autonomia de ejemplo para el cliente sandbox. No se consulta en tiempo de ejecucion mientras isSandbox=true bloquee toda ejecucion real.",
+  "defaultLevelForUnknownActionType": "HUMAN_APPROVAL_REQUIRED",
+  "levels": {
+    "AUTO_INTERNAL": { "enabled": false, "requiresApproval": false, "actionTypePatterns": [] },
+    "AUTO_PLAN": { "enabled": false, "requiresApproval": true, "actionTypePatterns": [] },
+    "AUTO_DRAFT": { "enabled": false, "requiresApproval": true, "actionTypePatterns": [] },
+    "HUMAN_APPROVAL_REQUIRED": { "enabled": true, "requiresApproval": true, "actionTypePatterns": ["*"] },
+    "FORBIDDEN": { "enabled": true, "requiresApproval": true, "actionTypePatterns": [] }
+  },
+  "guardrails": {
+    "neverTouch": ["wordpress", "google_ads", "ga4", "gtm", "n8n", "qdrant", "woocommerce"],
+    "neverPrint": ["env_full", "secrets"],
+    "neverOverwrite": ["data/*.jsonl", "reports/"]
+  },
+  "howToChange": "Este cliente es un sandbox de demostracion. No deberia necesitar cambios -- si un cliente real se crea copiando esta plantilla, revisar clients/zentry/autonomy-policy.json como referencia de una politica activa."
+}

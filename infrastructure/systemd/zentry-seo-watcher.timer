@@ -1,0 +1,20 @@
+[Unit]
+Description=Zentry AI Department - SEO Watcher Agent diario (10:00)
+
+[Timer]
+# El VPS esta en Etc/UTC (confirmado 2026-08-02, ver `timedatectl`). Se
+# decidio NO cambiar la zona horaria del sistema (afectaria a todos los
+# timestamps del servidor) y en su lugar ajustar este horario a UTC:
+#   08:00 UTC = 10:00 Madrid en horario de verano (CEST, aprox. finales de
+#               marzo a finales de octubre) <- vigente ahora (agosto).
+#   08:00 UTC = 09:00 Madrid en horario de invierno (CET).
+# Si se quiere que sea SIEMPRE exactamente las 10:00 hora de Madrid,
+# recordar mover esto a "09:00:00" al entrar el horario de invierno (y
+# volver a "08:00:00" en primavera). Ver docs/scheduling.md.
+OnCalendar=*-*-* 08:00:00
+Persistent=true
+RandomizedDelaySec=0
+Unit=zentry-seo-watcher.service
+
+[Install]
+WantedBy=timers.target
