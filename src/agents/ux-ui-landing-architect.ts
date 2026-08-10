@@ -94,7 +94,28 @@ function buildSectionBody(heading: string, changePack: ChangePack, sector: strin
   if (/proceso|como trabajamos|como funciona/.test(h)) {
     return buildProcessSectionBody(keyword);
   }
-  return `Cuentanos que necesitas${sector ? ` para ${sector}` : ""} y te ayudamos a encontrar la mejor solucion en ${keyword}.`;
+  // Fase O27.3 -- 2 categorias mas, frecuentes en paginas mixtas
+  // Zentry+Tukandado (mueble + cerradura) que antes caian todas al
+  // catch-all generico y salian con el mismo texto repetido.
+  if (/mueble.*cerradura|cerradura.*mueble|solo mueble|ambos/.test(h)) {
+    return `Depende de lo que necesites: solo el mueble (Zentry), solo la cerradura electronica (Tukandado), o la solucion completa integrada. Cuentanos tu caso y te orientamos hacia la opcion correcta.`;
+  }
+  if (/solucion zentry|mobiliario/.test(h)) {
+    return `Zentry fabrica y vende directamente el mobiliario: taquillas y lockers en metalica, fenolica o melamina, a medida para tu espacio.`;
+  }
+  if (/solucion tukandado|cerradura/.test(h)) {
+    return `Tukandado aporta la cerradura electronica -- apertura sin llave fisica, gestionable por app, tarjeta o codigo segun el modelo.`;
+  }
+  if (/como elegir/.test(h)) {
+    return `Cuentanos tu caso (numero de usuarios, presupuesto, si ya tienes taquillas o partes de cero) y te recomendamos la combinacion mas adecuada, sin compromiso.`;
+  }
+  // Catch-all final: SIEMPRE incorpora el propio titular en la frase, para
+  // que dos secciones distintas nunca produzcan el mismo parrafo exacto
+  // aunque no encajen en ninguna categoria de arriba (bug real
+  // encontrado en auditoria visual, Fase O27.3 -- antes este catch-all
+  // ignoraba `heading` por completo).
+  const headingTopic = heading.replace(/[¿?]/g, "").trim();
+  return `Sobre ${headingTopic.charAt(0).toLowerCase()}${headingTopic.slice(1)}: cuentanos tu caso concreto${sector ? ` en ${sector}` : ""} y te ayudamos a encontrar la mejor solucion en ${keyword}.`;
 }
 
 // Bloque "como trabajamos" (Fase O13.6c) -- describe el proceso comercial

@@ -101,10 +101,24 @@ export interface PreviewFields {
   internalLinks: string[];
 }
 
+// Fase O27.3 -- bug real encontrado auditando visualmente los borradores
+// de staging: el Content Planner genera `structure` como una lista en
+// notacion de esquema editorial ("H2: ¿Que es X?", "H3: Y vs Z") pensada
+// para que un humano la lea como un GUION, nunca como texto final. Sin
+// esta funcion, ese prefijo ("H2: "/"H3: "/"H1: ") se colaba literal
+// dentro de un <h2> real en el HTML publicado -- el titular decia
+// literalmente "H2: ¿Que es X?" en la pagina. Se aplica SOLO a `structure`
+// (new_content_page/content_update); seo_on_page_update usa
+// `suggestedH2s`, que nunca ha tenido este prefijo.
+function stripOutlinePrefix(heading: string): string {
+  return heading.replace(/^H[1-3]:\s*/i, "").trim();
+}
+
 export function extractPreviewFields(changePack: ChangePack): PreviewFields {
   const p = changePack.proposedChanges as Record<string, unknown>;
   const asString = (value: unknown, fallback = ""): string => (typeof value === "string" ? value : fallback);
   const asStringArray = (value: unknown): string[] => (Array.isArray(value) ? value.filter((v) => typeof v === "string") : []);
+  const asHeadingArray = (value: unknown): string[] => asStringArray(value).map(stripOutlinePrefix);
 
   if (changePack.changeType === "seo_on_page_update") {
     const faqs = Array.isArray(p.suggestedFaqs)
@@ -129,7 +143,7 @@ export function extractPreviewFields(changePack: ChangePack): PreviewFields {
       title: asString(p.recommendedTitle, changePack.keyword),
       metaDescription: "(no generada por Content Planner — redactar manualmente antes de publicar)",
       h1: asString(p.recommendedTitle, changePack.keyword),
-      h2s: asStringArray(p.structure),
+      h2s: asHeadingArray(p.structure),
       copy: `(brief de contenido, no copy final) ${asString(p.clusterNote)}`.trim(),
       faqs: [],
       cta: asString(p.recommendedCta, "(sin CTA propuesto)"),

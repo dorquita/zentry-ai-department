@@ -1,13 +1,14 @@
 # Production Deployment Planner — 2026-08-10
 
-- **departmentRunId:** `growth-department-2026-08-10T134413Z`
-- **Generado:** 2026-08-10T13:44:49.765Z
+- **departmentRunId:** `growth-department-2026-08-10T144907Z`
+- **Generado:** 2026-08-10T14:49:38.530Z
 
 **Recordatorio de seguridad: este informe es PURA PLANIFICACION. Ningun plan de este fichero, este agente ni este pase de `growth:daily` ha escrito nada en WordPress produccion. Produccion sigue intacta.**
 
 - Planes nuevos esta pasada: **0**
-- Planes ya existentes (sin cambios): **21**
+- Planes ya existentes (sin cambios): **0**
 - Drafts de staging sin QA pass todavia (omitidos, no se les propone plan): **0**
+- Omitidos por falta de revision visual humana (Fase O27.3 -- QA tecnico pasado no es lo mismo que listo para producción, ver src/core/visual-qa.ts): **21**
 - Omitidos por ya existir un plan sin resolver para el mismo canonicalKey (Fase O27, evita duplicados por Telegram): **0**
 - Omitidos por ya existir un plan sin resolver para la misma pagina real (Fase O27.2, otro change pack distinto sobre la misma URL): **0**
 - Nuevas solicitudes de aprobacion: **0** (enviadas por Telegram: 0)

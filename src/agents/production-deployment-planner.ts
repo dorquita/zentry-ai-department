@@ -25,6 +25,7 @@ import { runStagingQaAgent, StagingQaAgentRunResult } from "./staging-qa-agent";
 import { getWordpressPage } from "../adapters/wordpress";
 import { AutonomyRiskLevel } from "../core/autonomy-policy";
 import { resolveActiveClientPaths } from "../core/client-paths";
+import { isVisuallyApproved, readCurrentVisualQaApprovals } from "../core/visual-qa";
 
 /**
  * Production Deployment Planner (Fase O13.0, aprobaciones separadas
@@ -115,6 +116,7 @@ export interface ProductionDeploymentPlannerRunResult {
   newPlans: ProductionDeploymentPlan[];
   existingPlans: ProductionDeploymentPlan[];
   skippedNoQaPass: number;
+  skippedVisualReviewNeeded: number;
   skippedDuplicateCanonicalKey: number;
   skippedDuplicatePage: number;
   newApprovalRequests: number;
@@ -142,6 +144,7 @@ function buildReportMarkdown(result: ProductionDeploymentPlannerRunResult, allPl
   lines.push(`- Planes nuevos esta pasada: **${result.newPlans.length}**`);
   lines.push(`- Planes ya existentes (sin cambios): **${result.existingPlans.length}**`);
   lines.push(`- Drafts de staging sin QA pass todavia (omitidos, no se les propone plan): **${result.skippedNoQaPass}**`);
+  lines.push(`- Omitidos por falta de revision visual humana (Fase O27.3 -- QA tecnico pasado no es lo mismo que listo para producción, ver src/core/visual-qa.ts): **${result.skippedVisualReviewNeeded}**`);
   lines.push(`- Omitidos por ya existir un plan sin resolver para el mismo canonicalKey (Fase O27, evita duplicados por Telegram): **${result.skippedDuplicateCanonicalKey}**`);
   lines.push(`- Omitidos por ya existir un plan sin resolver para la misma pagina real (Fase O27.2, otro change pack distinto sobre la misma URL): **${result.skippedDuplicatePage}**`);
   lines.push(`- Nuevas solicitudes de aprobacion: **${result.newApprovalRequests}** (enviadas por Telegram: ${result.sentViaTelegram})`);
@@ -221,8 +224,10 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
   const newPlans: ProductionDeploymentPlan[] = [];
   const existingPlans: ProductionDeploymentPlan[] = [];
   let skippedNoQaPass = 0;
+  let skippedVisualReviewNeeded = 0;
   let skippedDuplicateCanonicalKey = 0;
   let skippedDuplicatePage = 0;
+  const visualApprovals = readCurrentVisualQaApprovals();
 
   // Fase O27 -- corrige el bug real de "Plan de deploy a produccion"
   // duplicado por Telegram (mismo canonicalKey, dos stagingExecutionId
@@ -262,6 +267,26 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
     // de cualquier landing "plana", aunque el QA tecnico la deje pasar.
     if (!qaForThis || !qaForThis.overallPass || !qaForThis.landingQa.pass) {
       skippedNoQaPass += 1;
+      continue;
+    }
+
+    // Fase O27.3 (postmortem visual de Pau): "el QA tecnico paso" NO
+    // significa "esta lista para producción" -- los borradores pasaban
+    // QA estructural pero visualmente parecian bocetos (encabezados
+    // "H2:" literales, parrafos repetidos, sin jerarquia visual clara).
+    // A partir de ahora, ademas del QA tecnico, hace falta que una
+    // persona haya confirmado explicitamente la pagina via
+    // markVisuallyApproved() (ver src/core/visual-qa.ts) antes de
+    // proponerle a Pau un plan de deploy a produccion. Si no esta
+    // aprobada visualmente, el change pack se queda en qa_passed --
+    // disponible, pero sin generar todavia una decision de producción.
+    if (!isVisuallyApproved(execution.wordpressPageId, visualApprovals)) {
+      skippedVisualReviewNeeded += 1;
+      logger.info("Production Deployment Planner: plan no creado, falta revision visual humana (QA tecnico OK, visual pendiente)", {
+        wordpressPageId: execution.wordpressPageId,
+        executionId: execution.executionId,
+        keyword: execution.keyword,
+      });
       continue;
     }
 
@@ -465,6 +490,7 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
     newPlans,
     existingPlans,
     skippedNoQaPass,
+    skippedVisualReviewNeeded,
     skippedDuplicateCanonicalKey,
     skippedDuplicatePage,
     newApprovalRequests,

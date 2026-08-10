@@ -328,6 +328,60 @@ export async function getProductionPage(pageId: number): Promise<ProductionPageI
   };
 }
 
+export interface ProductionPageSearchResult {
+  id: number;
+  slug: string;
+  title: string;
+  link: string;
+  status: string;
+}
+
+/**
+ * Fase O27.3 -- busqueda de solo lectura (GET, sin gate de escritura,
+ * mismo patron que getProductionPage()) contra paginas PUBLICADAS de
+ * produccion, por texto libre (WordPress busca en titulo/contenido/
+ * excerpt). Se usa para detectar si un borrador nuevo de staging apunta
+ * a una URL/tema que YA existe en produccion, antes de proponerlo como
+ * "pagina nueva" -- evita duplicados/canibalizacion (postmortem visual
+ * de Pau, Fase O27.3). Nunca escribe nada.
+ */
+export async function searchProductionPagesBySlug(query: string): Promise<ProductionPageSearchResult[]> {
+  const config = resolveProductionConfig();
+  const authHeader = "Basic " + Buffer.from(`${config.username}:${config.appPassword}`).toString("base64");
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}${WORDPRESS_API_PAGES_PATH}?search=${encodeURIComponent(query)}&per_page=10`, {
+      method: "GET",
+      headers: { Authorization: authHeader },
+    });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new Error(`Fallo de red buscando paginas de produccion: ${sanitizeProductionError(raw, config.appPassword)}`);
+  }
+
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = "";
+    }
+    throw new Error(
+      `WordPress PRODUCCION REST API respondio ${response.status} buscando paginas ("${query}"): ${sanitizeProductionError(bodyText, config.appPassword)}`
+    );
+  }
+
+  const json = (await response.json()) as Array<{ id: number; slug?: string; title?: { rendered?: string }; link?: string; status?: string }>;
+  return json.map((p) => ({
+    id: p.id,
+    slug: p.slug ?? "",
+    title: p.title?.rendered ?? "",
+    link: p.link ?? "",
+    status: p.status ?? "",
+  }));
+}
+
 export interface UpdateProductionDraftInput {
   pageId: number;
   title: string;

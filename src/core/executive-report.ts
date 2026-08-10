@@ -998,12 +998,29 @@ export interface PendingDecisionV2 {
   reviewUrl?: string;
 }
 
+/**
+ * Fase O27.3 -- borrador que YA paso QA tecnico en staging pero que
+ * TODAVIA no ha sido revisado visualmente por una persona (ver
+ * src/core/visual-qa.ts). Se muestra por separado de "Decisiones
+ * necesarias de Pau": no es una decision con opciones aprobar/rechazar,
+ * es informativo -- el unico paso siguiente posible es que alguien lo
+ * mire y, si esta bien, lo apruebe visualmente (scripts/mark-visual-qa.ts).
+ */
+export interface VisualReviewPendingItem {
+  keyword: string;
+  page?: string;
+  stagingUrl?: string;
+  /** Fase O27.3 -- ver src/core/existing-page-audit.ts. Ausente si todavia no se ha auditado. */
+  existingPageMatch?: { matchType: "update_existing_page" | "new_page_candidate"; productionUrl?: string };
+}
+
 export interface ExecutiveReportExtrasV2 {
   realChangesToday: RealChangeToday[];
   qaRunsToday: number;
   tasksClosedToday: number;
   tasksAdvancedToday: TaskAdvancedToday[];
   pendingDecisionsV2: PendingDecisionV2[];
+  draftsPendingVisualReview: VisualReviewPendingItem[];
   carrilAAutoAppliedToday: number;
   topBacklogSummary: string[];
   totalOpenOpportunityCount: number;
@@ -1038,13 +1055,25 @@ export function renderExecutiveReportMarkdownV2(data: ExecutiveReportData, extra
   // "todo fue analisis" si hubo ejecucion real). Se sustituye esa frase
   // final por una version que distingue staging (si puede haber cambios
   // reales) de produccion (nunca los hay sin aprobacion).
-  const summaryWithRealChanges =
+  let summaryWithRealChanges =
     extras.realChangesToday.length > 0
       ? data.summaryParagraph.replace(
           /No se ha publicado ningun cambio; las propuestas quedan preparadas para revision\.?/,
           `Se han aplicado ${extras.realChangesToday.length} cambio(s) real(es) en staging hoy (ver seccion 1) — nunca en produccion, que sigue exactamente igual.`
         )
       : data.summaryParagraph;
+  // Fase O27.3 -- V1 cuenta "decisiones pendientes" por su propio camino
+  // (incluye clusters "recomendados ahora" que V2 no trata como
+  // decision), y ademas ya no sabe nada del gate visual (Fase O27.3):
+  // sin este ajuste, el resumen de arriba podia decir "hay 2 decisiones"
+  // mientras la seccion 3 (la fuente real, ya filtrada) decia "ninguna
+  // decision pendiente" -- exactamente el tipo de informe incoherente
+  // que este sistema nunca debe enviar. Se quita la frase de V1 y se
+  // vuelve a poner con la cifra REAL de extras.pendingDecisionsV2.
+  summaryWithRealChanges = summaryWithRealChanges.replace(/\s*Hay \d+ decision\(es\) que necesitan tu aprobacion, aplazamiento o rechazo\.?/, "");
+  if (extras.pendingDecisionsV2.length > 0) {
+    summaryWithRealChanges += ` Hay ${extras.pendingDecisionsV2.length} decision(es) que necesitan tu aprobacion, aplazamiento o rechazo.`;
+  }
   lines.push(summaryWithRealChanges);
   lines.push("");
 
@@ -1063,6 +1092,27 @@ export function renderExecutiveReportMarkdownV2(data: ExecutiveReportData, extra
   lines.push(
     `QA tecnico/visual ejecutado hoy sobre borradores de staging: ${extras.qaRunsToday}. Tareas cerradas hoy (done): ${extras.tasksClosedToday}. Aplicado automaticamente por el Carril A (sin esperar aprobacion diaria): ${extras.carrilAAutoAppliedToday}.`
   );
+  lines.push("");
+  // Fase O27.3 -- distincion explicita pedida por Pau: "QA tecnico
+  // pasado" no es "listo para producción". Esta lista es SIEMPRE
+  // informativa (nunca una decision con opciones aprobar/rechazar) --
+  // el unico siguiente paso posible es que una persona la revise
+  // visualmente (scripts/mark-visual-qa.ts approve <id>).
+  lines.push(
+    `**Borradores con QA tecnico superado, pendientes de revision VISUAL humana (${extras.draftsPendingVisualReview.length}):** estos parecen bocetos hasta que alguien los mire y los apruebe visualmente -- ninguno se propone todavia para producción.`
+  );
+  if (extras.draftsPendingVisualReview.length === 0) {
+    lines.push("Ninguno.");
+  } else {
+    for (const d of extras.draftsPendingVisualReview) {
+      const matchLabel = !d.existingPageMatch
+        ? ""
+        : d.existingPageMatch.matchType === "update_existing_page"
+          ? ` [ACTUALIZA pagina existente: ${d.existingPageMatch.productionUrl ?? "producción"}]`
+          : " [candidata a pagina nueva -- sin equivalente en producción]";
+      lines.push(`- ${d.keyword}${d.page ? ` (${d.page})` : ""}${d.stagingUrl ? ` — ${d.stagingUrl}` : ""}${matchLabel}`);
+    }
+  }
   lines.push("");
 
   lines.push("## 2. Tareas avanzadas hoy");

@@ -2,8 +2,8 @@
 
 > Este es el informe tecnico interno (IDs, estados, work orders, change packs, agentes, trazabilidad). El informe para el responsable del departamento es el ejecutivo del mismo dia (`reports/daily/executive-<fecha>.md`), que es el que se envia por email.
 
-- **departmentRunId:** `growth-department-2026-08-10T134413Z`
-- **Generado:** 2026-08-10T13:44:50.318Z
+- **departmentRunId:** `growth-department-2026-08-10T144907Z`
+- **Generado:** 2026-08-10T14:49:39.157Z
 
 ## Resumen ejecutivo
 
@@ -12,7 +12,7 @@ El departamento Web & Growth analizo datos reales de Search Console, priorizó a
 ## Que ha hecho cada agente
 
 - **staging-executor**: completado — Staging Executor Agent finalizado: 0 ejecucion(es) aplicada(s), 0 pendiente(s) de aprobacion
-- **staging-qa-agent**: completado (2 warning(s)) — Staging QA Agent finalizado: 21/21 borrador(es) pasan (21 con warning)
+- **staging-qa-agent**: completado — Staging QA Agent finalizado: 21/21 borrador(es) pasan (21 con warning)
 - **approval-gateway**: completado — Approval Gateway Agent finalizado: 0 solicitud(es) nueva(s), 0 enviada(s) por Telegram
 - **production-deployment-planner**: completado — Production Deployment Planner finalizado: 0 plan(es) nuevo(s), 22 en total. Produccion no tocada.
 - **production-draft-executor**: completado — Production Draft Executor finalizado: 0 pendiente(s) nueva(s), 0 aplicada(s), canAttemptRealWrites=false.
@@ -161,18 +161,7 @@ Previews visuales generados (total acumulado, sobre las 5 plantillas de `src/cor
 
 Telegram activo: **si**. Telegram configurado: **si**.
 
-Solicitudes pendientes: **17** · enviadas por Telegram (total): **31** · aprobadas: **24** · rechazadas: **2** · pospuestas: **0**.
-
-- [critical] `b998cf4d-d0ff-4ff6-84df-bf0232d92fe9` taquillas melamina (https://zentrylockers.com/taquillas-melamina/) — canal: telegram, enviada
-- [critical] `5dc59ba6-1a17-40a7-97a1-d6407831847d` taquillas melamina (https://zentrylockers.com/taquillas-melamina-fenolico/) — canal: telegram, enviada
-- [critical] `c040c16b-370b-4f23-ba82-50c068411828` taquillas colegios (https://zentrylockers.com/taquillas-para-colegios/) — canal: telegram, enviada
-- [critical] `faa7557d-3dcc-4e98-bd04-384cbe6884f7` taquilla para el personal (https://zentrylockers.com/taquillas-para-empresas/) — canal: telegram, enviada
-- [critical] `56d63f35-b336-463e-9f34-444dfc33ed63` taquillas fenólicas en palencia (https://zentrylockers.com/taquillas-fenolicas/) — canal: telegram, enviada
-- [critical] `695e5487-b60e-4afb-be9a-dd60de762469` cerraduras inteligentes para taquillas (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — canal: telegram, enviada
-- [critical] `07df60ae-e1f4-45c5-b52e-87908c1636a0` comprar taquillas — canal: telegram, enviada
-- [critical] `d6697896-935a-468d-a280-4ab1a188fc94` soluciones de taquillas — canal: telegram, enviada
-- [critical] `8d975dd4-b910-49d1-988c-3fb7eb175126` taquillas inteligentes — canal: telegram, enviada
-- [critical] `ef894e6e-9619-4774-8f09-0b96662fa09f` taquillas para vestuarios — canal: telegram, enviada
+Solicitudes pendientes: **0** · enviadas por Telegram (total): **31** · aprobadas: **24** · rechazadas: **2** · pospuestas: **0**.
 
 ## Top 5 acciones recomendadas
 
@@ -249,11 +238,6 @@ Ver informe completo en `(no generado en esta pasada)`.
 
 Sin credenciales de GA4 ni GTM en este proyecto: Analytics Watcher solo documento los eventos clave esperados y propuso validaciones manuales.
 Ver informe completo en `(no generado en esta pasada)`.
-
-## Warnings
-
-- [staging-qa-agent] Staging QA: problema de salud general en staging (HTTP o noindex)
-- [staging-qa-agent] Staging QA: problema de salud general en staging (HTTP o noindex)
 
 ## Como gestionar el backlog
 

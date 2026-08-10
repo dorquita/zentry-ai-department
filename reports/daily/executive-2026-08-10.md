@@ -1,7 +1,7 @@
 # Informe diario de Web & Growth
 Fecha: 2026-08-10
 
-Hoy el departamento ha analizado el posicionamiento de la web en Google, ha revisado paginas comerciales importantes y ha comparado la cobertura de contenidos con la competencia. No se han detectado oportunidades nuevas hoy; el departamento sigue trabajando sobre las 17 identificadas anteriormente, 2 de ellas prioritarias. Se han aplicado 21 cambio(s) real(es) en staging hoy (ver seccion 1) — nunca en produccion, que sigue exactamente igual. Hay 3 decision(es) que necesitan tu aprobacion, aplazamiento o rechazo.
+Hoy el departamento ha analizado el posicionamiento de la web en Google, ha revisado paginas comerciales importantes y ha comparado la cobertura de contenidos con la competencia. No se han detectado oportunidades nuevas hoy; el departamento sigue trabajando sobre las 17 identificadas anteriormente, 2 de ellas prioritarias. Se han aplicado 21 cambio(s) real(es) en staging hoy (ver seccion 1) — nunca en produccion, que sigue exactamente igual.
 
 ## 1. Cambios reales hechos hoy
 
@@ -29,6 +29,29 @@ Hoy el departamento ha analizado el posicionamiento de la web en Google, ha revi
 
 QA tecnico/visual ejecutado hoy sobre borradores de staging: 22. Tareas cerradas hoy (done): 0. Aplicado automaticamente por el Carril A (sin esperar aprobacion diaria): 21.
 
+**Borradores con QA tecnico superado, pendientes de revision VISUAL humana (21):** estos parecen bocetos hasta que alguien los mire y los apruebe visualmente -- ninguno se propone todavia para producción.
+- taquillas melamina (https://zentrylockers.com/taquillas-melamina/) — https://staging.zentrylockers.com/?page_id=2091 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-melamina/]
+- taquillas melamina (https://zentrylockers.com/taquillas-melamina-fenolico/) — https://staging.zentrylockers.com/?page_id=2092 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-melamina-fenolico/]
+- taquillas colegios (https://zentrylockers.com/taquillas-para-colegios/) — https://staging.zentrylockers.com/?page_id=2093 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-para-colegios/]
+- taquilla para el personal (https://zentrylockers.com/taquillas-para-empresas/) — https://staging.zentrylockers.com/?page_id=2094 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-para-empresas/]
+- taquillas fenólicas en palencia (https://zentrylockers.com/taquillas-fenolicas/) — https://staging.zentrylockers.com/?page_id=2095 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-fenolicas/]
+- cerraduras inteligentes para taquillas (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — https://staging.zentrylockers.com/?page_id=2096 [ACTUALIZA pagina existente: https://zentrylockers.com/cerraduras-inteligentes-taquillas/]
+- taquillas melamina (https://zentrylockers.com/taquillas-melamina/) — https://staging.zentrylockers.com/?page_id=2097 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-melamina/]
+- taquillas colegios (https://zentrylockers.com/taquillas-para-colegios/) — https://staging.zentrylockers.com/?page_id=2098 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-para-colegios/]
+- taquilla para el personal (https://zentrylockers.com/taquillas-para-empresas/) — https://staging.zentrylockers.com/?page_id=2099 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-para-empresas/]
+- taquillas fenólicas en palencia (https://zentrylockers.com/taquillas-fenolicas/) — https://staging.zentrylockers.com/?page_id=2100 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-fenolicas/]
+- comprar taquillas — https://staging.zentrylockers.com/?page_id=2101 [candidata a pagina nueva -- sin equivalente en producción]
+- soluciones de taquillas — https://staging.zentrylockers.com/?page_id=2102 [candidata a pagina nueva -- sin equivalente en producción]
+- taquillas inteligentes — https://staging.zentrylockers.com/?page_id=2103 [candidata a pagina nueva -- sin equivalente en producción]
+- taquillas para vestuarios — https://staging.zentrylockers.com/?page_id=2104 [candidata a pagina nueva -- sin equivalente en producción]
+- metalicas taquillas — https://staging.zentrylockers.com/?page_id=2105 [candidata a pagina nueva -- sin equivalente en producción]
+- fenolicas con perfil — https://staging.zentrylockers.com/?page_id=2106 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-fenolicas-perfileria/]
+- industrial — https://staging.zentrylockers.com/?page_id=2107 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-para-industria/]
+- oficina — https://staging.zentrylockers.com/?page_id=2108 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-para-oficinas/]
+- colegio — https://staging.zentrylockers.com/?page_id=2109 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-escolares/]
+- universidad — https://staging.zentrylockers.com/?page_id=2110 [candidata a pagina nueva -- sin equivalente en producción]
+- hotel — https://staging.zentrylockers.com/?page_id=2111 [ACTUALIZA pagina existente: https://zentrylockers.com/taquillas-para-hoteles/]
+
 ## 2. Tareas avanzadas hoy
 
 | Tarea | Estado anterior | Estado nuevo | Evidencia | URL staging |
@@ -48,26 +71,7 @@ QA tecnico/visual ejecutado hoy sobre borradores de staging: 22. Tareas cerradas
 
 ## 3. Decisiones necesarias de Pau
 
-### 1. Aprobar el PLAN de deploy a produccion: hotel
-
-Opciones: aprobar / rechazar / aplazar.
-Impacto: Draft de staging `2111` (https://staging.zentrylockers.com/?page_id=2111) tiene un plan de deploy a produccion propuesto. Esto es una APROBACION DE PLAN: confirma que el DISENO (checklist, media, SEO, rollback) esta bien -- NO autoriza ninguna escritura real. Si apruebas esto, se pedira DESPUES una segunda aprobacion, distinta, para autorizar la ejecucion real.
-Riesgo: Critico — toca produccion real si se aprueba.
-URL de revision: (no aplica -- decision sobre backlog, no sobre una pagina concreta).
-
-### 2. Aprobar el PLAN de deploy a produccion: universidad
-
-Opciones: aprobar / rechazar / aplazar.
-Impacto: Draft de staging `2110` (https://staging.zentrylockers.com/?page_id=2110) tiene un plan de deploy a produccion propuesto. Esto es una APROBACION DE PLAN: confirma que el DISENO (checklist, media, SEO, rollback) esta bien -- NO autoriza ninguna escritura real. Si apruebas esto, se pedira DESPUES una segunda aprobacion, distinta, para autorizar la ejecucion real.
-Riesgo: Critico — toca produccion real si se aprueba.
-URL de revision: (no aplica -- decision sobre backlog, no sobre una pagina concreta).
-
-### 3. Aprobar el PLAN de deploy a produccion: colegio
-
-Opciones: aprobar / rechazar / aplazar.
-Impacto: Draft de staging `2109` (https://staging.zentrylockers.com/?page_id=2109) tiene un plan de deploy a produccion propuesto. Esto es una APROBACION DE PLAN: confirma que el DISENO (checklist, media, SEO, rollback) esta bien -- NO autoriza ninguna escritura real. Si apruebas esto, se pedira DESPUES una segunda aprobacion, distinta, para autorizar la ejecucion real.
-Riesgo: Critico — toca produccion real si se aprueba.
-URL de revision: (no aplica -- decision sobre backlog, no sobre una pagina concreta).
+Ninguna decision pendiente hoy.
 
 ## 4. Bloqueos reales
 
@@ -75,7 +79,6 @@ URL de revision: (no aplica -- decision sobre backlog, no sobre una pagina concr
 - No se han podido validar las conversiones porque la medicion de la web (GA4/GTM) todavia no esta conectada.
 - Se detectaron 26 sugerencia(s) de busqueda incompletas o poco claras, descartadas del analisis hasta poder validarlas manualmente.
 - Se detectaron 3 oportunidad(es) de mercado geografico muy especifico y con demanda minima medida, excluidas del analisis principal hasta confirmar si son un mercado real.
-- Staging QA: problema de salud general en staging (HTTP o noindex)
 
 ## 5. Backlog resumido
 
@@ -90,8 +93,8 @@ Oportunidades abiertas en total: 92 (no se repiten todas cada dia). Top priorida
 
 ## 6. Próxima ejecución
 
-Si no respondes: Las 3 decision(es) de arriba se mantienen pendientes (no se repiten como si fueran nuevas) y el Carril A sigue aplicando en staging cualquier otro cambio seguro que este listo, sin esperar a estas decisiones.
-Si apruebas: Se aplica en la siguiente pasada (staging si es Carril A/B, o el siguiente paso del plan si es produccion) y aparece en 'Tareas avanzadas hoy' del proximo informe.
+Si no respondes: No hay ninguna decision bloqueada; el departamento sigue avanzando en staging con normalidad.
+Si apruebas: No aplica — no hay ninguna decision esperando tu aprobacion hoy.
 Seguira avanzando en staging sin esperar tu respuesta: 86 oportunidad(es) mas siguen su curso normal en staging por el Carril A, sin necesitar tu aprobacion.
 
 _Generado automaticamente el 2026-08-10. Para el detalle tecnico completo, consulta el informe interno del mismo dia._

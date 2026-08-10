@@ -13,6 +13,8 @@ import { readCurrentStagingQaResults } from "../core/staging-qa-results";
 import { readCurrentProductionDeploymentPlans } from "../core/production-deployment-plans";
 import { readCurrentProductionExecutions } from "../core/production-executions";
 import { deriveOpportunityState, buildOpportunityStateContext, buildOpportunityStateContextAsOf } from "../core/opportunity-state";
+import { isVisuallyApproved, readCurrentVisualQaApprovals } from "../core/visual-qa";
+import { findExistingPageAudit, readCurrentExistingPageAudits } from "../core/existing-page-audit";
 import { getTelegramStatusForReport } from "../core/telegram-gateway";
 import { getWordpressStatusForReport } from "../adapters/wordpress";
 import {
@@ -23,6 +25,7 @@ import {
   PendingDecisionV2,
   RealChangeToday,
   TaskAdvancedToday,
+  VisualReviewPendingItem,
   renderExecutiveReportMarkdownV2,
   validateExecutiveReportCoherence,
 } from "../core/executive-report";
@@ -574,7 +577,24 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
   }
 
   const allApprovalRequests = readCurrentApprovalRequests();
-  const pendingApprovalRequests = allApprovalRequests.filter((r) => r.status === "pending");
+  const pendingApprovalRequestsRaw = allApprovalRequests.filter((r) => r.status === "pending");
+  // Fase O27.3 (postmortem visual de Pau): filtrado en el ORIGEN, no solo
+  // en la construccion de pendingDecisionsV2 -- si se filtrara solo alli,
+  // el resumen inicial de V1 (data.summaryParagraph, que cuenta
+  // decisiones por su propio camino independiente) se quedaria
+  // desincronizado con la seccion 3 y el informe se volveria
+  // incoherente (ej. "hay 3 decisiones" arriba pero "ninguna decision
+  // pendiente" en la seccion 3, visto en la primera pasada de prueba de
+  // este fix). Se filtra aqui, ANTES de que nada lo use, para que V1 y
+  // V2 vean siempre los mismos datos.
+  const planByIdForVisualGate = new Map(readCurrentProductionDeploymentPlans().map((p) => [p.deploymentPlanId, p]));
+  const visualApprovalsForGate = readCurrentVisualQaApprovals();
+  const pendingApprovalRequests = pendingApprovalRequestsRaw.filter((r) => {
+    if (r.relatedType !== "production_deployment_plan") return true;
+    const plan = planByIdForVisualGate.get(r.relatedId);
+    if (!plan) return true;
+    return isVisuallyApproved(plan.sourceDraftId, visualApprovalsForGate);
+  });
   const sentViaTelegramRequests = allApprovalRequests.filter((r) => Boolean(r.sentAt) && r.channel === "telegram");
   const approvedApprovalRequests = allApprovalRequests.filter((r) => r.status === "approved");
   const rejectedApprovalRequests = allApprovalRequests.filter((r) => r.status === "rejected");
@@ -716,6 +736,10 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
   // MAX_DECISIONS se llenaban con decisiones antiguas y las nuevas de
   // hoy quedaban invisibles (encontrado en el primer arranque real del
   // Carril A).
+  // Nota (Fase O27.3): pendingApprovalRequests YA viene filtrado en el
+  // origen (ver arriba) para excluir planes de deploy a produccion cuya
+  // pagina todavia no tiene revision visual -- no hace falta repetir el
+  // filtro aqui.
   const pendingDecisionsV2: PendingDecisionV2[] = [];
   const seenDecisionTitles = new Set<string>();
   const sortedPendingApprovalRequests = [...pendingApprovalRequests].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
@@ -773,6 +797,31 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
 
   const carrilAOpenCount = allActions.filter((a) => a.status === "auto_approved_for_planning").length;
 
+  // Fase O27.3 (postmortem visual de Pau): "QA tecnico pasado" no es lo
+  // mismo que "lista para producción" -- se anade una lista explicita de
+  // borradores que YA pasaron QA tecnico en staging pero que todavia
+  // nadie ha revisado visualmente (ver src/core/visual-qa.ts). Se
+  // deduplica por wordpressPageId: varias ejecuciones/QA runs pueden
+  // apuntar a la misma pagina.
+  const seenVisualReviewPageIds = new Set<number>();
+  const existingPageAudits = readCurrentExistingPageAudits();
+  const draftsPendingVisualReview: VisualReviewPendingItem[] = [];
+  for (const execution of allStagingExecutions) {
+    if (execution.status !== "applied_to_staging" || typeof execution.wordpressPageId !== "number") continue;
+    if (seenVisualReviewPageIds.has(execution.wordpressPageId)) continue;
+    const qa = allQaResults.find((r) => r.executionId === execution.executionId);
+    if (!qa || !qa.overallPass) continue;
+    if (isVisuallyApproved(execution.wordpressPageId, visualApprovalsForGate)) continue;
+    seenVisualReviewPageIds.add(execution.wordpressPageId);
+    const audit = findExistingPageAudit(execution.wordpressPageId, existingPageAudits);
+    draftsPendingVisualReview.push({
+      keyword: execution.keyword,
+      page: execution.page,
+      stagingUrl: execution.wordpressDraftUrl,
+      existingPageMatch: audit ? { matchType: audit.matchType, productionUrl: audit.productionUrl } : undefined,
+    });
+  }
+
   // --- Informe ejecutivo (Fase O9, formato de 6 secciones desde la Fase
   // O27): deduplicado, priorizado, en lenguaje natural, diferenciando
   // SIEMPRE analisis de ejecucion real. Es el que se envia por email. Si
@@ -821,6 +870,7 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
       tasksClosedToday,
       tasksAdvancedToday: tasksAdvancedToday.slice(0, 12),
       pendingDecisionsV2,
+      draftsPendingVisualReview,
       carrilAAutoAppliedToday,
       topBacklogSummary,
       totalOpenOpportunityCount,
