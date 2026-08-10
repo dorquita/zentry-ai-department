@@ -258,9 +258,20 @@ export const VISUAL_TEMPLATES: Record<VisualTemplateId, VisualTemplateDefinition
       'Cuando el change pack es un brief editorial informativo (changeType "new_content_page"/"content_update" sin intencion transaccional clara) — el contenido es mas informativo que de venta directa.',
     hero: {
       headlinePattern: "{titulo del articulo}",
-      subheadlinePattern: "Bajada editorial breve, tono informativo — nunca lenguaje de venta directa aqui.",
+      // Fase O27.4 (bug real encontrado en revision visual de Pau): este
+      // patron y el ctaLabel de abajo son los UNICOS de todo este fichero
+      // que se escribieron como una NOTA para quien programa (tono,
+      // criterio editorial), no como un patron de copy real con
+      // {placeholders} -- el resto de plantillas (sector_landing,
+      // product_landing...) SI son copy real listo para rellenar y
+      // publicar. ux-ui-landing-architect.ts usa este campo tal cual
+      // (fillPattern + boton), asi que la nota se colaba literal como
+      // subtitulo/CTA visibles en paginas reales de staging (2097, 2100).
+      // Deben ser copy real, blando/informativo en TONO pero nunca texto
+      // sobre como escribir texto.
+      subheadlinePattern: "Guia informativa de Zentry sobre {keyword}: todo lo que necesitas saber antes de decidir.",
       image: { imagePurpose: "hero", placeholderNote: placeholder("Imagen editorial/de contexto, no necesariamente de producto — estilo mas fotografico/lifestyle que las plantillas transaccionales."), dimensions: HERO_DIMENSIONS },
-      ctaLabel: "(sin CTA fuerte en el hero — es contenido informativo)",
+      ctaLabel: "Ver catalogo de taquillas Zentry",
     },
     featuredImage: { imagePurpose: "card", placeholderNote: placeholder("Miniatura para el listado del blog y para compartir en redes."), dimensions: CARD_DIMENSIONS },
     benefitsBlock: {
