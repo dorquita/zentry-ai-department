@@ -785,3 +785,74 @@ export async function updateStagingPublishedPageContent(input: UpdateStagingPubl
   logger.info("Contenido de pagina de staging actualizado (sigue publicada, status y slug sin cambios)", { wordpressDraftId: json.id, status: json.status });
   return { wordpressDraftId: json.id, wordpressDraftUrl: json.link ?? "" };
 }
+
+export interface TrashStagingPageResult {
+  pageId: number;
+  status: string;
+}
+
+/**
+ * Fase O28.7 -- mueve a la papelera de STAGING una pagina de revision
+ * que Pau ha rechazado explicitamente como "no quiero esta pagina"/
+ * "descartar"/"borrala" (ver telegram-approval-receiver.ts). SOLO
+ * staging, mismo `assertWordpressWriteAllowed()` que bloquea produccion
+ * incondicionalmente en todo este fichero -- este adapter nunca conoce
+ * credenciales de produccion. Reversible: WordPress conserva la pagina
+ * en la papelera (no es un borrado definitivo), se puede restaurar
+ * manualmente desde wp-admin si hiciera falta.
+ */
+export async function trashStagingPage(pageId: number): Promise<TrashStagingPageResult> {
+  if (!isWordpressDraftsEnabled()) {
+    throw new Error("trashStagingPage() llamado con WORDPRESS_DRAFTS_ENABLED != true. Bloqueado.");
+  }
+  assertWordpressWriteAllowed();
+
+  const current = await getWordpressPage(pageId);
+  if (current.status === "trash") {
+    logger.info("WordPress adapter: la pagina ya estaba en la papelera de staging, no se hace nada", { pageId });
+    return { pageId, status: "trash" };
+  }
+
+  const config = resolveWordpressConfig();
+  logger.info("WordPress adapter: moviendo a la papelera una pagina de revision de staging (rechazada explicitamente)", {
+    environment: resolveWordpressEnv(),
+    targetUrl: config.baseUrl,
+    pageId,
+    previousStatus: current.status,
+  });
+  const authHeader = "Basic " + Buffer.from(`${config.username}:${config.appPassword}`).toString("base64");
+
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}${WORDPRESS_API_PAGES_PATH}/${pageId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: authHeader },
+      body: JSON.stringify({ status: "trash" }),
+    });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new Error(`Fallo de red moviendo a la papelera la pagina ${pageId}: ${sanitizeWordpressError(raw, config.appPassword)}`);
+  }
+
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = "";
+    }
+    throw new Error(
+      `WordPress REST API respondio ${response.status} moviendo a la papelera la pagina ${pageId}: ${sanitizeWordpressError(bodyText, config.appPassword)}`
+    );
+  }
+
+  const json = (await response.json()) as { id?: number; status?: string };
+  if (typeof json.id !== "number" || json.status !== "trash") {
+    throw new Error(
+      `Respuesta inesperada de WordPress al mover a la papelera la pagina ${pageId} (sin id numerico o status != "trash"). Tratar como fallo.`
+    );
+  }
+
+  logger.info("Pagina de revision de staging movida a la papelera", { pageId: json.id, status: json.status });
+  return { pageId: json.id, status: json.status };
+}

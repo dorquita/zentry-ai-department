@@ -372,6 +372,13 @@ export type ApprovalRelatedType =
   | "staging_execution"
   | "production_deployment_plan"
   | "production_execution"
+  // Fase O28.7 -- revision visual de UNA pagina de staging publicada
+  // (nunca produccion) directamente, con `relatedId = String(wordpressPageId)`.
+  // Antes, "revision visual" se pedia via change_pack/staging_execution
+  // (relatedId = un UUID), lo que hacia fragil derivar el wordpressPageId
+  // real desde la solicitud (Number(uuid) = NaN). Este tipo lo deja
+  // directo y sin ambiguedad.
+  | "staging_review_page"
   // Fase O14: reservado para el dia que una ability de Novamira MCP
   // clasificada "safe_write_staging_only" con requiresApproval:true
   // (ver config/novamira-allowlist.json + src/core/novamira-guard.ts)
@@ -825,7 +832,14 @@ export interface TelegramProcessedUpdate {
     // Fase O28.5 -- rediseno del flujo de aprobaciones de Telegram.
     | "feedback_recorded"
     | "ignored_multiple_pending_needs_id"
-    | "ignored_no_pending_requests";
+    | "ignored_no_pending_requests"
+    // Fase O28.7 -- error inesperado procesando la actualizacion (ver
+    // handler generico de errores en runTelegramApprovalReceiver): se
+    // responde SIEMPRE con un mensaje claro, nunca se deja "cargando".
+    | "error"
+    // Fase O28.7 -- rechazo con feedback ambiguo: se pide aclaracion,
+    // nunca se borra ni se decide nada.
+    | "feedback_needs_clarification";
   approvalRequestId?: string;
   relatedType?: ApprovalRelatedType;
   processedAt: string;
@@ -860,6 +874,24 @@ export interface VisualReviewFeedback {
   feedback: string;
   source: "telegram";
   createdAt: string;
+}
+
+// Fase O28.7 -- nueva politica: una pagina de revision visual se
+// PUBLICA en staging (status=publish, solo staging -- nunca produccion)
+// para que Pau pueda abrirla por un enlace publico real desde Telegram,
+// en vez de un draft que exige sesion en wp-admin. `reviewStagingPage:
+// true` es la marca interna pedida por Pau -- WordPress no expone meta
+// personalizado via REST sin registrarlo en el tema (fuera de alcance,
+// no se toca theme/functions.php), asi que el registro vive aqui, en el
+// propio sistema, no como post meta de WordPress.
+export interface StagingReviewPage {
+  wordpressPageId: number;
+  keyword: string;
+  publicUrl: string;
+  pageType: "update_existing_page" | "new_page_candidate";
+  productionUrl?: string;
+  reviewStagingPage: true;
+  publishedAt: string;
 }
 
 /**

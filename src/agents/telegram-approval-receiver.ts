@@ -21,6 +21,9 @@ import {
 } from "../core/telegram-reject-prompts";
 import { recordVisualReviewFeedback } from "../core/visual-review-feedback";
 import { getNextUpdateOffset, recordProcessedUpdate } from "../core/telegram-processed-updates";
+import { markVisuallyApproved } from "../core/visual-qa";
+import { findStagingReviewPage, readCurrentStagingReviewPages } from "../core/staging-review-pages";
+import { trashStagingPage } from "../adapters/wordpress";
 import { logger } from "../core/logger";
 import { ApprovalRequest, TelegramProcessedUpdate } from "../core/types";
 
@@ -219,6 +222,21 @@ async function handleApproveOrReject(command: { type: "approve" | "reject"; id: 
   }
 
   setApprovalRequestStatus(request.approvalRequestId, "approved", { answer: "approved", answeredBy: "telegram", reason: "Aprobado via Telegram" });
+
+  // Fase O28.7 -- para una revision visual de pagina (relatedId =
+  // wordpressPageId directo, ver ApprovalRelatedType en types.ts), la
+  // aprobacion marca visually_approved en el sistema -- NUNCA genera
+  // deploy, NUNCA publica en produccion, NUNCA avanza un plan por si
+  // sola. Texto de confirmacion exacto pedido por Pau.
+  if (request.relatedType === "staging_review_page") {
+    const wordpressPageId = Number(request.relatedId);
+    if (Number.isFinite(wordpressPageId)) {
+      markVisuallyApproved(wordpressPageId, "pau", "Aprobado via Telegram (revision visual en staging)");
+    }
+    await reply("✅ Pagina aprobada visualmente. No se ha publicado en produccion.");
+    return { ...base, outcome: "approved", approvalRequestId: request.approvalRequestId, relatedType: request.relatedType };
+  }
+
   await reply(`✅ Aprobado: "${request.title}".`);
   return { ...base, outcome: "approved", approvalRequestId: request.approvalRequestId, relatedType: request.relatedType };
 }
@@ -257,12 +275,41 @@ async function handleConfirmProduction(shortId: string, update: UpdateBase): Pro
   return { ...base, outcome: "production_confirmed_approved", approvalRequestId: request.approvalRequestId, relatedType: request.relatedType };
 }
 
+// Fase O28.7 -- clasificacion del motivo de rechazo (Pau, PARTE 4):
+// "descartar" (no quiero esta pagina/borrala) actua distinto de "mejorar"
+// (se ve plano/falta imagen/CTA flojo). Nunca borra nada por una frase
+// ambigua -- en ese caso se pide aclaracion y no se cierra el prompt.
+export type RejectFeedbackClassification = "discard" | "improve" | "ambiguous";
+
+const DISCARD_PATTERNS = [
+  /no quiero esta p[aá]gina/,
+  /descartar/,
+  /no tiene sentido/,
+  /b[oó]rrala/,
+  /borrarla/,
+  /eliminarla/,
+  /quitarla/,
+  /no la quiero/,
+];
+const IMPROVE_PATTERNS = [/plano/, /falta imagen/, /\bcta\b/, /gen[eé]rico/, /dise[nñ]o/, /mejorar/, /flojo/, /copy/, /espaciado/, /color/, /muy basico/, /muy b[aá]sico/];
+
+export function classifyRejectFeedback(text: string): RejectFeedbackClassification {
+  const normalized = text.trim().toLowerCase();
+  if (DISCARD_PATTERNS.some((re) => re.test(normalized))) return "discard";
+  if (IMPROVE_PATTERNS.some((re) => re.test(normalized))) return "improve";
+  return "ambiguous";
+}
+
 /**
- * Fase O28.5 -- si hay un prompt de motivo de rechazo activo para este
- * chat, el mensaje se trata como la respuesta: se guarda como feedback
- * (ver src/core/visual-review-feedback.ts) y se cierra el prompt. Se
- * comprueba ANTES que cualquier otro tipo de comando, para que un motivo
- * como "no me gusta" no se reinterprete como un rechazo nuevo.
+ * Fase O28.5/O28.7 -- si hay un prompt de motivo de rechazo activo para
+ * este chat, el mensaje se trata como la respuesta: se guarda como
+ * feedback (ver src/core/visual-review-feedback.ts) y, segun como se
+ * clasifique, se actua sobre la pagina real (papelera solo si es
+ * new_page_candidate Y el motivo es un descarte explicito -- nunca en
+ * update_existing_page, nunca con un motivo de mejora, nunca con un
+ * motivo ambiguo). Se comprueba ANTES que cualquier otro tipo de
+ * comando, para que un motivo como "no me gusta" no se reinterprete
+ * como un rechazo nuevo.
  */
 async function tryHandleRejectReasonAnswer(update: UpdateBase): Promise<TelegramProcessedUpdate | null> {
   const prompt = findActiveRejectReasonPromptForChat(update.chatId);
@@ -273,26 +320,67 @@ async function tryHandleRejectReasonAnswer(update: UpdateBase): Promise<Telegram
     return null;
   }
 
-  setRejectReasonPromptStatus(prompt.promptId, "answered");
   const current = readCurrentApprovalRequests();
   const request = findApprovalRequestById2(prompt.approvalRequestId, current);
-  const wordpressPageId = request ? Number(request.relatedId) : undefined;
-  recordVisualReviewFeedback({
-    approvalRequestId: prompt.approvalRequestId,
-    wordpressPageId: Number.isFinite(wordpressPageId) ? wordpressPageId : undefined,
-    feedback: update.text.trim(),
-    source: "telegram",
-  });
-  await reply("Gracias, lo tengo en cuenta para las proximas paginas.");
-  return {
+  // Fase O28.7 -- para staging_review_page, relatedId ES el
+  // wordpressPageId (directo, sin ambiguedad); para otros relatedType
+  // heredados (change_pack/staging_execution...) relatedId es un UUID y
+  // Number(...) da NaN a proposito -- no hay pagina que asociar todavia.
+  const wordpressPageId = request ? Number(request.relatedId) : NaN;
+  const hasPageId = Number.isFinite(wordpressPageId);
+  const feedbackText = update.text.trim();
+  const classification = classifyRejectFeedback(feedbackText);
+
+  const base = {
     updateId: update.updateId,
     chatId: update.chatId,
     text: update.text,
-    outcome: "feedback_recorded",
     approvalRequestId: prompt.approvalRequestId,
     relatedType: request?.relatedType,
     processedAt: new Date().toISOString(),
   };
+
+  if (classification === "ambiguous") {
+    // No se cierra el prompt -- la siguiente respuesta se vuelve a
+    // evaluar aqui mismo, nunca se decide nada con una frase que no se
+    // entiende.
+    await reply(
+      'No estoy seguro de si quieres que la mejore o que la descarte. ¿Puedes decirlo mas claro? (ej: "descartar" / "borrala" para quitarla, o algo como "falta imagen"/"CTA flojo" para mejorarla)'
+    );
+    return { ...base, outcome: "feedback_needs_clarification" };
+  }
+
+  setRejectReasonPromptStatus(prompt.promptId, "answered");
+  recordVisualReviewFeedback({
+    approvalRequestId: prompt.approvalRequestId,
+    wordpressPageId: hasPageId ? wordpressPageId : undefined,
+    feedback: feedbackText,
+    source: "telegram",
+  });
+
+  if (classification === "discard" && hasPageId) {
+    const reviewPage = findStagingReviewPage(wordpressPageId, readCurrentStagingReviewPages());
+    if (reviewPage?.pageType === "new_page_candidate") {
+      try {
+        await trashStagingPage(wordpressPageId);
+        await reply("Entendido, la he movido a la papelera en staging (reversible desde wp-admin si hiciera falta). Produccion no se ha tocado.");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error("Fallo moviendo a la papelera una pagina de revision rechazada", { wordpressPageId, error: message });
+        await reply("Entendido, la marco como descartada -- no he podido moverla a la papelera automaticamente, lo reviso a mano.");
+      }
+    } else {
+      // update_existing_page (o pagina sin registro de revision, mas
+      // conservador): nunca se borra sin confirmar aparte -- se deja
+      // marcada como rechazada/necesita revision, sin tocar WordPress.
+      await reply("Entendido, la marco como rechazada. Como actualiza una pagina real ya existente, no la borro -- queda para revision, sin tocar produccion.");
+    }
+    return { ...base, outcome: "feedback_recorded" };
+  }
+
+  // classification === "improve" (o discard sin pageId identificado)
+  await reply("Gracias, lo tengo en cuenta para las proximas paginas. Sigue publicada en staging para seguir trabajandola.");
+  return { ...base, outcome: "feedback_recorded" };
 }
 
 /**
@@ -332,6 +420,7 @@ export interface TelegramApprovalReceiverRunResult {
   productionConfirmationsRequested: number;
   productionConfirmed: number;
   feedbackRecorded: number;
+  errors: number;
   ignored: number;
 }
 
@@ -344,6 +433,7 @@ export async function runTelegramApprovalReceiver(): Promise<TelegramApprovalRec
     productionConfirmationsRequested: 0,
     productionConfirmed: 0,
     feedbackRecorded: 0,
+    errors: 0,
     ignored: 0,
   };
 
@@ -359,52 +449,76 @@ export async function runTelegramApprovalReceiver(): Promise<TelegramApprovalRec
   for (const update of updates) {
     let processed: TelegramProcessedUpdate;
 
-    if (!isAuthorizedTelegramChat(update.chatId)) {
+    // Fase O28.7 -- Pau: "al recibir cualquier callback de boton,
+    // responder INMEDIATAMENTE con ACK". La causa real del "cargando..."
+    // reportado no era un bug de orden (answerCallbackQuery ya se
+    // llamaba antes de procesar nada) sino que este receiver es de
+    // sondeo MANUAL -- nada lo dispara solo cuando Pau pulsa un boton
+    // (ver informe). Aun asi, se envuelve TODO el procesamiento de cada
+    // actualizacion en un try/catch: si algo inesperado falla DESPUES
+    // del ACK, Pau recibe un mensaje claro en vez de quedarse sin
+    // respuesta -- nunca se deja un boton "cargando" indefinidamente por
+    // un fallo silencioso.
+    try {
+      if (!isAuthorizedTelegramChat(update.chatId)) {
+        processed = {
+          updateId: update.updateId,
+          chatId: update.chatId,
+          text: update.kind === "message" ? update.text : update.callbackData,
+          outcome: "ignored_unauthorized_chat",
+          processedAt: new Date().toISOString(),
+        };
+      } else if (update.kind === "callback") {
+        // Pulsar un boton: se responde al callback INMEDIATAMENTE (quita
+        // el "reloj" en el cliente de Telegram) antes de cualquier otra
+        // logica, y se reusa EXACTAMENTE la misma logica que
+        // "approve <id>"/"reject <id>" en texto, solo que el id ya viene
+        // sin ambiguedad en el callback_data -- nunca hace falta que Pau
+        // escriba nada.
+        await answerCallbackQuery(update.callbackQueryId, "Procesando...");
+        const command = parseCallbackData(update.callbackData);
+        const base: UpdateBase = { updateId: update.updateId, chatId: update.chatId, text: update.callbackData };
+        if (!command) {
+          processed = { updateId: update.updateId, chatId: update.chatId, text: update.callbackData, outcome: "ignored_no_command_match", processedAt: new Date().toISOString() };
+        } else {
+          processed = await handleApproveOrReject(command, base);
+        }
+      } else {
+        // update.kind === "message"
+        const base: UpdateBase = { updateId: update.updateId, chatId: update.chatId, text: update.text };
+        const feedbackHandled = await tryHandleRejectReasonAnswer(base);
+        if (feedbackHandled) {
+          processed = feedbackHandled;
+        } else {
+          const command = parseTelegramCommand(update.text);
+          if (command?.type === "confirm_production") {
+            processed = await handleConfirmProduction(command.shortId, base);
+          } else if (command) {
+            processed = await handleApproveOrReject(command, base);
+          } else {
+            const naturalLanguageHandled = await tryHandleNaturalLanguage(base);
+            processed =
+              naturalLanguageHandled ?? {
+                updateId: update.updateId,
+                chatId: update.chatId,
+                text: update.text,
+                outcome: "ignored_no_command_match",
+                processedAt: new Date().toISOString(),
+              };
+          }
+        }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logger.error("Telegram Approval Receiver: error inesperado procesando una actualizacion", { updateId: update.updateId, error: message });
+      await reply("⚠️ No he podido procesarlo. Revisare logs.");
       processed = {
         updateId: update.updateId,
         chatId: update.chatId,
         text: update.kind === "message" ? update.text : update.callbackData,
-        outcome: "ignored_unauthorized_chat",
+        outcome: "error",
         processedAt: new Date().toISOString(),
       };
-    } else if (update.kind === "callback") {
-      // Fase O28.5 -- pulsar un boton: se responde al callback (quita el
-      // "reloj" en el cliente de Telegram) y se reusa EXACTAMENTE la
-      // misma logica que "approve <id>"/"reject <id>" en texto, solo que
-      // el id ya viene sin ambiguedad en el callback_data -- nunca hace
-      // falta que Pau escriba nada.
-      await answerCallbackQuery(update.callbackQueryId, "Procesando...");
-      const command = parseCallbackData(update.callbackData);
-      const base: UpdateBase = { updateId: update.updateId, chatId: update.chatId, text: update.callbackData };
-      if (!command) {
-        processed = { updateId: update.updateId, chatId: update.chatId, text: update.callbackData, outcome: "ignored_no_command_match", processedAt: new Date().toISOString() };
-      } else {
-        processed = await handleApproveOrReject(command, base);
-      }
-    } else {
-      // update.kind === "message"
-      const base: UpdateBase = { updateId: update.updateId, chatId: update.chatId, text: update.text };
-      const feedbackHandled = await tryHandleRejectReasonAnswer(base);
-      if (feedbackHandled) {
-        processed = feedbackHandled;
-      } else {
-        const command = parseTelegramCommand(update.text);
-        if (command?.type === "confirm_production") {
-          processed = await handleConfirmProduction(command.shortId, base);
-        } else if (command) {
-          processed = await handleApproveOrReject(command, base);
-        } else {
-          const naturalLanguageHandled = await tryHandleNaturalLanguage(base);
-          processed =
-            naturalLanguageHandled ?? {
-              updateId: update.updateId,
-              chatId: update.chatId,
-              text: update.text,
-              outcome: "ignored_no_command_match",
-              processedAt: new Date().toISOString(),
-            };
-        }
-      }
     }
 
     recordProcessedUpdate(processed);
@@ -424,6 +538,9 @@ export async function runTelegramApprovalReceiver(): Promise<TelegramApprovalRec
         break;
       case "feedback_recorded":
         result.feedbackRecorded += 1;
+        break;
+      case "error":
+        result.errors += 1;
         break;
       default:
         result.ignored += 1;
