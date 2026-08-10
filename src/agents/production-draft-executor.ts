@@ -258,11 +258,16 @@ export async function runProductionDraftExecutor(departmentRunId?: string): Prom
           try {
             await sendTelegramApprovalRequest({
               approvalRequestId: request.approvalRequestId,
+              relatedType: request.relatedType,
               title: request.title,
               summary: request.summary,
               riskLevel: request.riskLevel,
               requestedAction: request.requestedAction,
               options: request.options,
+              stagingUrl: execution.sourceDraftUrl,
+              productionUrl: execution.page,
+              onApproveText:
+                "Se autoriza intentar crear un BORRADOR real en producción (nunca publicar). Solo se intentaría si además PRODUCTION_EXECUTION_ENABLED, PRODUCTION_DRAFTS_ENABLED y PRODUCTION_BACKEND=rest están activos -- hoy están desactivados.",
             });
             const updated = markApprovalRequestSent(request.approvalRequestId, "telegram");
             if (updated) sentViaTelegram += 1;

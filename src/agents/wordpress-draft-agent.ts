@@ -955,6 +955,7 @@ export async function runWordpressDraftAgent(departmentRunId?: string): Promise<
             try {
               await sendTelegramApprovalRequest({
                 approvalRequestId: request.approvalRequestId,
+                relatedType: request.relatedType,
                 title: request.title,
                 summary: request.summary,
                 riskLevel: request.riskLevel,

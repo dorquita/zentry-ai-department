@@ -124,6 +124,40 @@ function resolveMaterialInfo(material: string | undefined): MaterialInfo | undef
   return MATERIAL_INFO[material.toLowerCase()];
 }
 
+// Fase O28.6 -- 2103 ("taquillas inteligentes") seguia con relleno
+// generico en 3 secciones (app/tarjeta/codigo, solucion completa,
+// solicita una demo): son temas de CONTROL DE ACCESO, no de material,
+// y no habia ninguna base de conocimiento para ellos (a diferencia de
+// melamina/fenolica/metalica). Se anade aqui, con el mismo criterio que
+// MATERIAL_INFO -- hechos generales del sector, ningun dato especifico
+// de un modelo/linea de producto Zentry/Tukandado que no este
+// confirmado (ver ARES/ORBIS/BOXIS/NEO en el informe final: sin
+// documentacion real en este proyecto, no se afirma nada especifico de
+// esas lineas por nombre).
+const LOCK_TOPIC_TERMS = ["cerradura inteligente", "cerraduras inteligentes", "control de acceso", "taquilla inteligente", "taquillas inteligentes"];
+
+function isSmartLockTopic(changePack: ChangePack): boolean {
+  const haystack = `${changePack.keyword} ${changePack.page ?? ""}`.toLowerCase();
+  return LOCK_TOPIC_TERMS.some((term) => haystack.includes(term));
+}
+
+const LOCK_INFO = {
+  queEs:
+    "Una taquilla inteligente es una taquilla equipada con una cerradura electronica en vez de una cerradura mecanica tradicional: el acceso se gestiona de forma digital (codigo, tarjeta o app) en lugar de con una llave fisica.",
+  mecanicaVsElectronica:
+    "La cerradura mecanica usa llave o candado fisico -- sencilla y sin mantenimiento electronico, pero si se pierde la llave hay que forzarla o duplicarla. La cerradura electronica sustituye la llave por un metodo digital (PIN, tarjeta/RFID o app): permite gestionar accesos sin llaves fisicas que se pierdan o dupliquen, y en los modelos con conectividad tambien permite ver quien ha abierto y cuando.",
+  pin: "apertura por codigo PIN, sin necesidad de llevar ninguna tarjeta ni llave encima",
+  rfid: "apertura por tarjeta o llavero RFID, comodo para uso diario y facil de dar de baja si se pierde sin cambiar la cerradura entera",
+  app: "gestion remota por app segun el modelo (altas/bajas de usuarios, estado de las taquillas)",
+  logs: "control de accesos: los modelos con conectividad pueden registrar quien ha abierto cada taquilla y cuando",
+  aperturaRemota: "apertura remota por un administrador si un usuario olvida el codigo o pierde la tarjeta, sin depender de una llave maestra fisica",
+  usos: "gimnasios, oficinas, hoteles, colegios y centros deportivos",
+  cuandoElectronica:
+    "Conviene una cerradura electronica cuando hay muchos usuarios distintos (gimnasios, oficinas compartidas, hoteles), cuando interesa saber quien ha usado cada taquilla, o cuando se quiere evitar la gestion de llaves fisicas (duplicados, perdidas, cambios de cerradura).",
+  cuandoMecanica:
+    "Basta una cerradura mecanica cuando los usuarios son fijos y de confianza (por ejemplo, taquillas de personal fijo), el presupuesto es mas ajustado, o no hace falta ningun registro de quien accede.",
+};
+
 // Copy generico de RESPALDO por tipo de seccion detectado en el H2 --
 // nunca inventa cifras/plazos, siempre remite a "solicitar presupuesto"
 // cuando hace falta un dato concreto que no tenemos. Se usa SOLO cuando
@@ -142,6 +176,36 @@ function buildSectionBody(heading: string, changePack: ChangePack, sector: strin
   const h = heading.toLowerCase();
   const keyword = changePack.keyword;
   const info = resolveMaterialInfo(material);
+  const isLockTopic = isSmartLockTopic(changePack);
+
+  // Fase O28.6 -- categorias de control de acceso, comprobadas ANTES que
+  // las de material (una pagina de "taquillas inteligentes" no tiene
+  // material detectado, pero tampoco debe caer en el catch-all generico).
+  if (isLockTopic) {
+    if (/app|tarjeta|rfid|codigo|c[oó]digo|pin\b/.test(h)) {
+      return `Segun el modelo, la gestion de acceso puede incluir ${LOCK_INFO.pin}, ${LOCK_INFO.rfid}, y ${LOCK_INFO.app}. Ademas, ${LOCK_INFO.logs}.`;
+    }
+    if (/soluci[oó]n completa|todo en uno/.test(h)) {
+      return `${LOCK_INFO.queEs} ${LOCK_INFO.mecanicaVsElectronica}`;
+    }
+    if (/demo/.test(h)) {
+      return `Podemos mostrarte como funciona una taquilla inteligente Zentry + Tukandado con un caso real adaptado a tu sector. Cuentanos tu caso y te preparamos una demo o un presupuesto, sin compromiso -- nunca prometemos una funcionalidad que no este confirmada para tu pedido concreto.`;
+    }
+    if (/que es|definicion/.test(h)) return LOCK_INFO.queEs;
+    if (/vs|comparat|diferencia|alternativa|mecanica.*electronica|electronica.*mecanica/.test(h)) return LOCK_INFO.mecanicaVsElectronica;
+    if (/tipos y materiales|materiales disponibles|tipos de/.test(h)) {
+      return `Existen dos grandes tipos de cierre: mecanico (llave o candado fisico) y electronico (PIN, tarjeta/RFID o app). ${LOCK_INFO.mecanicaVsElectronica}`;
+    }
+    if (/uso habitual|para que sirve|cuando conviene|donde se usa|casos de uso/.test(h)) {
+      return `Es habitual encontrar taquillas inteligentes en: ${LOCK_INFO.usos}. ${LOCK_INFO.cuandoElectronica}`;
+    }
+    if (/como elegir/.test(h)) {
+      return `${LOCK_INFO.cuandoElectronica} ${LOCK_INFO.cuandoMecanica} Cuentanos tu caso (numero de usuarios, si necesitas registro de accesos) y te recomendamos la opcion mas adecuada.`;
+    }
+    if (/remot[ao]|control de acceso/.test(h)) {
+      return `${LOCK_INFO.aperturaRemota} ${LOCK_INFO.logs}.`;
+    }
+  }
 
   if (/que es|definicion/.test(h)) {
     if (info) return info.queEs;
@@ -199,9 +263,13 @@ function buildSectionBody(heading: string, changePack: ChangePack, sector: strin
     return `Cuentanos tu caso (numero de usuarios, presupuesto, si ya tienes taquillas o partes de cero) y te recomendamos la combinacion mas adecuada, sin compromiso.`;
   }
   // Catch-all final: si el material es conocido, se apoya en informacion
-  // REAL de ese material (nunca relleno generico); si no hay material
-  // detectado, incorpora siempre el propio titular en la frase para que
-  // dos secciones distintas nunca produzcan el mismo parrafo exacto.
+  // REAL de ese material (nunca relleno generico); si es un tema de
+  // control de acceso, en LOCK_INFO; si no hay ninguno de los dos,
+  // incorpora siempre el propio titular en la frase para que dos
+  // secciones distintas nunca produzcan el mismo parrafo exacto.
+  if (isLockTopic) {
+    return `Sobre ${heading.replace(/[¿?]/g, "").trim().toLowerCase()}: ${LOCK_INFO.queEs} ${LOCK_INFO.cuandoElectronica}`;
+  }
   if (info) {
     return `Sobre ${heading.replace(/[¿?]/g, "").trim().toLowerCase()}: la ${info.label} se caracteriza por ${info.ventajas.split(",")[0]}. ${info.usos.charAt(0).toUpperCase()}${info.usos.slice(1)}`;
   }
@@ -245,6 +313,25 @@ function buildMaterialAwareFaqs(keyword: string, material: string | undefined, s
   return faqs;
 }
 
+// Fase O28.6 -- FAQ especifica de control de acceso, para no repetir la
+// FAQ generica de material en una pagina que no habla de materiales.
+function buildLockAwareFaqs(keyword: string): LandingFaqItem[] {
+  return [
+    {
+      question: "¿Que pasa si olvido el codigo o pierdo la tarjeta?",
+      answer: "Un administrador puede resetear el codigo o dar de baja la tarjeta perdida y emitir una nueva, sin necesidad de cambiar la cerradura entera -- confirmamos el procedimiento exacto segun el modelo al preparar tu presupuesto.",
+    },
+    {
+      question: "¿Se puede instalar en taquillas que ya tengo?",
+      answer: `Segun el modelo de taquilla y de cerradura puede ser posible adaptar ${keyword} a un mueble ya existente -- cuentanos que taquillas tienes ahora y te confirmamos si es compatible.`,
+    },
+    {
+      question: "¿Que pasa si hay un corte de luz?",
+      answer: "Depende del modelo de cerradura electronica -- algunos incluyen apertura de emergencia o funcionan con pilas. Te confirmamos el comportamiento exacto del modelo recomendado para tu caso.",
+    },
+  ];
+}
+
 function buildBenefitBlocks(sector: string | undefined, keyword: string): LandingBenefitItem[] {
   return [
     { title: "Fabricante directo", description: "Sin intermediarios: precios mas competitivos y trato directo con quien fabrica tu pedido." },
@@ -266,6 +353,31 @@ function buildCards(material: string | undefined): LandingCardItem[] {
     { title: "Fenolica", description: "Resistente a la humedad, indicada para vestuarios y zonas humedas." },
     { title: "Melamina", description: "Alternativa mas economica con acabado tipo madera." },
   ];
+}
+
+// Fase O28.6 -- cards de "metodo de apertura" en vez de material, para
+// una pagina sobre control de acceso.
+function buildLockCards(): LandingCardItem[] {
+  return [
+    { title: "Codigo PIN", description: capitalize(LOCK_INFO.pin) + "." },
+    { title: "Tarjeta / RFID", description: capitalize(LOCK_INFO.rfid) + "." },
+    { title: "App / remoto", description: capitalize(LOCK_INFO.app) + "." },
+  ];
+}
+
+// Fase O28.6 -- tabla comparativa mecanica vs electronica, para paginas
+// de control de acceso (nunca la de materiales, que no aplica al tema).
+function buildLockComparisonTable(): LandingComparisonTable {
+  return {
+    title: "Cerradura mecanica vs electronica",
+    headers: ["Criterio", "Mecanica (llave)", "Electronica (PIN/tarjeta/app)"],
+    rows: [
+      ["Gestion de acceso", "Llave fisica, se puede perder o duplicar", "Codigo, tarjeta o app -- sin llave fisica"],
+      ["Registro de uso", "No", "Segun modelo -- puede registrar quien y cuando"],
+      ["Baja de un usuario", "Hay que cambiar la cerradura o duplicar llave", "Se da de baja el codigo/tarjeta sin tocar la cerradura"],
+      ["Recomendado para", "Usuarios fijos, presupuesto ajustado", "Muchos usuarios distintos: gimnasios, oficinas, hoteles"],
+    ],
+  };
 }
 
 // Fase O27.4c -- Pau reviso una captura real: sin tabla comparativa, sin
@@ -319,6 +431,7 @@ export function buildBlueprintInput(changePack: ChangePack): Omit<LandingBluepri
   const sector = detectTerm(changePack, SECTOR_TERMS);
   const material = detectTerm(changePack, MATERIAL_TERMS);
   const includeSecondaryCta = smartLocksBlockApplies(changePack);
+  const isLockTopic = isSmartLockTopic(changePack);
 
   const realLinks = fields.internalLinks.filter(isRealInternalUrl);
   const ctaTarget = realLinks[0] ?? "#solicitar-presupuesto";
@@ -344,17 +457,25 @@ export function buildBlueprintInput(changePack: ChangePack): Omit<LandingBluepri
     searchIntent: classifySearchIntent(heading),
   }));
 
-  const generatedFaqs = hasFaqHeading ? buildMaterialAwareFaqs(changePack.keyword, material, sector) : [];
+  const generatedFaqs = hasFaqHeading ? (isLockTopic ? buildLockAwareFaqs(changePack.keyword) : buildMaterialAwareFaqs(changePack.keyword, material, sector)) : [];
 
-  const processSteps = [
-    `Nos cuentas que ${changePack.keyword} necesitas (cantidad, medidas, material).`,
-    "Te preparamos un presupuesto a medida, sin compromiso.",
-    "Confirmado el pedido, fabricamos y coordinamos la entrega contigo.",
-  ];
-  const useCases = (resolveMaterialInfo(material)?.usos ?? "oficinas, colegios, gimnasios, vestuarios e instalaciones deportivas")
-    .split(",")
-    .map((u) => capitalize(u.trim()))
-    .slice(0, 4);
+  const processSteps = isLockTopic
+    ? [
+        `Nos cuentas tu caso (numero de usuarios, si necesitas registro de accesos).`,
+        "Te recomendamos el metodo de apertura mas adecuado y preparamos un presupuesto o una demo, sin compromiso.",
+        "Confirmado el pedido, instalamos y configuramos la gestion de accesos contigo.",
+      ]
+    : [
+        `Nos cuentas que ${changePack.keyword} necesitas (cantidad, medidas, material).`,
+        "Te preparamos un presupuesto a medida, sin compromiso.",
+        "Confirmado el pedido, fabricamos y coordinamos la entrega contigo.",
+      ];
+  const useCases = isLockTopic
+    ? LOCK_INFO.usos.split(",").map((u) => capitalize(u.trim()))
+    : (resolveMaterialInfo(material)?.usos ?? "oficinas, colegios, gimnasios, vestuarios e instalaciones deportivas")
+        .split(",")
+        .map((u) => capitalize(u.trim()))
+        .slice(0, 4);
 
   return {
     changePackId: changePack.changePackId,
@@ -371,20 +492,25 @@ export function buildBlueprintInput(changePack: ChangePack): Omit<LandingBluepri
     // nunca una foto inventada.
     heroImageCaption: `Imagen de producto — pendiente de sesion fotografica (${changePack.keyword})`,
     benefitsHeading: fillPattern(template.benefitsBlock.title, changePack, sector, material),
-    comparisonTable: buildComparisonTable(),
+    comparisonTable: isLockTopic ? buildLockComparisonTable() : buildComparisonTable(),
     useCases,
     processSteps,
-    ctaPrimary: { label: template.hero.ctaLabel, target: ctaTarget, isRealLink: realLinks.length > 0 },
+    // Fase O28.6 -- Pau: "CTA hacia presupuesto/demo sin prometer
+    // funcionalidades no confirmadas" -- el CTA por defecto de
+    // blog_article ("Ver catalogo de taquillas Zentry") es demasiado
+    // blando para una pagina de control de acceso pensada para generar
+    // una consulta real.
+    ctaPrimary: { label: isLockTopic ? "Solicitar informacion o demo" : template.hero.ctaLabel, target: ctaTarget, isRealLink: realLinks.length > 0 },
     ctaSecondary: includeSecondaryCta
       ? { label: "Ver cerraduras inteligentes", target: "#cerraduras-inteligentes", isRealLink: false }
       : undefined,
     benefitBlocks: buildBenefitBlocks(sector, changePack.keyword),
-    cards: buildCards(material),
+    cards: isLockTopic ? buildLockCards() : buildCards(material),
     sections,
     faq: [...fields.faqs.map(rewriteFaqIfPlaceholder), ...generatedFaqs],
     finalCta: {
-      headline: "Solicita presupuesto sin compromiso",
-      cta: { label: template.finalCta.label, target: ctaTarget, isRealLink: realLinks.length > 0 },
+      headline: isLockTopic ? "Solicita tu demo o presupuesto sin compromiso" : "Solicita presupuesto sin compromiso",
+      cta: { label: isLockTopic ? "Solicitar informacion o demo" : template.finalCta.label, target: ctaTarget, isRealLink: realLinks.length > 0 },
     },
     internalLinks: realLinks,
     visualHierarchyNotes: [

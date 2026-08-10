@@ -42,11 +42,15 @@ async function main(): Promise<void> {
 
   await sendTelegramApprovalRequest({
     approvalRequestId: request.approvalRequestId,
+    relatedType: request.relatedType,
     title: request.title,
     summary: request.summary,
     riskLevel: request.riskLevel,
     requestedAction: request.requestedAction,
     options: request.options,
+    stagingUrl: "https://staging.zentrylockers.com/?page_id=2111",
+    pageType: "update_existing_page",
+    productionUrl: "https://zentrylockers.com/taquillas-para-hoteles/",
   });
   markApprovalRequestSent(request.approvalRequestId, "telegram");
   console.log("Enviado por Telegram y marcado como sentAt.");

@@ -26,6 +26,7 @@ import { getWordpressPage } from "../adapters/wordpress";
 import { AutonomyRiskLevel } from "../core/autonomy-policy";
 import { resolveActiveClientPaths } from "../core/client-paths";
 import { isVisuallyApproved, readCurrentVisualQaApprovals } from "../core/visual-qa";
+import { findExistingPageAudit, readCurrentExistingPageAudits } from "../core/existing-page-audit";
 
 /**
  * Production Deployment Planner (Fase O13.0, aprobaciones separadas
@@ -410,22 +411,30 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
   let executionApprovedThisPass = 0;
   let executionRejectedThisPass = 0;
 
-  async function sendApproval(request: {
-    approvalRequestId: string;
-    title: string;
-    summary: string;
-    riskLevel: AutonomyRiskLevel;
-    requestedAction: string;
-    options: string[];
-  }): Promise<boolean> {
+  async function sendApproval(
+    request: {
+      approvalRequestId: string;
+      relatedType: string;
+      title: string;
+      summary: string;
+      riskLevel: AutonomyRiskLevel;
+      requestedAction: string;
+      options: string[];
+    },
+    context?: { stagingUrl?: string; productionUrl?: string; pageType?: "update_existing_page" | "new_page_candidate" }
+  ): Promise<boolean> {
     try {
       await sendTelegramApprovalRequest({
         approvalRequestId: request.approvalRequestId,
+        relatedType: request.relatedType,
         title: request.title,
         summary: request.summary,
         riskLevel: request.riskLevel,
         requestedAction: request.requestedAction,
         options: request.options,
+        stagingUrl: context?.stagingUrl,
+        productionUrl: context?.productionUrl,
+        pageType: context?.pageType,
       });
       const updated = markApprovalRequestSent(request.approvalRequestId, "telegram");
       return Boolean(updated);
@@ -469,7 +478,19 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
           summary: `Nueva solicitud de APROBACION DE PLAN para un deploy a produccion: ${plan.keyword}`,
           payload: { approvalRequestId: request.approvalRequestId, deploymentPlanId: plan.deploymentPlanId, stage: "plan_review" },
         });
-        if (telegramEnabled && (await sendApproval(request))) sentViaTelegram += 1;
+        if (telegramEnabled) {
+          const audit = findExistingPageAudit(plan.sourceDraftId, readCurrentExistingPageAudits());
+          const pageType = audit?.matchType ?? (plan.page ? "update_existing_page" : "new_page_candidate");
+          if (
+            await sendApproval(request, {
+              stagingUrl: plan.sourceDraftUrl,
+              productionUrl: audit?.productionUrl ?? plan.page,
+              pageType,
+            })
+          ) {
+            sentViaTelegram += 1;
+          }
+        }
       }
     }
 

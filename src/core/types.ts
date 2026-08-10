@@ -675,6 +675,17 @@ export interface AssetRequest {
 //      escritura real en produccion. Ni siquiera "execution_approved"
 //      ejecuta nada por si solo hoy -- no existe todavia ningun
 //      ejecutor real (ver docs/production-deployment-strategy.md).
+// Fase O28.5 -- "needs_revalidation" (Pau, tras el rediseno visual de
+// O28.1-O28.3): un plan creado ANTES de que su draft de origen se
+// regenerase con el motor visual/contenido nuevo queda con `seoMeta` y
+// `checklist` desactualizados -- no describe ya la pagina real. No es
+// "cancelled" (abandonado) ni "plan_rejected" (rechazado a proposito):
+// es un estado de PAUSA explicito, nunca avanza a ejecucion, y deja
+// hueco para que el planner proponga un plan NUEVO con datos correctos
+// una vez la pagina pase el gate de aprobacion visual (ver
+// src/core/visual-qa.ts) -- deliberadamente fuera de
+// UNRESOLVED_PLAN_STATUSES en production-deployment-planner.ts para no
+// bloquear esa regeneracion.
 export const DEPLOYMENT_PLAN_STATUSES = [
   "draft",
   "plan_ready_for_review",
@@ -686,6 +697,7 @@ export const DEPLOYMENT_PLAN_STATUSES = [
   "applied_to_production_draft",
   "rolled_back",
   "cancelled",
+  "needs_revalidation",
 ] as const;
 export type DeploymentPlanStatus = (typeof DEPLOYMENT_PLAN_STATUSES)[number];
 
@@ -809,10 +821,45 @@ export interface TelegramProcessedUpdate {
     | "ignored_ambiguous_id"
     | "ignored_not_found"
     | "ignored_confirmation_not_found_or_expired"
-    | "ignored_requires_cli_cascade";
+    | "ignored_requires_cli_cascade"
+    // Fase O28.5 -- rediseno del flujo de aprobaciones de Telegram.
+    | "feedback_recorded"
+    | "ignored_multiple_pending_needs_id"
+    | "ignored_no_pending_requests";
   approvalRequestId?: string;
   relatedType?: ApprovalRelatedType;
   processedAt: string;
+}
+
+// Fase O28.5 -- cuando Pau rechaza una revision (boton o texto natural),
+// el sistema pide un motivo antes de dar el rechazo por cerrado. Este
+// registro (append-only, mismo patron que TelegramProductionConfirmation)
+// recuerda que HAY una pregunta abierta para ese chat, para que el
+// siguiente mensaje de texto que llegue (sin comando reconocido) se
+// interprete como la RESPUESTA a esa pregunta, no como un mensaje suelto.
+export interface RejectReasonPrompt {
+  promptId: string;
+  approvalRequestId: string;
+  chatId: string;
+  status: "pending" | "answered" | "expired" | "cancelled";
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Fase O28.5 -- feedback real de Pau al rechazar una revision visual,
+// guardado para que futuras paginas no repitan el mismo error (Pau:
+// "evitar repetir el mismo error en futuras paginas"). No hay todavia
+// ningun agente automatico que LEA este fichero para cambiar su
+// comportamiento -- hoy es un registro consultable a mano/por un humano
+// antes de la siguiente regeneracion, un primer paso honesto hacia ese
+// circuito de mejora continua.
+export interface VisualReviewFeedback {
+  feedbackId: string;
+  approvalRequestId: string;
+  wordpressPageId?: number;
+  feedback: string;
+  source: "telegram";
+  createdAt: string;
 }
 
 /**

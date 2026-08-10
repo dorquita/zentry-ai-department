@@ -589,10 +589,20 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
   // V2 vean siempre los mismos datos.
   const planByIdForVisualGate = new Map(readCurrentProductionDeploymentPlans().map((p) => [p.deploymentPlanId, p]));
   const visualApprovalsForGate = readCurrentVisualQaApprovals();
+  // Fase O28.5 -- ademas de exigir aprobacion visual, la solicitud solo
+  // es valida si el plan asociado SIGUE en plan_ready_for_review. Un
+  // plan puede pausarse a needs_revalidation (datos desactualizados tras
+  // regenerar el draft de origen, ver types.ts) DESPUES de que su
+  // solicitud de Telegram ya existiera -- sin esta comprobacion, en
+  // cuanto la pagina pasara aprobacion visual, la solicitud vieja
+  // resucitaria pidiendo aprobar un plan con seoMeta/checklist obsoletos
+  // (bug real encontrado y corregido en O28.5: 11 solicitudes exactas en
+  // este caso).
   const pendingApprovalRequests = pendingApprovalRequestsRaw.filter((r) => {
     if (r.relatedType !== "production_deployment_plan") return true;
     const plan = planByIdForVisualGate.get(r.relatedId);
     if (!plan) return true;
+    if (plan.status !== "plan_ready_for_review") return false;
     return isVisuallyApproved(plan.sourceDraftId, visualApprovalsForGate);
   });
   const sentViaTelegramRequests = allApprovalRequests.filter((r) => Boolean(r.sentAt) && r.channel === "telegram");

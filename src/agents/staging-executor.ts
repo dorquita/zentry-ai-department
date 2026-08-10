@@ -334,11 +334,13 @@ export async function runStagingExecutor(departmentRunId?: string): Promise<Stag
             try {
               await sendTelegramApprovalRequest({
                 approvalRequestId: request.approvalRequestId,
+                relatedType: request.relatedType,
                 title: request.title,
                 summary: request.summary,
                 riskLevel: request.riskLevel,
                 requestedAction: request.requestedAction,
                 options: request.options,
+                stagingUrl: execution.wordpressDraftUrl,
               });
               const updated = markApprovalRequestSent(request.approvalRequestId, "telegram");
               if (updated) sentViaTelegram.push(updated);

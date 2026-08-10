@@ -110,6 +110,11 @@ function deriveStateForExecution(exec: StagingExecution, ctx: OpportunityStateCo
 
 function deriveStateForPlan(plan: ProductionDeploymentPlan, ctx: OpportunityStateContext): OpportunityState {
   if (plan.status === "plan_rejected" || plan.status === "cancelled") return "qa_passed";
+  // Fase O28.5 -- plan pausado por datos desactualizados (ver types.ts):
+  // nunca cuenta como "esperando aprobacion" -- si la pagina sigue con
+  // QA tecnico en orden, la oportunidad se sigue mostrando en su estado
+  // real (qa_passed o superior via el resto de la cadena), no aqui.
+  if (plan.status === "needs_revalidation") return "postponed";
   if (plan.status === "draft" || plan.status === "plan_ready_for_review") return "waiting_approval";
   if (plan.status === "plan_approved") return "approved";
   if (plan.status === "execution_pending_approval" || plan.status === "execution_approved") return "approved";

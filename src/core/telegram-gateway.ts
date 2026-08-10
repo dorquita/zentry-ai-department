@@ -141,17 +141,41 @@ async function callTelegramApi(botToken: string, method: string, payload: Record
   }
 }
 
-/** Envia un mensaje de texto simple. Sanitiza el contenido antes de enviarlo. */
-export async function sendTelegramMessage(text: string): Promise<void> {
+// Fase O28.5 -- Telegram SI soporta teclados inline (botones) con
+// cualquier bot token normal, sin nada especial que activar -- es parte
+// del Bot API estandar (`reply_markup.inline_keyboard`). `callbackData`
+// va en texto plano dentro del propio mensaje (nunca contiene secretos,
+// solo el approvalRequestId/accion), y Telegram lo devuelve tal cual en
+// el `callback_query` cuando alguien pulsa el boton (ver fetchTelegramUpdates).
+export interface TelegramInlineButton {
+  text: string;
+  url?: string;
+  callbackData?: string;
+}
+
+export interface SendTelegramMessageOptions {
+  buttons?: TelegramInlineButton[][];
+}
+
+/** Envia un mensaje de texto simple, con botones inline opcionales. Sanitiza el contenido antes de enviarlo. */
+export async function sendTelegramMessage(text: string, options: SendTelegramMessageOptions = {}): Promise<void> {
   const config = resolveTelegramConfig();
   const safeText = sanitizeOutgoingText(text);
+  const payload: Record<string, unknown> = {
+    chat_id: config.chatId,
+    text: safeText,
+    parse_mode: "HTML",
+  };
+  if (options.buttons && options.buttons.length > 0) {
+    payload.reply_markup = {
+      inline_keyboard: options.buttons.map((row) =>
+        row.map((btn) => (btn.url ? { text: btn.text, url: btn.url } : { text: btn.text, callback_data: btn.callbackData ?? "" }))
+      ),
+    };
+  }
   try {
-    await callTelegramApi(config.botToken, "sendMessage", {
-      chat_id: config.chatId,
-      text: safeText,
-      parse_mode: "HTML",
-    });
-    logger.info("Mensaje de Telegram enviado", { textLength: safeText.length });
+    await callTelegramApi(config.botToken, "sendMessage", payload);
+    logger.info("Mensaje de Telegram enviado", { textLength: safeText.length, withButtons: Boolean(options.buttons?.length) });
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err);
     const safeMessage = sanitizeTelegramError(raw, config.botToken);
@@ -160,7 +184,27 @@ export async function sendTelegramMessage(text: string): Promise<void> {
   }
 }
 
+/**
+ * Responde a la pulsacion de un boton (quita el "reloj de carga" que
+ * Telegram muestra en el cliente hasta que se llama esto). Nunca lanza --
+ * si falla, solo se registra: la accion real ya se proceso en el sistema
+ * antes de llamar aqui, esto es puramente cosmetico del lado de Telegram.
+ */
+export async function answerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
+  const config = resolveTelegramConfig();
+  try {
+    await callTelegramApi(config.botToken, "answerCallbackQuery", {
+      callback_query_id: callbackQueryId,
+      ...(text ? { text: sanitizeOutgoingText(text).slice(0, 200) } : {}),
+    });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    logger.error("Fallo al responder callback_query de Telegram", { error: sanitizeTelegramError(raw, config.botToken) });
+  }
+}
+
 export interface TelegramIncomingMessage {
+  kind: "message";
   updateId: number;
   chatId: string;
   fromUsername?: string;
@@ -168,20 +212,36 @@ export interface TelegramIncomingMessage {
   date: number;
 }
 
+// Fase O28.5 -- pulsar un boton inline no manda un "mensaje" normal,
+// manda un `callback_query` (update_id distinto, sin `.text`). Se captura
+// como su propio tipo para no confundirlo con texto libre.
+export interface TelegramIncomingCallback {
+  kind: "callback";
+  updateId: number;
+  chatId: string;
+  fromUsername?: string;
+  callbackQueryId: string;
+  callbackData: string;
+  date: number;
+}
+
+export type TelegramIncomingUpdate = TelegramIncomingMessage | TelegramIncomingCallback;
+
 /**
- * Lee mensajes nuevos del bot via `getUpdates` (Fase O13.2b). Solo
- * lectura del lado de Telegram -- no modifica nada en Telegram ni en
+ * Lee actualizaciones nuevas del bot via `getUpdates` (Fase O13.2b,
+ * ampliado en O28.5 para incluir pulsaciones de boton ademas de texto).
+ * Solo lectura del lado de Telegram -- no modifica nada en Telegram ni en
  * este proyecto por si sola. `offset` es el `update_id` a partir del
- * cual pedir mensajes (evita repetir los ya vistos); quien llama es
- * responsable de llevar la cuenta (ver
+ * cual pedir actualizaciones (evita repetir las ya vistas); quien llama
+ * es responsable de llevar la cuenta (ver
  * src/agents/telegram-approval-receiver.ts). `timeout: 0` -- long
  * polling explicitamente desactivado, esto es para invocacion manual
  * bajo peticion, nunca un proceso en segundo plano permanente.
  */
-export async function fetchTelegramUpdates(offset?: number): Promise<TelegramIncomingMessage[]> {
+export async function fetchTelegramUpdates(offset?: number): Promise<TelegramIncomingUpdate[]> {
   const config = resolveTelegramConfig();
   const url = `${TELEGRAM_API_BASE}/bot${config.botToken}/getUpdates`;
-  const payload: Record<string, unknown> = { timeout: 0, allowed_updates: ["message"] };
+  const payload: Record<string, unknown> = { timeout: 0, allowed_updates: ["message", "callback_query"] };
   if (typeof offset === "number") payload.offset = offset;
 
   let response: Response;
@@ -211,19 +271,40 @@ export async function fetchTelegramUpdates(offset?: number): Promise<TelegramInc
     result?: Array<{
       update_id: number;
       message?: { chat?: { id?: number | string }; from?: { username?: string }; text?: string; date?: number };
+      callback_query?: {
+        id: string;
+        data?: string;
+        message?: { chat?: { id?: number | string } };
+        from?: { username?: string };
+      };
     }>;
   };
   const results = json.result ?? [];
 
-  return results
-    .filter((u) => u.message && typeof u.message.text === "string")
-    .map((u) => ({
-      updateId: u.update_id,
-      chatId: String(u.message?.chat?.id ?? ""),
-      fromUsername: u.message?.from?.username,
-      text: u.message?.text ?? "",
-      date: u.message?.date ?? 0,
-    }));
+  const updates: TelegramIncomingUpdate[] = [];
+  for (const u of results) {
+    if (u.message && typeof u.message.text === "string") {
+      updates.push({
+        kind: "message",
+        updateId: u.update_id,
+        chatId: String(u.message.chat?.id ?? ""),
+        fromUsername: u.message.from?.username,
+        text: u.message.text,
+        date: u.message.date ?? 0,
+      });
+    } else if (u.callback_query && typeof u.callback_query.data === "string") {
+      updates.push({
+        kind: "callback",
+        updateId: u.update_id,
+        chatId: String(u.callback_query.message?.chat?.id ?? ""),
+        fromUsername: u.callback_query.from?.username,
+        callbackQueryId: u.callback_query.id,
+        callbackData: u.callback_query.data,
+        date: 0,
+      });
+    }
+  }
+  return updates;
 }
 
 /** Nunca expone el chatId configurado -- solo dice si coincide. */
@@ -232,83 +313,120 @@ export function isAuthorizedTelegramChat(chatId: string): boolean {
   return chatId === config.chatId;
 }
 
+// Fase O28.5 -- rediseno completo del mensaje de aprobacion (postmortem
+// de Pau: "Aprobacion critica — Produccion" para algo que "solo crea un
+// draft nuevo" es contradictorio). `messageCategory` se deriva del
+// `relatedType` de la ApprovalRequest (ver buildMessageCategory), NUNCA
+// del `riskLevel` -- el riskLevel sigue gobernando la doble confirmacion
+// de seguridad (sin cambios ahi), pero ya no decide el TEXTO que Pau lee.
+export type TelegramApprovalMessageCategory = "staging_review" | "production_candidate" | "production_deploy";
+
+export function deriveMessageCategory(relatedType: string): TelegramApprovalMessageCategory {
+  if (relatedType === "production_execution") return "production_deploy";
+  if (relatedType === "production_deployment_plan") return "production_candidate";
+  // action / work_order / change_pack / staging_execution / novamira_staging_write
+  return "staging_review";
+}
+
 export interface TelegramApprovalRequestContent {
   approvalRequestId: string;
+  relatedType: string;
   title: string;
   summary: string;
   riskLevel: string;
   requestedAction: string;
   options: string[];
+  /** Fase O28.5 -- contexto opcional para el formato nuevo; si falta, el mensaje se degrada mostrando menos detalle pero nunca inventa datos. */
+  pageType?: "update_existing_page" | "new_page_candidate";
+  stagingUrl?: string;
+  productionUrl?: string;
+  onApproveText?: string;
+  onRejectText?: string;
 }
 
 function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-const VPS_RECEIVER_NOTE =
-  "Responde en este chat: no ejecuta nada por si solo, solo desbloquea el siguiente paso.";
+const CATEGORY_HEADER: Record<TelegramApprovalMessageCategory, string> = {
+  staging_review: "🟦 Revision visual — Staging",
+  production_candidate: "🟨 Candidato a produccion",
+  production_deploy: "🟥 Aprobacion produccion — Deploy",
+};
+
+const CATEGORY_RISK_LABEL: Record<TelegramApprovalMessageCategory, string> = {
+  staging_review: "Bajo — solo staging, no produccion.",
+  production_candidate: "Alto — prepara un plan, todavia no toca produccion.",
+  production_deploy: "Critico — esta aprobacion, si se confirma dos veces, autorizaria una escritura real en produccion.",
+};
+
+const PAGE_TYPE_LABEL: Record<"update_existing_page" | "new_page_candidate", string> = {
+  update_existing_page: "Actualizacion de pagina existente",
+  new_page_candidate: "Pagina nueva candidata",
+};
+
+function defaultApproveText(category: TelegramApprovalMessageCategory): string {
+  if (category === "production_deploy") return "Se autoriza intentar la escritura real en produccion (pedira una segunda confirmacion explicita antes de ejecutar nada).";
+  if (category === "production_candidate") return "Se aprueba el DISENO del plan como candidato a produccion. No se publica nada todavia -- falta la aprobacion de EJECUCION, aparte.";
+  return "Se marca como revisado/aprobado en staging. No se toca produccion.";
+}
+
+function defaultRejectText(): string {
+  return "Te pedire el motivo y quedara marcado para revision, sin avanzar.";
+}
 
 /**
  * Formatea y envia una solicitud de aprobacion legible por Telegram
- * (Fase O13.2c: mensajes breves, sin "snoozed", sin comandos npm largos,
- * sin explicar flags de entorno -- solo aprobar/rechazar con un comando
- * corto). Distingue dos formatos:
- *
- * - `riskLevel === "critical"` (planes/ejecuciones de deploy a
- *   produccion): formato reducido especifico, con una lista fija de
- *   garantias de seguridad ("Importante: no publica nada...") en vez de
- *   repetir la explicacion tecnica de cada agente.
- * - cualquier otro riesgo: formato generico igual de corto.
- *
- * Esta fase no acepta respuestas directamente en el chat -- ver
- * docs/telegram-approvals.md.
+ * (Fase O13.2c, rediseñada en O28.5). Diferencia 3 categorias de mensaje
+ * segun `relatedType` (nunca segun riskLevel, que sigue gobernando solo
+ * la seguridad interna de doble confirmacion): revision de staging,
+ * candidato a produccion, y deploy a produccion -- cada una con su
+ * propio titulo, y SIEMPRE con: pagina, tipo, URL de staging si existe,
+ * URL objetivo de produccion si existe, resumen, riesgo real, que pasa
+ * si apruebas, que pasa si rechazas. Incluye botones inline
+ * [Aprobar]/[Rechazar]/[Ver staging] -- el texto `approve <id>`/
+ * `reject <id>` se mantiene como alternativa (funciona igual si Telegram
+ * no muestra botones en el cliente que use Pau), y ademas se acepta
+ * lenguaje natural ("ok", "aprobar", "rechazar"...) -- ver
+ * telegram-approval-receiver.ts.
  */
 export async function sendTelegramApprovalRequest(content: TelegramApprovalRequestContent): Promise<void> {
-  const isCritical = content.riskLevel.trim().toLowerCase() === "critical";
+  const category = deriveMessageCategory(content.relatedType);
+  const header = CATEGORY_HEADER[category];
+  const riskLine = CATEGORY_RISK_LABEL[category];
+  const approveText = content.onApproveText ?? defaultApproveText(category);
+  const rejectText = content.onRejectText ?? defaultRejectText();
 
-  const lines = isCritical
-    ? [
-        "⚠️ <b>Aprobacion critica — Produccion</b>",
-        "",
-        "<b>Accion:</b>",
-        escapeHtml(content.requestedAction),
-        "",
-        "<b>Pagina:</b>",
-        escapeHtml(content.title),
-        "",
-        "<b>Importante:</b>",
-        "- No publica nada",
-        "- No modifica paginas publicadas",
-        "- Solo crea un draft nuevo",
-        "- Sube/remapea la imagen necesaria",
-        "",
-        "<b>Riesgo:</b>",
-        "Critico",
-        "",
-        "<b>Para aprobar:</b>",
-        `<code>approve ${escapeHtml(content.approvalRequestId)}</code>`,
-        "",
-        "<b>Para rechazar:</b>",
-        `<code>reject ${escapeHtml(content.approvalRequestId)}</code>`,
-        "",
-        `<b>Nota:</b> ${VPS_RECEIVER_NOTE}`,
-      ]
-    : [
-        "✅ <b>Aprobacion pendiente</b>",
-        "",
-        `<b>${escapeHtml(content.title)}</b>`,
-        escapeHtml(content.summary),
-        "",
-        `Riesgo: <b>${escapeHtml(content.riskLevel)}</b>`,
-        "",
-        "<b>Para aprobar:</b>",
-        `<code>approve ${escapeHtml(content.approvalRequestId)}</code>`,
-        "",
-        "<b>Para rechazar:</b>",
-        `<code>reject ${escapeHtml(content.approvalRequestId)}</code>`,
-        "",
-        `<b>Nota:</b> ${VPS_RECEIVER_NOTE}`,
-      ];
+  const lines: string[] = [`<b>${header}</b>`, ""];
+  lines.push("<b>Pagina:</b>", escapeHtml(content.title), "");
+  if (content.pageType) {
+    lines.push("<b>Tipo:</b>", escapeHtml(PAGE_TYPE_LABEL[content.pageType]), "");
+  }
+  if (content.stagingUrl) {
+    lines.push("<b>Revisar aqui:</b>", escapeHtml(content.stagingUrl), "");
+  }
+  if (content.productionUrl) {
+    lines.push("<b>Pagina objetivo:</b>", escapeHtml(content.productionUrl), "");
+  }
+  lines.push("<b>Resumen:</b>", escapeHtml(content.summary), "");
+  lines.push("<b>Riesgo:</b>", riskLine, "");
+  lines.push("<b>Si apruebas:</b>", escapeHtml(approveText), "");
+  lines.push("<b>Si rechazas:</b>", escapeHtml(rejectText), "");
+  lines.push(
+    `<b>Responde:</b> "ok"/"aprobar" para aprobar, o "rechazar"/"no" para rechazar -- o usa los botones si tu Telegram los muestra. (Tambien acepta <code>approve ${escapeHtml(
+      content.approvalRequestId
+    )}</code> / <code>reject ${escapeHtml(content.approvalRequestId)}</code>.)`
+  );
 
-  await sendTelegramMessage(lines.join("\n"));
+  const buttons: TelegramInlineButton[][] = [
+    [
+      { text: "✅ Aprobar", callbackData: `appr:approve:${content.approvalRequestId}` },
+      { text: "❌ Rechazar", callbackData: `appr:reject:${content.approvalRequestId}` },
+    ],
+  ];
+  if (content.stagingUrl) {
+    buttons.push([{ text: "👀 Ver staging", url: content.stagingUrl }]);
+  }
+
+  await sendTelegramMessage(lines.join("\n"), { buttons });
 }
