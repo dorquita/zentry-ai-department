@@ -4,7 +4,7 @@
 - **changePackId:** `9f1b3c29-8cf4-4422-b04f-6785eea13df7` (status: ready_for_review)
 - **Plantilla visual:** `seo_landing` — Landing SEO on-page
 - **Por que esta plantilla:** Cuando el change pack es un ajuste on-page generico (changeType "seo_on_page_update") sin un sector o material claramente dominante — el caso mas comun hoy (ver Fase O11/O12).
-- **Generado:** 2026-08-09T08:02:03.213Z
+- **Generado:** 2026-08-10T13:22:34.354Z
 
 > Este fichero es un preview VISUAL local (Fase O12.4), complementario al preview de texto ya generado por el WordPress Draft Agent (`67bbb070-fc17-449b-92ac-ef8a59d2ebc1.md`, sin tocar). No se ha llamado a WordPress ni generado ninguna imagen real.
 

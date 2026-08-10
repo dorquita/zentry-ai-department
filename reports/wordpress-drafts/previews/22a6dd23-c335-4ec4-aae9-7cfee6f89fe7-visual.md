@@ -1,10 +1,10 @@
 # Preview VISUAL (local, no publicado) — taquillas melamina
 
 - **draftId:** `22a6dd23-c335-4ec4-aae9-7cfee6f89fe7`
-- **changePackId:** `3c91718c-c574-456f-9343-7de99030254c` (status: ready_for_review)
+- **changePackId:** `3c91718c-c574-456f-9343-7de99030254c` (status: approved_to_execute)
 - **Plantilla visual:** `product_landing` — Landing de producto/material
 - **Por que esta plantilla:** Cuando el change pack gira en torno a un MATERIAL o modelo concreto (melamina, fenolica, metalica, madera) detectado via material_terms — p.ej. "taquillas de melamina", "taquilla madera".
-- **Generado:** 2026-08-09T08:02:03.174Z
+- **Generado:** 2026-08-10T13:22:34.342Z
 
 > Este fichero es un preview VISUAL local (Fase O12.4), complementario al preview de texto ya generado por el WordPress Draft Agent (`22a6dd23-c335-4ec4-aae9-7cfee6f89fe7.md`, sin tocar). No se ha llamado a WordPress ni generado ninguna imagen real.
 

@@ -4,7 +4,7 @@
 - **changePackId:** `126c2caf-b18e-4a8c-88d3-b055be6d7920` (status: ready_for_review)
 - **Plantilla visual:** `blog_article` — Articulo de blog / contenido informativo
 - **Por que esta plantilla:** Cuando el change pack es un brief editorial informativo (changeType "new_content_page"/"content_update" sin intencion transaccional clara) — el contenido es mas informativo que de venta directa.
-- **Generado:** 2026-08-09T08:02:03.199Z
+- **Generado:** 2026-08-10T13:22:34.351Z
 
 > Este fichero es un preview VISUAL local (Fase O12.4), complementario al preview de texto ya generado por el WordPress Draft Agent (`ee681c3e-51f0-42ce-aef0-806752fd1ac9.md`, sin tocar). No se ha llamado a WordPress ni generado ninguna imagen real.
 

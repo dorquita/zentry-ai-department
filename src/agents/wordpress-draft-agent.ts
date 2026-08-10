@@ -417,6 +417,7 @@ export interface WordpressDraftAgentRunResult {
   rejectedDrafts: WordpressDraft[];
   wpCreationErrors: Array<{ draftId: string; changePackId: string; error: string }>;
   wordpressDraftsEnabled: boolean;
+  stagingExecutorIsActive: boolean;
   wordpressConfigured: boolean;
   wordpressBackend: WordpressBackend;
   wordpressEnv: WordpressEnv;
@@ -449,7 +450,12 @@ function buildReportMarkdown(result: WordpressDraftAgentRunResult, generatedAt: 
     `Previews locales nuevos: **${result.newLocalPreviews.length}** (ya existian: **${result.existingLocalPreviews.length}**, total acumulado: **${result.totalLocalPreviewCount}**). Borradores reales creados en WordPress en esta pasada: **${result.newWordpressDrafts.length}** (total acumulado: **${result.totalWordpressDraftCount}**). Solicitudes de aprobacion de Telegram nuevas: **${result.newApprovalRequests.length}** (enviadas: **${result.sentViaTelegram.length}**). Pendientes de aprobacion: **${result.pendingApprovalCount}**.`
   );
   lines.push("");
-  if (!result.wordpressDraftsEnabled || result.wordpressBackend === "local_preview") {
+  if (result.stagingExecutorIsActive) {
+    lines.push(
+      `**Este agente no ha creado ningun borrador real en esta pasada a proposito** (Fase O27.2): con STAGING_EXECUTION_ENABLED=true, el Staging Executor (Carril A) es la via oficial para escritura real -- crearla tambien aqui generaria una SEGUNDA solicitud de aprobacion de Telegram para el mismo change pack. Solo se han generado/actualizado previews locales. Ver \`docs/staging-execution.md\` y \`docs/carril-a-staging-autonomy.md\`.`
+    );
+    lines.push("");
+  } else if (!result.wordpressDraftsEnabled || result.wordpressBackend === "local_preview") {
     lines.push(
       `**No se ha llamado a WordPress en esta pasada** (WORDPRESS_DRAFTS_ENABLED=${result.wordpressDraftsEnabled ? "true" : "false"}, WORDPRESS_BACKEND=${result.wordpressBackend}). Solo se han generado/actualizado previews locales en \`reports/wordpress-drafts/previews/\`. Hacen falta las DOS variables a la vez (WORDPRESS_DRAFTS_ENABLED=true y WORDPRESS_BACKEND=rest o mcp) para que exista la posibilidad de una escritura real. Ver \`docs/wordpress-draft-agent.md\` y \`docs/wordpress-mcp-adapter.md\`.`
     );
@@ -585,12 +591,27 @@ export async function runWordpressDraftAgent(departmentRunId?: string): Promise<
   // punto de entrada nuevo).
   const wordpressEnv: WordpressEnv = resolveWordpressEnv();
 
+  // Fase O27.2 -- bug real encontrado en el primer pase con
+  // STAGING_EXECUTION_ENABLED=true Y WORDPRESS_DRAFTS_ENABLED=true a la
+  // vez: este agente y el Staging Executor comparten el mismo
+  // interruptor de adaptador (WORDPRESS_DRAFTS_ENABLED, por diseno, ver
+  // docs/staging-execution.md) pero tienen flujos de aprobacion
+  // SEPARADOS -- con los dos activos, un mismo change pack generaba DOS
+  // solicitudes de Telegram distintas ("Ejecutar en staging" del Carril A
+  // Y "Crear borrador WordPress" de este agente) para la MISMA pagina.
+  // Cuando el Staging Executor esta activo, es la via OFICIAL y mas
+  // completa (snapshot, rollback, QA integrado, Carril A) -- este agente
+  // cede el paso y se queda solo en previews locales, igual que si
+  // WORDPRESS_DRAFTS_ENABLED fuera false, para no duplicar la decision.
+  const stagingExecutorIsActive = (process.env.STAGING_EXECUTION_ENABLED ?? "").trim().toLowerCase() === "true";
+
   // Log claro del estado completo antes de decidir nada — sin secretos
   // (targetUrl es una URL publica, nunca una credencial).
   logger.info("WordPress Draft Agent: estado de escritura real para esta pasada", {
     environment: wordpressEnv,
     backend: wordpressBackend,
     draftsEnabled: wordpressDraftsEnabled,
+    stagingExecutorIsActive,
     targetUrl: wordpressTargetUrl ?? "(no configurado)",
   });
 
@@ -603,7 +624,7 @@ export async function runWordpressDraftAgent(departmentRunId?: string): Promise<
 
   const telegramEnabled = isTelegramApprovalsEnabled();
 
-  if (wordpressDraftsEnabled && wordpressBackend !== "local_preview") {
+  if (wordpressDraftsEnabled && wordpressBackend !== "local_preview" && !stagingExecutorIsActive) {
     const allChangePacksById = new Map(eligibleChangePacks.map((cp) => [cp.changePackId, cp]));
     const currentApprovalRequests = readCurrentApprovalRequests();
     const allCurrentDrafts = readCurrentWordpressDrafts();
@@ -727,6 +748,7 @@ export async function runWordpressDraftAgent(departmentRunId?: string): Promise<
     rejectedDrafts,
     wpCreationErrors,
     wordpressDraftsEnabled,
+    stagingExecutorIsActive,
     wordpressConfigured,
     wordpressBackend,
     wordpressEnv,

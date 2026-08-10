@@ -1,7 +1,7 @@
 # Staging Executor — 2026-08-10
 
-- **departmentRunId:** `growth-department-2026-08-10T125242Z`
-- **Generado:** 2026-08-10T12:52:42.969Z
+- **departmentRunId:** `growth-department-2026-08-10T134413Z`
+- **Generado:** 2026-08-10T13:44:13.755Z
 - **STAGING_EXECUTION_ENABLED:** true
 - **WORDPRESS_DRAFTS_ENABLED:** true
 - **WORDPRESS_BACKEND:** rest
@@ -12,7 +12,7 @@
 
 ## Resumen ejecutivo
 
-Ejecuciones nuevas puestas en cola: **0**. Solicitudes de aprobacion nuevas: **0** (enviadas por Telegram: **0**). Auto-aprobadas por el Carril A (sin esperar Telegram, Fase O27): **0**. Aprobadas en esta pasada: **0**. Rechazadas: **0**. Aplicadas de verdad en staging en esta pasada: **0** (total acumulado: **6**). Fallidas: **0**. Pospuestas por limite de batch (Fase O27.1): **0**. Pendientes de aprobacion: **0**.
+Ejecuciones nuevas puestas en cola: **0**. Solicitudes de aprobacion nuevas: **0** (enviadas por Telegram: **0**). Auto-aprobadas por el Carril A (sin esperar Telegram, Fase O27): **0**. Aprobadas en esta pasada: **0**. Rechazadas: **0**. Aplicadas de verdad en staging en esta pasada: **0** (total acumulado: **21**). Fallidas: **0**. Pospuestas por limite de batch (Fase O27.1): **0**. Pendientes de aprobacion: **0**.
 
 ## Ejecuciones aplicadas en esta pasada (0)
 

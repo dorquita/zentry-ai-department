@@ -2,8 +2,8 @@
 
 > Este es el informe tecnico interno (IDs, estados, work orders, change packs, agentes, trazabilidad). El informe para el responsable del departamento es el ejecutivo del mismo dia (`reports/daily/executive-<fecha>.md`), que es el que se envia por email.
 
-- **departmentRunId:** `growth-department-2026-08-10T125242Z`
-- **Generado:** 2026-08-10T12:52:59.692Z
+- **departmentRunId:** `growth-department-2026-08-10T134413Z`
+- **Generado:** 2026-08-10T13:44:50.318Z
 
 ## Resumen ejecutivo
 
@@ -12,9 +12,9 @@ El departamento Web & Growth analizo datos reales de Search Console, priorizó a
 ## Que ha hecho cada agente
 
 - **staging-executor**: completado — Staging Executor Agent finalizado: 0 ejecucion(es) aplicada(s), 0 pendiente(s) de aprobacion
-- **staging-qa-agent**: completado (4 warning(s)) — Staging QA Agent finalizado: 5/6 borrador(es) pasan (5 con warning)
+- **staging-qa-agent**: completado (2 warning(s)) — Staging QA Agent finalizado: 21/21 borrador(es) pasan (21 con warning)
 - **approval-gateway**: completado — Approval Gateway Agent finalizado: 0 solicitud(es) nueva(s), 0 enviada(s) por Telegram
-- **production-deployment-planner**: completado — Production Deployment Planner finalizado: 0 plan(es) nuevo(s), 6 en total. Produccion no tocada.
+- **production-deployment-planner**: completado — Production Deployment Planner finalizado: 0 plan(es) nuevo(s), 22 en total. Produccion no tocada.
 - **production-draft-executor**: completado — Production Draft Executor finalizado: 0 pendiente(s) nueva(s), 0 aplicada(s), canAttemptRealWrites=false.
 - **seo-watcher**: completado — seo-watcher: omitido en este QA parcial (Search Console con invalid_grant hoy, no relacionado con la Fase O27) -- se ejecutara en la siguiente pasada diaria real.
 - **seo-director**: completado — seo-director: omitido en este QA parcial (Search Console con invalid_grant hoy, no relacionado con la Fase O27) -- se ejecutara en la siguiente pasada diaria real.
@@ -38,7 +38,7 @@ El departamento Web & Growth analizo datos reales de Search Console, priorizó a
 
 ## Autonomia (Fase O7) — que decidio el sistema solo hoy
 
-Auto-procesadas: **0** · Auto-aprobadas para planificacion: **0** · Pendientes de aprobacion humana: **5** · Bloqueadas: **0**. Ver `docs/autonomy-policy.md` para el detalle completo de la politica y como cambiarla.
+Auto-procesadas: **0** · Auto-aprobadas para planificacion: **0** · Pendientes de aprobacion humana: **0** · Bloqueadas: **0**. Ver `docs/autonomy-policy.md` para el detalle completo de la politica y como cambiarla.
 
 ## Acciones auto-procesadas hoy (AUTO_INTERNAL) (0)
 
@@ -52,15 +52,11 @@ SEO/contenido/CRO/SEM/Analytics/competencia de riesgo bajo o medio: el sistema y
 
 Ninguna.
 
-## Pendientes de aprobacion humana (5)
+## Pendientes de aprobacion humana (0)
 
 Acciones que tocarian produccion real (WordPress, Ads, GA4, GTM...) si se ejecutaran. Hoy ningun agente genera este tipo, pero la politica ya esta lista para cuando exista.
 
-- [high] `19599263-9e05-4bca-8d6a-761cf54f3aad` SEO: "cerraduras inteligentes para taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) (visto 36 vez/veces)
-- [high] `4bdbbe6e-743a-40df-822f-615935e57cfa` Mejorar title/meta de https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (visto 36 vez/veces)
-- [high] `ef7a3825-b95f-4942-a4dc-46faed0d825e` Reforzar enlazado interno hacia https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (visto 57 vez/veces)
-- [high] `1a0e540c-8785-482b-9be2-217c5d6fe818` SEO: "cerraduras inteligentes para taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) (visto 21 vez/veces)
-- [high] `b764c03e-3b88-441f-aa88-117d45d97e21` CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (visto 21 vez/veces)
+Ninguna.
 
 ## Acciones bloqueadas (0)
 
@@ -80,24 +76,29 @@ Ya se habian detectado en pasadas anteriores y siguen en 'open' sin que la polit
 
 Ninguna.
 
-## Aprobadas por un humano pero todavia no ejecutadas (1)
+## Aprobadas por un humano pero todavia no ejecutadas (6)
 
 Un humano acepto trabajarlas explicitamente (`status: approved`) — sigue sin haberse tocado produccion.
 
+- [high] `19599263-9e05-4bca-8d6a-761cf54f3aad` SEO: "cerraduras inteligentes para taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) (visto 36 vez/veces)
+- [high] `4bdbbe6e-743a-40df-822f-615935e57cfa` Mejorar title/meta de https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (visto 36 vez/veces)
+- [high] `ef7a3825-b95f-4942-a4dc-46faed0d825e` Reforzar enlazado interno hacia https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (visto 58 vez/veces)
 - [high] `25d36c60-b32a-4fd0-8de5-b910cb886507` CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (visto 36 vez/veces)
+- [high] `1a0e540c-8785-482b-9be2-217c5d6fe818` SEO: "cerraduras inteligentes para taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) (visto 22 vez/veces)
+- [high] `b764c03e-3b88-441f-aa88-117d45d97e21` CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (visto 22 vez/veces)
 
 ## Descartadas (rechazadas o snoozed) (6)
 
-- [high] `bd11d934-13ec-430b-9a1e-21bd47e65358` SEO: "cerraduras inteligentes para centros deportivos" (https://zentrylockers.com/cerraduras/) (visto 57 vez/veces)
+- [high] `bd11d934-13ec-430b-9a1e-21bd47e65358` SEO: "cerraduras inteligentes para centros deportivos" (https://zentrylockers.com/cerraduras/) (visto 58 vez/veces)
 - [medium] `1defbda1-17f0-4aff-a889-5ca05e8e4112` SEO: "taquillas de melamina" (https://zentrylockers.com/taquillas-melamina/) (visto 2 vez/veces)
-- [high] `1ca5c03b-b4f4-4a1c-a0fd-08f12f8be719` Landing/articulo dedicado: "cerraduras inteligentes para centros deportivos" (visto 57 vez/veces)
-- [high] `fb468529-c5ca-4e2b-bdcb-3e8570707fa7` Mejorar title/meta de https://zentrylockers.com/cerraduras/ (visto 57 vez/veces)
+- [high] `1ca5c03b-b4f4-4a1c-a0fd-08f12f8be719` Landing/articulo dedicado: "cerraduras inteligentes para centros deportivos" (visto 58 vez/veces)
+- [high] `fb468529-c5ca-4e2b-bdcb-3e8570707fa7` Mejorar title/meta de https://zentrylockers.com/cerraduras/ (visto 58 vez/veces)
 - [medium] `5c7930bf-b28d-4f24-93d3-a5dbeb74e483` Landing/articulo dedicado: "taquillas de melamina" (visto 2 vez/veces)
-- [high] `6eaea17e-d61c-4dde-b06c-fc4d355d4de8` CRO: https://zentrylockers.com/cerraduras/ (visto 57 vez/veces)
+- [high] `6eaea17e-d61c-4dde-b06c-fc4d355d4de8` CRO: https://zentrylockers.com/cerraduras/ (visto 58 vez/veces)
 
 ## Work orders listas para revisar
 
-Acciones planificables (`approved` + `auto_approved_for_planning`): **87**. Work orders nuevas hoy: **0**. Listas para revisar en total: **95** (de las cuales **95** `auto_prepared` y **0** `ready_for_review`).
+Acciones planificables (`approved` + `auto_approved_for_planning`): **92**. Work orders nuevas hoy: **0**. Listas para revisar en total: **95** (de las cuales **95** `auto_prepared` y **0** `ready_for_review`).
 
 **Por marca:** Zentry 48 · Tukandado 8 · Mixta 40.
 
@@ -122,7 +123,7 @@ Acciones planificables (`approved` + `auto_approved_for_planning`): **87**. Work
 
 ## Change Packs — paquetes de cambio concretos
 
-Total: **72** · nuevos hoy: **0** · listos para revisar (`ready_for_review`): **66**. Ninguno ejecuta nada — ni siquiera en `approved_to_execute`. Ver `docs/change-packs.md`.
+Total: **72** · nuevos hoy: **0** · listos para revisar (`ready_for_review`): **42**. Ninguno ejecuta nada — ni siquiera en `approved_to_execute`. Ver `docs/change-packs.md`.
 
 **Por tipo de cambio:**
 
@@ -135,11 +136,11 @@ Total: **72** · nuevos hoy: **0** · listos para revisar (`ready_for_review`): 
 
 **Top 5 change packs listos para revisar:**
 
-- [high] `6bba78a5-650d-4473-8711-3a9ac04013c1` cerraduras inteligentes para taquillas (seo_on_page_update, marca: both, status: ready_for_review)
-- [high] `e6718d19-9a9e-4c85-96a1-c2a0a0c08a0a` cerraduras inteligentes para centros deportivos (seo_on_page_update, marca: both, status: ready_for_review)
 - [high] `cb57c7e2-dc57-4aa4-8e93-3dce132a5477` cerraduras inteligentes para taquillas (content_update, marca: both, status: ready_for_review)
 - [high] `a1be8ae4-9a5c-4e5a-bf2d-2acf752b6432` cerraduras inteligentes para taquillas (content_update, marca: both, status: ready_for_review)
-- [high] `e8a01e73-98fb-4ffe-b04d-8471c5e08224` cerraduras inteligentes para centros deportivos (new_content_page, marca: tukandado, status: ready_for_review)
+- [high] `b7d86924-e97e-46eb-80b7-09a00cbb00eb` cerraduras electronicas para taquillas (cro_conversion_update, marca: both, status: ready_for_review)
+- [medium] `a90c4b01-3bef-4688-a56f-6ae5416b3ee6` taquillas de melamina (seo_on_page_update, marca: zentry, status: ready_for_review)
+- [medium] `832fef27-196f-44f2-92e4-c18249e95c9f` taquilla madera (seo_on_page_update, marca: zentry, status: ready_for_review)
 
 ## WordPress Draft Agent — previews y borradores
 
@@ -149,8 +150,8 @@ Previews locales totales: **72** (nuevos hoy: **0**). Borradores reales creados 
 
 ## Staging Executor / Staging QA (Fase O12)
 
-STAGING_EXECUTION_ENABLED: **true**. Ejecuciones aplicadas de verdad en staging (total acumulado, siempre `draft`, nunca publicadas, nunca produccion): **6**. Fallidas: **0**. Pendientes de aprobacion por Telegram: **0**.
-Staging QA (solo lectura): **6** borrador(es) verificado(s), **5** pasan, **1** fallan. Ver `docs/staging-execution.md` y `docs/staging-rollback.md`.
+STAGING_EXECUTION_ENABLED: **true**. Ejecuciones aplicadas de verdad en staging (total acumulado, siempre `draft`, nunca publicadas, nunca produccion): **21**. Fallidas: **0**. Pendientes de aprobacion por Telegram: **0**.
+Staging QA (solo lectura): **21** borrador(es) verificado(s), **21** pasan, **0** fallan. Ver `docs/staging-execution.md` y `docs/staging-rollback.md`.
 
 ## Visual Template System / Asset Planning (Fase O12.4)
 
@@ -160,13 +161,18 @@ Previews visuales generados (total acumulado, sobre las 5 plantillas de `src/cor
 
 Telegram activo: **si**. Telegram configurado: **si**.
 
-Solicitudes pendientes: **5** · enviadas por Telegram (total): **10** · aprobadas: **8** · rechazadas: **2** · pospuestas: **0**.
+Solicitudes pendientes: **17** · enviadas por Telegram (total): **31** · aprobadas: **24** · rechazadas: **2** · pospuestas: **0**.
 
 - [critical] `b998cf4d-d0ff-4ff6-84df-bf0232d92fe9` taquillas melamina (https://zentrylockers.com/taquillas-melamina/) — canal: telegram, enviada
 - [critical] `5dc59ba6-1a17-40a7-97a1-d6407831847d` taquillas melamina (https://zentrylockers.com/taquillas-melamina-fenolico/) — canal: telegram, enviada
 - [critical] `c040c16b-370b-4f23-ba82-50c068411828` taquillas colegios (https://zentrylockers.com/taquillas-para-colegios/) — canal: telegram, enviada
 - [critical] `faa7557d-3dcc-4e98-bd04-384cbe6884f7` taquilla para el personal (https://zentrylockers.com/taquillas-para-empresas/) — canal: telegram, enviada
 - [critical] `56d63f35-b336-463e-9f34-444dfc33ed63` taquillas fenólicas en palencia (https://zentrylockers.com/taquillas-fenolicas/) — canal: telegram, enviada
+- [critical] `695e5487-b60e-4afb-be9a-dd60de762469` cerraduras inteligentes para taquillas (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — canal: telegram, enviada
+- [critical] `07df60ae-e1f4-45c5-b52e-87908c1636a0` comprar taquillas — canal: telegram, enviada
+- [critical] `d6697896-935a-468d-a280-4ab1a188fc94` soluciones de taquillas — canal: telegram, enviada
+- [critical] `8d975dd4-b910-49d1-988c-3fb7eb175126` taquillas inteligentes — canal: telegram, enviada
+- [critical] `ef894e6e-9619-4774-8f09-0b96662fa09f` taquillas para vestuarios — canal: telegram, enviada
 
 ## Top 5 acciones recomendadas
 
@@ -174,7 +180,7 @@ Solicitudes pendientes: **5** · enviadas por Telegram (total): **10** · aproba
 
 - **Pagina:** https://zentrylockers.com/cerraduras-inteligentes-taquillas/
 - **Marca:** Zentry + cerradura — solucion completa de taquilla inteligente
-- **Accion:** Optimizar on-page para "cerraduras inteligentes para taquillas" en https://zentrylockers.com/cerraduras-inteligentes-taquillas/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 21.3 a top 10.
+- **Accion:** Optimizar on-page para "cerraduras inteligentes para taquillas" en https://zentrylockers.com/cerraduras-inteligentes-taquillas/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 21.0 a top 10.
 - **Esfuerzo:** medium · **Impacto:** medium
 - **Requiere WordPress:** si · **Requiere contenido nuevo:** no
 
@@ -182,7 +188,7 @@ Solicitudes pendientes: **5** · enviadas por Telegram (total): **10** · aproba
 
 - **Pagina:** https://zentrylockers.com/cerraduras/
 - **Marca:** Zentry + cerradura — solucion completa de taquilla inteligente
-- **Accion:** Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "cerraduras inteligentes para centros deportivos" (posicion actual 38.0, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/cerraduras/ para "cerraduras inteligentes para centros deportivos" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
+- **Accion:** Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "cerraduras inteligentes para centros deportivos" (posicion actual 37.8, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/cerraduras/ para "cerraduras inteligentes para centros deportivos" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 - **Esfuerzo:** high · **Impacto:** medium
 - **Requiere WordPress:** si · **Requiere contenido nuevo:** si
 
@@ -215,13 +221,13 @@ Solicitudes pendientes: **5** · enviadas por Telegram (total): **10** · aproba
 - [medium] "taquillas melamina" (https://zentrylockers.com/taquillas-melamina/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquillas melamina" (posicion actual 30.7, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-melamina/ para "taquillas melamina" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 - [medium] "taquillas de melamina" (https://zentrylockers.com/taquillas-melamina/) — Optimizar on-page para "taquillas de melamina" en https://zentrylockers.com/taquillas-melamina/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 29.3 a top 10. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-melamina/ para "taquillas de melamina" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 - [medium] "taquillas melamina" (https://zentrylockers.com/taquillas-melamina-fenolico/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquillas melamina" (posicion actual 42.3, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-melamina-fenolico/ para "taquillas melamina" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
-- [medium] "taquillas de melamina" (https://zentrylockers.com/taquillas-melamina-fenolico/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquillas de melamina" (posicion actual 42.4, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-melamina-fenolico/ para "taquillas de melamina" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
+- [medium] "taquillas de melamina" (https://zentrylockers.com/taquillas-melamina-fenolico/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquillas de melamina" (posicion actual 42.5, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-melamina-fenolico/ para "taquillas de melamina" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 - [medium] "taquillas colegios" (https://zentrylockers.com/taquillas-para-colegios/) — Optimizar on-page para "taquillas colegios" en https://zentrylockers.com/taquillas-para-colegios/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 25.1 a top 10. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-para-colegios/ para "taquillas colegios" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 - [medium] "taquilla madera" (https://zentrylockers.com/taquillas-melamina/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquilla madera" (posicion actual 42.9, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-melamina/ para "taquilla madera" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
+- [medium] "taquilla para el personal" (https://zentrylockers.com/taquillas-para-empresas/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquilla para el personal" (posicion actual 64.7, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-para-empresas/ para "taquilla para el personal" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 - [medium] "taquillas escolares" (https://zentrylockers.com/taquillas-para-colegios/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquillas escolares" (posicion actual 33.8, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-para-colegios/ para "taquillas escolares" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
-- [medium] "taquilla para el personal" (https://zentrylockers.com/taquillas-para-empresas/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquilla para el personal" (posicion actual 64.9, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-para-empresas/ para "taquilla para el personal" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
-- [medium] "taquillas fenólicas en palencia" (https://zentrylockers.com/taquillas-fenolicas/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquillas fenólicas en palencia" (posicion actual 74.3, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-fenolicas/ para "taquillas fenólicas en palencia" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
-- [medium] "taquillas vestuarios de melamina" (https://zentrylockers.com/taquillas-melamina/) — Optimizar on-page para "taquillas vestuarios de melamina" en https://zentrylockers.com/taquillas-melamina/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 29.0 a top 10. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-melamina/ para "taquillas vestuarios de melamina" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
+- [medium] "taquillas fenólicas en palencia" (https://zentrylockers.com/taquillas-fenolicas/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "taquillas fenólicas en palencia" (posicion actual 74.2, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-fenolicas/ para "taquillas fenólicas en palencia" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
+- [medium] "taquillas vestuarios de melamina" (https://zentrylockers.com/taquillas-melamina/) — Optimizar on-page para "taquillas vestuarios de melamina" en https://zentrylockers.com/taquillas-melamina/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 28.7 a top 10. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/taquillas-melamina/ para "taquillas vestuarios de melamina" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 
 ## Oportunidades Tukandado (0)
 
@@ -229,9 +235,9 @@ Sin oportunidades en esta categoria.
 
 ## Oportunidades mixtas / cross-sell (4)
 
-- [high] "cerraduras inteligentes para taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — Optimizar on-page para "cerraduras inteligentes para taquillas" en https://zentrylockers.com/cerraduras-inteligentes-taquillas/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 21.3 a top 10.
-- [high] "cerraduras inteligentes para centros deportivos" (https://zentrylockers.com/cerraduras/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "cerraduras inteligentes para centros deportivos" (posicion actual 38.0, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/cerraduras/ para "cerraduras inteligentes para centros deportivos" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
-- [medium] "cerraduras electrónicas taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "cerraduras electrónicas taquillas" (posicion actual 35.5, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/cerraduras-inteligentes-taquillas/ para "cerraduras electrónicas taquillas" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
+- [high] "cerraduras inteligentes para taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — Optimizar on-page para "cerraduras inteligentes para taquillas" en https://zentrylockers.com/cerraduras-inteligentes-taquillas/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 21.0 a top 10.
+- [high] "cerraduras inteligentes para centros deportivos" (https://zentrylockers.com/cerraduras/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "cerraduras inteligentes para centros deportivos" (posicion actual 37.8, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/cerraduras/ para "cerraduras inteligentes para centros deportivos" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
+- [medium] "cerraduras electrónicas taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — Oportunidad futura / requiere landing fuerte: crear o reforzar una landing o articulo dedicado para "cerraduras electrónicas taquillas" (posicion actual 35.4, fuera de las primeras 3 paginas de resultados). No es un quick win: requiere contenido nuevo robusto, arquitectura de enlazado interno y posible cluster de contenido de soporte. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/cerraduras-inteligentes-taquillas/ para "cerraduras electrónicas taquillas" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 - [medium] "cerraduras electronicas para taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — Optimizar on-page para "cerraduras electronicas para taquillas" en https://zentrylockers.com/cerraduras-inteligentes-taquillas/: reforzar el contenido en H1/H2, ampliar profundidad del texto, mejorar enlazado interno desde paginas relacionadas y actualizar meta title/description. Objetivo: pasar de posicion 24.4 a top 10. Ademas, Reescribir meta title y meta description de https://zentrylockers.com/cerraduras-inteligentes-taquillas/ para "cerraduras electronicas para taquillas" (CTR actual 0.00%, muy por debajo del umbral). Probar mensajes mas atractivos (precio, garantia, CTA) y valorar datos estructurados/rich snippets.
 
 ## Estado SEM
@@ -246,9 +252,7 @@ Ver informe completo en `(no generado en esta pasada)`.
 
 ## Warnings
 
-- [staging-qa-agent] Staging QA detecto 1 borrador(es) con problemas
 - [staging-qa-agent] Staging QA: problema de salud general en staging (HTTP o noindex)
-- [staging-qa-agent] Staging QA detecto 1 borrador(es) con problemas
 - [staging-qa-agent] Staging QA: problema de salud general en staging (HTTP o noindex)
 
 ## Como gestionar el backlog

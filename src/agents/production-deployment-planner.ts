@@ -116,6 +116,7 @@ export interface ProductionDeploymentPlannerRunResult {
   existingPlans: ProductionDeploymentPlan[];
   skippedNoQaPass: number;
   skippedDuplicateCanonicalKey: number;
+  skippedDuplicatePage: number;
   newApprovalRequests: number;
   sentViaTelegram: number;
   planApprovedThisPass: number;
@@ -142,6 +143,7 @@ function buildReportMarkdown(result: ProductionDeploymentPlannerRunResult, allPl
   lines.push(`- Planes ya existentes (sin cambios): **${result.existingPlans.length}**`);
   lines.push(`- Drafts de staging sin QA pass todavia (omitidos, no se les propone plan): **${result.skippedNoQaPass}**`);
   lines.push(`- Omitidos por ya existir un plan sin resolver para el mismo canonicalKey (Fase O27, evita duplicados por Telegram): **${result.skippedDuplicateCanonicalKey}**`);
+  lines.push(`- Omitidos por ya existir un plan sin resolver para la misma pagina real (Fase O27.2, otro change pack distinto sobre la misma URL): **${result.skippedDuplicatePage}**`);
   lines.push(`- Nuevas solicitudes de aprobacion: **${result.newApprovalRequests}** (enviadas por Telegram: ${result.sentViaTelegram})`);
   lines.push(
     `- Aprobaciones de PLAN esta pasada: ${result.planApprovedThisPass} aprobados / ${result.planRejectedThisPass} rechazados`
@@ -220,6 +222,7 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
   const existingPlans: ProductionDeploymentPlan[] = [];
   let skippedNoQaPass = 0;
   let skippedDuplicateCanonicalKey = 0;
+  let skippedDuplicatePage = 0;
 
   // Fase O27 -- corrige el bug real de "Plan de deploy a produccion"
   // duplicado por Telegram (mismo canonicalKey, dos stagingExecutionId
@@ -235,6 +238,19 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
   // aparte y se deja constancia en el informe.
   const canonicalKeyByExecutionId = new Map(executions.map((e) => [e.executionId, e.canonicalKey]));
   const UNRESOLVED_PLAN_STATUSES = new Set(["draft", "plan_ready_for_review", "plan_approved", "execution_pending_approval", "execution_approved"]);
+
+  // Fase O27.2 -- segundo bug real encontrado en el primer batch escalado
+  // de 15 tareas: 4 paginas recibieron DOS change packs distintos (uno
+  // seo_on_page_update, otro content_update) el mismo dia -- canonicalKey
+  // distinto a proposito (son propuestas de contenido diferentes), pero
+  // para Pau son "la misma pagina pidiendo aprobacion dos veces" en su
+  // Telegram. Ademas del dedup por canonicalKey de arriba, tambien se
+  // comprueba por PAGINA REAL (`execution.page`): si ya hay un plan sin
+  // resolver para la misma pagina (de OTRO canonicalKey), tampoco se crea
+  // un segundo -- se avisa en el log/informe para que se revisen juntos
+  // cuando llegue el momento, en vez de mandar 2 decisiones separadas por
+  // la misma URL.
+  const pageByExecutionId = new Map(executions.map((e) => [e.executionId, e.page]));
 
   for (const execution of executions) {
     const qaForThis = qaResult.draftResults.find((d) => d.wordpressPageId === execution.wordpressPageId);
@@ -268,6 +284,26 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
         executionId: execution.executionId,
         existingPlanId: duplicateUnresolvedPlan.deploymentPlanId,
         existingPlanStagingExecutionId: duplicateUnresolvedPlan.stagingExecutionId,
+      });
+      continue;
+    }
+
+    const duplicateUnresolvedPlanForPage =
+      execution.page &&
+      current.find(
+        (p) =>
+          UNRESOLVED_PLAN_STATUSES.has(p.status) &&
+          p.stagingExecutionId !== execution.executionId &&
+          Boolean(pageByExecutionId.get(p.stagingExecutionId)) &&
+          pageByExecutionId.get(p.stagingExecutionId) === execution.page
+      );
+    if (duplicateUnresolvedPlanForPage) {
+      skippedDuplicatePage += 1;
+      logger.info("Production Deployment Planner: plan no creado, ya existe uno sin resolver para la misma pagina real (otro changePack)", {
+        page: execution.page,
+        executionId: execution.executionId,
+        existingPlanId: duplicateUnresolvedPlanForPage.deploymentPlanId,
+        existingPlanStagingExecutionId: duplicateUnresolvedPlanForPage.stagingExecutionId,
       });
       continue;
     }
@@ -430,6 +466,7 @@ export async function runProductionDeploymentPlanner(departmentRunId?: string): 
     existingPlans,
     skippedNoQaPass,
     skippedDuplicateCanonicalKey,
+    skippedDuplicatePage,
     newApprovalRequests,
     sentViaTelegram,
     planApprovedThisPass,
