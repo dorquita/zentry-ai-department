@@ -100,6 +100,7 @@ export interface StagingExecutorRunResult {
   rejectedThisPass: StagingExecution[];
   appliedThisPass: StagingExecution[];
   failedThisPass: StagingExecution[];
+  skippedByBatchLimit: StagingExecution[];
   pendingApprovalCount: number;
   totalAppliedCount: number;
   stagingExecutionEnabled: boolean;
@@ -132,8 +133,14 @@ function buildReportMarkdown(result: StagingExecutorRunResult, generatedAt: stri
   lines.push("## Resumen ejecutivo");
   lines.push("");
   lines.push(
-    `Ejecuciones nuevas puestas en cola: **${result.newPendingExecutions.length}**. Solicitudes de aprobacion nuevas: **${result.newApprovalRequests.length}** (enviadas por Telegram: **${result.sentViaTelegram.length}**). Auto-aprobadas por el Carril A (sin esperar Telegram, Fase O27): **${result.autoApprovedCarrilAThisPass.length}**. Aprobadas en esta pasada: **${result.approvedThisPass.length}**. Rechazadas: **${result.rejectedThisPass.length}**. Aplicadas de verdad en staging en esta pasada: **${result.appliedThisPass.length}** (total acumulado: **${result.totalAppliedCount}**). Fallidas: **${result.failedThisPass.length}**. Pendientes de aprobacion: **${result.pendingApprovalCount}**.`
+    `Ejecuciones nuevas puestas en cola: **${result.newPendingExecutions.length}**. Solicitudes de aprobacion nuevas: **${result.newApprovalRequests.length}** (enviadas por Telegram: **${result.sentViaTelegram.length}**). Auto-aprobadas por el Carril A (sin esperar Telegram, Fase O27): **${result.autoApprovedCarrilAThisPass.length}**. Aprobadas en esta pasada: **${result.approvedThisPass.length}**. Rechazadas: **${result.rejectedThisPass.length}**. Aplicadas de verdad en staging en esta pasada: **${result.appliedThisPass.length}** (total acumulado: **${result.totalAppliedCount}**). Fallidas: **${result.failedThisPass.length}**. Pospuestas por limite de batch (Fase O27.1): **${result.skippedByBatchLimit.length}**. Pendientes de aprobacion: **${result.pendingApprovalCount}**.`
   );
+  if (result.skippedByBatchLimit.length > 0) {
+    lines.push("");
+    lines.push(
+      `**Limite de batch activo:** \`STAGING_EXECUTION_BATCH_LIMIT\` esta definida en \`.env\` -- ${result.skippedByBatchLimit.length} ejecucion(es) ya aprobada(s) se quedan en \`approved\` para la siguiente pasada (o para cuando se suba/quite el limite). No se pierden ni se rechazan.`
+    );
+  }
   lines.push("");
   if (!result.canAttemptRealWrites) {
     lines.push(
@@ -363,9 +370,30 @@ export async function runStagingExecutor(departmentRunId?: string): Promise<Stag
   // --- Fase 3: aplicar de verdad las ejecuciones "approved", solo si los 4 interruptores lo permiten ---
   const appliedThisPass: StagingExecution[] = [];
   const failedThisPass: StagingExecution[] = [];
+  const skippedByBatchLimit: StagingExecution[] = [];
 
   if (canAttemptRealWrites) {
-    const approvedExecutions = readCurrentStagingExecutions().filter((e) => e.status === "approved");
+    let approvedExecutions = readCurrentStagingExecutions().filter((e) => e.status === "approved");
+    // Fase O27.1 -- limite de batch OPCIONAL para el primer arranque
+    // controlado del Carril A (smoke test). Nunca hardcodeado: si
+    // STAGING_EXECUTION_BATCH_LIMIT no esta definida (o no es un entero
+    // positivo), se procesan TODAS las ejecuciones "approved" de esta
+    // pasada, exactamente como siempre -- quitar la variable de .env
+    // vuelve a la escala completa sin tocar ni una linea de codigo. Las
+    // ejecuciones que se queden fuera del batch NO se pierden ni se
+    // rechazan: siguen en "approved" y se recogen en la siguiente pasada
+    // (o en la siguiente subida del limite).
+    const batchLimitRaw = (process.env.STAGING_EXECUTION_BATCH_LIMIT ?? "").trim();
+    const batchLimit = batchLimitRaw ? Number.parseInt(batchLimitRaw, 10) : NaN;
+    if (Number.isInteger(batchLimit) && batchLimit > 0 && approvedExecutions.length > batchLimit) {
+      skippedByBatchLimit.push(...approvedExecutions.slice(batchLimit));
+      approvedExecutions = approvedExecutions.slice(0, batchLimit);
+      logger.info("Staging Executor: limite de batch activo (Fase O27.1), aplicando solo un subconjunto esta pasada", {
+        batchLimit,
+        aplicandoEstaPasada: approvedExecutions.length,
+        pospuestasSiguientePasada: skippedByBatchLimit.length,
+      });
+    }
     for (const execution of approvedExecutions) {
       const changePack = findChangePackById(execution.changePackId);
       if (!changePack) {
@@ -445,6 +473,7 @@ export async function runStagingExecutor(departmentRunId?: string): Promise<Stag
     rejectedThisPass,
     appliedThisPass,
     failedThisPass,
+    skippedByBatchLimit,
     pendingApprovalCount,
     totalAppliedCount,
     stagingExecutionEnabled,

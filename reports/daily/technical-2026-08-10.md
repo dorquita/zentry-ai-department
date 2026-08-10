@@ -2,8 +2,8 @@
 
 > Este es el informe tecnico interno (IDs, estados, work orders, change packs, agentes, trazabilidad). El informe para el responsable del departamento es el ejecutivo del mismo dia (`reports/daily/executive-<fecha>.md`), que es el que se envia por email.
 
-- **departmentRunId:** `growth-department-2026-08-10T104124Z`
-- **Generado:** 2026-08-10T10:41:28.117Z
+- **departmentRunId:** `growth-department-2026-08-10T125242Z`
+- **Generado:** 2026-08-10T12:52:59.692Z
 
 ## Resumen ejecutivo
 
@@ -12,9 +12,9 @@ El departamento Web & Growth analizo datos reales de Search Console, priorizó a
 ## Que ha hecho cada agente
 
 - **staging-executor**: completado — Staging Executor Agent finalizado: 0 ejecucion(es) aplicada(s), 0 pendiente(s) de aprobacion
-- **staging-qa-agent**: completado (4 warning(s)) — Staging QA Agent finalizado: 0/1 borrador(es) pasan (0 con warning)
+- **staging-qa-agent**: completado (4 warning(s)) — Staging QA Agent finalizado: 5/6 borrador(es) pasan (5 con warning)
 - **approval-gateway**: completado — Approval Gateway Agent finalizado: 0 solicitud(es) nueva(s), 0 enviada(s) por Telegram
-- **production-deployment-planner**: completado — Production Deployment Planner finalizado: 0 plan(es) nuevo(s), 1 en total. Produccion no tocada.
+- **production-deployment-planner**: completado — Production Deployment Planner finalizado: 0 plan(es) nuevo(s), 6 en total. Produccion no tocada.
 - **production-draft-executor**: completado — Production Draft Executor finalizado: 0 pendiente(s) nueva(s), 0 aplicada(s), canAttemptRealWrites=false.
 - **seo-watcher**: completado — seo-watcher: omitido en este QA parcial (Search Console con invalid_grant hoy, no relacionado con la Fase O27) -- se ejecutara en la siguiente pasada diaria real.
 - **seo-director**: completado — seo-director: omitido en este QA parcial (Search Console con invalid_grant hoy, no relacionado con la Fase O27) -- se ejecutara en la siguiente pasada diaria real.
@@ -122,7 +122,7 @@ Acciones planificables (`approved` + `auto_approved_for_planning`): **87**. Work
 
 ## Change Packs — paquetes de cambio concretos
 
-Total: **72** · nuevos hoy: **0** · listos para revisar (`ready_for_review`): **71**. Ninguno ejecuta nada — ni siquiera en `approved_to_execute`. Ver `docs/change-packs.md`.
+Total: **72** · nuevos hoy: **0** · listos para revisar (`ready_for_review`): **66**. Ninguno ejecuta nada — ni siquiera en `approved_to_execute`. Ver `docs/change-packs.md`.
 
 **Por tipo de cambio:**
 
@@ -149,8 +149,8 @@ Previews locales totales: **72** (nuevos hoy: **0**). Borradores reales creados 
 
 ## Staging Executor / Staging QA (Fase O12)
 
-STAGING_EXECUTION_ENABLED: **true**. Ejecuciones aplicadas de verdad en staging (total acumulado, siempre `draft`, nunca publicadas, nunca produccion): **1**. Fallidas: **0**. Pendientes de aprobacion por Telegram: **0**.
-Staging QA (solo lectura): **1** borrador(es) verificado(s), **0** pasan, **1** fallan. Ver `docs/staging-execution.md` y `docs/staging-rollback.md`.
+STAGING_EXECUTION_ENABLED: **true**. Ejecuciones aplicadas de verdad en staging (total acumulado, siempre `draft`, nunca publicadas, nunca produccion): **6**. Fallidas: **0**. Pendientes de aprobacion por Telegram: **0**.
+Staging QA (solo lectura): **6** borrador(es) verificado(s), **5** pasan, **1** fallan. Ver `docs/staging-execution.md` y `docs/staging-rollback.md`.
 
 ## Visual Template System / Asset Planning (Fase O12.4)
 
@@ -160,7 +160,13 @@ Previews visuales generados (total acumulado, sobre las 5 plantillas de `src/cor
 
 Telegram activo: **si**. Telegram configurado: **si**.
 
-Solicitudes pendientes: **0** · enviadas por Telegram (total): **5** · aprobadas: **3** · rechazadas: **2** · pospuestas: **0**.
+Solicitudes pendientes: **5** · enviadas por Telegram (total): **10** · aprobadas: **8** · rechazadas: **2** · pospuestas: **0**.
+
+- [critical] `b998cf4d-d0ff-4ff6-84df-bf0232d92fe9` taquillas melamina (https://zentrylockers.com/taquillas-melamina/) — canal: telegram, enviada
+- [critical] `5dc59ba6-1a17-40a7-97a1-d6407831847d` taquillas melamina (https://zentrylockers.com/taquillas-melamina-fenolico/) — canal: telegram, enviada
+- [critical] `c040c16b-370b-4f23-ba82-50c068411828` taquillas colegios (https://zentrylockers.com/taquillas-para-colegios/) — canal: telegram, enviada
+- [critical] `faa7557d-3dcc-4e98-bd04-384cbe6884f7` taquilla para el personal (https://zentrylockers.com/taquillas-para-empresas/) — canal: telegram, enviada
+- [critical] `56d63f35-b336-463e-9f34-444dfc33ed63` taquillas fenólicas en palencia (https://zentrylockers.com/taquillas-fenolicas/) — canal: telegram, enviada
 
 ## Top 5 acciones recomendadas
 

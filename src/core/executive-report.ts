@@ -1030,7 +1030,22 @@ export function renderExecutiveReportMarkdownV2(data: ExecutiveReportData, extra
   lines.push("# Informe diario de Web & Growth");
   lines.push(`Fecha: ${data.dateLabel}`);
   lines.push("");
-  lines.push(data.summaryParagraph);
+  // Fase O27.1 -- el resumen de V1 (data.summaryParagraph) siempre
+  // termina con "No se ha publicado ningun cambio; las propuestas quedan
+  // preparadas para revision", que era correcto cuando NADA se escribia
+  // nunca de verdad, pero se vuelve enganoso en cuanto el Carril A aplica
+  // cambios reales en staging (violaria la regla explicita de no decir
+  // "todo fue analisis" si hubo ejecucion real). Se sustituye esa frase
+  // final por una version que distingue staging (si puede haber cambios
+  // reales) de produccion (nunca los hay sin aprobacion).
+  const summaryWithRealChanges =
+    extras.realChangesToday.length > 0
+      ? data.summaryParagraph.replace(
+          /No se ha publicado ningun cambio; las propuestas quedan preparadas para revision\.?/,
+          `Se han aplicado ${extras.realChangesToday.length} cambio(s) real(es) en staging hoy (ver seccion 1) — nunca en produccion, que sigue exactamente igual.`
+        )
+      : data.summaryParagraph;
+  lines.push(summaryWithRealChanges);
   lines.push("");
 
   lines.push("## 1. Cambios reales hechos hoy");

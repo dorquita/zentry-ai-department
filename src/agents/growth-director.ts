@@ -707,20 +707,19 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
   // decision" para un humano (ej. el bug real de "Plan de deploy a
   // produccion: taquillas escolares" duplicado), Pau nunca ve la fila
   // repetida en el email.
+  // Fase O27.1 -- orden deliberado: las solicitudes de aprobacion
+  // (pendingApprovalRequests, ordenadas de mas reciente a mas antigua)
+  // van ANTES que las acciones waiting_approval del backlog general. Una
+  // aprobacion de PLAN/EJECUCION de produccion recien creada por un
+  // batch de hoy es mas urgente y mas accionable que una decision de
+  // backlog que lleva dias esperando -- sin este orden, las 3 plazas de
+  // MAX_DECISIONS se llenaban con decisiones antiguas y las nuevas de
+  // hoy quedaban invisibles (encontrado en el primer arranque real del
+  // Carril A).
   const pendingDecisionsV2: PendingDecisionV2[] = [];
   const seenDecisionTitles = new Set<string>();
-  for (const action of waitingApprovalActions) {
-    const title = `Aprobar o descartar: ${action.title}`;
-    if (seenDecisionTitles.has(title)) continue;
-    seenDecisionTitles.add(title);
-    pendingDecisionsV2.push({
-      title,
-      impact: action.impact || action.recommendation || "Mejora de visibilidad/conversion en la pagina afectada.",
-      risk: "Bajo — preparacion/mejora reversible, no toca produccion por si sola.",
-      reviewUrl: action.page,
-    });
-  }
-  for (const request of pendingApprovalRequests) {
+  const sortedPendingApprovalRequests = [...pendingApprovalRequests].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  for (const request of sortedPendingApprovalRequests) {
     const prefix =
       request.relatedType === "production_deployment_plan"
         ? "Aprobar el PLAN de deploy a produccion"
@@ -741,6 +740,17 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
           : request.riskLevel === "high"
             ? "Alto."
             : "Medio/bajo.",
+    });
+  }
+  for (const action of waitingApprovalActions) {
+    const title = `Aprobar o descartar: ${action.title}`;
+    if (seenDecisionTitles.has(title)) continue;
+    seenDecisionTitles.add(title);
+    pendingDecisionsV2.push({
+      title,
+      impact: action.impact || action.recommendation || "Mejora de visibilidad/conversion en la pagina afectada.",
+      risk: "Bajo — preparacion/mejora reversible, no toca produccion por si sola.",
+      reviewUrl: action.page,
     });
   }
 
