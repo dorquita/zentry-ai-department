@@ -7,7 +7,7 @@ import { fillPattern, detectTerm, smartLocksBlockApplies, SECTOR_TERMS, MATERIAL
 import { readCurrentLandingBlueprints, upsertLandingBlueprint } from "../core/landing-blueprints";
 import { emitEvent, readAllEvents } from "../core/department-events";
 import { logger } from "../core/logger";
-import { ChangePack, LandingBenefitItem, LandingBlueprint, LandingCardItem, LandingFaqItem, LandingSection } from "../core/types";
+import { ChangePack, LandingBenefitItem, LandingBlueprint, LandingCardItem, LandingComparisonTable, LandingFaqItem, LandingSection } from "../core/types";
 import { resolveActiveClientPaths } from "../core/client-paths";
 
 /**
@@ -182,9 +182,6 @@ function buildSectionBody(heading: string, changePack: ChangePack, sector: strin
   if (/entrega|plazo|envio/.test(h)) {
     return `El plazo de entrega depende del volumen del pedido y del grado de personalizacion. Al ser fabricante directo solemos ofrecer plazos ajustados -- te confirmamos el plazo exacto para tu pedido al preparar el presupuesto.`;
   }
-  if (/proceso|como trabajamos|como funciona/.test(h)) {
-    return buildProcessSectionBody(keyword);
-  }
   // Fase O27.3 -- 2 categorias mas, frecuentes en paginas mixtas
   // Zentry+Tukandado (mueble + cerradura) que antes caian todas al
   // catch-all generico y salian con el mismo texto repetido.
@@ -248,12 +245,6 @@ function buildMaterialAwareFaqs(keyword: string, material: string | undefined, s
   return faqs;
 }
 
-// Bloque "como trabajamos" (Fase O13.6c) -- describe el proceso comercial
-// en pasos genericos, sin comprometer plazos ni cifras concretas.
-function buildProcessSectionBody(keyword: string): string {
-  return `Trabajar con nosotros es sencillo: nos cuentas que ${keyword} necesitas, te preparamos un presupuesto a medida sin compromiso, y una vez confirmado, fabricamos y coordinamos la entrega contigo. Te acompañamos en todo el proceso, desde la primera consulta hasta la instalacion.`;
-}
-
 function buildBenefitBlocks(sector: string | undefined, keyword: string): LandingBenefitItem[] {
   return [
     { title: "Fabricante directo", description: "Sin intermediarios: precios mas competitivos y trato directo con quien fabrica tu pedido." },
@@ -275,6 +266,33 @@ function buildCards(material: string | undefined): LandingCardItem[] {
     { title: "Fenolica", description: "Resistente a la humedad, indicada para vestuarios y zonas humedas." },
     { title: "Melamina", description: "Alternativa mas economica con acabado tipo madera." },
   ];
+}
+
+// Fase O27.4c -- Pau reviso una captura real: sin tabla comparativa, sin
+// elementos de producto reales, comparativa de materiales reducida a un
+// parrafo de texto plano. Se construye una tabla REAL (3 materiales x 4
+// criterios) usando la misma base de conocimiento de MATERIAL_INFO --
+// siempre relevante en este catalogo (Zentry solo vende taquillas en
+// estos 3 materiales), asi que se incluye en TODAS las paginas, no solo
+// cuando se detecta un material concreto en el keyword.
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function buildComparisonTable(): LandingComparisonTable {
+  const m = MATERIAL_INFO.melamina;
+  const f = MATERIAL_INFO.fenolica;
+  const met = MATERIAL_INFO.metalica;
+  return {
+    title: "Comparativa de materiales",
+    headers: ["Criterio", "Melamina", "Fenolica", "Metalica"],
+    rows: [
+      ["Resistencia a la humedad", "Media", "Alta", "Media (requiere tratamiento anticorrosion)"],
+      ["Resistencia a impactos", "Media", "Alta", "Muy alta"],
+      ["Acabado", "Calido, tipo madera", "Tecnico", "Industrial"],
+      ["Uso recomendado", capitalize(m.usos.split(",")[0]), capitalize(f.usos.split(",")[0]), capitalize(met.usos.split(",")[0])],
+    ],
+  };
 }
 
 function rewriteFaqIfPlaceholder(faq: { question: string; answer: string }): LandingFaqItem {
@@ -310,24 +328,33 @@ export function buildBlueprintInput(changePack: ChangePack): Omit<LandingBluepri
   // era un FAQ real): se extrae aqui y se sustituye por 2-3 preguntas y
   // respuestas REALES (ver buildMaterialAwareFaqs), que ademas generan su
   // propio bloque "Preguntas frecuentes" real en el HTML final.
+  // Fase O27.4d -- benchmark UX/UI (ver docs/ux-benchmark-taquillas.md):
+  // "como trabajamos"/"proceso" se saca de `sections` (texto plano) igual
+  // que ya se hizo con el FAQ en O27.4b -- ahora alimenta el componente
+  // visual zentryProcessSteps (numerado, con tratamiento propio) en vez
+  // de otro parrafo mas.
   const faqHeadingPattern = /preguntas frecuentes|\bfaq\b/i;
-  const nonFaqHeadings = fields.h2s.filter((heading) => !faqHeadingPattern.test(heading));
-  const hasFaqHeading = fields.h2s.length !== nonFaqHeadings.length;
+  const processHeadingPattern = /proceso|como trabajamos|como funciona/i;
+  const nonFaqHeadings = fields.h2s.filter((heading) => !faqHeadingPattern.test(heading) && !processHeadingPattern.test(heading));
+  const hasFaqHeading = fields.h2s.length !== fields.h2s.filter((heading) => !faqHeadingPattern.test(heading)).length;
 
   const sections: LandingSection[] = nonFaqHeadings.map((heading) => ({
     heading,
     body: buildSectionBody(heading, changePack, sector, material),
     searchIntent: classifySearchIntent(heading),
   }));
-  if (!sections.some((s) => /proceso|como trabajamos|como funciona/i.test(s.heading))) {
-    sections.push({
-      heading: "Como trabajamos",
-      body: buildProcessSectionBody(changePack.keyword),
-      searchIntent: "informational",
-    });
-  }
 
   const generatedFaqs = hasFaqHeading ? buildMaterialAwareFaqs(changePack.keyword, material, sector) : [];
+
+  const processSteps = [
+    `Nos cuentas que ${changePack.keyword} necesitas (cantidad, medidas, material).`,
+    "Te preparamos un presupuesto a medida, sin compromiso.",
+    "Confirmado el pedido, fabricamos y coordinamos la entrega contigo.",
+  ];
+  const useCases = (resolveMaterialInfo(material)?.usos ?? "oficinas, colegios, gimnasios, vestuarios e instalaciones deportivas")
+    .split(",")
+    .map((u) => capitalize(u.trim()))
+    .slice(0, 4);
 
   return {
     changePackId: changePack.changePackId,
@@ -336,6 +363,17 @@ export function buildBlueprintInput(changePack: ChangePack): Omit<LandingBluepri
       headline: fillPattern(template.hero.headlinePattern, changePack, sector, material),
       subheadline: fillPattern(template.hero.subheadlinePattern, changePack, sector, material),
     },
+    // Fase O27.4c -- no hay pipeline de fotos/render reales conectado a
+    // este agente todavia (ver src/agents/visual-asset-planner.ts para el
+    // flujo de peticion de assets, que es async y depende de aprobacion
+    // separada) -- en vez de dejar el hero sin imagen (uno de los
+    // problemas senalados por Pau), se marca un placeholder HONESTO,
+    // nunca una foto inventada.
+    heroImageCaption: `Imagen de producto — pendiente de sesion fotografica (${changePack.keyword})`,
+    benefitsHeading: fillPattern(template.benefitsBlock.title, changePack, sector, material),
+    comparisonTable: buildComparisonTable(),
+    useCases,
+    processSteps,
     ctaPrimary: { label: template.hero.ctaLabel, target: ctaTarget, isRealLink: realLinks.length > 0 },
     ctaSecondary: includeSecondaryCta
       ? { label: "Ver cerraduras inteligentes", target: "#cerraduras-inteligentes", isRealLink: false }

@@ -316,26 +316,272 @@ function escapeHtmlText(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function buildButtonBlock(label: string, target: string): string {
+// Fase O27.4d -- componentes "zentry*" (benchmark UX/UI de referencias
+// reales del sector, ver docs/ux-benchmark-taquillas.md): antes de este
+// fix, el "hero" era una banda de una sola columna, apilada (imagen
+// encima, texto debajo) -- ningun competidor directo visitado (Setroc,
+// Taquiblok) hace esto. El patron real observado en los dos es SIEMPRE
+// dos columnas: texto+CTA a un lado, imagen real al otro. Se replica esa
+// ESTRUCTURA (no el diseno literal de ningun competidor -- colores,
+// tipografia y copy son propios de Zentry).
+
+// `prominent` anade estilo de boton grande/relleno (`is-style-fill` +
+// `has-large-font-size`, clases nativas de Gutenberg) para el CTA del
+// hero y el cierre comercial -- Pau senalo el CTA como "poco
+// protagonista" en una captura real; Taquiblok usa un boton amarillo muy
+// visible sobre foto real como referencia de lo que SI funciona.
+// Fase O28.1 -- `extraClass` (p.ej. "zentry-cta") se anade AL LADO de las
+// clases nativas de Gutenberg, nunca en su lugar: el marcador
+// `<!-- wp:buttons -->`/`wp-block-button__link` sigue presente para que
+// (a) el QA tecnico (checkLandingQuality) siga detectando el boton como
+// tal, y (b) el bloque siga siendo un boton Gutenberg valido si alguien
+// lo abre en el editor -- el estilo real lo aporta la clase zentry-cta.
+function buildButtonBlock(label: string, target: string, extraClass?: string): string {
   const safeLabel = escapeHtmlText(label);
   const safeTarget = escapeHtmlAttr(target);
+  const linkClass = extraClass ? `wp-block-button__link wp-element-button ${extraClass}` : "wp-block-button__link wp-element-button";
   return [
     `<!-- wp:buttons -->`,
     `<div class="wp-block-buttons"><!-- wp:button -->`,
-    `<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="${safeTarget}">${safeLabel}</a></div>`,
+    `<div class="wp-block-button"><a class="${linkClass}" href="${safeTarget}">${safeLabel}</a></div>`,
     `<!-- /wp:button --></div>`,
     `<!-- /wp:buttons -->`,
   ].join("\n");
 }
 
-function buildColumnsBlock(items: Array<{ title: string; description: string }>): string {
-  const columns = items
+// Fase O28.1 -- pulido visual final: se confirmo (test real de escritura
+// contra staging) que <style> SI sobrevive en content.raw, asi que en vez
+// de depender solo de estilos inline (limitados: sin hover, sin
+// gradientes reutilizables, dificil de mantener consistente), se define
+// UN bloque de clases CSS reutilizables ".zentry-*" que se inyecta una
+// vez al principio del contenido. Colores tomados de las variables CSS
+// REALES de produccion (--global-palette1..9, verificado via curl contra
+// zentrylockers.com) -- no son colores inventados, son la marca real.
+const ZENTRY_BRAND = {
+  primary: "#3182CE",
+  primaryDark: "#2B6CB0",
+  ink: "#1A202C",
+  inkSoft: "#2D3748",
+  muted: "#4A5568",
+  bgSoft: "#F7FAFC",
+  bgCard: "#EDF2F7",
+};
+
+const ZENTRY_STYLE_BLOCK = `<style>
+.zentry-hero{background:linear-gradient(135deg,${ZENTRY_BRAND.bgCard} 0%,${ZENTRY_BRAND.bgSoft} 100%);border-radius:20px;padding:3.5rem 2.5rem;margin-bottom:2.5rem;}
+.zentry-hero__grid{display:grid;grid-template-columns:1.15fr 1fr;gap:2.5rem;align-items:center;}
+.zentry-hero__title{font-size:2.5rem;line-height:1.15;margin:0 0 1rem;color:${ZENTRY_BRAND.ink};font-weight:800;}
+.zentry-hero__subtitle{font-size:1.3rem;color:${ZENTRY_BRAND.inkSoft};margin:0 0 1.5rem;line-height:1.5;}
+.zentry-hero__benefits{list-style:none;padding:0;margin:0 0 1.75rem;}
+.zentry-hero__benefits li{font-size:1.1rem;margin-bottom:0.65rem;color:${ZENTRY_BRAND.inkSoft};font-weight:600;}
+.zentry-cta{display:inline-block!important;background:${ZENTRY_BRAND.primary}!important;color:#fff!important;font-weight:700!important;font-size:1.15rem!important;padding:1.1rem 2.25rem!important;border-radius:10px!important;text-decoration:none!important;box-shadow:0 6px 18px rgba(49,130,206,0.35);transition:transform .15s ease,box-shadow .15s ease;}
+.zentry-cta:hover{background:${ZENTRY_BRAND.primaryDark}!important;transform:translateY(-2px);box-shadow:0 8px 22px rgba(49,130,206,0.45);}
+.zentry-image-box{background:linear-gradient(135deg,${ZENTRY_BRAND.primary} 0%,${ZENTRY_BRAND.primaryDark} 100%);border-radius:18px;padding:3.5rem 1.5rem;text-align:center;min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 14px 34px rgba(49,130,206,0.28);}
+.zentry-image-box__icon{font-size:4.5rem;margin:0;line-height:1;}
+.zentry-image-box__caption{margin:1.1rem 0 0;font-size:0.95rem;opacity:0.92;font-style:italic;padding:0 1rem;}
+.zentry-cards{display:grid!important;width:100%!important;grid-template-columns:repeat(var(--zentry-cols,3),1fr);gap:1.5rem;margin:1.75rem 0;align-items:stretch;}
+@media(max-width:780px){.zentry-cards{grid-template-columns:1fr!important;}}
+.zentry-card{background:#fff;border:1px solid ${ZENTRY_BRAND.bgCard};border-radius:14px;padding:2rem 1.5rem;text-align:center;box-shadow:0 3px 14px rgba(26,32,44,0.07);transition:transform .15s ease,box-shadow .15s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;box-sizing:border-box;}
+.zentry-card:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(26,32,44,0.12);}
+.zentry-card__icon{font-size:2.5rem;display:block;margin-bottom:0.65rem;}
+.zentry-card__title{font-size:1.15rem;font-weight:700;color:${ZENTRY_BRAND.ink};margin:0 0 0.5rem;}
+.zentry-card__desc{font-size:0.95rem;color:${ZENTRY_BRAND.muted};margin:0;line-height:1.5;}
+.zentry-table-wrap{overflow-x:auto;margin:1.75rem 0;border-radius:14px;box-shadow:0 3px 14px rgba(26,32,44,0.07);}
+.zentry-table{width:100%;border-collapse:collapse;background:#fff;}
+.zentry-table th{background:${ZENTRY_BRAND.primary};color:#fff;padding:1.1rem 1.25rem;text-align:left;font-size:0.95rem;font-weight:700;}
+.zentry-table td{padding:1rem 1.25rem;border-bottom:1px solid ${ZENTRY_BRAND.bgCard};font-size:0.95rem;color:${ZENTRY_BRAND.inkSoft};}
+.zentry-table tr:last-child td{border-bottom:none;}
+.zentry-table td:first-child{font-weight:700;color:${ZENTRY_BRAND.ink};background:${ZENTRY_BRAND.bgSoft};}
+.zentry-usecases{display:grid!important;width:100%!important;grid-template-columns:repeat(var(--zentry-cols,4),1fr);gap:1.25rem;margin:1.75rem 0;align-items:stretch;}
+@media(max-width:780px){.zentry-usecases{grid-template-columns:repeat(2,1fr)!important;}}
+.zentry-usecase{background:${ZENTRY_BRAND.bgSoft};border-radius:14px;padding:1.75rem 1rem;text-align:center;border:1px solid ${ZENTRY_BRAND.bgCard};display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;box-sizing:border-box;}
+.zentry-usecase__icon{font-size:2.5rem;display:block;margin-bottom:0.6rem;}
+.zentry-usecase__label{font-weight:700;color:${ZENTRY_BRAND.ink};font-size:1.02rem;}
+.zentry-process{display:grid!important;width:100%!important;grid-template-columns:repeat(var(--zentry-cols,3),1fr);gap:1.75rem;margin:1.75rem 0;align-items:start;}
+@media(max-width:780px){.zentry-process{grid-template-columns:1fr!important;}}
+.zentry-process__step{text-align:center;padding:1rem;}
+.zentry-process__number{width:3.75rem;height:3.75rem;border-radius:50%;background:${ZENTRY_BRAND.primary};color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;font-weight:800;font-size:1.5rem;box-shadow:0 6px 16px rgba(49,130,206,0.32);}
+.zentry-process__text{color:${ZENTRY_BRAND.inkSoft};font-size:1.02rem;line-height:1.5;}
+.zentry-final-cta{background:linear-gradient(135deg,${ZENTRY_BRAND.ink} 0%,${ZENTRY_BRAND.inkSoft} 100%);border-radius:20px;padding:4rem 2rem;text-align:center;margin-top:3rem;max-width:640px;margin-left:auto;margin-right:auto;}
+.zentry-final-cta__title{color:#fff;font-size:2rem;margin:0 0 0.9rem;line-height:1.2;}
+.zentry-final-cta__support{color:#CBD5E0;font-size:1.1rem;margin:0 0 2rem;line-height:1.5;}
+/* Fase O28.2 -- el bloque nativo de Gutenberg "Botones" trae su propio
+   justify-content (por defecto flex-start) en .wp-block-buttons, que
+   IGNORA el text-align:center del contenedor padre -- por eso el CTA
+   final se veia pegado a la izquierda pese a estar dentro de una banda
+   centrada. Se fuerza el centrado del bloque de botones especificamente
+   dentro de esta banda, sin tocar el boton del hero (que debe seguir
+   alineado a la izquierda, dentro de su columna de texto). */
+.zentry-final-cta .wp-block-buttons{display:flex!important;justify-content:center!important;margin:0!important;}
+.zentry-faq-item{border:1px solid ${ZENTRY_BRAND.bgCard};border-radius:14px;padding:1.4rem 1.6rem;margin-bottom:1rem;background:#fff;box-shadow:0 2px 10px rgba(26,32,44,0.05);}
+.zentry-faq-item h3{margin-top:0;color:${ZENTRY_BRAND.ink};font-size:1.12rem;}
+.zentry-faq-item p{margin-bottom:0;color:${ZENTRY_BRAND.muted};}
+@media(max-width:780px){.zentry-hero__grid{grid-template-columns:1fr;}.zentry-hero{padding:2.25rem 1.5rem;}.zentry-hero__title{font-size:1.9rem;}.zentry-final-cta__title{font-size:1.5rem;}}
+</style>`;
+
+/**
+ * zentryBenefitsCards -- tarjetas de ventajas reales (fondo blanco, borde,
+ * sombra suave, hover con elevacion) -- Setroc usa este mismo patron
+ * estructural (icono + titulo + descripcion corta, en tarjeta propia) en
+ * su bloque de confianza. Se replica la ESTRUCTURA con copy/marca propios.
+ */
+function zentryBenefitsCards(items: Array<{ title: string; description: string }>, withIcons = false): string {
+  const cards = items
+    .map((item, i) => {
+      const icon = withIcons ? `<span class="zentry-card__icon">${COLUMN_ICONS[i % COLUMN_ICONS.length]}</span>` : "";
+      return `<div class="zentry-card">${icon}<h3 class="zentry-card__title">${escapeHtmlText(item.title)}</h3><p class="zentry-card__desc">${escapeHtmlText(item.description)}</p></div>`;
+    })
+    .join("\n");
+  // Fase O28.1 -- envuelto en un `<!-- wp:columns -->` real (div propio,
+  // sin mezclar clases con .zentry-cards -- evita cualquier conflicto
+  // entre el `display:flex` del bloque nativo y el `display:grid` propio)
+  // para que siga contando como bloque visual valido en el QA tecnico y
+  // en el editor de bloques.
+  // Fase O28.2 -- `--zentry-cols` explicito (nunca auto-fit): rejilla
+  // predecible de verdad, capada a 3 columnas maximo (si hay 1 sola card
+  // -- el material destacado -- ocupa 1 columna centrada, no se estira a
+  // todo el ancho). El bug real de "huecos raros"/tarjetas descompensadas
+  // era que `.zentry-cards` vivia dentro de `.wp-block-columns` (flex de
+  // Kadence) sin `width:100%`, asi que el grid se calculaba contra un
+  // ancho encogido en vez del ancho completo del bloque -- ver `width:100%!important` arriba.
+  const cols = Math.min(items.length, 3);
+  return [
+    `<!-- wp:columns -->`,
+    `<div class="wp-block-columns"><div class="zentry-cards" style="--zentry-cols:${cols};${cols === 1 ? "max-width:360px;margin-left:auto;margin-right:auto;" : ""}">`,
+    cards,
+    `</div></div>`,
+    `<!-- /wp:columns -->`,
+  ].join("\n");
+}
+const COLUMN_ICONS = ["✅", "📐", "💬", "🔧", "⭐"];
+
+/**
+ * zentryHeroProduct -- hero a DOS COLUMNAS grande, con impacto (patron
+ * confirmado por captura real en Taquiblok: titular+copy a la izquierda,
+ * imagen destacada a la derecha). El placeholder de imagen ahora es una
+ * caja grande con degradado de marca, no un icono pequeño suelto --
+ * sigue siendo honesto (nunca simula una foto real), pero se presenta
+ * como un espacio de diseno "reservado", no como un error visual.
+ */
+function zentryHeroProduct(blueprint: LandingBlueprint): string {
+  const quickBenefits = blueprint.benefitBlocks
+    .slice(0, 3)
+    .map((b) => `<li>✅ ${escapeHtmlText(b.title)}</li>`)
+    .join("\n");
+  const caption = blueprint.heroImageCaption ?? "Imagen de producto — pendiente de sesion fotografica";
+  return [
+    `<div class="zentry-hero">`,
+    `<div class="zentry-hero__grid">`,
+    `<div class="zentry-hero__content">`,
+    `<h2 class="zentry-hero__title">${escapeHtmlText(blueprint.hero.headline)}</h2>`,
+    `<p class="zentry-hero__subtitle">${escapeHtmlText(blueprint.hero.subheadline)}</p>`,
+    quickBenefits ? `<ul class="zentry-hero__benefits">\n${quickBenefits}\n</ul>` : "",
+    buildButtonBlock(blueprint.ctaPrimary.label, blueprint.ctaPrimary.target, "zentry-cta"),
+    `</div>`,
+    `<div class="zentry-hero__visual">`,
+    `<div class="zentry-image-box">`,
+    `<p class="zentry-image-box__icon">🖼️</p>`,
+    `<p class="zentry-image-box__caption">${escapeHtmlText(caption)}</p>`,
+    `</div>`,
+    `</div>`,
+    `</div>`,
+    `</div>`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * zentryFinalCta -- cierre comercial fuerte: banda con degradado oscuro,
+ * titulo grande, TEXTO DE APOYO (nuevo, pedido explicitamente por Pau) y
+ * boton grande de marca.
+ */
+function zentryFinalCta(blueprint: LandingBlueprint): string {
+  return [
+    `<div class="zentry-final-cta">`,
+    `<h2 class="zentry-final-cta__title">${escapeHtmlText(blueprint.finalCta.headline)}</h2>`,
+    `<p class="zentry-final-cta__support">Fabricante directo, sin intermediarios. Te respondemos con tu presupuesto a medida en poco tiempo.</p>`,
+    buildButtonBlock(blueprint.finalCta.cta.label, blueprint.finalCta.cta.target, "zentry-cta"),
+    `</div>`,
+  ].join("\n");
+}
+
+/**
+ * zentryMaterialComparisonTable -- tabla con cabecera de marca (fondo de
+ * color, texto blanco), primera columna con mas peso visual, filas
+ * separadas por linea sutil y envuelta en una tarjeta con sombra.
+ */
+function zentryMaterialComparisonTable(table: NonNullable<LandingBlueprint["comparisonTable"]>): string {
+  const theadCells = table.headers.map((h) => `<th>${escapeHtmlText(h)}</th>`).join("");
+  const bodyRows = table.rows
+    .map((row) => `<tr>${row.map((cell) => `<td>${escapeHtmlText(cell)}</td>`).join("")}</tr>`)
+    .join("\n");
+  return [
+    `<h2>${escapeHtmlText(table.title)}</h2>`,
+    `<div class="zentry-table-wrap">`,
+    `<table class="zentry-table"><thead><tr>${theadCells}</tr></thead><tbody>`,
+    bodyRows,
+    `</tbody></table>`,
+    `</div>`,
+  ].join("\n");
+}
+
+const USE_CASE_ICONS = ["🏢", "🏫", "🏊", "🏋️", "🏨", "🏭"];
+
+/**
+ * zentryUseCasesGrid -- grid de sectores/usos con icono grande y card
+ * propia (antes era una fila de columnas basicas de Gutenberg).
+ */
+function zentryUseCasesGrid(useCases: string[]): string {
+  if (useCases.length === 0) return "";
+  const cards = useCases
     .map(
-      (item) =>
-        `<!-- wp:column -->\n<div class="wp-block-column"><h3>${escapeHtmlText(item.title)}</h3><p>${escapeHtmlText(item.description)}</p></div>\n<!-- /wp:column -->`
+      (useCase, i) =>
+        `<div class="zentry-usecase"><span class="zentry-usecase__icon">${USE_CASE_ICONS[i % USE_CASE_ICONS.length]}</span><div class="zentry-usecase__label">${escapeHtmlText(useCase)}</div></div>`
     )
     .join("\n");
-  return [`<!-- wp:columns -->`, `<div class="wp-block-columns">`, columns, `</div>`, `<!-- /wp:columns -->`].join("\n");
+  // Fase O28.2 -- columnas explicitas capadas a 4 (nunca auto-fit), igual
+  // criterio que zentryBenefitsCards.
+  const cols = Math.min(useCases.length, 4);
+  return [
+    `<h2>Donde se usan habitualmente</h2>`,
+    `<!-- wp:columns -->`,
+    `<div class="wp-block-columns"><div class="zentry-usecases" style="--zentry-cols:${cols};">`,
+    cards,
+    `</div></div>`,
+    `<!-- /wp:columns -->`,
+  ].join("\n");
+}
+
+/**
+ * zentryProcessSteps -- pasos numerados con circulo grande de marca y
+ * mas separacion entre pasos.
+ */
+function zentryProcessSteps(steps: string[]): string {
+  if (steps.length === 0) return "";
+  const stepBlocks = steps
+    .map((step, i) => `<div class="zentry-process__step"><div class="zentry-process__number">${i + 1}</div><p class="zentry-process__text">${escapeHtmlText(step)}</p></div>`)
+    .join("\n");
+  const cols = Math.min(steps.length, 3);
+  return [
+    `<h2>Como pedir tu presupuesto</h2>`,
+    `<!-- wp:columns -->`,
+    `<div class="wp-block-columns"><div class="zentry-process" style="--zentry-cols:${cols};">`,
+    stepBlocks,
+    `</div></div>`,
+    `<!-- /wp:columns -->`,
+  ].join("\n");
+}
+
+/**
+ * zentryFaqBlock -- FAQ en tarjetas propias con sombra suave.
+ */
+function zentryFaqBlock(items: Array<{ question: string; answer: string }>): string {
+  const parts = [`<h2>Preguntas frecuentes</h2>`];
+  for (const item of items) {
+    parts.push(`<div class="zentry-faq-item"><h3>${escapeHtmlText(item.question)}</h3><p>${escapeHtmlText(item.answer)}</p></div>`);
+  }
+  return parts.join("\n");
 }
 
 /**
@@ -383,18 +629,32 @@ export function buildWordpressContentHtml(fields: PreviewFields, blueprint?: Lan
 
   const parts: string[] = [];
 
-  // El tema ya renderiza su propio <h1 class="page-title"> a partir del
-  // titulo de WordPress (verificado en produccion, Fase O13.7b) -- el
-  // titular del hero usa <h2> para no duplicar el H1 de la pagina.
-  parts.push(`<h2>${escapeHtmlText(blueprint.hero.headline)}</h2>`);
-  parts.push(`<p><strong>${escapeHtmlText(blueprint.hero.subheadline)}</strong></p>`);
-  parts.push(buildButtonBlock(blueprint.ctaPrimary.label, blueprint.ctaPrimary.target));
+  // Fase O27.4d -- rediseno con componentes "zentry*" tras benchmark UX/UI
+  // de referencias reales del sector (ver docs/ux-benchmark-taquillas.md):
+  // hero a 2 columnas, ventajas con iconos, tabla comparativa real, grid
+  // de usos, pasos de proceso, FAQ y cierre comercial fuerte -- patrones
+  // confirmados en Setroc/Taquiblok, nunca copiados literalmente (colores,
+  // tipografia y copy son propios de Zentry).
+  // Fase O28.1 -- bloque de estilo con clases ".zentry-*" reutilizables,
+  // inyectado UNA vez al principio (confirmado con una escritura real de
+  // prueba que <style> sobrevive en content.raw).
+  parts.push(ZENTRY_STYLE_BLOCK);
+  parts.push(zentryHeroProduct(blueprint));
 
   if (blueprint.benefitBlocks.length > 0) {
-    parts.push(buildColumnsBlock(blueprint.benefitBlocks));
+    if (blueprint.benefitsHeading) parts.push(`<h2>${escapeHtmlText(blueprint.benefitsHeading)}</h2>`);
+    parts.push(zentryBenefitsCards(blueprint.benefitBlocks, true));
   }
   if (blueprint.cards.length > 0) {
-    parts.push(buildColumnsBlock(blueprint.cards));
+    parts.push(zentryBenefitsCards(blueprint.cards, false));
+  }
+
+  if (blueprint.comparisonTable) {
+    parts.push(zentryMaterialComparisonTable(blueprint.comparisonTable));
+  }
+
+  if (blueprint.useCases && blueprint.useCases.length > 0) {
+    parts.push(zentryUseCasesGrid(blueprint.useCases));
   }
 
   for (const section of blueprint.sections) {
@@ -402,16 +662,16 @@ export function buildWordpressContentHtml(fields: PreviewFields, blueprint?: Lan
     parts.push(`<p>${escapeHtmlText(section.body)}</p>`);
   }
 
+  if (blueprint.processSteps && blueprint.processSteps.length > 0) {
+    parts.push(zentryProcessSteps(blueprint.processSteps));
+  }
+
   if (blueprint.ctaSecondary) {
     parts.push(buildButtonBlock(blueprint.ctaSecondary.label, blueprint.ctaSecondary.target));
   }
 
   if (blueprint.faq.length > 0) {
-    parts.push(`<h2>Preguntas frecuentes</h2>`);
-    for (const item of blueprint.faq) {
-      parts.push(`<h3>${escapeHtmlText(item.question)}</h3>`);
-      parts.push(`<p>${escapeHtmlText(item.answer)}</p>`);
-    }
+    parts.push(zentryFaqBlock(blueprint.faq));
   }
 
   if (blueprint.internalLinks.length > 0) {
@@ -430,8 +690,7 @@ export function buildWordpressContentHtml(fields: PreviewFields, blueprint?: Lan
     );
   }
 
-  parts.push(`<h2>${escapeHtmlText(blueprint.finalCta.headline)}</h2>`);
-  parts.push(buildButtonBlock(blueprint.finalCta.cta.label, blueprint.finalCta.cta.target));
+  parts.push(zentryFinalCta(blueprint));
 
   return parts.join("\n\n");
 }

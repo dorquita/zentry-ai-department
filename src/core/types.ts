@@ -870,11 +870,34 @@ export interface LandingFaqItem {
   answer: string;
 }
 
+export interface LandingComparisonTable {
+  title: string;
+  headers: string[];
+  rows: string[][];
+}
+
 export interface LandingBlueprint {
   blueprintId: string;
   changePackId: string;
   templateType: string;
   hero: { headline: string; subheadline: string };
+  // Fase O27.4c -- Pau revizo una captura real y la pagina parecia un
+  // boceto/articulo plano: sin imagen de hero, jerarquia visual floja,
+  // sin tabla comparativa real. `heroImageCaption` (siempre presente
+  // hoy, no hay pipeline de fotos reales conectado a este agente) marca
+  // que el hero debe mostrar un placeholder visual HONESTO (nunca una
+  // foto falsa) en vez de texto plano sin imagen.
+  heroImageCaption?: string;
+  benefitsHeading?: string;
+  comparisonTable?: LandingComparisonTable;
+  // Fase O27.4d -- benchmark UX/UI de referencias reales del sector (ver
+  // docs/ux-benchmark-taquillas.md): las landings de competidores
+  // directos (Setroc, Taquiblok) usan bloques dedicados de "en que
+  // sectores se usa" y "como funciona el pedido" con tratamiento visual
+  // propio, no un parrafo de texto mas -- `useCases`/`processSteps`
+  // alimentan los componentes zentryUseCasesGrid/zentryProcessSteps.
+  useCases?: string[];
+  processSteps?: string[];
   ctaPrimary: LandingCtaSpec;
   ctaSecondary?: LandingCtaSpec;
   benefitBlocks: LandingBenefitItem[];

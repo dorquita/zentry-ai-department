@@ -326,21 +326,32 @@ export function selectVisualTemplate(changePack: ChangePack): VisualTemplateId {
     return "comparison_landing";
   }
 
+  const SECTOR_HINTS = ["colegio", "gimnasio", "hotel", "oficina", "hospital", "universidad", "centro deportivo", "polideportivo", "piscina", "industrial", "empresa"];
+  const MATERIAL_HINTS = ["melamina", "fenolic", "metalic", "madera"];
+  const hasSector = SECTOR_HINTS.some((hint) => haystack.includes(hint));
+  const hasMaterial = MATERIAL_HINTS.some((hint) => haystack.includes(hint));
+
+  // Fase O27.4c -- bug real encontrado en revision visual de Pau: una
+  // pagina content_update/new_content_page sobre un MATERIAL concreto
+  // ("taquillas melamina", "taquillas fenolicas...") caia siempre en
+  // blog_article (tono informativo, SIN CTA fuerte por diseno) solo por
+  // ser de ese changeType -- nunca llegaba a comprobar si hablaba de un
+  // material o un sector, aunque el template comercial correcto
+  // (product_landing/sector_landing) ya existia y estaba mejor
+  // disenado para esto. Ahora sector/material se comprueban PRIMERO,
+  // y blog_article queda solo para contenido genuinamente informativo
+  // sin sector ni material claros (el caso para el que se diseno).
   if (changePack.changeType === "new_content_page" || changePack.changeType === "content_update") {
-    const B2B_SECTOR_HINTS = ["colegio", "gimnasio", "hotel", "oficina", "hospital", "universidad", "centro deportivo", "polideportivo", "piscina", "industrial"];
-    const hasSector = B2B_SECTOR_HINTS.some((hint) => haystack.includes(hint));
-    if (!hasSector) {
+    if (!hasSector && !hasMaterial) {
       return "blog_article";
     }
   }
 
-  const SECTOR_HINTS = ["colegio", "gimnasio", "hotel", "oficina", "hospital", "universidad", "centro deportivo", "polideportivo", "piscina", "industrial", "empresa"];
-  if (SECTOR_HINTS.some((hint) => haystack.includes(hint))) {
+  if (hasSector) {
     return "sector_landing";
   }
 
-  const MATERIAL_HINTS = ["melamina", "fenolic", "metalic", "madera"];
-  if (MATERIAL_HINTS.some((hint) => haystack.includes(hint))) {
+  if (hasMaterial) {
     return "product_landing";
   }
 
