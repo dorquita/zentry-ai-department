@@ -114,6 +114,21 @@ function stripOutlinePrefix(heading: string): string {
   return heading.replace(/^H[1-3]:\s*/i, "").trim();
 }
 
+// Fase O27.4b -- segundo bug real encontrado en revision visual de Pau:
+// para new_content_page/content_update, esta funcion devolvia SIEMPRE la
+// nota interna "(no generada por Content Planner — redactar manualmente
+// antes de publicar)" como si fuera la meta description real -- y esa
+// nota terminaba en el <meta name="description"> y en el excerpt de la
+// pagina publicada en staging (visible para cualquiera que la inspeccione
+// o la vea en un listado). Content Planner nunca genera una meta
+// description para estos tipos de change pack (confirmado: su esquema no
+// tiene ese campo) -- en vez de dejar la nota interna, se genera una meta
+// description real y razonable a partir del titulo/keyword.
+function buildFallbackMetaDescription(title: string): string {
+  const base = `${title}: materiales, ventajas y presupuesto con Zentry, fabricante directo. Sin compromiso.`;
+  return base.length <= 155 ? base : `${base.slice(0, 152)}...`;
+}
+
 export function extractPreviewFields(changePack: ChangePack): PreviewFields {
   const p = changePack.proposedChanges as Record<string, unknown>;
   const asString = (value: unknown, fallback = ""): string => (typeof value === "string" ? value : fallback);
@@ -139,10 +154,11 @@ export function extractPreviewFields(changePack: ChangePack): PreviewFields {
   }
 
   if (changePack.changeType === "new_content_page" || changePack.changeType === "content_update") {
+    const title = asString(p.recommendedTitle, changePack.keyword);
     return {
-      title: asString(p.recommendedTitle, changePack.keyword),
-      metaDescription: "(no generada por Content Planner — redactar manualmente antes de publicar)",
-      h1: asString(p.recommendedTitle, changePack.keyword),
+      title,
+      metaDescription: buildFallbackMetaDescription(title),
+      h1: title,
       h2s: asHeadingArray(p.structure),
       copy: `(brief de contenido, no copy final) ${asString(p.clusterNote)}`.trim(),
       faqs: [],

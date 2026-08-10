@@ -67,20 +67,111 @@ function classifySearchIntent(heading: string): LandingSection["searchIntent"] {
   return "commercial";
 }
 
+// Fase O27.4b -- base de conocimiento REAL sobre los 3 materiales del
+// catalogo (metalica/fenolica/melamina, ver O21/O22). Son propiedades
+// tecnicas generales del sector (no cifras/garantias/plazos propios de
+// Zentry que no tengamos confirmados), asi que es informacion segura de
+// afirmar sin inventar nada especifico de la empresa. Postmortem de Pau:
+// el catch-all anterior ("cuentanos tu caso concreto...") no aportaba
+// ninguna informacion real sobre el producto -- esto es lo que lo
+// sustituye para las secciones mas comunes (que es / ventajas /
+// limitaciones / usos / comparativa).
+interface MaterialInfo {
+  label: string;
+  queEs: string;
+  ventajas: string;
+  limitaciones: string;
+  usos: string;
+  vsOtros: string;
+}
+
+const MATERIAL_INFO: Record<string, MaterialInfo> = {
+  melamina: {
+    label: "melamina",
+    queEs:
+      "Las taquillas de melamina estan fabricadas en tablero aglomerado revestido con resina melaminica: un acabado con aspecto calido, similar a la madera, pero mas resistente al uso diario y mas facil de limpiar que la madera maciza.",
+    ventajas: "buen acabado estetico tipo madera, amplia gama de colores, relacion calidad-precio ajustada y peso moderado que facilita el transporte e instalacion.",
+    limitaciones: "menor resistencia a la humedad continua que la fenolica -- no es la opcion mas indicada para vestuarios de piscina o zonas con vapor constante.",
+    usos: "oficinas, colegios, vestuarios de gimnasio de uso moderado y cualquier zona comun seca donde el aspecto visual importa tanto como la funcionalidad.",
+    vsOtros:
+      "frente a la fenolica, la melamina tiene mejor acabado estetico y menor coste pero resiste peor la humedad continua; frente a la metalica, es mas silenciosa y con mejor aspecto, aunque algo menos robusta ante impactos fuertes.",
+  },
+  fenolica: {
+    label: "fenolica",
+    queEs:
+      "Las taquillas fenolicas estan fabricadas en tablero compacto fenolico, un material de alta densidad disenado para soportar humedad, agua e impactos sin deteriorarse.",
+    ventajas: "maxima resistencia a la humedad y al vapor de agua, muy duradera frente a golpes y uso intensivo, y practicamente inalterable con el paso del tiempo.",
+    limitaciones: "coste superior al de la melamina, y su acabado es mas tecnico/industrial que calido.",
+    usos: "vestuarios de piscinas, duchas, gimnasios, polideportivos y cualquier zona con humedad constante.",
+    vsOtros:
+      "frente a la melamina, la fenolica gana claramente en resistencia a la humedad aunque cuesta algo mas; frente a la metalica, no se oxida y resulta mas silenciosa al abrir y cerrar.",
+  },
+  metalica: {
+    label: "metalica",
+    queEs: "Las taquillas metalicas estan fabricadas en chapa de acero pintada: la opcion mas robusta y tradicional para uso intensivo.",
+    ventajas: "maxima resistencia a impactos y a un uso muy intensivo, buena relacion de precio en grandes volumenes y mejor comportamiento frente al fuego que las opciones en tablero.",
+    limitaciones: "acabado mas industrial que estetico, y en entornos muy humedos requieren un tratamiento anticorrosion adecuado.",
+    usos: "gimnasios, instalaciones deportivas, colegios de alto trafico y entornos industriales o de fabrica.",
+    vsOtros:
+      "frente a la melamina y la fenolica, la metalica es la mas resistente a impactos fuertes y al uso mas exigente, aunque su aspecto es mas industrial y puede ser algo mas ruidosa al cerrarse.",
+  },
+};
+MATERIAL_INFO.fenolico = MATERIAL_INFO.fenolica;
+MATERIAL_INFO.metalico = MATERIAL_INFO.metalica;
+
+function resolveMaterialInfo(material: string | undefined): MaterialInfo | undefined {
+  if (!material) return undefined;
+  return MATERIAL_INFO[material.toLowerCase()];
+}
+
 // Copy generico de RESPALDO por tipo de seccion detectado en el H2 --
 // nunca inventa cifras/plazos, siempre remite a "solicitar presupuesto"
 // cuando hace falta un dato concreto que no tenemos. Se usa SOLO cuando
 // el change pack no aporta ya un parrafo real para esa seccion (evita
-// dejar secciones vacias, la causa raiz del postmortem).
-function buildSectionBody(heading: string, changePack: ChangePack, sector: string | undefined): string {
+// dejar secciones vacias, la causa raiz del postmortem original).
+//
+// Fase O27.4b (segundo postmortem visual de Pau): las secciones que SI
+// coincidian con una categoria de abajo ya estaban bien, pero varias
+// caian en el catch-all final y salian con relleno generico ("Sobre X:
+// cuentanos tu caso concreto...") sin ninguna informacion real del
+// producto. Se anaden categorias con contenido REAL especifico del
+// material (que es / ventajas / limitaciones / usos / comparativa) y se
+// mejora el catch-all para que use esa misma informacion cuando el
+// material es conocido, en vez de relleno generico.
+function buildSectionBody(heading: string, changePack: ChangePack, sector: string | undefined, material: string | undefined): string {
   const h = heading.toLowerCase();
   const keyword = changePack.keyword;
+  const info = resolveMaterialInfo(material);
 
-  if (/modelo|medida|configuracion/.test(h)) {
-    return `Disponemos de ${keyword} en distintas configuraciones para adaptarnos al espacio disponible${sector ? ` en ${sector}` : ""}. Cuentanos tu caso concreto y te proponemos la combinacion de medidas mas adecuada.`;
+  if (/que es|definicion/.test(h)) {
+    if (info) return info.queEs;
+    return `${keyword.charAt(0).toUpperCase()}${keyword.slice(1)} son taquillas modulares fabricadas a medida por Zentry, disponibles en metalica, fenolica o melamina segun el uso y el entorno donde se instalen.`;
   }
-  if (/material/.test(h)) {
-    return `Fabricamos en distintos materiales segun la necesidad: opciones mas robustas para uso intensivo, resistentes a la humedad para zonas humedas, y alternativas mas economicas para espacios comunes. Te ayudamos a elegir el material mas adecuado para tu caso.`;
+  if (/ventaja/.test(h)) {
+    if (info) return `Las principales ventajas de la ${info.label} son: ${info.ventajas}`;
+    return `Entre las principales ventajas de ${keyword} destacan la fabricacion a medida, la posibilidad de elegir el material mas adecuado para tu uso y un trato directo con quien fabrica tu pedido, sin intermediarios.`;
+  }
+  if (/limitacion|desventaja|inconvenient/.test(h)) {
+    if (info) return `Como cualquier material, la ${info.label} tambien tiene limitaciones a valorar: ${info.limitaciones}`;
+    return `Cada material tiene sus limitaciones (resistencia a la humedad, coste, acabado): te ayudamos a elegir el mas adecuado segun donde vayan a instalarse tus ${keyword}.`;
+  }
+  if (/uso habitual|para que sirve|cuando conviene|donde se usa|casos de uso/.test(h)) {
+    if (info) return `Es habitual encontrar taquillas de ${info.label} en: ${info.usos}`;
+    return `${keyword.charAt(0).toUpperCase()}${keyword.slice(1)} se usan habitualmente en colegios, oficinas, gimnasios, vestuarios e instalaciones deportivas -- el material mas adecuado depende de la humedad y la intensidad de uso de cada espacio.`;
+  }
+  if (/vs|comparat|diferencia|alternativa/.test(h)) {
+    if (info) return `Comparando materiales: ${info.vsOtros}`;
+    return `Los 3 materiales disponibles cubren necesidades distintas: la melamina destaca por su acabado y precio, la fenolica por su resistencia a la humedad, y la metalica por su robustez ante un uso muy intensivo. Cuentanos donde vas a instalarlas y te recomendamos el material mas adecuado.`;
+  }
+  if (/tipos y materiales|materiales disponibles/.test(h)) {
+    const all = ["melamina", "fenolica", "metalica"].map((m) => MATERIAL_INFO[m]);
+    const summary = all.map((m) => `${m.label} (${m.ventajas.split(",")[0]})`).join("; ");
+    return info
+      ? `Estas taquillas estan fabricadas en ${info.label}. Tambien disponemos de otros materiales segun tu caso: ${summary}.`
+      : `Fabricamos taquillas en 3 materiales principales: ${summary}. Te ayudamos a elegir el mas adecuado para tu espacio y uso concreto.`;
+  }
+  if (/modelo|medida|configuracion/.test(h)) {
+    return `Disponemos de ${keyword} en distintas configuraciones (numero de puertas, altura, anchura) para adaptarnos al espacio disponible${sector ? ` en ${sector}` : ""}. Cuentanos las medidas de tu espacio y el numero de usuarios, y te proponemos la combinacion mas adecuada.`;
   }
   if (/precio|presupuesto|coste/.test(h)) {
     return `Al ser fabricante directo, ofrecemos precios competitivos sin intermediarios. Cada pedido tiene necesidades distintas de cantidad, materiales y medidas, asi que preparamos un presupuesto a medida sin compromiso.`;
@@ -107,15 +198,54 @@ function buildSectionBody(heading: string, changePack: ChangePack, sector: strin
     return `Tukandado aporta la cerradura electronica -- apertura sin llave fisica, gestionable por app, tarjeta o codigo segun el modelo.`;
   }
   if (/como elegir/.test(h)) {
+    if (info) return `Para elegir bien entre materiales: ${info.vsOtros} Cuentanos tu caso (numero de usuarios, presupuesto, si el espacio es humedo) y te recomendamos la combinacion mas adecuada.`;
     return `Cuentanos tu caso (numero de usuarios, presupuesto, si ya tienes taquillas o partes de cero) y te recomendamos la combinacion mas adecuada, sin compromiso.`;
   }
-  // Catch-all final: SIEMPRE incorpora el propio titular en la frase, para
-  // que dos secciones distintas nunca produzcan el mismo parrafo exacto
-  // aunque no encajen en ninguna categoria de arriba (bug real
-  // encontrado en auditoria visual, Fase O27.3 -- antes este catch-all
-  // ignoraba `heading` por completo).
+  // Catch-all final: si el material es conocido, se apoya en informacion
+  // REAL de ese material (nunca relleno generico); si no hay material
+  // detectado, incorpora siempre el propio titular en la frase para que
+  // dos secciones distintas nunca produzcan el mismo parrafo exacto.
+  if (info) {
+    return `Sobre ${heading.replace(/[¿?]/g, "").trim().toLowerCase()}: la ${info.label} se caracteriza por ${info.ventajas.split(",")[0]}. ${info.usos.charAt(0).toUpperCase()}${info.usos.slice(1)}`;
+  }
   const headingTopic = heading.replace(/[¿?]/g, "").trim();
   return `Sobre ${headingTopic.charAt(0).toLowerCase()}${headingTopic.slice(1)}: cuentanos tu caso concreto${sector ? ` en ${sector}` : ""} y te ayudamos a encontrar la mejor solucion en ${keyword}.`;
+}
+
+// Fase O27.4b -- antes, un H2 tipo "Preguntas frecuentes sobre X"
+// generaba una unica seccion con UN parrafo generico ("Sobre preguntas
+// frecuentes...: cuentanos tu caso concreto...") -- ni era un FAQ real ni
+// aportaba informacion. Se detecta este heading en buildBlueprintInput y,
+// en vez de una seccion mas, se generan 3 preguntas/respuestas REALES
+// (bloque FAQ autentico, con su propio <h2>"Preguntas frecuentes"> ya
+// generado por buildWordpressContentHtml) -- nunca inventa plazos/precios
+// concretos, remite a "presupuesto" cuando hace falta un dato exacto.
+function buildMaterialAwareFaqs(keyword: string, material: string | undefined, sector: string | undefined): LandingFaqItem[] {
+  const info = resolveMaterialInfo(material);
+  const faqs: LandingFaqItem[] = [
+    {
+      question: `¿Cuanto tardais en fabricar e instalar ${keyword}?`,
+      answer: "El plazo depende del volumen y del grado de personalizacion del pedido -- te lo confirmamos exactamente al preparar tu presupuesto.",
+    },
+    {
+      question: "¿Puedo combinar distintos materiales o medidas en el mismo pedido?",
+      answer: `Si, cada pedido de ${keyword} se configura a medida: puedes combinar materiales, medidas y acabados segun las zonas de tu instalacion${sector ? ` (${sector})` : ""}.`,
+    },
+  ];
+  if (info) {
+    faqs.push({
+      question: `¿Es resistente a la humedad la ${info.label}?`,
+      answer: info.limitaciones.toLowerCase().includes("humedad")
+        ? `Es un punto a tener en cuenta: ${info.limitaciones} Si tu espacio es humedo, te recomendamos valorar la fenolica.`
+        : `Si -- ${info.ventajas.split(",")[0]}, lo que la hace adecuada para zonas con humedad.`,
+    });
+  } else {
+    faqs.push({
+      question: "¿Las taquillas incluyen cerradura?",
+      answer: "Puedes elegir cerradura mecanica estandar o anadir cerradura electronica Tukandado para apertura sin llave fisica.",
+    });
+  }
+  return faqs;
 }
 
 // Bloque "como trabajamos" (Fase O13.6c) -- describe el proceso comercial
@@ -133,6 +263,10 @@ function buildBenefitBlocks(sector: string | undefined, keyword: string): Landin
 }
 
 function buildCards(material: string | undefined): LandingCardItem[] {
+  const info = resolveMaterialInfo(material);
+  if (info) {
+    return [{ title: info.label.charAt(0).toUpperCase() + info.label.slice(1), description: info.ventajas.charAt(0).toUpperCase() + info.ventajas.slice(1) }];
+  }
   if (material) {
     return [{ title: material.charAt(0).toUpperCase() + material.slice(1), description: `Opcion en ${material}, con las caracteristicas mas adecuadas para tu proyecto.` }];
   }
@@ -171,9 +305,18 @@ export function buildBlueprintInput(changePack: ChangePack): Omit<LandingBluepri
   const realLinks = fields.internalLinks.filter(isRealInternalUrl);
   const ctaTarget = realLinks[0] ?? "#solicitar-presupuesto";
 
-  const sections: LandingSection[] = fields.h2s.map((heading) => ({
+  // Fase O27.4b -- un heading tipo "Preguntas frecuentes sobre X" nunca
+  // se convierte en una seccion mas (salia como UN parrafo generico, ni
+  // era un FAQ real): se extrae aqui y se sustituye por 2-3 preguntas y
+  // respuestas REALES (ver buildMaterialAwareFaqs), que ademas generan su
+  // propio bloque "Preguntas frecuentes" real en el HTML final.
+  const faqHeadingPattern = /preguntas frecuentes|\bfaq\b/i;
+  const nonFaqHeadings = fields.h2s.filter((heading) => !faqHeadingPattern.test(heading));
+  const hasFaqHeading = fields.h2s.length !== nonFaqHeadings.length;
+
+  const sections: LandingSection[] = nonFaqHeadings.map((heading) => ({
     heading,
-    body: buildSectionBody(heading, changePack, sector),
+    body: buildSectionBody(heading, changePack, sector, material),
     searchIntent: classifySearchIntent(heading),
   }));
   if (!sections.some((s) => /proceso|como trabajamos|como funciona/i.test(s.heading))) {
@@ -183,6 +326,8 @@ export function buildBlueprintInput(changePack: ChangePack): Omit<LandingBluepri
       searchIntent: "informational",
     });
   }
+
+  const generatedFaqs = hasFaqHeading ? buildMaterialAwareFaqs(changePack.keyword, material, sector) : [];
 
   return {
     changePackId: changePack.changePackId,
@@ -198,7 +343,7 @@ export function buildBlueprintInput(changePack: ChangePack): Omit<LandingBluepri
     benefitBlocks: buildBenefitBlocks(sector, changePack.keyword),
     cards: buildCards(material),
     sections,
-    faq: fields.faqs.map(rewriteFaqIfPlaceholder),
+    faq: [...fields.faqs.map(rewriteFaqIfPlaceholder), ...generatedFaqs],
     finalCta: {
       headline: "Solicita presupuesto sin compromiso",
       cta: { label: template.finalCta.label, target: ctaTarget, isRealLink: realLinks.length > 0 },
