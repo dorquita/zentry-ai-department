@@ -155,6 +155,17 @@ export interface TelegramInlineButton {
 
 export interface SendTelegramMessageOptions {
   buttons?: TelegramInlineButton[][];
+  /**
+   * Fase O28.8 -- bug real encontrado en pruebas: un texto plano con un
+   * placeholder tipo "approve <id>" rompia el parser HTML de Telegram
+   * ("Unsupported start tag") y la respuesta nunca llegaba. `plainText:
+   * true` omite `parse_mode` (Telegram trata el texto tal cual, sin
+   * negrita/etc, pero nunca falla por `<`/`>`/`&` sueltos) -- para
+   * usarlo en cualquier mensaje que no necesite negrita real. Los
+   * mensajes que SI usan `<b>` (sendTelegramApprovalRequest) siguen en
+   * HTML, con sus valores dinamicos ya escapados con escapeHtml().
+   */
+  plainText?: boolean;
 }
 
 /** Envia un mensaje de texto simple, con botones inline opcionales. Sanitiza el contenido antes de enviarlo. */
@@ -164,7 +175,7 @@ export async function sendTelegramMessage(text: string, options: SendTelegramMes
   const payload: Record<string, unknown> = {
     chat_id: config.chatId,
     text: safeText,
-    parse_mode: "HTML",
+    ...(options.plainText ? {} : { parse_mode: "HTML" }),
   };
   if (options.buttons && options.buttons.length > 0) {
     payload.reply_markup = {
@@ -234,14 +245,21 @@ export type TelegramIncomingUpdate = TelegramIncomingMessage | TelegramIncomingC
  * este proyecto por si sola. `offset` es el `update_id` a partir del
  * cual pedir actualizaciones (evita repetir las ya vistas); quien llama
  * es responsable de llevar la cuenta (ver
- * src/agents/telegram-approval-receiver.ts). `timeout: 0` -- long
- * polling explicitamente desactivado, esto es para invocacion manual
- * bajo peticion, nunca un proceso en segundo plano permanente.
+ * src/agents/telegram-approval-receiver.ts).
+ *
+ * `longPollSeconds` (Fase O28.8, por defecto 0 = comportamiento historico
+ * de sondeo manual/instantaneo): si se pasa >0, usa el `timeout` real de
+ * Telegram para long polling -- la peticion HTTP queda ABIERTA en el
+ * servidor de Telegram hasta que llega una actualizacion nueva o pasa ese
+ * tiempo, lo que da respuesta casi instantanea sin necesitar sondear en
+ * bucle corto. Usado por el servicio systemd permanente
+ * (scripts/telegram-approvals-service.ts); el poll manual bajo peticion
+ * sigue usando 0 (instantaneo, nunca bloquea la terminal).
  */
-export async function fetchTelegramUpdates(offset?: number): Promise<TelegramIncomingUpdate[]> {
+export async function fetchTelegramUpdates(offset?: number, longPollSeconds = 0): Promise<TelegramIncomingUpdate[]> {
   const config = resolveTelegramConfig();
   const url = `${TELEGRAM_API_BASE}/bot${config.botToken}/getUpdates`;
-  const payload: Record<string, unknown> = { timeout: 0, allowed_updates: ["message", "callback_query"] };
+  const payload: Record<string, unknown> = { timeout: longPollSeconds, allowed_updates: ["message", "callback_query"] };
   if (typeof offset === "number") payload.offset = offset;
 
   let response: Response;

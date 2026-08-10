@@ -312,7 +312,8 @@ export async function runStagingExecutor(departmentRunId?: string): Promise<Stag
           if (telegramEnabled) {
             try {
               await sendTelegramMessage(
-                `Carril A (staging, sin aprobacion diaria): "${execution.keyword}"${execution.page ? ` (${execution.page})` : ""} se va a aplicar automaticamente en staging (borrador, sin publicar). No hace falta que respondas nada.`
+                `Carril A (staging, sin aprobacion diaria): "${execution.keyword}"${execution.page ? ` (${execution.page})` : ""} se va a aplicar automaticamente en staging (borrador, sin publicar). No hace falta que respondas nada.`,
+                { plainText: true }
               );
             } catch (err) {
               const message = err instanceof Error ? err.message : String(err);

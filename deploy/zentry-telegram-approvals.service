@@ -1,0 +1,29 @@
+[Unit]
+Description=Zentry AI Department - Telegram Approvals Receiver (long-poll permanente)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/zentry-ai-department
+ExecStart=/usr/bin/npx ts-node scripts/telegram-approvals-service.ts
+Restart=on-failure
+RestartSec=10
+User=root
+
+# El .env lo carga la propia app via dotenv.config() (WorkingDirectory
+# correcto es lo unico que hace falta) -- no se usa EnvironmentFile=
+# aqui a proposito: los Application Password de WordPress pueden llevar
+# espacios, y el parseo de EnvironmentFile de systemd no esta pensado
+# para eso; dotenv si.
+
+# stdout/stderr van al journal de systemd (journalctl), nunca a un
+# fichero en texto plano fuera de control -- el logger de la app ya
+# redacta cualquier campo que parezca token/secret/pass/apiKey antes de
+# imprimir nada.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=zentry-telegram-approvals
+
+[Install]
+WantedBy=multi-user.target

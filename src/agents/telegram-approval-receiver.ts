@@ -147,9 +147,13 @@ function isConfirmationExpired(createdAt: string, nowMs: number): boolean {
   return nowMs - createdMs > PRODUCTION_CONFIRMATION_WINDOW_MINUTES * 60 * 1000;
 }
 
+// Fase O28.8 -- texto plano (sin parse_mode HTML): estos mensajes nunca
+// usan negrita real, y un placeholder como "approve <id>" rompia el
+// parser HTML de Telegram (bug real encontrado probando el servicio
+// permanente) -- en texto plano, `<`/`>`/`&` sueltos nunca fallan.
 async function reply(text: string): Promise<void> {
   try {
-    await sendTelegramMessage(text);
+    await sendTelegramMessage(text, { plainText: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error("Telegram Approval Receiver: fallo al responder en el chat", { error: message });
@@ -424,7 +428,12 @@ export interface TelegramApprovalReceiverRunResult {
   ignored: number;
 }
 
-export async function runTelegramApprovalReceiver(): Promise<TelegramApprovalReceiverRunResult> {
+export interface RunTelegramApprovalReceiverOptions {
+  /** Fase O28.8 -- >0 activa long polling real de Telegram (usado por el servicio systemd permanente). 0 (por defecto) = comportamiento historico instantaneo del poll manual. */
+  longPollSeconds?: number;
+}
+
+export async function runTelegramApprovalReceiver(options: RunTelegramApprovalReceiverOptions = {}): Promise<TelegramApprovalReceiverRunResult> {
   const result: TelegramApprovalReceiverRunResult = {
     updatesFetched: 0,
     updatesProcessed: 0,
@@ -443,7 +452,7 @@ export async function runTelegramApprovalReceiver(): Promise<TelegramApprovalRec
   }
 
   const offset = getNextUpdateOffset();
-  const updates: TelegramIncomingUpdate[] = await fetchTelegramUpdates(offset);
+  const updates: TelegramIncomingUpdate[] = await fetchTelegramUpdates(offset, options.longPollSeconds ?? 0);
   result.updatesFetched = updates.length;
 
   for (const update of updates) {
