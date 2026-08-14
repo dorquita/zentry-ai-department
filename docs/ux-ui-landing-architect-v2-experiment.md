@@ -122,17 +122,31 @@ sigue siendo codigo determinista, igual que en v1:
    `zentrylockers.com.evil.com`). Antes de esta correccion, cualquier
    `https://` se aceptaba como interno. Ver `test/internal-url-guard.test.ts`.
 
-## Como se ejecuta hoy (dos comandos deterministas + una llamada real al subagente)
+## Ejecucion manual/interactiva (procedimiento historico de depuracion)
+
+**Esto describe un procedimiento manual/interactivo, no el mecanismo
+autonomo actual.** El mecanismo autonomo real de hoy es GitHub Actions ->
+`claude-code-action` -> `--agent ux-ui-landing-architect-v2` ->
+validacion/fallback -> artifact, sin ninguna sesion interactiva de por
+medio -- ver la seccion "GitHub Actions + claude-code-action (mecanismo
+actual)" mas abajo, que es la que esta VERIFICADA end-to-end de verdad
+(run real `31851396385`). Lo que sigue en esta seccion sigue siendo util
+como procedimiento manual de depuracion (p.ej. para inspeccionar a mano
+el prompt generado antes de tocar el workflow), pero no describe como se
+ejecuta el empleado en produccion.
 
 El runner (`scripts/run-landing-architect-comparison.ts`) **no llama a
 la API de Anthropic por su cuenta** -- este repositorio no tiene ninguna
-dependencia ni credencial para eso (mismo principio que el resto del
-proyecto: nada se ejecuta solo). La invocacion real del subagente la
-hace SIEMPRE una sesion de Claude Code usando la herramienta `Agent` --
-nunca el propio proceso Node. **Esto esta VERIFICADO end-to-end cuando
-quien orquesta es una sesion interactiva** (ver "Estado real de la
-automatizacion en Claude Cloud" mas abajo para el detalle exacto de que
-esta probado y que no).
+dependencia ni credencial propia para eso; el runner solo prepara
+ficheros y valida respuestas, nunca invoca un modelo el mismo (mismo
+principio en ambos mecanismos, manual y automatizado). En este
+procedimiento manual, la invocacion real del subagente la hace una
+sesion de Claude Code usando la herramienta `Agent` -- nunca el propio
+proceso Node. **Esto esta VERIFICADO end-to-end cuando quien orquesta es
+una sesion interactiva** (ver "HISTORICO: intento con Claude Cloud
+Routines" mas abajo para el detalle exacto de que se probo y que no con
+Routines -- un mecanismo distinto, ya desactivado, que intentaba
+automatizar precisamente este procedimiento manual sin exito).
 
 ```bash
 # Paso 1: preparar. Calcula V1 de verdad, construye el contexto de V2
@@ -227,15 +241,25 @@ criterios de evaluacion con dos columnas vacias ("V1 cumple" / "V2
 cumple") para que una persona las marque. Ningun campo de ese documento
 contiene una conclusion de "cual es mejor" -- eso es intencional.
 
-## Estado real de la automatizacion en Claude Cloud
+## HISTORICO: intento anterior con Claude Cloud Routines (desactivado)
 
-**Resumen en una frase: hoy NO existe un empleado autonomo 24/7
-funcionando.** El flujo completo funciona de verdad cuando lo orquesta
-una sesion interactiva de Claude Code; disparado por un Routine
-(`create_new_session_on_fire`, sin nadie mirando) NO ha completado de
-forma fiable en ninguno de los intentos probados. Esta seccion describe
-el resultado real de las pruebas, no la arquitectura que nos gustaria
-tener.
+**Esta seccion completa es HISTORICA.** Describe un mecanismo de
+automatizacion anterior, basado en Claude Cloud Routines
+(`create_new_session_on_fire`), que se probo, fallo de forma reproducible
+y quedo desactivado -- ver "Routine experimental" mas abajo. **No se
+borra la evidencia** (queda integra, tal como se registro durante las
+pruebas), pero ya NO describe el estado actual del proyecto: el mecanismo
+que sustituyo a este intento es GitHub Actions + `claude-code-action`,
+documentado en la seccion "GitHub Actions + claude-code-action (mecanismo
+actual)" mas abajo, con una validacion end-to-end real completa (run
+`31851396385`).
+
+**Resumen preciso del estado actual (no el de esta seccion historica):**
+no existe un proceso de inferencia continuo 24/7. Si existe actualmente
+un empleado autonomo ejecutado de forma programada mediante GitHub
+Actions (`schedule` diario + `workflow_dispatch` bajo demanda); el
+intento anterior basado en Claude Cloud Routines (descrito integramente
+mas abajo) quedo desactivado por falta de fiabilidad.
 
 ### Que esta VERIFICADO y que NO
 
@@ -260,11 +284,13 @@ identificar con certeza que tool call concreta queda pendiente. Lo unico
 verificable desde fuera es la marca de tiempo congelada y el
 `stop_reason=tool_use` del diagnostico de plataforma.
 
-### Mecanismo de ejecucion (el que SI existe, capacidades nativas, sin API/SDK)
+### Mecanismo de ejecucion del intento HISTORICO con Routines (capacidades nativas, sin API/SDK propia)
 
-Este repositorio **no usa la API de Anthropic ni el Agent SDK**, y no se
-ha introducido ninguna API key, worker propio, cola de mensajes ni
-infraestructura adicional -- la parte no automatica de esto sigue
+**Esto describe unicamente el intento historico con Routines, no el
+mecanismo actual** (que SI usa la API de Anthropic, via
+`claude-code-action` -- ver mas abajo). Para este intento historico: no
+se introdujo ninguna API key, worker propio, cola de mensajes ni
+infraestructura adicional -- la parte no automatica de esto seguia
 funcionando con capacidades nativas:
 
 1. **Herramienta `Agent`** (nativa de Claude Code) -- `.claude/agents/*.md`
@@ -281,7 +307,7 @@ funcionando con capacidades nativas:
    `create_new_session_on_fire`) -- verificado leyendo su esquema real,
    no asumido.
 
-### Procedimiento (el que se ha intentado automatizar, sin exito fiable todavia)
+### Procedimiento (el que se intento automatizar con Routines, sin exito fiable en ese mecanismo)
 
 1. `npm run landing-architect:compare -- ` (sin `--changePackId`: elige
    uno al azar). Leer la linea `RUNNER_RESULT_JSON`.
