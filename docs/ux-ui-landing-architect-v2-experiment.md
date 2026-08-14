@@ -340,6 +340,72 @@ sesion lo respete -- exactamente el mismo modelo de confianza
 usa el resto de este proyecto para sus agentes deterministas (ver
 `docs/risk-policy.md`), no una garantia nueva ni mas debil.
 
+## GitHub Actions + claude-code-action (mecanismo actual, sustituye al Routine)
+
+La tabla de arriba documenta por que el mecanismo basado en Routine
+(`create_new_session_on_fire`) **no es fiable**: la sesion disparada se
+congela con `stop_reason=tool_use` sin resolver, con o sin `Agent`. En
+vez de seguir intentando diagnosticar esa causa raiz (desconocida, sin
+herramienta para leer el transcript interno de una sesion de Routine),
+`.github/workflows/ux-ui-landing-architect-v2.yml` sustituye el mecanismo
+de disparo completo: GitHub Actions (`workflow_dispatch` /
+`schedule`, este ultimo comentado por ahora) en vez de un Routine de
+Claude Cloud, y `anthropics/claude-code-action@v1` con `--agent
+ux-ui-landing-architect-v2` en vez de una sesion generica que invoca
+`Agent`/`Task`.
+
+Diferencia clave con el mecanismo anterior: **la sesion orquestadora y el
+empleado son la MISMA sesion.** No hay una sesion "por fuera" que decida
+invocar `Agent(subagent_type: "ux-ui-landing-architect-v2")` -- el flag
+`--agent` de `claude_args` hace que la sesion principal de Claude Code
+Action arranque YA como `ux-ui-landing-architect-v2` (verificado leyendo
+el codigo fuente real de `@anthropic-ai/claude-agent-sdk@0.3.233`, la
+version que pinza `claude-code-action@v1`: `agent` es una opcion de
+Options de primer nivel, "equivalent to the `--agent` CLI flag"). Todo lo
+que antes hacia la sesion orquestadora (preparar el change pack, invocar
+al subagente, escribir su respuesta, ejecutar el segundo paso del
+runner) lo hace ahora GitHub Actions + TypeScript determinista alrededor
+de esa unica sesion Claude -- nunca la propia sesion Claude, que sigue
+sin herramientas (`tools: []`, mas `--disallowedTools "mcp__*"` como
+defensa adicional).
+
+### Estado real de ESTE mecanismo (honesto, no aspiracional)
+
+| Verificado | Como |
+|---|---|
+| `--agent` es un mecanismo real y documentado del Claude Agent SDK (no un flag inventado) | Leido en `package/sdk.d.ts` de `@anthropic-ai/claude-agent-sdk@0.3.233` (la version exacta que instala `claude-code-action@v1`), descargado y extraido para esta verificacion. |
+| `--json-schema` / `structured_output` es el mecanismo oficial de salida estructurada | `docs/usage.md` y `.github/workflows/test-structured-output.yml` del propio repositorio `anthropics/claude-code-action`, mas la documentacion publica en `code.claude.com/docs/en/agent-sdk/structured-outputs`. |
+| En este workflow (`workflow_dispatch`/`schedule`, sin evento de PR/issue) no se instala ningun servidor MCP propio de la Action | Leido `src/mcp/install-mcp-server.ts` del repo de la Action: los servidores `github_comment`/`github_ci`/`github_inline_comment`/`github` solo se instalan si se piden herramientas `mcp__*` explicitas o si hay contexto de PR -- ninguna de las dos condiciones aplica aqui. |
+| Pasar `github_token` explicito evita que la Action pida su propio token con permisos de escritura por defecto | Leido `base-action/src/github/token.ts`: sin `github_token` de entrada, la Action pide un token OIDC contra el GitHub App oficial de Claude con `DEFAULT_PERMISSIONS = {contents: write, pull_requests: write, issues: write}`, sin importar el `permissions:` del workflow -- y requiere `id-token: write`. |
+| Todo el pipeline determinista (paso 1 del runner -> parseo de `RUNNER_RESULT_JSON` -> lectura del prompt -> escritura simulada de una respuesta V2 -> paso 2 del runner -> parseo final) funciona de extremo a extremo | Simulado localmente con una respuesta V2 ficticia (sin invocar a Claude de verdad): `v2Status` termino en `"executed"` con `fabricationWarningCount: 0`, exactamente el contrato que espera el workflow. |
+| La invocacion REAL de `anthropics/claude-code-action@v1` dentro de GitHub Actions (con Claude de verdad, `--agent` de verdad) | **NO VERIFICADO TODAVIA.** Ver bloqueo abajo. |
+
+### Bloqueo real para la prueba end-to-end (PR #3, sin merge)
+
+Se intento disparar `workflow_dispatch` del workflow nuevo via la API de
+GitHub (`POST /repos/.../actions/workflows/ux-ui-landing-architect-v2.yml/dispatches`)
+apuntando a la rama del PR. Resultado: **`404 Not Found`.**
+`GET /repos/.../actions/workflows` confirma la causa: solo aparece `CI`
+(`.github/workflows/ci.yml`, ya en `main`) -- GitHub solo registra un
+workflow como "dispatchable" (via API o UI) despues de que su fichero
+exista en la rama por defecto del repositorio al menos una vez, aunque
+luego SI se pueda elegir ejecutarlo contra cualquier rama con el
+parametro `ref`. Con el workflow viviendo solo en
+`claude/automate-landing-architect-v2-fege7j` (PR #3, sin mergear a
+proposito, ver instrucciones de esa iteracion), no hay ninguna forma de
+dispararlo -- ni por API ni por la UI de GitHub -- hasta que llegue a
+`main`.
+
+Esto significa que, a dia de hoy, la invocacion real de Claude dentro de
+GitHub Actions (con `--agent`/`--json-schema` de verdad, autenticacion de
+verdad) **sigue sin probarse end-to-end**, no por un fallo del mecanismo
+disenado, sino por esta restriccion de plataforma que solo se resuelve
+mergeando el workflow a `main`. La primera ejecucion real de
+`workflow_dispatch` tras el merge debe documentarse aqui (reemplazando
+esta fila) con el resultado exacto: `run_id`, `changePackId` procesado,
+`v2Status`, numero de `fabricationWarnings`, y si la autenticacion
+(`CLAUDE_CODE_OAUTH_TOKEN` / `ANTHROPIC_API_KEY`) estaba configurada.
+
 ## Que falta para que esto deje de ser un experimento
 
 No es el objetivo de este documento proponerlo (evitar otra cronologia de
@@ -347,8 +413,12 @@ fases), pero para que quede explicito el alcance actual: hoy no existe
 ningun mecanismo que tome la salida de V2 y la aplique a
 `data/landing-blueprints.jsonl`, ni que la conecte con
 `wordpress-draft-agent.ts`. V2 sigue siendo, a dia de hoy, un generador
-de propuestas locales para comparacion -- verificado de principio a fin
-cuando lo orquesta una sesion interactiva de Claude Code, pero **sin
-ninguna automatizacion sin supervision funcionando todavia** (ver
-"Estado real de la automatizacion en Claude Cloud" mas arriba) y, en
-cualquier caso, sin ningun camino hacia aplicar nada.
+de propuestas locales para comparacion. El flujo esta verificado de
+principio a fin cuando lo orquesta una sesion interactiva de Claude Code;
+el mecanismo de Routine documentado arriba no es fiable; y el mecanismo
+de GitHub Actions + `claude-code-action` (este PR) tiene todo el pipeline
+determinista verificado pero **la invocacion real de Claude dentro de
+Actions sigue sin probarse end-to-end**, bloqueada por la restriccion de
+plataforma descrita arriba hasta que el workflow llegue a `main`. En
+cualquier caso, sin ningun camino hacia aplicar nada a WordPress/staging/
+produccion.
