@@ -50,6 +50,7 @@
     "visual-templates:build": "ts-node scripts/run-visual-template-builder.ts",
     "visual-assets:plan": "ts-node scripts/run-visual-asset-planner.ts",
     "landing-architect:compare": "ts-node scripts/run-landing-architect-comparison.ts",
+    "landing-architect:parse-runner-result-for-ci": "ts-node scripts/parse-runner-result-for-ci.ts",
     "assets:send-test": "ts-node scripts/send-test-asset-request.ts",
     "assets:upload-to-wordpress": "ts-node scripts/upload-asset-to-wordpress.ts",
     "assets:associate-product": "ts-node scripts/associate-product-image.ts",
