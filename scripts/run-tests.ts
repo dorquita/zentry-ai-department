@@ -14,6 +14,9 @@ import { runSubagentToolGuardTests } from "../test/subagent-tool-guard.test";
 import { runInternalUrlGuardTests } from "../test/internal-url-guard.test";
 import { runLandingArchitectComparisonTests } from "../test/landing-architect-comparison.test";
 import { runLandingArchitectChangePackSelectionTests } from "../test/landing-architect-change-pack-selection.test";
+import { runLandingArchitectV2OutputSchemaTests } from "../test/landing-architect-v2-output-schema.test";
+import { runRunnerResultParserTests } from "../test/runner-result-parser.test";
+import { runComparisonArtifactReaderTests } from "../test/comparison-artifact-reader.test";
 
 interface TestCase {
   name: string;
@@ -29,6 +32,9 @@ function main(): void {
     { suiteName: "internal-url-guard", cases: runInternalUrlGuardTests() },
     { suiteName: "landing-architect-comparison", cases: runLandingArchitectComparisonTests() },
     { suiteName: "landing-architect-change-pack-selection", cases: runLandingArchitectChangePackSelectionTests() },
+    { suiteName: "landing-architect-v2-output-schema", cases: runLandingArchitectV2OutputSchemaTests() },
+    { suiteName: "runner-result-parser", cases: runRunnerResultParserTests() },
+    { suiteName: "comparison-artifact-reader", cases: runComparisonArtifactReaderTests() },
   ];
 
   let passed = 0;

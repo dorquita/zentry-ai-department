@@ -1,0 +1,310 @@
+name: UX/UI Landing Architect v2 (GitHub Actions + Claude)
+
+# Objetivo de este workflow (ver docs/ux-ui-landing-architect-v2-experiment.md):
+# ejecutar el subagente ux-ui-landing-architect-v2 de principio a fin en
+# GitHub Actions, SIN portatil encendido, SIN VPS, SIN Claude Routines y
+# SIN Agent/Task anidado. La sesion principal de claude-code-action ES
+# directamente el empleado (--agent ux-ui-landing-architect-v2, ver mas
+# abajo) -- nunca una sesion generica que a su vez invoca un subagente.
+#
+# Separacion estricta de responsabilidades:
+#   - Este workflow (GitHub Actions + TypeScript determinista) hace TODA
+#     la orquestacion: prepara el contexto, invoca a Claude, escribe su
+#     respuesta, valida, audita y publica el resultado.
+#   - Claude (el paso "Ejecutar ux-ui-landing-architect-v2") SOLO razona
+#     sobre el prompt que recibe y devuelve el JSON estructurado. No
+#     ejecuta el runner, no escribe v2-output.json, no tiene herramientas
+#     (tools: [] en .claude/agents/ux-ui-landing-architect-v2.md).
+#   - src/core/landing-architect-comparison.ts (ya existente, sin
+#     modificar aqui) sigue siendo responsable de validateV2Output(),
+#     auditV2OutputForFabrication(), la comparacion V1/V2 y el
+#     fail-closed -- ver scripts/run-landing-architect-comparison.ts.
+#
+# No hace deploy, no publica nada, no toca WordPress/staging/produccion/
+# Ads/GA4/GTM/Search Console/n8n/VPS. El resultado se sube como artifact
+# de GitHub Actions, nunca se commitea.
+
+on:
+  workflow_dispatch:
+    inputs:
+      changePackId:
+        description: >-
+          ID de change pack especifico a procesar (opcional, solo para
+          debugging manual). Vacio (por defecto) = el runner elige UNO al
+          azar entre los elegibles (ready_for_review / approved_to_execute).
+        required: false
+        type: string
+  # Ejecucion automatica diaria -- DESACTIVADA A PROPOSITO en este PR hasta
+  # demostrar un ciclo completo end-to-end via workflow_dispatch (ver
+  # criterio de exito en docs/ux-ui-landing-architect-v2-experiment.md).
+  # Para activarla: descomentar el bloque de abajo (frecuencia objetivo:
+  # 1 vez al dia; el runner ya limita a un UNICO change pack por ejecucion
+  # por diseno, ver src/core/landing-architect-change-pack-selection.ts).
+  # schedule:
+  #   - cron: "0 7 * * *" # 07:00 UTC diario
+
+# Un solo empleado ux-ui-landing-architect-v2 corriendo a la vez: si ya hay
+# una ejecucion en curso (p.ej. un workflow_dispatch manual solapado con el
+# disparo programado), la nueva ejecucion espera en cola en vez de correr
+# en paralelo y arriesgarse a que dos ejecuciones escriban a la vez sobre
+# los mismos reports/ux-ui-landing-comparison/<changePackId>/.
+concurrency:
+  group: ux-ui-landing-architect-v2
+  cancel-in-progress: false
+
+# Principio de minimo privilegio: este empleado NUNCA escribe en el repo
+# (no commit, no push, no PR, no comentarios en issues/PRs). Con
+# `contents: read` alcanza -- ver el step "Ejecutar ux-ui-landing-architect-v2"
+# mas abajo para por que hace falta pasar `github_token` explicitamente
+# para que claude-code-action respete este limite en vez de pedir un
+# token propio con permisos de escritura.
+permissions:
+  contents: read
+
+jobs:
+  run-landing-architect-v2:
+    name: Ejecutar ux-ui-landing-architect-v2
+    runs-on: ubuntu-latest
+    # Fail-closed frente a sesiones colgadas (ver docs/ux-ui-landing-architect-v2-experiment.md,
+    # "Estado real de la automatizacion en Claude Cloud" -- razon de ser de
+    # este limite): nunca debe quedar el job bloqueado horas.
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --- Autenticacion Claude: explicita, sin fallback silencioso ---
+      # Preferencia documentada: CLAUDE_CODE_OAUTH_TOKEN. Alternativa:
+      # ANTHROPIC_API_KEY. El metodo elegido se registra en el output
+      # `method` (visible en logs y en el Step Summary si falla) -- nunca
+      # se prueban los dos en silencio ni se combinan.
+      - name: Resolver metodo de autenticacion Claude
+        id: claude-auth
+        run: |
+          if [ -n "$HAS_OAUTH" ]; then
+            echo "method=oauth" >> "$GITHUB_OUTPUT"
+            echo "Autenticacion Claude resuelta: CLAUDE_CODE_OAUTH_TOKEN (preferido)."
+          elif [ -n "$HAS_API_KEY" ]; then
+            echo "method=api_key" >> "$GITHUB_OUTPUT"
+            echo "Autenticacion Claude resuelta: ANTHROPIC_API_KEY (CLAUDE_CODE_OAUTH_TOKEN no configurado)."
+          else
+            echo "method=none" >> "$GITHUB_OUTPUT"
+            echo "::warning::Ninguna autenticacion Claude configurada (falta el secret CLAUDE_CODE_OAUTH_TOKEN o ANTHROPIC_API_KEY)."
+          fi
+        env:
+          HAS_OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' && '1' || '' }}
+          HAS_API_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' && '1' || '' }}
+
+      - name: Abortar (BLOCKED_BY_AUTH) si falta autenticacion Claude
+        if: steps.claude-auth.outputs.method == 'none'
+        run: |
+          {
+            echo "## UX/UI Landing Architect v2 -- BLOCKED_BY_AUTH"
+            echo ""
+            echo "Falta configurar autenticacion de Claude para este repositorio. Accion manual (una sola vez):"
+            echo ""
+            echo "1. Genera un token: \`claude setup-token\` en local (cuentas Claude Pro/Max) para CLAUDE_CODE_OAUTH_TOKEN,"
+            echo "   o una API key en la Consola de Anthropic para ANTHROPIC_API_KEY."
+            echo "2. Anade el secret **CLAUDE_CODE_OAUTH_TOKEN** (preferido) o **ANTHROPIC_API_KEY** en:"
+            echo "   Settings -> Secrets and variables -> Actions -> New repository secret (repo dorquita/zentry-ai-department)."
+            echo "3. Vuelve a lanzar este workflow con \`workflow_dispatch\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::BLOCKED_BY_AUTH -- falta CLAUDE_CODE_OAUTH_TOKEN o ANTHROPIC_API_KEY. Ver el Step Summary para la accion manual exacta."
+          exit 1
+
+      # --- Paso 1 del runner: prepara UN change pack + contexto V2 + v2-prompt.md ---
+      - name: "Runner (paso 1): preparar change pack + contexto V2"
+        id: prepare
+        run: |
+          set -o pipefail
+          if [ -n "$CHANGE_PACK_ID" ]; then
+            npm run landing-architect:compare -- --changePackId "$CHANGE_PACK_ID" 2>&1 | tee runner-step1.log
+          else
+            npm run landing-architect:compare -- 2>&1 | tee runner-step1.log
+          fi
+        env:
+          CHANGE_PACK_ID: ${{ inputs.changePackId }}
+
+      - name: Parsear RUNNER_RESULT_JSON (paso 1)
+        id: step1
+        run: npm run landing-architect:parse-runner-result-for-ci -- runner-step1.log
+
+      - name: Validar estado tras el paso 1 (pending_execution + prompt existe)
+        run: |
+          if [ "$V2_STATUS" != "pending_execution" ]; then
+            echo "::error::v2Status inesperado tras el paso 1 del runner: \"$V2_STATUS\" (se esperaba pending_execution). Abortando antes de invocar a Claude."
+            exit 1
+          fi
+          if [ ! -f "$PROMPT_FILE_PATH" ]; then
+            echo "::error::promptFilePath no existe en disco: $PROMPT_FILE_PATH"
+            exit 1
+          fi
+          echo "OK: v2Status=pending_execution, promptFilePath existe ($PROMPT_FILE_PATH)."
+        env:
+          V2_STATUS: ${{ steps.step1.outputs.v2Status }}
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      - name: Leer contenido completo de v2-prompt.md
+        id: read_prompt
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      - name: Preparar JSON Schema de salida (LandingArchitectV2Output) para --json-schema
+        id: schema
+        run: echo "json=$(jq -c . config/landing-architect-v2-output.schema.json)" >> "$GITHUB_OUTPUT"
+
+      # --- Invocacion real de Claude: LA SESION PRINCIPAL de claude-code-action
+      # ES ux-ui-landing-architect-v2 (--agent), no una sesion generica que
+      # a su vez invoca Agent/Task. Verificado contra el codigo fuente real
+      # del commit fijado abajo (Claude Agent SDK 0.3.233 -- el propio
+      # mensaje de ese commit en anthropics/claude-code-action dice "chore:
+      # bump Claude Code to 2.1.233 and Agent SDK to 0.3.233"): `agent` es
+      # una opcion de primer nivel de Options ("This is equivalent to the
+      # --agent CLI flag"), y --json-schema/structured_output es el
+      # mecanismo oficial documentado (docs/usage.md del propio
+      # repositorio de la Action, ese mismo commit).
+      #
+      # IMPORTANTE (por que un SHA y no @v1): este job recibe
+      # CLAUDE_CODE_OAUTH_TOKEN/ANTHROPIC_API_KEY -- @v1 es un tag movible
+      # que Anthropic puede reapuntar a otro commit en cualquier momento,
+      # asi que se fija el commit exacto auditado para este PR en vez de
+      # confiar en que el tag siga apuntando ahi. Al actualizar
+      # deliberadamente a una version mas nueva: repetir la verificacion
+      # de este bloque de comentarios contra el nuevo commit.
+      #
+      # tools: [] se respeta en dos capas independientes:
+      #   1) el propio frontmatter de .claude/agents/ux-ui-landing-architect-v2.md
+      #      (ya verificado con tool_uses:0 en una ejecucion real, ver
+      #      docs/ux-ui-landing-architect-v2-experiment.md).
+      #   2) `--disallowedTools "mcp__*"` aqui, como defensa en profundidad
+      #      adicional. NO se anade `--tools ""`: se verifico leyendo
+      #      base-action/src/parse-sdk-options.ts (mismo commit fijado)
+      #      que su parser de claude_args trata un valor vacio ("") como
+      #      "sin valor" (JS: cadena vacia es falsy), asi que `--tools ""`
+      #      se interpretaria como el flag booleano `--tools` sin argumento
+      #      en vez de "sin herramientas" -- comportamiento no documentado
+      #      y potencialmente distinto al deseado, así que se omite en vez
+      #      de arriesgar un flag que rompa el arranque de Claude Code.
+      #      No hace falta ademas: en este workflow (workflow_dispatch/schedule,
+      #      sin evento de PR/issue) claude-code-action no instala NINGUN
+      #      servidor MCP propio (el `github_comment`/`github_ci`/`github`
+      #      MCP server solo se instalan si se piden herramientas
+      #      `mcp__github*` explicitas o si hay contexto de PR -- verificado
+      #      en src/mcp/install-mcp-server.ts del repositorio de la Action).
+      #
+      # `github_token: ${{ github.token }}` se pasa EXPLICITAMENTE por una
+      # razon tecnica real (ver seccion de permisos arriba): si no se
+      # provee, claude-code-action pide un token propio via OIDC
+      # (requiere `id-token: write`) contra el GitHub App oficial de
+      # Claude, y ese token se emite por defecto con permisos de ESCRITURA
+      # (contents/pull_requests/issues) sin importar lo que diga el
+      # `permissions:` de este workflow (ver base-action/src/github/token.ts
+      # del repositorio de la Action, DEFAULT_PERMISSIONS). Pasar el
+      # GITHUB_TOKEN por defecto del workflow evita esa via por completo:
+      # el token que ve Claude queda limitado a `contents: read`, y no
+      # requiere instalar ninguna GitHub App de terceros en este repo.
+      - name: Ejecutar ux-ui-landing-architect-v2 (Claude Code Action)
+        id: claude
+        if: steps.claude-auth.outputs.method != 'none'
+        # SHA fijado (no el tag movible @v1) -- ver el bloque de
+        # comentarios de arriba para el porque. Corresponde a los tags
+        # "v1" y "v1.0.193" en anthropics/claude-code-action en el
+        # momento de auditar este PR (verificado con `git ls-remote`
+        # directo contra ese repositorio, no asumido).
+        uses: anthropics/claude-code-action@9d7150bc8a3dae8149739a88019d192b579ad90c # v1.0.193
+        timeout-minutes: 10
+        with:
+          prompt: ${{ steps.read_prompt.outputs.content }}
+          github_token: ${{ github.token }}
+          anthropic_api_key: ${{ steps.claude-auth.outputs.method == 'api_key' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ steps.claude-auth.outputs.method == 'oauth' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          claude_args: |
+            --agent ux-ui-landing-architect-v2
+            --disallowedTools "mcp__*"
+            --max-turns 8
+            --json-schema '${{ steps.schema.outputs.json }}'
+
+      # --- Escritura segura de la salida estructurada (nunca interpolada en shell) ---
+      - name: Escribir structured_output en expectedV2OutputPath
+        run: printf '%s' "$STRUCTURED_OUTPUT" > "$EXPECTED_V2_OUTPUT_PATH"
+        env:
+          STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}
+          EXPECTED_V2_OUTPUT_PATH: ${{ steps.step1.outputs.expectedV2OutputPath }}
+
+      # --- Paso 2 del runner: valida + audita fabricacion + comparacion V1/V2 ---
+      # Sale con codigo != 0 (sin continue-on-error) si v2Status queda en
+      # "invalid_output" -- ver validateV2Output()/main() en
+      # scripts/run-landing-architect-comparison.ts. Eso ya deja el
+      # workflow en FAILED por si mismo, sin logica adicional aqui.
+      - name: "Runner (paso 2): validar salida de Claude + auditar fabricacion + comparacion V1/V2"
+        run: |
+          set -o pipefail
+          npm run landing-architect:compare -- --changePackId "$CHANGE_PACK_ID" --v2-output "$EXPECTED_V2_OUTPUT_PATH" 2>&1 | tee runner-step2.log
+        env:
+          CHANGE_PACK_ID: ${{ steps.step1.outputs.changePackId }}
+          EXPECTED_V2_OUTPUT_PATH: ${{ steps.step1.outputs.expectedV2OutputPath }}
+
+      - name: Parsear RUNNER_RESULT_JSON (paso 2)
+        id: step2
+        run: npm run landing-architect:parse-runner-result-for-ci -- runner-step2.log
+
+      - name: Subir artifact (comparison.json, comparison.md, v2-output.json)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ux-ui-landing-architect-v2-${{ steps.step2.outputs.changePackId }}
+          path: |
+            ${{ steps.step2.outputs.comparisonJsonPath }}
+            ${{ steps.step2.outputs.comparisonMdPath }}
+            ${{ steps.step1.outputs.expectedV2OutputPath }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Generar GitHub Step Summary
+        run: |
+          {
+            echo "## UX/UI Landing Architect v2"
+            echo ""
+            echo "- **changePackId:** \`$CHANGE_PACK_ID\`"
+            echo "- **keyword:** $KEYWORD"
+            echo "- **Claude execution:** ${{ steps.claude.conclusion }}"
+            echo "- **v2Status:** \`$V2_STATUS\`"
+            echo "- **fabricationWarnings:** $FABRICATION_WARNING_COUNT"
+            echo "- **artifact generado:** \`ux-ui-landing-architect-v2-$CHANGE_PACK_ID\`"
+            echo "- **Escritura externa realizada:** ninguna (WordPress/staging/produccion/Ads/GA4/GTM/Search Console/n8n/VPS no se han tocado; nada se ha commiteado)."
+            echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo ""
+            if [ "$FABRICATION_WARNING_COUNT" != "0" ] && [ "$FABRICATION_WARNING_COUNT" != "null" ]; then
+              echo "> ⚠️ Hay avisos de posible fabricacion de datos sin respaldo en el input (listados abajo, y tambien en \`comparison.md\` del artifact) -- revisar antes de dar por buena esta propuesta. No se han descartado ni reinterpretado."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          CHANGE_PACK_ID: ${{ steps.step2.outputs.changePackId }}
+          KEYWORD: ${{ steps.step2.outputs.keyword }}
+          V2_STATUS: ${{ steps.step2.outputs.v2Status }}
+          FABRICATION_WARNING_COUNT: ${{ steps.step2.outputs.fabricationWarningCount }}
+
+      # Muestra los fabricationWarnings REALES (leidos tal cual de
+      # comparison.json via extractFabricationWarnings(), src/core/comparison-artifact-reader.ts)
+      # en el Step Summary cuando los hay -- nunca se le pide a Claude que
+      # los resuma ni reinterprete. No escribe nada (y no falla) si el
+      # array esta vacio.
+      - name: Mostrar fabricationWarnings reales en el Step Summary (si los hay)
+        run: npm run landing-architect:print-fabrication-warnings-for-ci -- "$COMPARISON_JSON_PATH"
+        env:
+          COMPARISON_JSON_PATH: ${{ steps.step2.outputs.comparisonJsonPath }}

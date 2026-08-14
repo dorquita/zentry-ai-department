@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zentrylockers.internal/schemas/landing-architect-v2-output.schema.json",
+  "title": "LandingArchitectV2Output",
+  "description": "Contrato de salida del subagente Claude ux-ui-landing-architect-v2, pasado a `claude-code-action` via --json-schema (ver .github/workflows/ux-ui-landing-architect-v2.yml). Debe reflejar EXACTAMENTE la interfaz TypeScript LandingArchitectV2Output en src/core/landing-architect-comparison.ts -- cualquier cambio en esa interfaz debe reflejarse aqui en el mismo commit (ver test/landing-architect-v2-output-schema.test.ts, que verifica que este fichero sigue aceptando/rechazando los mismos fixtures que validateV2Output()). Deliberadamente draft-07 (no 2020-12): el SDK de Claude Agent rechaza schemas que declaren un draft mas nuevo -- ver https://code.claude.com/docs/en/agent-sdk/structured-outputs. IMPORTANTE (evitar romper el workflow): este fichero se embebe tal cual dentro de un string shell entre comillas simples (--json-schema entrecomillado) en .github/workflows/ux-ui-landing-architect-v2.yml -- ningun valor de texto de este JSON (descripciones incluidas) debe contener el caracter apostrofe. Usa definitions/$ref (no $defs) y additionalProperties:false en todos los objetos porque son exactamente las features soportadas documentadas en https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "hero": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "headline": { "type": "string" },
+        "subheadline": { "type": "string" }
+      },
+      "required": ["headline", "subheadline"]
+    },
+    "heroImageCaption": { "type": "string" },
+    "benefitsHeading": { "type": "string" },
+    "comparisonTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "headers": { "type": "array", "items": { "type": "string" } },
+        "rows": {
+          "type": "array",
+          "items": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "required": ["title", "headers", "rows"]
+    },
+    "useCases": { "type": "array", "items": { "type": "string" } },
+    "processSteps": { "type": "array", "items": { "type": "string" } },
+    "ctaPrimary": { "$ref": "#/definitions/cta" },
+    "ctaSecondary": { "$ref": "#/definitions/cta" },
+    "benefitBlocks": { "type": "array", "items": { "$ref": "#/definitions/titledItem" } },
+    "cards": { "type": "array", "items": { "$ref": "#/definitions/titledItem" } },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "heading": { "type": "string" },
+          "body": { "type": "string" },
+          "searchIntent": {
+            "type": "string",
+            "enum": ["informational", "transactional", "comparison", "commercial"]
+          }
+        },
+        "required": ["heading", "body", "searchIntent"]
+      }
+    },
+    "faq": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "question": { "type": "string" },
+          "answer": { "type": "string" }
+        },
+        "required": ["question", "answer"]
+      }
+    },
+    "finalCta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "headline": { "type": "string" },
+        "cta": { "$ref": "#/definitions/cta" }
+      },
+      "required": ["headline", "cta"]
+    },
+    "internalLinks": { "type": "array", "items": { "type": "string" } },
+    "visualHierarchyNotes": { "type": "array", "items": { "type": "string" } },
+    "reasoningNotes": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": [
+    "hero",
+    "ctaPrimary",
+    "benefitBlocks",
+    "cards",
+    "sections",
+    "faq",
+    "finalCta",
+    "internalLinks",
+    "visualHierarchyNotes",
+    "reasoningNotes"
+  ],
+  "definitions": {
+    "cta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "target": { "type": "string" },
+        "isRealLink": { "type": "boolean" }
+      },
+      "required": ["label", "target", "isRealLink"]
+    },
+    "titledItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["title", "description"]
+    }
+  }
+}
