@@ -30,10 +30,10 @@
  * Sin --changePackId, elige UN change pack elegible AL AZAR
  * (ready_for_review / approved_to_execute) -- ver
  * src/core/landing-architect-change-pack-selection.ts. Aleatorio (no
- * "el primero") a proposito: una ejecucion automatica recurrente (ver
- * docs/ux-ui-landing-architect-v2-experiment.md, "Ejecucion autonoma en
- * Claude Cloud") que siempre comparase el mismo change pack no aportaria
- * cobertura nueva dia a dia.
+ * "el primero") para evitar un sesgo sistematico hacia el primer
+ * elemento del listado en ejecuciones repetidas -- esto NO garantiza
+ * que no se repita el mismo change pack en dos ejecuciones distintas
+ * (es un sorteo simple, sin memoria de ejecuciones anteriores).
  */
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -44,7 +44,7 @@ import { readCurrentChangePacks, findChangePackById } from "../src/core/change-p
 import { buildBlueprintInput } from "../src/agents/ux-ui-landing-architect";
 import { buildLandingArchitectContext } from "../src/core/landing-architect-v2-context";
 import { selectRandomEligibleChangePack } from "../src/core/landing-architect-change-pack-selection";
-import { auditV2OutputForFabrication, buildComparisonArtifact, extractJsonFromModelResponse, renderComparisonMarkdown, validateV2Output, V2Result } from "../src/core/landing-architect-comparison";
+import { auditV2OutputForFabrication, buildComparisonArtifact, buildRunnerResultSummary, extractJsonFromModelResponse, renderComparisonMarkdown, validateV2Output, V2Result } from "../src/core/landing-architect-comparison";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
 import { resolveActiveClientPaths } from "../src/core/client-paths";
 import { ChangePack } from "../src/core/types";
@@ -196,22 +196,24 @@ async function main(): Promise<void> {
   console.log("");
   console.log("Recordatorio: ninguna de las dos propuestas se ha aplicado a WordPress/staging/produccion. Solo lectura + reportes locales.");
 
-  // Linea unica, machine-readable, para que una sesion Claude Cloud
-  // orquestando este runner (ver docs/ux-ui-landing-architect-v2-experiment.md,
-  // "Ejecucion autonoma en Claude Cloud") no tenga que parsear el resto
-  // de la salida en texto libre para saber que paso toca a continuacion
-  // ni cuantos avisos de fabricacion hubo.
-  console.log(
-    "RUNNER_RESULT_JSON=" +
-      JSON.stringify({
-        changePackId: changePack.changePackId,
-        keyword: changePack.keyword,
-        v2Status: v2Result.status,
-        fabricationWarningCount: v2Result.status === "executed" ? v2Result.fabricationWarnings.length : null,
-        comparisonJsonPath: jsonPath,
-        comparisonMdPath: mdPath,
-      })
+  // Linea unica, machine-readable, con una estructura FIJA e identica
+  // en los 3 estados de v2Status -- ver RunnerResultSummary en
+  // src/core/landing-architect-comparison.ts. Pensada para que quien
+  // orquesta este runner no tenga que parsear el resto de la salida en
+  // texto libre ni ramificar su logica segun el estado para saber donde
+  // esta cada fichero.
+  const resultSummary = buildRunnerResultSummary(
+    changePack.changePackId,
+    changePack.keyword,
+    {
+      promptFilePath: path.join(outDir, "v2-prompt.md"),
+      expectedV2OutputPath: path.join(outDir, "v2-output.json"),
+      comparisonJsonPath: jsonPath,
+      comparisonMdPath: mdPath,
+    },
+    v2Result
   );
+  console.log("RUNNER_RESULT_JSON=" + JSON.stringify(resultSummary));
 
   // Fail-closed para automatizacion: una salida V2 invalida debe ser
   // detectable por codigo de salida (nunca silenciosa), aunque el

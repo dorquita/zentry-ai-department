@@ -282,6 +282,49 @@ export function auditV2OutputForFabrication(context: LandingArchitectContext, v2
 
 export type V2Result = { status: "pending_execution"; promptFilePath: string } | { status: "invalid_output"; error: string; rawOutputPath: string } | { status: "executed"; output: LandingArchitectV2Output; fabricationWarnings: string[] };
 
+/**
+ * Contrato machine-readable que imprime el runner al final de cada
+ * ejecucion (linea `RUNNER_RESULT_JSON=...`, ver
+ * scripts/run-landing-architect-comparison.ts). Estructura FIJA e
+ * IDENTICA en los 3 estados posibles de `v2Status` -- quien orquesta
+ * esto (hoy: una sesion interactiva de Claude Code; ver
+ * docs/ux-ui-landing-architect-v2-experiment.md para el estado real,
+ * no aspiracional, de la automatizacion via Routine) no tiene que
+ * ramificar su logica de lectura segun el estado para saber donde
+ * esta cada fichero.
+ */
+export interface RunnerResultSummary {
+  changePackId: string;
+  keyword: string;
+  v2Status: V2Result["status"];
+  /** Ruta del prompt preparado para V2 -- ruta deterministica, exista o no ya en disco en el momento de esta llamada concreta. */
+  promptFilePath: string;
+  /** Ruta donde el runner espera encontrar la respuesta de V2 si se le llama con --v2-output. */
+  expectedV2OutputPath: string;
+  comparisonJsonPath: string;
+  comparisonMdPath: string;
+  /** null salvo que v2Status sea "executed" (unico estado en el que existen fabricationWarnings que contar). */
+  fabricationWarningCount: number | null;
+}
+
+export function buildRunnerResultSummary(
+  changePackId: string,
+  keyword: string,
+  paths: { promptFilePath: string; expectedV2OutputPath: string; comparisonJsonPath: string; comparisonMdPath: string },
+  v2Result: V2Result
+): RunnerResultSummary {
+  return {
+    changePackId,
+    keyword,
+    v2Status: v2Result.status,
+    promptFilePath: paths.promptFilePath,
+    expectedV2OutputPath: paths.expectedV2OutputPath,
+    comparisonJsonPath: paths.comparisonJsonPath,
+    comparisonMdPath: paths.comparisonMdPath,
+    fabricationWarningCount: v2Result.status === "executed" ? v2Result.fabricationWarnings.length : null,
+  };
+}
+
 interface StructuralCounts {
   sections: number;
   faq: number;
