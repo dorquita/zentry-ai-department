@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import * as fs from "fs";
 import * as path from "path";
-import { auditV2OutputForFabrication, LandingArchitectComparisonArtifact, LandingArchitectV2Output, renderComparisonMarkdown } from "../src/core/landing-architect-comparison";
+import { auditV2OutputForFabrication, buildRunnerResultSummary, extractJsonFromModelResponse, LandingArchitectComparisonArtifact, LandingArchitectV2Output, renderComparisonMarkdown, V2Result } from "../src/core/landing-architect-comparison";
 import { LandingArchitectContext } from "../src/core/landing-architect-v2-context";
 
 export interface TestCase {
@@ -216,6 +216,95 @@ export function runLandingArchitectComparisonTests(): TestCase[] {
 
         const recomputedWarnings = auditV2OutputForFabrication(artifact.input, artifact.v2.output);
         assert.ok(recomputedWarnings.length > 0, "el fixture ilustra un caso CON warning -- si esto falla, el fixture quedo desincronizado con la logica de auditoria real");
+      },
+    },
+
+    // --- extractJsonFromModelResponse (ver ejecucion real en Claude Cloud, docs/ux-ui-landing-architect-v2-experiment.md) ---
+    {
+      name: "extractJsonFromModelResponse parsea JSON sin fences",
+      fn: () => {
+        const result = extractJsonFromModelResponse('{"a": 1}');
+        assert.deepEqual(result, { a: 1 });
+      },
+    },
+    {
+      name: "extractJsonFromModelResponse quita un fence ```json ... ``` (caso real observado en la ejecucion via Agent tool)",
+      fn: () => {
+        const raw = '```json\n{"a": 1, "b": [1, 2]}\n```';
+        const result = extractJsonFromModelResponse(raw);
+        assert.deepEqual(result, { a: 1, b: [1, 2] });
+      },
+    },
+    {
+      name: "extractJsonFromModelResponse quita un fence generico sin la etiqueta 'json'",
+      fn: () => {
+        const raw = '```\n{"a": 1}\n```';
+        const result = extractJsonFromModelResponse(raw);
+        assert.deepEqual(result, { a: 1 });
+      },
+    },
+    {
+      name: "extractJsonFromModelResponse tolera espacio en blanco alrededor del fence",
+      fn: () => {
+        const raw = '  \n```json\n  {"a": 1}  \n```\n  ';
+        const result = extractJsonFromModelResponse(raw);
+        assert.deepEqual(result, { a: 1 });
+      },
+    },
+    {
+      name: "extractJsonFromModelResponse falla (fail-closed) con texto que no es JSON, con o sin fence",
+      fn: () => {
+        assert.throws(() => extractJsonFromModelResponse("esto no es JSON"));
+        assert.throws(() => extractJsonFromModelResponse("```json\nesto tampoco\n```"));
+      },
+    },
+
+    // --- buildRunnerResultSummary: contrato RUNNER_RESULT_JSON (estructura fija en los 3 estados) ---
+    {
+      name: "buildRunnerResultSummary incluye promptFilePath y expectedV2OutputPath en pending_execution",
+      fn: () => {
+        const v2Result: V2Result = { status: "pending_execution", promptFilePath: "/tmp/x/v2-prompt.md" };
+        const summary = buildRunnerResultSummary(
+          "cp-1",
+          "keyword de ejemplo",
+          { promptFilePath: "/tmp/x/v2-prompt.md", expectedV2OutputPath: "/tmp/x/v2-output.json", comparisonJsonPath: "/tmp/x/comparison.json", comparisonMdPath: "/tmp/x/comparison.md" },
+          v2Result
+        );
+        assert.equal(summary.changePackId, "cp-1");
+        assert.equal(summary.keyword, "keyword de ejemplo");
+        assert.equal(summary.v2Status, "pending_execution");
+        assert.equal(summary.promptFilePath, "/tmp/x/v2-prompt.md");
+        assert.equal(summary.expectedV2OutputPath, "/tmp/x/v2-output.json");
+        assert.equal(summary.comparisonJsonPath, "/tmp/x/comparison.json");
+        assert.equal(summary.comparisonMdPath, "/tmp/x/comparison.md");
+        assert.equal(summary.fabricationWarningCount, null);
+      },
+    },
+    {
+      name: "buildRunnerResultSummary reporta fabricationWarningCount solo en executed",
+      fn: () => {
+        const paths = { promptFilePath: "/tmp/x/v2-prompt.md", expectedV2OutputPath: "/tmp/x/v2-output.json", comparisonJsonPath: "/tmp/x/comparison.json", comparisonMdPath: "/tmp/x/comparison.md" };
+        const executed: V2Result = { status: "executed", output: baseV2Output(), fabricationWarnings: ["warning 1", "warning 2"] };
+        const summaryExecuted = buildRunnerResultSummary("cp-1", "kw", paths, executed);
+        assert.equal(summaryExecuted.fabricationWarningCount, 2);
+
+        const invalid: V2Result = { status: "invalid_output", error: "boom", rawOutputPath: "/tmp/x/v2-output-raw-invalid.json" };
+        const summaryInvalid = buildRunnerResultSummary("cp-1", "kw", paths, invalid);
+        assert.equal(summaryInvalid.fabricationWarningCount, null);
+      },
+    },
+    {
+      name: "buildRunnerResultSummary mantiene la misma forma de objeto (mismas claves) en los 3 estados",
+      fn: () => {
+        const paths = { promptFilePath: "/tmp/x/v2-prompt.md", expectedV2OutputPath: "/tmp/x/v2-output.json", comparisonJsonPath: "/tmp/x/comparison.json", comparisonMdPath: "/tmp/x/comparison.md" };
+        const results: V2Result[] = [
+          { status: "pending_execution", promptFilePath: "/tmp/x/v2-prompt.md" },
+          { status: "executed", output: baseV2Output(), fabricationWarnings: [] },
+          { status: "invalid_output", error: "boom", rawOutputPath: "/tmp/x/v2-output-raw-invalid.json" },
+        ];
+        const keySets = results.map((r) => Object.keys(buildRunnerResultSummary("cp-1", "kw", paths, r)).sort());
+        assert.deepEqual(keySets[0], keySets[1]);
+        assert.deepEqual(keySets[1], keySets[2]);
       },
     },
   ];

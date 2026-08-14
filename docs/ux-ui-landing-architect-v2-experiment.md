@@ -122,30 +122,78 @@ sigue siendo codigo determinista, igual que en v1:
    `zentrylockers.com.evil.com`). Antes de esta correccion, cualquier
    `https://` se aceptaba como interno. Ver `test/internal-url-guard.test.ts`.
 
-## Como se ejecuta hoy (dos pasos, manuales)
+## Como se ejecuta hoy (dos comandos deterministas + una llamada real al subagente)
 
 El runner (`scripts/run-landing-architect-comparison.ts`) **no llama a
-la API de Anthropic ni invoca el subagente por su cuenta** -- este
-repositorio no tiene ninguna dependencia ni credencial para eso (mismo
-principio que el resto del proyecto: nada se ejecuta solo). En su lugar:
+la API de Anthropic por su cuenta** -- este repositorio no tiene ninguna
+dependencia ni credencial para eso (mismo principio que el resto del
+proyecto: nada se ejecuta solo). La invocacion real del subagente la
+hace SIEMPRE una sesion de Claude Code usando la herramienta `Agent` --
+nunca el propio proceso Node. **Esto esta VERIFICADO end-to-end cuando
+quien orquesta es una sesion interactiva** (ver "Estado real de la
+automatizacion en Claude Cloud" mas abajo para el detalle exacto de que
+esta probado y que no).
 
 ```bash
 # Paso 1: preparar. Calcula V1 de verdad, construye el contexto de V2
 # y escribe un prompt listo para pegarselo al subagente.
 npm run landing-architect:compare -- --changePackId <id>
 
-# (fuera de este runner: se ejecuta el subagente ux-ui-landing-architect-v2
-#  -- p.ej. desde una sesion de Claude Code con la herramienta Agent --
-#  usando como prompt el fichero reports/ux-ui-landing-comparison/<id>/v2-prompt.md,
-#  y se guarda su respuesta JSON en un fichero)
+# (la sesion de Claude Code que orquesta esto invoca ahora la herramienta
+#  Agent con subagent_type "ux-ui-landing-architect-v2", pasando como
+#  prompt el contenido de reports/ux-ui-landing-comparison/<id>/v2-prompt.md
+#  tal cual -- y escribe la respuesta del subagente, tal cual, en
+#  reports/ux-ui-landing-comparison/<id>/v2-output.json)
 
 # Paso 2: completar. Valida esa respuesta, audita fabricacion de datos,
 # y regenera el artefacto de comparacion con los dos resultados.
-npm run landing-architect:compare -- --changePackId <id> --v2-output respuesta-v2.json
+npm run landing-architect:compare -- --changePackId <id> --v2-output reports/ux-ui-landing-comparison/<id>/v2-output.json
 ```
 
-Sin `--changePackId`, toma el primer change pack elegible
-(`ready_for_review` / `approved_to_execute`) que encuentre.
+Sin `--changePackId`, elige UN change pack elegible **al azar**
+(`ready_for_review` / `approved_to_execute`, ver
+`src/core/landing-architect-change-pack-selection.ts`) -- evita un
+sesgo sistematico hacia el primer elemento del listado en ejecuciones
+repetidas. **Esto no es una garantia de no-repeticion**: es un sorteo
+simple (`Math.random()` por defecto) sin memoria de que change pack se
+proceso en ejecuciones anteriores, asi que dos ejecuciones distintas
+pueden perfectamente elegir el mismo change pack.
+
+Cada ejecucion termina con una linea `RUNNER_RESULT_JSON={...}` en
+stdout, con una forma FIJA e IDENTICA en los 3 estados posibles (ver
+`RunnerResultSummary` / `buildRunnerResultSummary()` en
+`src/core/landing-architect-comparison.ts`, testeado en
+`test/landing-architect-comparison.test.ts`):
+
+```json
+{
+  "changePackId": "...",
+  "keyword": "...",
+  "v2Status": "pending_execution | executed | invalid_output",
+  "promptFilePath": "reports/ux-ui-landing-comparison/<id>/v2-prompt.md",
+  "expectedV2OutputPath": "reports/ux-ui-landing-comparison/<id>/v2-output.json",
+  "comparisonJsonPath": "reports/ux-ui-landing-comparison/<id>/comparison.json",
+  "comparisonMdPath": "reports/ux-ui-landing-comparison/<id>/comparison.md",
+  "fabricationWarningCount": null
+}
+```
+
+`promptFilePath`/`expectedV2OutputPath` son rutas DETERMINISTAS (siempre
+las mismas para un `changePackId` dado) -- se incluyen siempre, exista o
+no ya el fichero en disco en el momento concreto de esa llamada.
+`fabricationWarningCount` solo es un numero cuando `v2Status` es
+`"executed"`; en los otros dos estados es `null`. Pensada para que quien
+orquesta esto no tenga que parsear texto libre ni ramificar su logica
+segun el estado para saber donde esta cada fichero. Si `v2Status` queda
+en `"invalid_output"`, el proceso termina ademas con **codigo de salida
+1** (fail-closed, detectable por automatizacion) aunque el artefacto se
+guarde igualmente para inspeccion.
+
+La respuesta cruda del subagente puede venir envuelta en un fence
+` ```json ... ``` ` aunque sus instrucciones pidan no incluirlo (caso
+real, ver mas abajo) -- `extractJsonFromModelResponse()` lo tolera antes
+de intentar `JSON.parse`; si el contenido no es JSON valido de todas
+formas, sigue fallando fail-closed.
 
 ### Que se guarda
 
@@ -179,11 +227,128 @@ criterios de evaluacion con dos columnas vacias ("V1 cumple" / "V2
 cumple") para que una persona las marque. Ningun campo de ese documento
 contiene una conclusion de "cual es mejor" -- eso es intencional.
 
+## Estado real de la automatizacion en Claude Cloud
+
+**Resumen en una frase: hoy NO existe un empleado autonomo 24/7
+funcionando.** El flujo completo funciona de verdad cuando lo orquesta
+una sesion interactiva de Claude Code; disparado por un Routine
+(`create_new_session_on_fire`, sin nadie mirando) NO ha completado de
+forma fiable en ninguno de los intentos probados. Esta seccion describe
+el resultado real de las pruebas, no la arquitectura que nos gustaria
+tener.
+
+### Que esta VERIFICADO y que NO
+
+| Escenario | Estado |
+|---|---|
+| Sesion interactiva de Claude Code -> `Agent` (`ux-ui-landing-architect-v2`) -> runner (`--v2-output`) -> comparacion | **VERIFICADO.** Ejecucion real documentada: el subagente devolvio el JSON de propuesta esperado y termino con **`tool_uses: 0`** (evidencia empirica de que `tools: []` se respeta en ejecucion real, no solo en la comprobacion estatica de `src/core/subagent-tool-guard.ts`). |
+| Routine -> sesion nueva -> comandos Bash basicos (`pwd`/`git`/`ls`), sin runner ni Agent | **VERIFICADO.** La sesion arranca, tiene el repositorio disponible, ejecuta comandos, y termina limpiamente (`IDLE`/`REVIEW_READY`). |
+| Routine -> sesion nueva -> `npm install` + runner (solo `prepare`, sin Agent) | **VERIFICADO.** Termino limpiamente, sin bloquearse. |
+| Routine -> sesion nueva -> runner + `Agent`(`ux-ui-landing-architect-v2`) + runner (`--v2-output`) -> comparacion | **NO FIABLE. Falla de forma reproducible.** Dos intentos completos con esta arquitectura, ambos terminaron con la sesion congelada (`stop_reason=tool_use` sin resolver nunca) hasta interrumpirla manualmente. |
+| Routine -> sesion nueva que asume el rol de `ux-ui-landing-architect-v2` ELLA MISMA (sin invocar `Agent`/`Task` en ningun punto) -> runner (`--v2-output`) -> comparacion | **NO FIABLE. Falla igual.** Un intento completo, misma firma de fallo (`stop_reason=tool_use` sin resolver) tras ~21 minutos, pese a no usar `Agent`/`Task` en absoluto. |
+
+Diagnostico exacto (reproducido 3 veces en total, con y sin `Agent`):
+`status_category: "failed"`, `status_detail: "[ede_diagnostic]
+result_type=user last_content_type=n/a stop_reason=tool_use"` -- una
+tool call se emite y nunca vuelve con resultado. **No es un fallo del
+subagente ni de su logica**: fallo tanto con `Agent` como sin el, asi
+que la causa NO se puede atribuir a `ux-ui-landing-architect-v2` ni a la
+herramienta `Agent` especificamente. **La causa raiz exacta es
+DESCONOCIDA** -- no existe hoy una herramienta para leer el transcript
+interno de una sesion disparada por Routine, asi que no se puede
+identificar con certeza que tool call concreta queda pendiente. Lo unico
+verificable desde fuera es la marca de tiempo congelada y el
+`stop_reason=tool_use` del diagnostico de plataforma.
+
+### Mecanismo de ejecucion (el que SI existe, capacidades nativas, sin API/SDK)
+
+Este repositorio **no usa la API de Anthropic ni el Agent SDK**, y no se
+ha introducido ninguna API key, worker propio, cola de mensajes ni
+infraestructura adicional -- la parte no automatica de esto sigue
+funcionando con capacidades nativas:
+
+1. **Herramienta `Agent`** (nativa de Claude Code) -- `.claude/agents/*.md`
+   se descubren automaticamente como `subagent_type` invocables desde
+   una sesion interactiva que tiene el repositorio abierto. Funciona
+   (ver tabla de arriba).
+2. **MCP `Claude_Code_Remote`** (Routines/triggers, sesiones cloud) --
+   `create_trigger` programa una ejecucion periodica que dispara un
+   prompt hacia una sesion NUEVA (`create_new_session_on_fire: true`) o
+   hacia una sesion persistente. Es el mecanismo real de "trigger/
+   routine/scheduled session" de Claude Cloud -- no una construccion de
+   este proyecto. `update_trigger` NO permite cambiar el modo de
+   destino de un trigger ya creado (ni a `persistent_session_id` ni a
+   `create_new_session_on_fire`) -- verificado leyendo su esquema real,
+   no asumido.
+
+### Procedimiento (el que se ha intentado automatizar, sin exito fiable todavia)
+
+1. `npm run landing-architect:compare -- ` (sin `--changePackId`: elige
+   uno al azar). Leer la linea `RUNNER_RESULT_JSON`.
+2. Leer el fichero `v2-prompt.md` que indica esa linea.
+3. Razonar como `ux-ui-landing-architect-v2` sobre ese contenido
+   (invocando `Agent` con `subagent_type: "ux-ui-landing-architect-v2"`,
+   o asumiendo el rol directamente sin `Agent` -- las dos variantes se
+   probaron, ver tabla de arriba) y producir el JSON de salida.
+4. Escribir esa respuesta, **tal cual, sin reinterpretarla**, en el
+   `expectedV2OutputPath` que indico el paso 1.
+5. `npm run landing-architect:compare -- --changePackId <id> --v2-output
+   <ese fichero>`. Leer la segunda linea `RUNNER_RESULT_JSON`.
+6. Reportar changePack usado, `v2Status`, numero de
+   `fabricationWarnings` (listados tal cual, nunca descartados ni
+   reinterpretados) y las diferencias estructurales principales
+   (`comparison.json` -> `structuralDiff`). Nunca declarar cual version
+   es "mejor".
+
+Los pasos 1, 4 y 5 son deterministas (TOOL). El paso 3 es la unica parte
+que requiere razonamiento real de Claude. **Este procedimiento esta
+VERIFICADO cuando lo ejecuta una sesion interactiva** (paso a paso, con
+alguien -- en la practica, otra sesion de Claude Code -- observando cada
+tool call). **NO esta verificado cuando lo ejecuta, de principio a fin y
+sin intervencion, una sesion disparada por Routine** (ver tabla de
+arriba).
+
+### Routine experimental (resultado real, no la arquitectura deseada)
+
+`ux-ui-landing-architect-v2 — comparacion diaria`
+(`trig_018AUUSdDFghtM28WJL9Jnb4`), cron diario, `create_new_session_on_fire:
+true`. **Estado actual: DESACTIVADO** (`enabled: false`) -- se dejo asi
+deliberadamente tras las pruebas fallidas, para no fallar en silencio en
+un disparo programado sin supervision. Su prompt actual en la plataforma
+es el de la ULTIMA prueba realizada (el intento sin `Agent`/`Task`); no
+representa una automatizacion lista para producción.
+
+**No reactivar este Routine hasta que la causa raiz del bloqueo se
+entienda** (o se decida asumir el riesgo de que falle silenciosamente
+hasta el timeout de plataforma correspondiente, algo que hoy no se
+conoce con precision).
+
+### Limite real de esta iteracion (honesto, no asumido)
+
+Incluso si la sesion orquestadora completara de forma fiable: la
+herramienta `Agent` restringe con garantia verificada las herramientas
+del **subagente** invocado (`tools: []`, confirmado con `tool_uses: 0`
+en la ejecucion interactiva). La sesion ORQUESTADORA en si misma (la que
+llamaria a `Agent`, o asumiria el rol directamente) sigue teniendo las
+capacidades normales de cualquier sesion de Claude Code -- no existe hoy
+un mecanismo de plataforma que la confine a "solo lectura" de forma
+dura. Su comportamiento de "no tocar WordPress/staging/produccion/Ads/
+GA4/GTM/Search Console/n8n/VPS, no hacer commit, no publicar" dependeria
+de que el prompt del Routine lo instruya explicitamente y de que la
+sesion lo respete -- exactamente el mismo modelo de confianza
+(instrucciones + guards de codigo, no sandboxing de plataforma) que ya
+usa el resto de este proyecto para sus agentes deterministas (ver
+`docs/risk-policy.md`), no una garantia nueva ni mas debil.
+
 ## Que falta para que esto deje de ser un experimento
 
 No es el objetivo de este documento proponerlo (evitar otra cronologia de
 fases), pero para que quede explicito el alcance actual: hoy no existe
 ningun mecanismo que tome la salida de V2 y la aplique a
 `data/landing-blueprints.jsonl`, ni que la conecte con
-`wordpress-draft-agent.ts`. V2 es, a dia de hoy, un generador de
-propuestas locales para comparacion manual -- nada mas.
+`wordpress-draft-agent.ts`. V2 sigue siendo, a dia de hoy, un generador
+de propuestas locales para comparacion -- verificado de principio a fin
+cuando lo orquesta una sesion interactiva de Claude Code, pero **sin
+ninguna automatizacion sin supervision funcionando todavia** (ver
+"Estado real de la automatizacion en Claude Cloud" mas arriba) y, en
+cualquier caso, sin ningun camino hacia aplicar nada.
