@@ -10,6 +10,9 @@
 import { runExecutiveReportTests } from "../test/executive-report.test";
 import { runNovamiraGuardTests } from "../test/novamira-guard.test";
 import { runClientConfigTests } from "../test/client-config.test";
+import { runSubagentToolGuardTests } from "../test/subagent-tool-guard.test";
+import { runInternalUrlGuardTests } from "../test/internal-url-guard.test";
+import { runLandingArchitectComparisonTests } from "../test/landing-architect-comparison.test";
 
 interface TestCase {
   name: string;
@@ -21,6 +24,9 @@ function main(): void {
     { suiteName: "executive-report", cases: runExecutiveReportTests() },
     { suiteName: "novamira-guard", cases: runNovamiraGuardTests() },
     { suiteName: "client-config", cases: runClientConfigTests() },
+    { suiteName: "subagent-tool-guard", cases: runSubagentToolGuardTests() },
+    { suiteName: "internal-url-guard", cases: runInternalUrlGuardTests() },
+    { suiteName: "landing-architect-comparison", cases: runLandingArchitectComparisonTests() },
   ];
 
   let passed = 0;
