@@ -8,9 +8,13 @@
  *
  * Lee el execution_file que expone claude-code-action, intenta recuperar
  * deterministicamente el resultado de Claude con
- * recoverV2OutputFromExecutionFile() (TOOL puro, testeado por separado),
- * y si tiene exito escribe el texto EXACTO recuperado (sin reinterpretar)
- * en $GITHUB_OUTPUT para que el step siguiente lo escriba tal cual en
+ * recoverV2OutputFromExecutionFile() (TOOL puro, testeado por separado) --
+ * validando el JSON recuperado contra el MISMO
+ * config/landing-architect-v2-output.schema.json que exige --json-schema
+ * en el camino normal (paridad de contrato caso A / caso B, ver el
+ * comentario de recoverV2OutputFromExecutionFile()) -- y si tiene exito
+ * escribe el texto EXACTO recuperado (sin reinterpretar) en
+ * $GITHUB_OUTPUT para que el step siguiente lo escriba tal cual en
  * expectedV2OutputPath -- exactamente el mismo patron que ya usa
  * structured_output en el camino normal.
  *
@@ -20,7 +24,9 @@
  * Uso: ts-node scripts/recover-v2-output-from-execution-file-for-ci.ts <ruta-al-execution_file>
  */
 import * as fs from "fs";
+import * as path from "path";
 import { recoverV2OutputFromExecutionFile } from "../src/core/execution-file-result-extractor";
+import { JsonSchemaLite } from "../src/core/json-schema-lite";
 
 function main(): void {
   const executionFilePath = process.argv[2];
@@ -32,8 +38,11 @@ function main(): void {
     throw new Error("GITHUB_OUTPUT no esta definido -- este script solo esta pensado para ejecutarse dentro de un step de GitHub Actions.");
   }
 
+  const schemaPath = path.join(__dirname, "..", "config", "landing-architect-v2-output.schema.json");
+  const outputSchema = JSON.parse(fs.readFileSync(schemaPath, "utf-8")) as JsonSchemaLite;
+
   const raw = fs.readFileSync(executionFilePath, "utf-8");
-  const recovered = recoverV2OutputFromExecutionFile(raw);
+  const recovered = recoverV2OutputFromExecutionFile(raw, outputSchema);
 
   const delimiter = `RECOVERED_EOF_${Math.random().toString(36).slice(2)}`;
   fs.appendFileSync(outputPath, `recoveredText<<${delimiter}\n${recovered.rawResultText}\n${delimiter}\n`, "utf-8");

@@ -1,4 +1,5 @@
 import { extractJsonFromModelResponse, validateV2Output, LandingArchitectV2Output } from "./landing-architect-comparison";
+import { JsonSchemaLite, validateAgainstSchema } from "./json-schema-lite";
 
 /**
  * Fallback deterministico para cuando `claude-code-action` termina con
@@ -36,6 +37,22 @@ import { extractJsonFromModelResponse, validateV2Output, LandingArchitectV2Outpu
  * presente). No reinterpreta ni "repara" el JSON de Claude: si no es
  * valido, o si la estructura no cumple LandingArchitectV2Output, lanza
  * (fail-closed), exactamente igual que el camino normal.
+ *
+ * PARIDAD DE CONTRATO caso A / caso B: cuando structured_output SI esta
+ * presente (caso A), su contenido ya fue validado por el Claude Agent SDK
+ * contra config/landing-architect-v2-output.schema.json (--json-schema),
+ * INCLUIDO `additionalProperties: false` -- un campo extra no declarado
+ * en el schema se rechaza ahi, antes de que este workflow lo vea
+ * siquiera. validateV2Output() por si solo es mas permisivo (duck-typing
+ * deliberado, ignora campos extra -- ver su propio comentario en
+ * landing-architect-comparison.ts), asi que sin esta validacion extra el
+ * camino de fallback (caso B) aceptaria JSON que --json-schema habria
+ * rechazado en el caso A, relajando el contrato sin querer. Por eso
+ * recoverV2OutputFromExecutionFile() exige el MISMO schema (via
+ * validateAgainstSchema(), src/core/json-schema-lite.ts, la MISMA logica
+ * que usa el test de deriva contra este fichero) ademas de
+ * validateV2Output() -- nunca una tercera definicion manual del
+ * contrato, siempre el mismo config/landing-architect-v2-output.schema.json.
  */
 
 /** Subconjunto minimo de un SDKMessage que necesitamos -- no importamos el paquete completo del SDK (no es una dependencia de este proyecto). */
@@ -75,18 +92,23 @@ export interface RecoveredV2Result {
 
 /**
  * Punto de entrada del fallback: dado el contenido crudo (string) de un
- * execution_file, devuelve el texto de respuesta de Claude YA
- * verificado como JSON valido y con la forma de LandingArchitectV2Output
- * -- o lanza con un motivo especifico y distinguible para cada modo de
- * fallo:
+ * execution_file y el JSON Schema versionado (config/landing-architect-v2-output.schema.json,
+ * ya parseado -- lo lee/pasa el caller, este modulo sigue sin hacer I/O
+ * propio), devuelve el texto de respuesta de Claude YA verificado como
+ * JSON valido, conforme al schema (mismo contrato que --json-schema,
+ * INCLUIDO additionalProperties: false) y con la forma de
+ * LandingArchitectV2Output -- o lanza con un motivo especifico y
+ * distinguible para cada modo de fallo:
  *   - execution_file no es JSON valido, o no es un array.
  *   - no hay ningun mensaje final de tipo "result" (nada recuperable).
  *   - el mensaje final indica un fallo real de Claude (is_error / subtype != "success").
  *   - el campo `result` no es un string no vacio.
  *   - el texto de `result` no es JSON valido (ni con fence ni sin el).
+ *   - el JSON no cumple config/landing-architect-v2-output.schema.json
+ *     (p.ej. un campo no declarado, top-level o anidado -- ver tests).
  *   - el JSON no cumple la forma de LandingArchitectV2Output.
  */
-export function recoverV2OutputFromExecutionFile(rawExecutionFileContent: string): RecoveredV2Result {
+export function recoverV2OutputFromExecutionFile(rawExecutionFileContent: string, outputSchema: JsonSchemaLite): RecoveredV2Result {
   let messages: unknown;
   try {
     messages = JSON.parse(rawExecutionFileContent);
@@ -105,6 +127,12 @@ export function recoverV2OutputFromExecutionFile(rawExecutionFileContent: string
   }
 
   const parsed = extractJsonFromModelResponse(resultMessage.result);
+
+  const schemaErrors = validateAgainstSchema(outputSchema, outputSchema, parsed);
+  if (schemaErrors.length > 0) {
+    throw new Error(`El JSON recuperado del execution_file no cumple config/landing-architect-v2-output.schema.json (el mismo contrato que exige --json-schema en el caso A): ${schemaErrors.join("; ")}`);
+  }
+
   const output = validateV2Output(parsed);
 
   return { rawResultText: resultMessage.result, output };

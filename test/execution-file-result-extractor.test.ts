@@ -1,9 +1,17 @@
 import * as assert from "node:assert/strict";
+import * as fs from "fs";
+import * as path from "path";
 import { extractFinalResultMessage, recoverV2OutputFromExecutionFile } from "../src/core/execution-file-result-extractor";
+import { JsonSchemaLite } from "../src/core/json-schema-lite";
 
 export interface TestCase {
   name: string;
   fn: () => void;
+}
+
+function loadOutputSchema(): JsonSchemaLite {
+  const schemaPath = path.join(__dirname, "..", "config", "landing-architect-v2-output.schema.json");
+  return JSON.parse(fs.readFileSync(schemaPath, "utf-8")) as JsonSchemaLite;
 }
 
 const VALID_V2_OUTPUT = {
@@ -51,6 +59,8 @@ function realisticMessages(resultOverrides: Record<string, unknown> = {}): unkno
 }
 
 export function runExecutionFileResultExtractorTests(): TestCase[] {
+  const outputSchema = loadOutputSchema();
+
   return [
     {
       name: "extractFinalResultMessage encuentra el mensaje final de tipo result entre mensajes intermedios (no confunde el assistant intermedio con el resultado)",
@@ -86,7 +96,7 @@ export function runExecutionFileResultExtractorTests(): TestCase[] {
       name: "recoverV2OutputFromExecutionFile: extrae y valida un resultado JSON valido (caso feliz del fallback)",
       fn: () => {
         const raw = JSON.stringify(realisticMessages());
-        const recovered = recoverV2OutputFromExecutionFile(raw);
+        const recovered = recoverV2OutputFromExecutionFile(raw, outputSchema);
         assert.equal(recovered.output.hero.headline, "Taquillas de melamina");
         assert.equal(recovered.rawResultText, JSON.stringify(VALID_V2_OUTPUT));
       },
@@ -96,49 +106,49 @@ export function runExecutionFileResultExtractorTests(): TestCase[] {
       fn: () => {
         const fenced = "```json\n" + JSON.stringify(VALID_V2_OUTPUT) + "\n```";
         const raw = JSON.stringify(realisticMessages({ result: fenced }));
-        const recovered = recoverV2OutputFromExecutionFile(raw);
+        const recovered = recoverV2OutputFromExecutionFile(raw, outputSchema);
         assert.equal(recovered.output.hero.headline, "Taquillas de melamina");
       },
     },
     {
       name: "recoverV2OutputFromExecutionFile (fail-closed): lanza si el execution_file no es JSON valido",
       fn: () => {
-        assert.throws(() => recoverV2OutputFromExecutionFile("esto no es JSON"), /no es JSON valido/);
+        assert.throws(() => recoverV2OutputFromExecutionFile("esto no es JSON", outputSchema), /no es JSON valido/);
       },
     },
     {
       name: "recoverV2OutputFromExecutionFile (fail-closed): lanza si no hay ningun mensaje result final",
       fn: () => {
         const raw = JSON.stringify([{ type: "system", subtype: "init" }]);
-        assert.throws(() => recoverV2OutputFromExecutionFile(raw), /no se encontro ningun mensaje final/);
+        assert.throws(() => recoverV2OutputFromExecutionFile(raw, outputSchema), /no se encontro ningun mensaje final/);
       },
     },
     {
       name: "recoverV2OutputFromExecutionFile (fail-closed): lanza si el resultado final indica un fallo real de Claude (is_error true)",
       fn: () => {
         const raw = JSON.stringify(realisticMessages({ subtype: "success", is_error: true }));
-        assert.throws(() => recoverV2OutputFromExecutionFile(raw), /Fallo real de Claude/);
+        assert.throws(() => recoverV2OutputFromExecutionFile(raw, outputSchema), /Fallo real de Claude/);
       },
     },
     {
       name: "recoverV2OutputFromExecutionFile (fail-closed): lanza si el subtype no es success (p.ej. error_max_structured_output_retries)",
       fn: () => {
         const raw = JSON.stringify(realisticMessages({ subtype: "error_max_structured_output_retries", is_error: undefined, result: undefined }));
-        assert.throws(() => recoverV2OutputFromExecutionFile(raw), /Fallo real de Claude/);
+        assert.throws(() => recoverV2OutputFromExecutionFile(raw, outputSchema), /Fallo real de Claude/);
       },
     },
     {
       name: "recoverV2OutputFromExecutionFile (fail-closed): lanza si el campo result esta vacio",
       fn: () => {
         const raw = JSON.stringify(realisticMessages({ result: "   " }));
-        assert.throws(() => recoverV2OutputFromExecutionFile(raw), /texto no vacio/);
+        assert.throws(() => recoverV2OutputFromExecutionFile(raw, outputSchema), /texto no vacio/);
       },
     },
     {
       name: "recoverV2OutputFromExecutionFile (fail-closed): lanza si el texto de result no es JSON valido (ni con fence ni sin el)",
       fn: () => {
         const raw = JSON.stringify(realisticMessages({ result: "esto no es JSON en absoluto" }));
-        assert.throws(() => recoverV2OutputFromExecutionFile(raw));
+        assert.throws(() => recoverV2OutputFromExecutionFile(raw, outputSchema));
       },
     },
     {
@@ -147,7 +157,31 @@ export function runExecutionFileResultExtractorTests(): TestCase[] {
         const invalidShape = { ...VALID_V2_OUTPUT } as Record<string, unknown>;
         delete invalidShape.hero;
         const raw = JSON.stringify(realisticMessages({ result: JSON.stringify(invalidShape) }));
-        assert.throws(() => recoverV2OutputFromExecutionFile(raw), /hero/);
+        assert.throws(() => recoverV2OutputFromExecutionFile(raw, outputSchema), /hero/);
+      },
+    },
+    // --- REGRESION (paridad de contrato caso A / caso B): un JSON con un
+    // campo extra que --json-schema habria rechazado en el caso A
+    // (structured_output) tambien debe rechazarse en el caso B
+    // (fallback), aunque validateV2Output() por si solo sea permisivo con
+    // campos extra. ---
+    {
+      name: "REGRESION (paridad de contrato): un campo top-level no declarado en el schema (unexpectedField) DEBE FALLAR, aunque el resto del JSON sea valido",
+      fn: () => {
+        const withExtraField = { ...VALID_V2_OUTPUT, unexpectedField: "esto no debe aceptarse" };
+        const raw = JSON.stringify(realisticMessages({ result: JSON.stringify(withExtraField) }));
+        assert.throws(() => recoverV2OutputFromExecutionFile(raw, outputSchema), /unexpectedField/);
+      },
+    },
+    {
+      name: "REGRESION (paridad de contrato): un campo anidado no declarado (hero.extra) DEBE FALLAR igual que el top-level",
+      fn: () => {
+        const withNestedExtraField = { ...VALID_V2_OUTPUT, hero: { ...VALID_V2_OUTPUT.hero, extra: "campo anidado no declarado" } };
+        const raw = JSON.stringify(realisticMessages({ result: JSON.stringify(withNestedExtraField) }));
+        assert.throws(
+          () => recoverV2OutputFromExecutionFile(raw, outputSchema),
+          (err: unknown) => err instanceof Error && /\$\.hero/.test(err.message) && /"extra"/.test(err.message)
+        );
       },
     },
   ];

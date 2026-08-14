@@ -427,7 +427,7 @@ Diagnostico exacto, leido de los logs reales del job (no inventado):
 - `claude_args` recibido por la Action, tal cual se genero: `--agent ux-ui-landing-architect-v2 --disallowedTools "mcp__*" --max-turns 8 --json-schema '<schema completo>'` -- confirma que `--agent` SI se paso.
 - Claude Code CLI instalado: `2.1.233`. `@anthropic-ai/claude-agent-sdk@0.3.233` instalado -- coincide exactamente con lo documentado para el SHA fijado.
 - Modelo usado: `claude-sonnet-5` (mensaje `system`/`init`).
-- Mensaje final `result`: `subtype: "success"`, `is_error: false`, `num_turns: 1`, `permission_denials_count: 0` (cero intentos de usar herramientas -- consistente con `tools: []`), `total_cost_usd: 0.175569` (inferencia real, no un fallo de arranque).
+- Mensaje final `result`: `subtype: "success"`, `is_error: false`, `num_turns: 1`, `permission_denials_count: 0` (no hubo denegaciones de permisos, consistente con la configuracion `tools: []` -- esto NO demuestra por si solo que Claude nunca intento usar una herramienta; solo demuestra que ninguna llamada a herramienta llego a necesitar una decision de permiso. No se dispone de otra evidencia del run, como un recuento explicito de `tool_uses`, para afirmar mas que eso), `total_cost_usd: 0.175569` (inferencia real, no un fallo de arranque).
 - La propia Action fallo DESPUES de eso, con el mensaje exacto: `--json-schema was provided but Claude did not return structured_output. Result subtype: success`.
 - Todos los steps posteriores (escribir structured_output, paso 2 del runner, subir artifact, Step Summary) quedaron `skipped` -- el job entero termino en `failure` sin llegar a producir ningun artifact.
 
