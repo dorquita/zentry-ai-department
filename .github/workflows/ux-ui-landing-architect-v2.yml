@@ -34,14 +34,18 @@ on:
           azar entre los elegibles (ready_for_review / approved_to_execute).
         required: false
         type: string
-  # Ejecucion automatica diaria -- DESACTIVADA A PROPOSITO en este PR hasta
-  # demostrar un ciclo completo end-to-end via workflow_dispatch (ver
-  # criterio de exito en docs/ux-ui-landing-architect-v2-experiment.md).
-  # Para activarla: descomentar el bloque de abajo (frecuencia objetivo:
-  # 1 vez al dia; el runner ya limita a un UNICO change pack por ejecucion
-  # por diseno, ver src/core/landing-architect-change-pack-selection.ts).
-  # schedule:
-  #   - cron: "0 7 * * *" # 07:00 UTC diario
+  # Ejecucion automatica diaria -- ACTIVADA tras la primera validacion
+  # end-to-end real (run 31851396385, ver
+  # docs/ux-ui-landing-architect-v2-experiment.md, seccion "Primera
+  # validacion end-to-end completa"). 1 vez al dia, a las 07:00 UTC en
+  # punto -- GitHub Actions evalua el cron SIEMPRE en UTC, sin
+  # conversion a ninguna zona horaria local; no es "las 9 de la manana
+  # en Madrid todo el ano" (varia con el horario de verano/invierno,
+  # CET/CEST son UTC+1/UTC+2). El runner ya limita a un UNICO change
+  # pack por ejecucion por diseno (ver
+  # src/core/landing-architect-change-pack-selection.ts).
+  schedule:
+    - cron: "0 7 * * *" # 07:00 UTC diario (no una hora local fija)
 
 # Un solo empleado ux-ui-landing-architect-v2 corriendo a la vez: si ya hay
 # una ejecucion en curso (p.ej. un workflow_dispatch manual solapado con el

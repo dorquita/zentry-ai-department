@@ -122,17 +122,31 @@ sigue siendo codigo determinista, igual que en v1:
    `zentrylockers.com.evil.com`). Antes de esta correccion, cualquier
    `https://` se aceptaba como interno. Ver `test/internal-url-guard.test.ts`.
 
-## Como se ejecuta hoy (dos comandos deterministas + una llamada real al subagente)
+## Ejecucion manual/interactiva (procedimiento historico de depuracion)
+
+**Esto describe un procedimiento manual/interactivo, no el mecanismo
+autonomo actual.** El mecanismo autonomo real de hoy es GitHub Actions ->
+`claude-code-action` -> `--agent ux-ui-landing-architect-v2` ->
+validacion/fallback -> artifact, sin ninguna sesion interactiva de por
+medio -- ver la seccion "GitHub Actions + claude-code-action (mecanismo
+actual)" mas abajo, que es la que esta VERIFICADA end-to-end de verdad
+(run real `31851396385`). Lo que sigue en esta seccion sigue siendo util
+como procedimiento manual de depuracion (p.ej. para inspeccionar a mano
+el prompt generado antes de tocar el workflow), pero no describe como se
+ejecuta el empleado en produccion.
 
 El runner (`scripts/run-landing-architect-comparison.ts`) **no llama a
 la API de Anthropic por su cuenta** -- este repositorio no tiene ninguna
-dependencia ni credencial para eso (mismo principio que el resto del
-proyecto: nada se ejecuta solo). La invocacion real del subagente la
-hace SIEMPRE una sesion de Claude Code usando la herramienta `Agent` --
-nunca el propio proceso Node. **Esto esta VERIFICADO end-to-end cuando
-quien orquesta es una sesion interactiva** (ver "Estado real de la
-automatizacion en Claude Cloud" mas abajo para el detalle exacto de que
-esta probado y que no).
+dependencia ni credencial propia para eso; el runner solo prepara
+ficheros y valida respuestas, nunca invoca un modelo el mismo (mismo
+principio en ambos mecanismos, manual y automatizado). En este
+procedimiento manual, la invocacion real del subagente la hace una
+sesion de Claude Code usando la herramienta `Agent` -- nunca el propio
+proceso Node. **Esto esta VERIFICADO end-to-end cuando quien orquesta es
+una sesion interactiva** (ver "HISTORICO: intento con Claude Cloud
+Routines" mas abajo para el detalle exacto de que se probo y que no con
+Routines -- un mecanismo distinto, ya desactivado, que intentaba
+automatizar precisamente este procedimiento manual sin exito).
 
 ```bash
 # Paso 1: preparar. Calcula V1 de verdad, construye el contexto de V2
@@ -227,15 +241,25 @@ criterios de evaluacion con dos columnas vacias ("V1 cumple" / "V2
 cumple") para que una persona las marque. Ningun campo de ese documento
 contiene una conclusion de "cual es mejor" -- eso es intencional.
 
-## Estado real de la automatizacion en Claude Cloud
+## HISTORICO: intento anterior con Claude Cloud Routines (desactivado)
 
-**Resumen en una frase: hoy NO existe un empleado autonomo 24/7
-funcionando.** El flujo completo funciona de verdad cuando lo orquesta
-una sesion interactiva de Claude Code; disparado por un Routine
-(`create_new_session_on_fire`, sin nadie mirando) NO ha completado de
-forma fiable en ninguno de los intentos probados. Esta seccion describe
-el resultado real de las pruebas, no la arquitectura que nos gustaria
-tener.
+**Esta seccion completa es HISTORICA.** Describe un mecanismo de
+automatizacion anterior, basado en Claude Cloud Routines
+(`create_new_session_on_fire`), que se probo, fallo de forma reproducible
+y quedo desactivado -- ver "Routine experimental" mas abajo. **No se
+borra la evidencia** (queda integra, tal como se registro durante las
+pruebas), pero ya NO describe el estado actual del proyecto: el mecanismo
+que sustituyo a este intento es GitHub Actions + `claude-code-action`,
+documentado en la seccion "GitHub Actions + claude-code-action (mecanismo
+actual)" mas abajo, con una validacion end-to-end real completa (run
+`31851396385`).
+
+**Resumen preciso del estado actual (no el de esta seccion historica):**
+no existe un proceso de inferencia continuo 24/7. Si existe actualmente
+un empleado autonomo ejecutado de forma programada mediante GitHub
+Actions (`schedule` diario + `workflow_dispatch` bajo demanda); el
+intento anterior basado en Claude Cloud Routines (descrito integramente
+mas abajo) quedo desactivado por falta de fiabilidad.
 
 ### Que esta VERIFICADO y que NO
 
@@ -260,11 +284,13 @@ identificar con certeza que tool call concreta queda pendiente. Lo unico
 verificable desde fuera es la marca de tiempo congelada y el
 `stop_reason=tool_use` del diagnostico de plataforma.
 
-### Mecanismo de ejecucion (el que SI existe, capacidades nativas, sin API/SDK)
+### Mecanismo de ejecucion del intento HISTORICO con Routines (capacidades nativas, sin API/SDK propia)
 
-Este repositorio **no usa la API de Anthropic ni el Agent SDK**, y no se
-ha introducido ninguna API key, worker propio, cola de mensajes ni
-infraestructura adicional -- la parte no automatica de esto sigue
+**Esto describe unicamente el intento historico con Routines, no el
+mecanismo actual** (que SI usa la API de Anthropic, via
+`claude-code-action` -- ver mas abajo). Para este intento historico: no
+se introdujo ninguna API key, worker propio, cola de mensajes ni
+infraestructura adicional -- la parte no automatica de esto seguia
 funcionando con capacidades nativas:
 
 1. **Herramienta `Agent`** (nativa de Claude Code) -- `.claude/agents/*.md`
@@ -281,7 +307,7 @@ funcionando con capacidades nativas:
    `create_new_session_on_fire`) -- verificado leyendo su esquema real,
    no asumido.
 
-### Procedimiento (el que se ha intentado automatizar, sin exito fiable todavia)
+### Procedimiento (el que se intento automatizar con Routines, sin exito fiable en ese mecanismo)
 
 1. `npm run landing-architect:compare -- ` (sin `--changePackId`: elige
    uno al azar). Leer la linea `RUNNER_RESULT_JSON`.
@@ -410,7 +436,7 @@ mas abajo deben revisarse contra el commit nuevo.
 | En este workflow (`workflow_dispatch`/`schedule`, sin evento de PR/issue) no se instala ningun servidor MCP propio de la Action | Leido `src/mcp/install-mcp-server.ts` de ese commit: los servidores `github_comment`/`github_ci`/`github_inline_comment`/`github` solo se instalan si se piden herramientas `mcp__*` explicitas o si hay contexto de PR -- ninguna de las dos condiciones aplica aqui. |
 | Pasar `github_token` explicito evita que la Action pida su propio token con permisos de escritura por defecto | Leido `base-action/src/github/token.ts` de ese commit: sin `github_token` de entrada, la Action pide un token OIDC contra el GitHub App oficial de Claude con `DEFAULT_PERMISSIONS = {contents: write, pull_requests: write, issues: write}`, sin importar el `permissions:` del workflow -- y requiere `id-token: write`. |
 | Todo el pipeline determinista (paso 1 del runner -> parseo de `RUNNER_RESULT_JSON` -> lectura del prompt -> escritura simulada de una respuesta V2 -> paso 2 del runner -> parseo final) funciona de extremo a extremo | Simulado localmente con una respuesta V2 ficticia (sin invocar a Claude de verdad): `v2Status` termino en `"executed"` con `fabricationWarningCount: 0`, exactamente el contrato que espera el workflow. |
-| La invocacion REAL del commit fijado de `claude-code-action` dentro del runner de GitHub Actions (con Claude de verdad, `--agent` de verdad) | **VERIFICADA PARCIALMENTE.** Claude SI arranco, razono y respondio -- pero `--json-schema` fallo en entregar `structured_output` en los dos intentos reales. Ver el run real documentado abajo y el fallback que anade PR #4. |
+| La invocacion REAL del commit fijado de `claude-code-action` dentro del runner de GitHub Actions (con Claude de verdad, `--agent` de verdad), de principio a fin, sin intervencion humana entre el disparo y el resultado | **VERIFICADA COMPLETA.** Run [`31851396385`](https://github.com/dorquita/zentry-ai-department/actions/runs/31851396385) (PR #4 ya mergeado): el step de Claude termino en `failure` (outcome real, sin enmascarar) por ausencia de `structured_output` -- pero el fallback (caso B) recupero el resultado del `execution_file`, paso la validacion contra `config/landing-architect-v2-output.schema.json`, paso `validateV2Output()`, `v2Status` termino en `"executed"` con `fabricationWarningCount: 0`, se subio el artifact, y el job completo termino en `conclusion: success`. Ver el detalle exacto en la seccion siguiente. |
 
 ### Primeras ejecuciones reales (PR #3 mergeado a `main`) -- ambas fallaron por la misma causa
 
@@ -474,10 +500,40 @@ siendo el runner determinista, nunca Claude ni la Action.
 codigo real, asi que no hacia falta la alternativa de quitarlo por
 completo.
 
-**La primera ejecucion real de `workflow_dispatch` DESPUES de este
-fallback (PR #4) debe documentarse aqui, reemplazando este parrafo, con:
-`run_id`, si se uso el caso A (structured_output directo) o el caso B
-(fallback), `v2Status`, y numero de `fabricationWarnings`.**
+### Primera validacion end-to-end completa (PR #5, tras mergear PR #4)
+
+Tras mergear PR #4, el siguiente `workflow_dispatch` (run
+[`31851396385`](https://github.com/dorquita/zentry-ai-department/actions/runs/31851396385),
+`head_sha` `a683c4c` -- el merge commit de PR #4) es la **primera vez que
+el pipeline completo, de principio a fin, termina en exito real** sin
+intervencion humana entre el disparo y el resultado. Datos exactos,
+confirmados leyendo los logs y el listado de jobs del run real (no
+reportados de segunda mano):
+
+- **`changePackId`:** `4e9134a4-09ff-44af-a4c9-707fc52da0ec`
+- **`keyword`:** `universidad`
+- **Step "Ejecutar ux-ui-landing-architect-v2 (Claude Code Action)":** `outcome: failure` -- el mismo fallo de ausencia de `structured_output` documentado arriba SIGUIO ocurriendo (esto no es un cambio de comportamiento de la Action; el fallback existe precisamente para esto). Gracias a `continue-on-error: true` (acotado a este step, ver PR #4), el job no murio ahi.
+- **Step "Fallback: recuperar salida V2 del execution_file...":** `conclusion: success` -- `recoverV2OutputFromExecutionFile()` parseo el `execution_file`, encontro el mensaje final `"result"`, **valido el JSON recuperado contra `config/landing-architect-v2-output.schema.json`** (el mismo schema que exige `--json-schema` en el caso A -- ver PARIDAD DE CONTRATO en PR #4) y despues contra `validateV2Output()` -- ambas pasaron.
+- **Step "Decidir y escribir la salida V2...":** log exacto: `"Caso B: structured_output ausente -- usando el resultado recuperado deterministicamente del execution_file."`. **Origen de la salida V2: fallback via `execution_file` (caso B).**
+- **Paso 2 del runner** (`scripts/run-landing-architect-comparison.ts`, sin modificar): log exacto `"V2: salida valida. Avisos de posible fabricacion de datos: 0."` -> `v2Status: "executed"`, `fabricationWarningCount: 0`.
+- **Artifact subido:** `ux-ui-landing-architect-v2-4e9134a4-09ff-44af-a4c9-707fc52da0ec` (3 ficheros: `comparison.json`, `comparison.md`, `v2-output.json`; 10244 bytes).
+- **Escritura externa:** ninguna -- log exacto del runner: *"Recordatorio: ninguna de las dos propuestas se ha aplicado a WordPress/staging/produccion. Solo lectura + reportes locales."* Sin commits, sin push, sin PR, sin comentarios.
+- **Conclusion del job completo:** `success`.
+
+**Que valida exactamente este run (y que NO):** valida el **sistema
+completo CON fallback** -- disparo por `workflow_dispatch`, `--agent
+ux-ui-landing-architect-v2` como sesion principal, recuperacion
+deterministica cuando `--json-schema` no entrega `structured_output`,
+paridad de contrato entre caso A y caso B, auditoria de fabricacion, y
+publicacion de artifact sin ninguna escritura externa -- de principio a
+fin, sin intervencion humana entre el disparo y el resultado. **NO**
+valida que `structured_output` (`--json-schema` en el caso A) funcione de
+forma fiable contra este schema -- en las tres ejecuciones reales
+observadas hasta ahora (dos en PR #3, una aqui), `structured_output`
+nunca ha llegado a entregarse; lo que ha sostenido el pipeline en las tres
+ha sido siempre el fallback (caso B). Esto sigue siendo, con la evidencia
+disponible, el "camino real" de este empleado hoy, no el "camino
+excepcional".
 
 ## Que falta para que esto deje de ser un experimento
 
@@ -489,9 +545,10 @@ ningun mecanismo que tome la salida de V2 y la aplique a
 de propuestas locales para comparacion. El flujo esta verificado de
 principio a fin cuando lo orquesta una sesion interactiva de Claude Code;
 el mecanismo de Routine documentado arriba no es fiable; y el mecanismo
-de GitHub Actions + `claude-code-action` (este PR) tiene todo el pipeline
-determinista verificado pero **la invocacion real de Claude dentro de
-Actions sigue sin probarse end-to-end**, bloqueada por la restriccion de
-plataforma descrita arriba hasta que el workflow llegue a `main`. En
-cualquier caso, sin ningun camino hacia aplicar nada a WordPress/staging/
-produccion.
+de GitHub Actions + `claude-code-action` **ya tiene una validacion
+end-to-end real completa** (run `31851396385`, ver arriba) -- disparada
+por `workflow_dispatch`, sin intervencion humana entre el disparo y el
+resultado, con el fallback (caso B) sosteniendo el pipeline porque
+`structured_output` (caso A) sigue sin haberse observado funcionando en
+ninguna de las tres ejecuciones reales hasta ahora. En cualquier caso,
+sin ningun camino hacia aplicar nada a WordPress/staging/produccion.
