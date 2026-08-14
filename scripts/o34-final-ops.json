@@ -1,0 +1,885 @@
+[
+  {
+    "productId": 334,
+    "productName": "Taquilla 1 puerta – Módulo 1",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM1P1-30.jpg",
+      "title": "Taquilla 1 puerta - Modulo 1 (Metálica) 30cm",
+      "alt": "Taquilla 1 puerta – Módulo 1 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM1P1-40.jpg",
+        "title": "Taquilla 1 puerta - Modulo 1 (Metálica) 40cm",
+        "alt": "Taquilla 1 puerta – Módulo 1 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM1P1-40 (Blanco).jpg",
+        "title": "Taquilla 1 puerta - Modulo 1 (Metálica) 40cm - acabado blanco",
+        "alt": "Taquilla 1 puerta – Módulo 1 (Metálica) – 40 cm – acabado blanco"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM1P1-40 (Gris).jpg",
+        "title": "Taquilla 1 puerta - Modulo 1 (Metálica) 40cm",
+        "alt": "Taquilla 1 puerta – Módulo 1 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/OTR1-CHACON-METAL1P_1M_BAJA.jpg",
+        "title": "Taquilla 1 puerta - Modulo 1 (Metálica)",
+        "alt": "Taquilla 1 puerta – Módulo 1 (Metálica)"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM1P1-30 (Abierta).jpg",
+        "title": "Taquilla 1 puerta - Modulo 1 (Metálica) 30cm - vista abierta",
+        "alt": "Taquilla 1 puerta – Módulo 1 (Metálica) – 30 cm – vista abierta"
+      }
+    ]
+  },
+  {
+    "productId": 339,
+    "productName": "Taquilla 1 puerta – Módulo 2",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM2P1-30.jpg",
+      "title": "Taquilla 1 puerta - Modulo 2 (Metálica) 30cm",
+      "alt": "Taquilla 1 puerta – Módulo 2 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/OTR1-CHACON-METAL1P_2M_BAJA.jpg",
+        "title": "Taquilla 1 puerta - Modulo 2 (Metálica)",
+        "alt": "Taquilla 1 puerta – Módulo 2 (Metálica)"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM2P1-30 Patas y techo inclinado.jpg",
+        "title": "Taquilla 1 puerta - Modulo 2 (Metálica) 30cm - techo inclinado, con patas",
+        "alt": "Taquilla 1 puerta – Módulo 2 (Metálica) – 30 cm – techo inclinado, con patas"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM2P1-40 (Divisoria y patas).jpg",
+        "title": "Taquilla 1 puerta - Modulo 2 (Metálica) 40cm - con divisoria",
+        "alt": "Taquilla 1 puerta – Módulo 2 (Metálica) – 40 cm – con divisoria"
+      }
+    ]
+  },
+  {
+    "productId": 364,
+    "productName": "Taquilla 1 puerta – Módulo 3",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM3P1-30.jpg",
+      "title": "Taquilla 1 puerta - Modulo 3 (Metálica) 30cm",
+      "alt": "Taquilla 1 puerta – Módulo 3 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3P1-40.jpg",
+        "title": "Taquilla 1 puerta - Modulo 3 (Metálica) 40cm",
+        "alt": "Taquilla 1 puerta – Módulo 3 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3P1-30 (2).jpg",
+        "title": "Taquilla 1 puerta - Modulo 3 (Metálica) 30cm",
+        "alt": "Taquilla 1 puerta – Módulo 3 (Metálica) – 30 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/OTR1-CHACON-METAL1P_3M_BAJA.jpg",
+        "title": "Taquilla 1 puerta - Modulo 3 (Metálica)",
+        "alt": "Taquilla 1 puerta – Módulo 3 (Metálica)"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3P1-30 (Techo inclinado).jpg",
+        "title": "Taquilla 1 puerta - Modulo 3 (Metálica) 30cm - techo inclinado",
+        "alt": "Taquilla 1 puerta – Módulo 3 (Metálica) – 30 cm – techo inclinado"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3P1-40 (Divisoria y patas.jpg",
+        "title": "Taquilla 1 puerta - Modulo 3 (Metálica) 40cm - con divisoria",
+        "alt": "Taquilla 1 puerta – Módulo 3 (Metálica) – 40 cm – con divisoria"
+      }
+    ]
+  },
+  {
+    "productId": 372,
+    "productName": "Taquilla 2 puertas – Módulo 1",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM1P2-30.jpg",
+      "title": "Taquilla 2 puertas - Modulo 1 (Metálica) 30cm",
+      "alt": "Taquilla 2 puertas – Módulo 1 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM1P2-40.jpg",
+        "title": "Taquilla 2 puertas - Modulo 1 (Metálica) 40cm",
+        "alt": "Taquilla 2 puertas – Módulo 1 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM1P2-30 (Con patas).jpg",
+        "title": "Taquilla 2 puertas - Modulo 1 (Metálica) 30cm - con patas",
+        "alt": "Taquilla 2 puertas – Módulo 1 (Metálica) – 30 cm – con patas"
+      }
+    ]
+  },
+  {
+    "productId": 393,
+    "productName": "Taquilla 2 puertas – Módulo 2",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM2P2-30.jpg",
+      "title": "Taquilla 2 puertas - Modulo 2 (Metálica) 30cm",
+      "alt": "Taquilla 2 puertas – Módulo 2 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM2P2-40.jpg",
+        "title": "Taquilla 2 puertas - Modulo 2 (Metálica) 40cm",
+        "alt": "Taquilla 2 puertas – Módulo 2 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM2P2-30 (con patas).jpg",
+        "title": "Taquilla 2 puertas - Modulo 2 (Metálica) 30cm - con patas",
+        "alt": "Taquilla 2 puertas – Módulo 2 (Metálica) – 30 cm – con patas"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM2P2-40 (Abierto) (Grafito-Rojo).jpg",
+        "title": "Taquilla 2 puertas - Modulo 2 (Metálica) 40cm - vista abierta, acabado rojo, acabado grafito",
+        "alt": "Taquilla 2 puertas – Módulo 2 (Metálica) – 40 cm – vista abierta, acabado rojo, acabado grafito"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM2P2-40 (Abierto).jpg",
+        "title": "Taquilla 2 puertas - Modulo 2 (Metálica) 40cm - vista abierta",
+        "alt": "Taquilla 2 puertas – Módulo 2 (Metálica) – 40 cm – vista abierta"
+      }
+    ]
+  },
+  {
+    "productId": 398,
+    "productName": "Taquilla 2 puertas – Módulo 3",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM3P2-30.jpg",
+      "title": "Taquilla 2 puertas - Modulo 3 (Metálica) 30cm",
+      "alt": "Taquilla 2 puertas – Módulo 3 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3P2-30 (Abierto).jpg",
+        "title": "Taquilla 2 puertas - Modulo 3 (Metálica) 30cm - vista abierta",
+        "alt": "Taquilla 2 puertas – Módulo 3 (Metálica) – 30 cm – vista abierta"
+      }
+    ]
+  },
+  {
+    "productId": 413,
+    "productName": "Taquilla 3 puertas – Módulo 3",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/OTR1-CHACON-METALP3_3M (Large).jpg",
+      "title": "Taquilla 3 puertas - Modulo 3 (Metálica)",
+      "alt": "Taquilla 3 puertas – Módulo 3 (Metálica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 425,
+    "productName": "Taquilla 4 puertas – Módulo 1",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM1P4-30.jpg",
+      "title": "Taquilla 4 puertas - Modulo 1 (Metálica) 30cm",
+      "alt": "Taquilla 4 puertas – Módulo 1 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/OTR1-CHACON-METAL_4P_1M_BAJA.jpg",
+        "title": "Taquilla 4 puertas - Modulo 1 (Metálica)",
+        "alt": "Taquilla 4 puertas – Módulo 1 (Metálica)"
+      }
+    ]
+  },
+  {
+    "productId": 430,
+    "productName": "Taquilla 4 puertas – Módulo 2",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM2P4-30.jpg",
+      "title": "Taquilla 4 puertas - Modulo 2 (Metálica) 30cm",
+      "alt": "Taquilla 4 puertas – Módulo 2 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM2P4-40.jpg",
+        "title": "Taquilla 4 puertas - Modulo 2 (Metálica) 40cm",
+        "alt": "Taquilla 4 puertas – Módulo 2 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/OTR1-CHACON-METAL4P_2M_BAJA.jpg",
+        "title": "Taquilla 4 puertas - Modulo 2 (Metálica)",
+        "alt": "Taquilla 4 puertas – Módulo 2 (Metálica)"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/OTR1-CHACON-METALP4_2M_BAJA.jpg",
+        "title": "Taquilla 4 puertas - Modulo 2 (Metálica)",
+        "alt": "Taquilla 4 puertas – Módulo 2 (Metálica)"
+      }
+    ]
+  },
+  {
+    "productId": 435,
+    "productName": "Taquilla 4 puertas – Módulo 3",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM3P4-30.jpg",
+      "title": "Taquilla 4 puertas - Modulo 3 (Metálica) 30cm",
+      "alt": "Taquilla 4 puertas – Módulo 3 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3P4-40.jpg",
+        "title": "Taquilla 4 puertas - Modulo 3 (Metálica) 40cm",
+        "alt": "Taquilla 4 puertas – Módulo 3 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/OTR1-CHACON-METALP4_3M_BAJA.jpg",
+        "title": "Taquilla 4 puertas - Modulo 3 (Metálica)",
+        "alt": "Taquilla 4 puertas – Módulo 3 (Metálica)"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/OTR1-CHACON-METAL_3M_4P_BAJA.jpg",
+        "title": "Taquilla 4 puertas - Modulo 3 (Metálica)",
+        "alt": "Taquilla 4 puertas – Módulo 3 (Metálica)"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3P4-30 (Abierto).jpg",
+        "title": "Taquilla 4 puertas - Modulo 3 (Metálica) 30cm - vista abierta",
+        "alt": "Taquilla 4 puertas – Módulo 3 (Metálica) – 30 cm – vista abierta"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3P4-40 (Abierta).jpg",
+        "title": "Taquilla 4 puertas - Modulo 3 (Metálica) 40cm - vista abierta",
+        "alt": "Taquilla 4 puertas – Módulo 3 (Metálica) – 40 cm – vista abierta"
+      }
+    ]
+  },
+  {
+    "productId": 440,
+    "productName": "Taquilla 2 puertas en L – Módulo 1",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM1PL-40.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 1 (Metálica) 40cm",
+      "alt": "Taquilla 2 puertas en L – Módulo 1 (Metálica) – 40 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM1PL-40 (2).jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 1 (Metálica) 40cm",
+        "alt": "Taquilla 2 puertas en L – Módulo 1 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/CHACON-METAL_2PL_1M_BAJA.jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 1 (Metálica)",
+        "alt": "Taquilla 2 puertas en L – Módulo 1 (Metálica)"
+      }
+    ]
+  },
+  {
+    "productId": 445,
+    "productName": "Taquilla 2 puertas en L – Módulo 2",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM2PL-40.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 2 (Metálica) 40cm",
+      "alt": "Taquilla 2 puertas en L – Módulo 2 (Metálica) – 40 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM2PL-40 (2).jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 2 (Metálica) 40cm",
+        "alt": "Taquilla 2 puertas en L – Módulo 2 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/CHACON-METAL_2PL_2M_BAJA.jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 2 (Metálica)",
+        "alt": "Taquilla 2 puertas en L – Módulo 2 (Metálica)"
+      }
+    ]
+  },
+  {
+    "productId": 450,
+    "productName": "Taquilla 2 puertas en L – Módulo 3",
+    "familia": "Metálica",
+    "featured": {
+      "localPath": "Taquillas_Metalicas/VTMTM3PL-30.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 3 (Metálica) 30cm",
+      "alt": "Taquilla 2 puertas en L – Módulo 3 (Metálica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3PL-40.jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 3 (Metálica) 40cm",
+        "alt": "Taquilla 2 puertas en L – Módulo 3 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3PL-40 (2).jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 3 (Metálica) 40cm",
+        "alt": "Taquilla 2 puertas en L – Módulo 3 (Metálica) – 40 cm"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/CHACON-METAL_2PL_3M_BAJA.jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 3 (Metálica)",
+        "alt": "Taquilla 2 puertas en L – Módulo 3 (Metálica)"
+      },
+      {
+        "localPath": "Taquillas_Metalicas/VTMTM3PL-40 Con patas.jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 3 (Metálica) 40cm - con patas",
+        "alt": "Taquilla 2 puertas en L – Módulo 3 (Metálica) – 40 cm – con patas"
+      }
+    ]
+  },
+  {
+    "productId": 489,
+    "productName": "Taquilla 1 puerta – Módulo 1",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM1-40P1.jpg",
+      "title": "Taquilla 1 puerta - Modulo 1 (Fenólica) 40cm",
+      "alt": "Taquilla 1 puerta – Módulo 1 (Fenólica) – 40 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM1P1.jpg",
+        "title": "Taquilla 1 puerta - Modulo 1 (Fenólica)",
+        "alt": "Taquilla 1 puerta – Módulo 1 (Fenólica)"
+      }
+    ]
+  },
+  {
+    "productId": 499,
+    "productName": "Taquilla 2 puertas – Módulo 1",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM1-30P2.jpg",
+      "title": "Taquilla 2 puertas - Modulo 1 (Fenólica) 30cm",
+      "alt": "Taquilla 2 puertas – Módulo 1 (Fenólica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Fenolico/VTFPM1-30P2 Negro.jpg",
+        "title": "Taquilla 2 puertas - Modulo 1 (Fenólica) 30cm - acabado negro",
+        "alt": "Taquilla 2 puertas – Módulo 1 (Fenólica) – 30 cm – acabado negro"
+      },
+      {
+        "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM1P2.jpg",
+        "title": "Taquilla 2 puertas - Modulo 1 (Fenólica)",
+        "alt": "Taquilla 2 puertas – Módulo 1 (Fenólica)"
+      }
+    ]
+  },
+  {
+    "productId": 505,
+    "productName": "Taquilla 1 puerta – Módulo 2",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM2-P1.jpg",
+      "title": "Taquilla 1 puerta - Modulo 2 (Fenólica)",
+      "alt": "Taquilla 1 puerta – Módulo 2 (Fenólica)"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Fenolico/VTFPM2-40P1 (Divisoria y techo inclinado).jpg",
+        "title": "Taquilla 1 puerta - Modulo 2 (Fenólica) 40cm - techo inclinado, con divisoria",
+        "alt": "Taquilla 1 puerta – Módulo 2 (Fenólica) – 40 cm – techo inclinado, con divisoria"
+      }
+    ]
+  },
+  {
+    "productId": 513,
+    "productName": "Taquilla 3 puertas – Módulo 1",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM1P3.jpg",
+      "title": "Taquilla 3 puertas - Modulo 1 (Fenólica)",
+      "alt": "Taquilla 3 puertas – Módulo 1 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 519,
+    "productName": "Taquilla 2 puertas – Módulo 2",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM2-40P2.jpg",
+      "title": "Taquilla 2 puertas - Modulo 2 (Fenólica) 40cm",
+      "alt": "Taquilla 2 puertas – Módulo 2 (Fenólica) – 40 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Fenolico/VTFPM2-P2.jpg",
+        "title": "Taquilla 2 puertas - Modulo 2 (Fenólica)",
+        "alt": "Taquilla 2 puertas – Módulo 2 (Fenólica)"
+      }
+    ]
+  },
+  {
+    "productId": 525,
+    "productName": "Taquilla 3 puertas – Módulo 2",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM2P3.jpg",
+      "title": "Taquilla 3 puertas - Modulo 2 (Fenólica)",
+      "alt": "Taquilla 3 puertas – Módulo 2 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 531,
+    "productName": "Taquilla 1 puerta – Módulo 3",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM3P1.jpg",
+      "title": "Taquilla 1 puerta - Modulo 3 (Fenólica)",
+      "alt": "Taquilla 1 puerta – Módulo 3 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 537,
+    "productName": "Taquilla 2 puertas – Módulo 3",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM3-P2.jpg",
+      "title": "Taquilla 2 puertas - Modulo 3 (Fenólica)",
+      "alt": "Taquilla 2 puertas – Módulo 3 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 543,
+    "productName": "Taquilla 3 puertas – Módulo 3",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM3P3.jpg",
+      "title": "Taquilla 3 puertas - Modulo 3 (Fenólica)",
+      "alt": "Taquilla 3 puertas – Módulo 3 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 549,
+    "productName": "Taquilla 1 puerta – Módulo 4",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM4-P1.jpg",
+      "title": "Taquilla 1 puerta - Modulo 4 (Fenólica)",
+      "alt": "Taquilla 1 puerta – Módulo 4 (Fenólica)"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Fenolico/VTFPM4-30P1 (Techo inclinado).jpg",
+        "title": "Taquilla 1 puerta - Modulo 4 (Fenólica) 30cm - techo inclinado",
+        "alt": "Taquilla 1 puerta – Módulo 4 (Fenólica) – 30 cm – techo inclinado"
+      },
+      {
+        "localPath": "Taquillas_Fenolico/VTFPM4-40P1 (Divisoria vertical).jpg",
+        "title": "Taquilla 1 puerta - Modulo 4 (Fenólica) 40cm - con divisoria",
+        "alt": "Taquilla 1 puerta – Módulo 4 (Fenólica) – 40 cm – con divisoria"
+      }
+    ]
+  },
+  {
+    "productId": 555,
+    "productName": "Taquilla 2 puertas – Módulo 4",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM4-P2.jpg",
+      "title": "Taquilla 2 puertas - Modulo 4 (Fenólica)",
+      "alt": "Taquilla 2 puertas – Módulo 4 (Fenólica)"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Fenolico/VTFPM4-40P2 (Techo inclinado).jpg",
+        "title": "Taquilla 2 puertas - Modulo 4 (Fenólica) 40cm - techo inclinado",
+        "alt": "Taquilla 2 puertas – Módulo 4 (Fenólica) – 40 cm – techo inclinado"
+      }
+    ]
+  },
+  {
+    "productId": 561,
+    "productName": "Taquilla 3 puertas – Módulo 4",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM4P3.jpg",
+      "title": "Taquilla 3 puertas - Modulo 4 (Fenólica)",
+      "alt": "Taquilla 3 puertas – Módulo 4 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 567,
+    "productName": "Taquilla 4 puertas – Módulo 4",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM4-30P4.jpg",
+      "title": "Taquilla 4 puertas - Modulo 4 (Fenólica) 30cm",
+      "alt": "Taquilla 4 puertas – Módulo 4 (Fenólica) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 573,
+    "productName": "Taquilla 2 puertas en L – Módulo 1",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM1-40PL.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 1 (Fenólica) 40cm",
+      "alt": "Taquilla 2 puertas en L – Módulo 1 (Fenólica) – 40 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM1PL.jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 1 (Fenólica)",
+        "alt": "Taquilla 2 puertas en L – Módulo 1 (Fenólica)"
+      }
+    ]
+  },
+  {
+    "productId": 579,
+    "productName": "Taquilla 2 puertas en L – Módulo 2",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/VTFPM2-30PL.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 2 (Fenólica) 30cm",
+      "alt": "Taquilla 2 puertas en L – Módulo 2 (Fenólica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM2PL.jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 2 (Fenólica)",
+        "alt": "Taquilla 2 puertas en L – Módulo 2 (Fenólica)"
+      },
+      {
+        "localPath": "Taquillas_Fenolico/VTFPM2-30PL (Techo inclinado).jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 2 (Fenólica) 30cm - techo inclinado",
+        "alt": "Taquilla 2 puertas en L – Módulo 2 (Fenólica) – 30 cm – techo inclinado"
+      }
+    ]
+  },
+  {
+    "productId": 585,
+    "productName": "Taquilla 2 puertas en L – Módulo 3",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM3PL.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 3 (Fenólica)",
+      "alt": "Taquilla 2 puertas en L – Módulo 3 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 591,
+    "productName": "Taquilla 2 puertas en L – Módulo 4",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM4PL.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 4 (Fenólica)",
+      "alt": "Taquilla 2 puertas en L – Módulo 4 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 597,
+    "productName": "Taquilla 1 puerta – Módulo 1",
+    "familia": "Melamina",
+    "featured": {
+      "localPath": "Taquilla_MelaminaMel/VTMMM1-30P1-19.jpg",
+      "title": "Taquilla 1 puerta - Modulo 1 (Melamina) 30cm",
+      "alt": "Taquilla 1 puerta – Módulo 1 (Melamina) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 603,
+    "productName": "Taquilla 2 puertas – Módulo 1",
+    "familia": "Melamina",
+    "featured": {
+      "localPath": "Taquilla_MelaminaMel/VTMMM1-30P2-19.jpg",
+      "title": "Taquilla 2 puertas - Modulo 1 (Melamina) 30cm",
+      "alt": "Taquilla 2 puertas – Módulo 1 (Melamina) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquilla_MelaminaMel/VTMMM1-40P2-19.jpg",
+        "title": "Taquilla 2 puertas - Modulo 1 (Melamina) 40cm",
+        "alt": "Taquilla 2 puertas – Módulo 1 (Melamina) – 40 cm"
+      },
+      {
+        "localPath": "Taquilla_MelaminaMel/VTMMM1-30P2-19 (2).jpg",
+        "title": "Taquilla 2 puertas - Modulo 1 (Melamina) 30cm",
+        "alt": "Taquilla 2 puertas – Módulo 1 (Melamina) – 30 cm"
+      }
+    ]
+  },
+  {
+    "productId": 609,
+    "productName": "Taquilla 3 puertas – Módulo 1",
+    "familia": "Melamina",
+    "featured": {
+      "localPath": "Taquilla_MelaminaMel/VTMMM1-30P3-19.jpg",
+      "title": "Taquilla 3 puertas - Modulo 1 (Melamina) 30cm",
+      "alt": "Taquilla 3 puertas – Módulo 1 (Melamina) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1248,
+    "productName": "Taquilla 4 puertas – Módulo 1",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM1P4.jpg",
+      "title": "Taquilla 4 puertas - Modulo 1 (Fenólica)",
+      "alt": "Taquilla 4 puertas – Módulo 1 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1254,
+    "productName": "Taquilla 4 puertas – Módulo 2",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM2P4.jpg",
+      "title": "Taquilla 4 puertas - Modulo 2 (Fenólica)",
+      "alt": "Taquilla 4 puertas – Módulo 2 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1261,
+    "productName": "Taquilla 4 puertas – Módulo 3",
+    "familia": "Fenólica",
+    "featured": {
+      "localPath": "Taquillas_Fenolico/OTR1-CHACON-TAFM3P4.jpg",
+      "title": "Taquilla 4 puertas - Modulo 3 (Fenólica)",
+      "alt": "Taquilla 4 puertas – Módulo 3 (Fenólica)"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1291,
+    "productName": "Taquilla 4 puertas – Módulo 1",
+    "familia": "Melamina",
+    "featured": {
+      "localPath": "Taquilla_MelaminaMel/VTMMM1-30P4-19.jpg",
+      "title": "Taquilla 4 puertas - Modulo 1 (Melamina) 30cm",
+      "alt": "Taquilla 4 puertas – Módulo 1 (Melamina) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1296,
+    "productName": "Taquilla 1 puerta – Módulo 2",
+    "familia": "Melamina",
+    "featured": {
+      "localPath": "Taquilla_MelaminaMel/VTMMM2-30P1-19.jpg",
+      "title": "Taquilla 1 puerta - Modulo 2 (Melamina) 30cm",
+      "alt": "Taquilla 1 puerta – Módulo 2 (Melamina) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquilla_MelaminaMel/VTMMM2-30P1-19 (Rojo).jpg",
+        "title": "Taquilla 1 puerta - Modulo 2 (Melamina) 30cm - acabado rojo",
+        "alt": "Taquilla 1 puerta – Módulo 2 (Melamina) – 30 cm – acabado rojo"
+      }
+    ]
+  },
+  {
+    "productId": 1301,
+    "productName": "Taquilla 2 puertas – Módulo 2",
+    "familia": "Melamina",
+    "featured": {
+      "localPath": "Taquilla_MelaminaMel/VTMMM2-30-P2-19.jpg",
+      "title": "Taquilla 2 puertas - Modulo 2 (Melamina) 30cm",
+      "alt": "Taquilla 2 puertas – Módulo 2 (Melamina) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1306,
+    "productName": "Taquilla 3 puertas – Módulo 2",
+    "familia": "Melamina",
+    "featured": {
+      "localPath": "Taquilla_MelaminaMel/VTMMM2-30P3-19.jpg",
+      "title": "Taquilla 3 puertas - Modulo 2 (Melamina) 30cm",
+      "alt": "Taquilla 3 puertas – Módulo 2 (Melamina) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquilla_MelaminaMel/VTMMM2-30P3-19 (Azul).jpg",
+        "title": "Taquilla 3 puertas - Modulo 2 (Melamina) 30cm - acabado azul",
+        "alt": "Taquilla 3 puertas – Módulo 2 (Melamina) – 30 cm – acabado azul"
+      }
+    ]
+  },
+  {
+    "productId": 1311,
+    "productName": "Taquilla 4 puertas – Módulo 2",
+    "familia": "Melamina",
+    "featured": {
+      "localPath": "Taquilla_MelaminaMel/VTMMM2-30P4-19.jpg",
+      "title": "Taquilla 4 puertas - Modulo 2 (Melamina) 30cm",
+      "alt": "Taquilla 4 puertas – Módulo 2 (Melamina) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1319,
+    "productName": "Taquilla 1 puerta – Módulo 1",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM1-30P1.jpg",
+      "title": "Taquilla 1 puerta - Modulo 1 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 1 puerta – Módulo 1 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1325,
+    "productName": "Taquilla 2 puertas – Módulo 1",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM1-30P2.jpg",
+      "title": "Taquilla 2 puertas - Modulo 1 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 2 puertas – Módulo 1 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1331,
+    "productName": "Taquilla 3 puertas – Módulo 1",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM1-30P3.jpg",
+      "title": "Taquilla 3 puertas - Modulo 1 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 3 puertas – Módulo 1 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1337,
+    "productName": "Taquilla 4 puertas – Módulo 1",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM1-30P4.jpg",
+      "title": "Taquilla 4 puertas - Modulo 1 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 4 puertas – Módulo 1 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1343,
+    "productName": "Taquilla 2 puertas en L – Módulo 1",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM1-30PL.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 1 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 2 puertas en L – Módulo 1 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquilla_MelaminaFen/VTMFM1-40PL-10.jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 1 (Melamina Fenólica) 40cm - espesor 10 mm",
+        "alt": "Taquilla 2 puertas en L – Módulo 1 (Melamina Fenólica) – 40 cm – espesor 10 mm"
+      }
+    ]
+  },
+  {
+    "productId": 1349,
+    "productName": "Taquilla 1 puerta – Módulo 2",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM2-30P1.jpg",
+      "title": "Taquilla 1 puerta - Modulo 2 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 1 puerta – Módulo 2 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquilla_MelaminaFen/VTMFM2-30P1 2.jpg",
+        "title": "Taquilla 1 puerta - Modulo 2 (Melamina Fenólica) 30cm",
+        "alt": "Taquilla 1 puerta – Módulo 2 (Melamina Fenólica) – 30 cm"
+      },
+      {
+        "localPath": "Taquilla_MelaminaFen/VTMFM2-30P1 3.jpg",
+        "title": "Taquilla 1 puerta - Modulo 2 (Melamina Fenólica) 30cm",
+        "alt": "Taquilla 1 puerta – Módulo 2 (Melamina Fenólica) – 30 cm"
+      }
+    ]
+  },
+  {
+    "productId": 1355,
+    "productName": "Taquilla 2 puertas – Módulo 2",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM2-P2.jpg",
+      "title": "Taquilla 2 puertas - Modulo 2 (Melamina Fenólica)",
+      "alt": "Taquilla 2 puertas – Módulo 2 (Melamina Fenólica)"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquilla_MelaminaFen/VTMFM2-30P2 (Todo Blanco).jpg",
+        "title": "Taquilla 2 puertas - Modulo 2 (Melamina Fenólica) 30cm - acabado blanco",
+        "alt": "Taquilla 2 puertas – Módulo 2 (Melamina Fenólica) – 30 cm – acabado blanco"
+      },
+      {
+        "localPath": "Taquilla_MelaminaFen/VTMFM2-30P2 Blanco.jpg",
+        "title": "Taquilla 2 puertas - Modulo 2 (Melamina Fenólica) 30cm - acabado blanco",
+        "alt": "Taquilla 2 puertas – Módulo 2 (Melamina Fenólica) – 30 cm – acabado blanco"
+      },
+      {
+        "localPath": "Taquilla_MelaminaFen/VTMFM2-30P2 (Todo blanco) abierto.jpg",
+        "title": "Taquilla 2 puertas - Modulo 2 (Melamina Fenólica) 30cm - vista abierta, acabado blanco",
+        "alt": "Taquilla 2 puertas – Módulo 2 (Melamina Fenólica) – 30 cm – vista abierta, acabado blanco"
+      }
+    ]
+  },
+  {
+    "productId": 1361,
+    "productName": "Taquilla 3 puertas – Módulo 2",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM2-30P3.jpg",
+      "title": "Taquilla 3 puertas - Modulo 2 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 3 puertas – Módulo 2 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1367,
+    "productName": "Taquilla 4 puertas – Módulo 2",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM2-30P4.jpg",
+      "title": "Taquilla 4 puertas - Modulo 2 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 4 puertas – Módulo 2 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": []
+  },
+  {
+    "productId": 1373,
+    "productName": "Taquilla 2 puertas en L – Módulo 2",
+    "familia": "Melamina-Fenólico",
+    "featured": {
+      "localPath": "Taquilla_MelaminaFen/VTMFM2-30PL.jpg",
+      "title": "Taquilla 2 puertas en L - Modulo 2 (Melamina Fenólica) 30cm",
+      "alt": "Taquilla 2 puertas en L – Módulo 2 (Melamina Fenólica) – 30 cm"
+    },
+    "gallery": [
+      {
+        "localPath": "Taquilla_MelaminaFen/VTMFM2-30PL-12 (Techo inclinado).jpg",
+        "title": "Taquilla 2 puertas en L - Modulo 2 (Melamina Fenólica) 30cm - techo inclinado, espesor 12 mm",
+        "alt": "Taquilla 2 puertas en L – Módulo 2 (Melamina Fenólica) – 30 cm – techo inclinado, espesor 12 mm"
+      }
+    ]
+  }
+]

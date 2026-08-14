@@ -1,0 +1,46 @@
+{
+  "results": {
+    "css_created": {
+      "id": 18,
+      "code_error": null
+    },
+    "wa_created": {
+      "id": 19,
+      "code_error": null
+    },
+    "landing_created": {
+      "id": 20,
+      "code_error": null
+    },
+    "tracking_created": {
+      "id": 21,
+      "code_error": null
+    },
+    "css_activated": {
+      "id": 18,
+      "active": true,
+      "code_error": null
+    },
+    "wa_activated": {
+      "id": 19,
+      "active": true,
+      "code_error": null
+    },
+    "landing_activated": {
+      "id": 20,
+      "active": true,
+      "code_error": null
+    },
+    "tracking_activated": {
+      "id": 21,
+      "active": true,
+      "code_error": null
+    },
+    "snippet15_updated": {
+      "id": 15,
+      "active": true,
+      "code_error": null
+    }
+  },
+  "activated": true
+}

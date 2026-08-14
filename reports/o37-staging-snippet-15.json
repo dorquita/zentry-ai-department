@@ -1,0 +1,15 @@
+{
+  "id": 15,
+  "name": "O33 - CTA presupuesto proyecto a medida (recuperado tras O32.7)",
+  "desc": "Recupera el CTA de presupuesto perdido al quitar zentry-hide-prices-guests.php. Solo AÑADE contenido (woocommerce_after_add_to_cart_button / woocommerce_after_shop_loop_item), nunca sustituye precio ni formulario de compra. Fase O33 tarea 0 -- creado inactivo a proposito, se activa en un paso aparte tras revisar.",
+  "code": "add_action('woocommerce_after_add_to_cart_button', function () {\n    global $product;\n    if (!$product instanceof WC_Product) return;\n\n    $url = add_query_arg([\n        'origen'          => 'cta_proyecto_medida',\n        'producto_id'     => $product->get_id(),\n        'producto_slug'   => $product->get_slug(),\n        'producto_nombre' => rawurlencode($product->get_name()),\n        'ubicacion'       => 'ficha_producto',\n    ], home_url('/contacto/'));\n\n    echo '<div class=\"zentry-price-cta zentry-price-cta--compact\"><p class=\"zentry-price-cta__text\">¿Necesitas varias unidades, instalación o un proyecto a medida? <a href=\"' . esc_url($url) . '\">Solicita un presupuesto personalizado</a>.</p></div>';\n});\n\nadd_action('woocommerce_after_shop_loop_item', function () {\n    global $product;\n    if (!$product instanceof WC_Product) return;\n    $url = add_query_arg([\n        'origen' => 'cta_proyecto_medida',\n        'producto_id' => $product->get_id(),\n        'producto_slug' => $product->get_slug(),\n        'producto_nombre' => rawurlencode($product->get_name()),\n        'ubicacion' => 'categoria',\n    ], home_url('/contacto/'));\n    echo '<a class=\"zentry-price-cta__link-compact\" href=\"' . esc_url($url) . '\">Proyecto a medida →</a>';\n}, 25);",
+  "tags": [],
+  "scope": "front-end",
+  "condition_id": 0,
+  "active": true,
+  "priority": 10,
+  "network": false,
+  "shared_network": false,
+  "modified": "2026-08-11 07:01:55",
+  "code_error": null
+}

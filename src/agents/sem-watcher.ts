@@ -130,6 +130,109 @@ function campaignStateFromSnapshot(snapshot: GoogleAdsSnapshot): CampaignStateVi
   };
 }
 
+export interface SemCampaignSummaryItem {
+  name: string;
+  status: string;
+  dailyBudgetEUR: number | null;
+  adGroups: number;
+  positiveKeywords: number;
+}
+
+/**
+ * Fase O45.1/O49.6 -- desde que hay 7 campanas SEM reales en la cuenta
+ * (6 nuevas + 1 legacy), el informe ejecutivo necesita una vista agregada
+ * de TODAS las campanas relevantes, no solo de la "principal" que elige
+ * `selectPrimaryCampaign` para el informe tecnico. Pura lectura/
+ * agregacion sobre el snapshot ya obtenido -- nunca decide ni modifica
+ * nada en Google Ads.
+ */
+export interface SemDepartmentSummary {
+  totalCampaigns: number;
+  activeCampaignCount: number;
+  pausedCampaignCount: number;
+  allPaused: boolean;
+  totalDailyBudgetIfActivatedEUR: number;
+  totalMonthlyBudgetIfActivatedEUR: number;
+  campaigns: SemCampaignSummaryItem[];
+  totalPositiveKeywords: number;
+  totalNegativeKeywords: number;
+  realSpendEUR: number;
+  primaryConversionActionNames: string[];
+  unexpectedPrimaryConversionActionNames: string[];
+  duplicateKeywordWarnings: string[];
+}
+
+const EXPECTED_PRIMARY_CONVERSION_SUBSTRINGS = ["generate_lead_form_submit", "click_whatsapp", "click_phone"];
+
+function buildSemDepartmentSummary(snapshot: GoogleAdsSnapshot): SemDepartmentSummary {
+  const relevantCampaigns = snapshot.campaigns.filter((c) => c.status !== "REMOVED");
+
+  const campaigns: SemCampaignSummaryItem[] = relevantCampaigns.map((c) => {
+    const agIds = new Set(snapshot.adGroups.filter((ag) => ag.campaignId === c.id).map((ag) => ag.id));
+    return {
+      name: c.name,
+      status: c.status,
+      dailyBudgetEUR: microsToEuros(c.dailyBudgetMicros),
+      adGroups: agIds.size,
+      positiveKeywords: snapshot.positiveKeywords.filter((k) => agIds.has(k.adGroupId)).length,
+    };
+  });
+
+  const activeCampaignCount = campaigns.filter((c) => c.status === "ENABLED").length;
+  const pausedCampaignCount = campaigns.filter((c) => c.status === "PAUSED").length;
+  const allPaused = activeCampaignCount === 0;
+  const totalDailyBudgetIfActivatedEUR = Math.round(campaigns.reduce((sum, c) => sum + (c.dailyBudgetEUR ?? 0), 0) * 100) / 100;
+  const totalMonthlyBudgetIfActivatedEUR = Math.round(totalDailyBudgetIfActivatedEUR * 30 * 100) / 100;
+
+  const relevantCampaignIds = new Set(relevantCampaigns.map((c) => c.id));
+  const realSpendMicros = snapshot.metrics
+    .filter((m) => relevantCampaignIds.has(m.campaignId))
+    .reduce((sum, m) => sum + m.costMicros, 0);
+  const realSpendEUR = Math.round((realSpendMicros / 1_000_000) * 100) / 100;
+
+  const primaryConversionActionNames = snapshot.conversionActions.filter((ca) => ca.primaryForGoal).map((ca) => ca.name);
+  const unexpectedPrimaryConversionActionNames = primaryConversionActionNames.filter(
+    (name) => !EXPECTED_PRIMARY_CONVERSION_SUBSTRINGS.some((expected) => name.toLowerCase().includes(expected))
+  );
+
+  // Deteccion de keywords positivas (mismo texto+matchType) activas
+  // desde mas de una campana relevante a la vez -- p.ej. la legacy
+  // duplicando ad groups con campanas nuevas dedicadas.
+  const adGroupToCampaign = new Map(snapshot.adGroups.map((ag) => [ag.id, { campaignId: ag.campaignId, campaignName: ag.campaignName }]));
+  const kwIndex = new Map<string, Set<string>>();
+  for (const kw of snapshot.positiveKeywords) {
+    if (kw.status === "REMOVED") continue;
+    const ag = adGroupToCampaign.get(kw.adGroupId);
+    if (!ag || !relevantCampaignIds.has(ag.campaignId)) continue;
+    const key = `${kw.text.toLowerCase()}|${kw.matchType}`;
+    if (!kwIndex.has(key)) kwIndex.set(key, new Set());
+    kwIndex.get(key)!.add(ag.campaignName);
+  }
+  const duplicateKeywordWarnings: string[] = [];
+  for (const [key, campaignNames] of kwIndex.entries()) {
+    if (campaignNames.size > 1) {
+      const [text] = key.split("|");
+      duplicateKeywordWarnings.push(`"${text}" se dirige desde ${campaignNames.size} campanas distintas: ${[...campaignNames].join(", ")}`);
+    }
+  }
+
+  return {
+    totalCampaigns: campaigns.length,
+    activeCampaignCount,
+    pausedCampaignCount,
+    allPaused,
+    totalDailyBudgetIfActivatedEUR,
+    totalMonthlyBudgetIfActivatedEUR,
+    campaigns,
+    totalPositiveKeywords: snapshot.positiveKeywords.length,
+    totalNegativeKeywords: snapshot.negativeKeywords.length,
+    realSpendEUR,
+    primaryConversionActionNames,
+    unexpectedPrimaryConversionActionNames,
+    duplicateKeywordWarnings,
+  };
+}
+
 export interface SemWatcherRunResult {
   departmentRunId: string;
   connected: boolean;
@@ -138,6 +241,7 @@ export interface SemWatcherRunResult {
   warnings: string[];
   reportPath: string;
   adsSnapshot?: GoogleAdsSnapshot;
+  departmentSummary?: SemDepartmentSummary;
 }
 
 function formatEur(micros: number): string {
@@ -184,6 +288,34 @@ function buildReportMarkdown(result: SemWatcherRunResult, generatedAt: string): 
     "**Recordatorio:** este agente NO activa la campana, NO cambia presupuesto, NO crea keywords, NO crea anuncios y NO toca conversiones bajo ninguna circunstancia — ni con credenciales reales conectadas."
   );
   lines.push("");
+
+  if (result.departmentSummary) {
+    const d = result.departmentSummary;
+    lines.push("## Departamento SEM — todas las campanas (Fase O45.1/O49.6)");
+    lines.push("");
+    lines.push(`- **Campanas activas/pausadas (no REMOVED):** ${d.totalCampaigns}`);
+    lines.push(`- **Activas (ENABLED):** ${d.activeCampaignCount} · **Pausadas:** ${d.pausedCampaignCount}`);
+    lines.push(`- **Gasto real (ventana ${result.adsSnapshot?.metricsWindow ?? "?"}):** ${d.realSpendEUR.toFixed(2)} EUR`);
+    lines.push(`- **Presupuesto diario total si se activaran todas:** ${d.totalDailyBudgetIfActivatedEUR.toFixed(2)} EUR (~${d.totalMonthlyBudgetIfActivatedEUR.toFixed(2)} EUR/mes)`);
+    lines.push(`- **Keywords positivas (total cuenta):** ${d.totalPositiveKeywords} · **Negativas:** ${d.totalNegativeKeywords}`);
+    lines.push("");
+    lines.push("| Campana | Estado | Presupuesto/dia | Ad groups | Keywords |");
+    lines.push("|---|---|---|---|---|");
+    for (const c of d.campaigns) {
+      lines.push(`| ${c.name} | ${c.status} | ${c.dailyBudgetEUR !== null ? c.dailyBudgetEUR.toFixed(2) + " EUR" : "?"} | ${c.adGroups} | ${c.positiveKeywords} |`);
+    }
+    lines.push("");
+    lines.push(`**Conversiones primarias activas:** ${d.primaryConversionActionNames.length === 0 ? "ninguna" : d.primaryConversionActionNames.join(", ")}.`);
+    if (d.unexpectedPrimaryConversionActionNames.length > 0) {
+      lines.push(`**ALERTA -- conversion primaria inesperada:** ${d.unexpectedPrimaryConversionActionNames.join(", ")}.`);
+    }
+    lines.push("");
+    if (d.duplicateKeywordWarnings.length > 0) {
+      lines.push(`**Keywords duplicadas entre campanas (${d.duplicateKeywordWarnings.length}):**`);
+      for (const w of d.duplicateKeywordWarnings) lines.push(`- ${w}`);
+      lines.push("");
+    }
+  }
 
   if (result.connected && result.adsSnapshot) {
     const snap = result.adsSnapshot;
@@ -367,6 +499,7 @@ export async function runSemWatcher(departmentRunId?: string): Promise<SemWatche
   }
 
   const semCandidates = getSemCandidatesFromCompetitorIntel();
+  const departmentSummary = adsSnapshot ? buildSemDepartmentSummary(adsSnapshot) : undefined;
 
   emitEvent({
     departmentRunId: deptRunId,
@@ -390,6 +523,7 @@ export async function runSemWatcher(departmentRunId?: string): Promise<SemWatche
     warnings,
     reportPath: "",
     adsSnapshot,
+    departmentSummary,
   };
   result.reportPath = writeReport(result, generatedAt);
 
@@ -398,7 +532,25 @@ export async function runSemWatcher(departmentRunId?: string): Promise<SemWatche
     agent: AGENT_NAME,
     type: "agent_finished",
     summary: `SEM Watcher Agent finalizado. Conectado=${connected}. Candidatas SEM: ${semCandidates.length}.`,
-    payload: { connected, campaignStatus: campaignState.status, semCandidateCount: semCandidates.length, reportPath: result.reportPath },
+    // Fase O49 -- payload ampliado para que el informe ejecutivo (ver
+    // growth-director.ts) pueda mostrar un bloque "Departamento SEM" real
+    // en vez de solo si esta conectado o no: nombre/estado/tamaño de la
+    // campana y presupuesto diario configurado (nunca gasto real si no
+    // hay metricas -- la campana sigue PAUSED).
+    payload: {
+      connected,
+      campaignName: campaignState.name,
+      campaignStatus: campaignState.status,
+      adGroups: campaignState.adGroups,
+      positiveKeywords: campaignState.positiveKeywords,
+      negativeKeywords: campaignState.negativeKeywords,
+      responsiveSearchAds: campaignState.responsiveSearchAds,
+      semCandidateCount: semCandidates.length,
+      metricsWindow: adsSnapshot?.metricsWindow,
+      metrics: adsSnapshot?.metrics ?? [],
+      reportPath: result.reportPath,
+      departmentSummary,
+    },
   });
   logger.info("SEM Watcher Agent finalizado", { connected, reportPath: result.reportPath });
 

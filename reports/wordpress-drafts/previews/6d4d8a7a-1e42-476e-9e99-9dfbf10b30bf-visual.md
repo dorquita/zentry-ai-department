@@ -1,10 +1,10 @@
 # Preview VISUAL (local, no publicado) — taquillas colegios
 
 - **draftId:** `6d4d8a7a-1e42-476e-9e99-9dfbf10b30bf`
-- **changePackId:** `5ac544c5-54a6-46f6-bb54-2cc9894804a4` (status: ready_for_review)
+- **changePackId:** `5ac544c5-54a6-46f6-bb54-2cc9894804a4` (status: approved_to_execute)
 - **Plantilla visual:** `sector_landing` — Landing de sector B2B
 - **Por que esta plantilla:** Cuando el change pack apunta a un sector concreto (colegio, gimnasio, hotel, oficina, hospital...) detectado via b2b_sector_terms en config/brand-positioning.json — p.ej. "taquillas escolares", "taquillas para gimnasios".
-- **Generado:** 2026-08-10T13:22:34.347Z
+- **Generado:** 2026-08-14T11:14:01.482Z
 
 > Este fichero es un preview VISUAL local (Fase O12.4), complementario al preview de texto ya generado por el WordPress Draft Agent (`6d4d8a7a-1e42-476e-9e99-9dfbf10b30bf.md`, sin tocar). No se ha llamado a WordPress ni generado ninguna imagen real.
 
@@ -34,12 +34,12 @@ _(3-4 items — 3-4 beneficios especificos del sector (resistencia a humedad en 
 
 Resumen breve de 2-3 materiales/modelos mas adecuados para ESE sector (p.ej. metalica para gimnasios por higiene, melamina para oficinas por estetica), con enlace a la pagina de producto correspondiente — nunca el catalogo completo aqui.
 
-- H2: ¿Que es taquillas colegios?
-- H2: Tipos y materiales disponibles
-- H3: Metalica vs fenolica vs melamina
-- H2: Como elegir la medida correcta
-- H2: Precios y presupuesto
-- H2: Preguntas frecuentes sobre taquillas colegios
+- ¿Que es taquillas colegios?
+- Tipos y materiales disponibles
+- Metalica vs fenolica vs melamina
+- Como elegir la medida correcta
+- Precios y presupuesto
+- Preguntas frecuentes sobre taquillas colegios
 
 ## 🔐 ¿Tambien necesitas cerradura electronica?
 

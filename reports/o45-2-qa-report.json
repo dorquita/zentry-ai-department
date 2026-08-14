@@ -1,0 +1,1230 @@
+{
+  "campaigns": [
+    {
+      "name": "SEM | Producto | Melamina y Fenólicas",
+      "status": "PAUSED",
+      "dailyBudgetEUR": 8,
+      "isLegacy": false,
+      "adGroups": [
+        {
+          "name": "Fenólicas",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "taquillas fenolicas",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas fenolicas",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas fenolicas vestuarios",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "comprar taquillas fenolicas",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas fenolicas precio",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 0,
+          "campaignNegativeCount": 13,
+          "ads": [
+            {
+              "id": "820839833400",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/taquillas-fenolicas/"
+              ],
+              "headlines": [
+                "Taquillas Fenólicas",
+                "Resistente a la Humedad",
+                "Ideales para Piscinas y Duchas",
+                "Precio Público Online",
+                "Para Gimnasios y Deportivos",
+                "Compra Online",
+                "Solicita tu Presupuesto"
+              ],
+              "descriptions": [
+                "Taquillas fenólicas resistentes a la humedad, ideales para vestuarios con duchas.",
+                "Precio público, sin sorpresas. Elige medidas y tipo de cerradura.",
+                "Para gimnasios, piscinas y centros deportivos. Envío a toda España.",
+                "¿Dudas? Escríbenos por WhatsApp, te respondemos rápido."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Melamina",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "taquillas melamina",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas melamina",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquilla melamina",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas de melamina",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "precio taquillas melamina",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 0,
+          "campaignNegativeCount": 13,
+          "ads": [
+            {
+              "id": "820839624177",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/taquillas-melamina/"
+              ],
+              "headlines": [
+                "Taquillas de Melamina",
+                "Precio Público Online",
+                "Diseño Moderno y Resistente",
+                "Para Gimnasios y Colegios",
+                "Elige Color y Cerradura",
+                "Compra Online",
+                "Envío a Toda España",
+                "Solicita tu Presupuesto"
+              ],
+              "descriptions": [
+                "Taquillas de melamina con diseño moderno, resistentes al uso diario.",
+                "Elige anchura, color y tipo de cerradura. Precio público, sin sorpresas.",
+                "Para vestuarios, gimnasios, colegios y empresas. Envío a toda España.",
+                "¿Dudas sobre qué modelo elegir? Escríbenos por WhatsApp."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SEM | ES | Compra | Taquillas / Gimnasios",
+      "status": "PAUSED",
+      "dailyBudgetEUR": 10,
+      "isLegacy": false,
+      "adGroups": [
+        {
+          "name": "Test1",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "venta de taquillas",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas gimnasio",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "comprar taquillas",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "precio taquillas",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "venta de lockers",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas gimnasio",
+              "matchType": "BROAD",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas vestuario",
+              "matchType": "BROAD",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "lockers inteligentes",
+              "matchType": "BROAD",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "lockers gimnasio",
+              "matchType": "BROAD",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas inteligentes",
+              "matchType": "BROAD",
+              "status": "ENABLED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 0,
+          "campaignNegativeCount": 7,
+          "ads": [
+            {
+              "id": "803754613588",
+              "status": "REMOVED",
+              "finalUrls": [
+                "https://zentrylockers.com/"
+              ],
+              "headlines": [
+                "Taquillas inteligentes",
+                "Lockers inteligentes",
+                "Cerraduras inteligentes",
+                "Moderniza tu gimnasio",
+                "Sistema de lockers profesional",
+                "Taquillas con app móvil",
+                "Acceso sin llaves ni tarjetas",
+                "Mejora la experiencia clientes",
+                "Solución completa para centros",
+                "Instalalo rápido en tu centro",
+                "Pide una demo gratuita"
+              ],
+              "descriptions": [
+                "Instala taquillas inteligentes en tu centro. Sin llaves, sin problemas.",
+                "Solución completa: hardware + software + instalación.",
+                "Mejora la experiencia de tus clientes desde el primer día.",
+                "Solicita una demo gratuita en Barcelona."
+              ]
+            },
+            {
+              "id": "820954750268",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/taquillas-para-gimnasios/"
+              ],
+              "headlines": [
+                "Taquillas para Gimnasios",
+                "Cerraduras Inteligentes",
+                "Acceso por App, PIN o RFID",
+                "Precio Público Online",
+                "Resistentes al Uso Diario",
+                "Para Centros Deportivos",
+                "Compra Online",
+                "Solicita tu Presupuesto",
+                "Melamina, Metal o Fenólico",
+                "Envío a Toda España"
+              ],
+              "descriptions": [
+                "Taquillas para gimnasios y centros deportivos, con precio público online.",
+                "Cerraduras inteligentes con PIN, RFID o app. Sin llaves físicas que perder.",
+                "Elige material, medidas y tipo de cerradura. Presupuesto sin compromiso.",
+                "¿Dudas sobre qué modelo elegir? Escríbenos por WhatsApp, respuesta rápida."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SEM | Cerraduras inteligentes",
+      "status": "PAUSED",
+      "dailyBudgetEUR": 7,
+      "isLegacy": false,
+      "adGroups": [
+        {
+          "name": "Cerraduras inteligentes para taquillas",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "cerradura electronica para taquilla",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "cerradura inteligente para taquillas",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "candado inteligente taquilla",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "cerraduras inteligentes taquillas",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "sistema de cierre inteligente para taquillas",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "cerradura smart taquilla",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 0,
+          "campaignNegativeCount": 16,
+          "ads": [
+            {
+              "id": "820839849324",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/cerraduras-para-taquillas/"
+              ],
+              "headlines": [
+                "Cerraduras Inteligentes",
+                "Para Taquillas y Lockers",
+                "Acceso por App, PIN o RFID",
+                "Sin Llaves Físicas",
+                "Adiós a Llaves Perdidas",
+                "Presupuesto Personalizado",
+                "Para Gimnasios y Empresas",
+                "Control de Accesos",
+                "Modelos BOXIS, ARES, NEO",
+                "Pide tu Presupuesto"
+              ],
+              "descriptions": [
+                "Sustituye llaves físicas por PIN, tarjeta RFID o app en tus taquillas.",
+                "Compatibles con taquillas nuevas o ya instaladas. Evaluamos tu caso sin compromiso.",
+                "Reduce pérdidas de llaves y mejora el control de acceso en tus instalaciones.",
+                "Modelos BOXIS, ARES, NEO y ORBIS. Solicita tu presupuesto personalizado."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SEM | Sector | Colegios",
+      "status": "PAUSED",
+      "dailyBudgetEUR": 2,
+      "isLegacy": false,
+      "adGroups": [
+        {
+          "name": "Taquillas para colegios",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "taquillas colegio",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas para colegios",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas escolares",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas para colegios",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas de colegio",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "casilleros colegio",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas colegio",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 0,
+          "campaignNegativeCount": 12,
+          "ads": [
+            {
+              "id": "820954694048",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/taquillas-para-colegios/"
+              ],
+              "headlines": [
+                "Taquillas para Colegios",
+                "Resistentes al Uso Escolar",
+                "Melamina, Metal o Fenólico",
+                "Precio Público Online",
+                "Casilleros para Aulas",
+                "Cerraduras Seguras",
+                "Solicita tu Presupuesto"
+              ],
+              "descriptions": [
+                "Taquillas escolares resistentes, con precio público y sin sorpresas.",
+                "Elige material, medidas y cerradura según las necesidades de tu centro.",
+                "Para colegios, institutos y centros educativos. Envío a toda España.",
+                "¿Dudas? Escríbenos por WhatsApp, te respondemos rápido."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SEM | Sector | Empresas",
+      "status": "PAUSED",
+      "dailyBudgetEUR": 5,
+      "isLegacy": false,
+      "adGroups": [
+        {
+          "name": "Taquillas para empresas",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "lockers para empresas",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas para empresas",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas inteligentes para oficinas",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "taquillas corporativas",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "sistema de taquillas para empleados",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 0,
+          "campaignNegativeCount": 18,
+          "ads": [
+            {
+              "id": "820882076125",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/taquillas-para-empresas/"
+              ],
+              "headlines": [
+                "Taquillas para Empresas",
+                "Lockers para tu Oficina",
+                "Melamina, Metal o Resina",
+                "Seguridad para tus Empleados",
+                "Acceso por App, PIN o RFID",
+                "Taquillas Corporativas",
+                "Bajo Mantenimiento",
+                "Instalación Personalizada",
+                "Solicita tu Presupuesto"
+              ],
+              "descriptions": [
+                "Taquillas para oficinas y vestuarios en melamina, metal, fenólico o resina/ABS.",
+                "Cerraduras inteligentes con app, PIN, tarjeta o RFID. Registro de accesos incluido.",
+                "Seguridad para los efectos personales de cada empleado, con bajo mantenimiento.",
+                "Instalación adaptada a tu espacio y número de usuarios. Presupuesto sin compromiso."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SEM | Marca | Zentry",
+      "status": "PAUSED",
+      "dailyBudgetEUR": 2,
+      "isLegacy": false,
+      "adGroups": [
+        {
+          "name": "Zentry marca",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "zentry",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "zentry lockers",
+              "matchType": "EXACT",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "zentry lockers",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            },
+            {
+              "text": "zentry taquillas",
+              "matchType": "PHRASE",
+              "status": "ENABLED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 0,
+          "campaignNegativeCount": 2,
+          "ads": [
+            {
+              "id": "820839876690",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/"
+              ],
+              "headlines": [
+                "Zentry Lockers",
+                "Taquillas y Cerraduras Smart",
+                "Precio Público, Sin Sorpresas",
+                "Fabricante Español",
+                "Compra Online o Presupuesto",
+                "Solicita tu Presupuesto"
+              ],
+              "descriptions": [
+                "Zentry Lockers: taquillas y cerraduras inteligentes con precio público online.",
+                "Melamina, metálicas, fenólicas y cerraduras electrónicas. Envío a toda España.",
+                "¿Dudas? Escríbenos por WhatsApp, te respondemos rápido."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Zentry Lockers - Search ES - Leads B2B",
+      "status": "PAUSED",
+      "dailyBudgetEUR": 10,
+      "isLegacy": true,
+      "adGroups": [
+        {
+          "name": "Cerraduras inteligentes para taquillas",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "cerradura electronica para taquilla",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "cerradura inteligente para taquillas",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "candado inteligente taquilla",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "cerraduras inteligentes taquillas",
+              "matchType": "PHRASE",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "sistema de cierre inteligente para taquillas",
+              "matchType": "PHRASE",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "cerradura smart taquilla",
+              "matchType": "PHRASE",
+              "status": "PAUSED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 16,
+          "campaignNegativeCount": 0,
+          "ads": [
+            {
+              "id": "819097157881",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/cerraduras-inteligentes-taquillas/"
+              ],
+              "headlines": [
+                "Cerraduras Inteligentes",
+                "Para Taquillas y Lockers",
+                "Acceso por App, PIN o RFID",
+                "Sin Llaves Físicas",
+                "Adiós a Llaves Perdidas",
+                "Presupuesto Personalizado",
+                "Para Gimnasios y Empresas",
+                "Control de Accesos",
+                "Modelos BOXIS, ARES, NEO",
+                "Pide tu Presupuesto"
+              ],
+              "descriptions": [
+                "Sustituye llaves físicas por PIN, tarjeta RFID o app en tus taquillas.",
+                "Compatibles con taquillas nuevas o ya instaladas. Evaluamos tu caso sin compromiso.",
+                "Reduce pérdidas de llaves y mejora el control de acceso en tus instalaciones.",
+                "Modelos BOXIS, ARES, NEO y ORBIS. Solicita tu presupuesto personalizado."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Digitalización de taquillas existentes",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "digitalizar taquillas",
+              "matchType": "PHRASE",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "digitalización de taquillas",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "modernizar taquillas antiguas",
+              "matchType": "PHRASE",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "actualizar cerraduras de taquillas",
+              "matchType": "PHRASE",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "kit digitalización taquillas",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "convertir taquillas en inteligentes",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 13,
+          "campaignNegativeCount": 0,
+          "ads": [
+            {
+              "id": "819054105750",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/digitalizacion-taquillas/"
+              ],
+              "headlines": [
+                "Digitaliza tus Taquillas",
+                "Sin Cambiar el Mobiliario",
+                "Actualiza las Cerraduras",
+                "De Llave a PIN, RFID o App",
+                "Aprovecha tus Taquillas",
+                "Adiós a Llaves Duplicadas",
+                "Solicita tu Presupuesto",
+                "Para Gimnasios y Empresas",
+                "Renueva sin Obra Completa"
+              ],
+              "descriptions": [
+                "Convierte taquillas ya instaladas en inteligentes sin renovar el mobiliario.",
+                "Cambia llaves físicas por PIN, RFID o app. Evaluamos tu caso antes de presupuestar.",
+                "Reduce pérdidas de llaves y mejora el control de acceso en tus instalaciones.",
+                "Solución personalizada según material, medidas y número de taquillas."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Taquillas para empresas",
+          "status": "PAUSED",
+          "positiveKeywords": [
+            {
+              "text": "lockers para empresas",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "taquillas para empresas",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "taquillas inteligentes para oficinas",
+              "matchType": "PHRASE",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "taquillas corporativas",
+              "matchType": "EXACT",
+              "status": "PAUSED",
+              "negative": false
+            },
+            {
+              "text": "sistema de taquillas para empleados",
+              "matchType": "PHRASE",
+              "status": "PAUSED",
+              "negative": false
+            }
+          ],
+          "adGroupNegativeCount": 18,
+          "campaignNegativeCount": 0,
+          "ads": [
+            {
+              "id": "819097382578",
+              "status": "PAUSED",
+              "finalUrls": [
+                "https://zentrylockers.com/taquillas-para-empresas/"
+              ],
+              "headlines": [
+                "Taquillas para Empresas",
+                "Lockers para tu Oficina",
+                "Melamina, Metal o Resina",
+                "Seguridad para tus Empleados",
+                "Acceso por App, PIN o RFID",
+                "Taquillas Corporativas",
+                "Bajo Mantenimiento",
+                "Instalación Personalizada",
+                "Solicita tu Presupuesto"
+              ],
+              "descriptions": [
+                "Taquillas para oficinas y vestuarios en melamina, metal, fenólico o resina/ABS.",
+                "Cerraduras inteligentes con app, PIN, tarjeta o RFID. Registro de accesos incluido.",
+                "Seguridad para los efectos personales de cada empleado, con bajo mantenimiento.",
+                "Instalación adaptada a tu espacio y número de usuarios. Presupuesto sin compromiso."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "allFinalUrls": [
+    "https://zentrylockers.com/taquillas-fenolicas/",
+    "https://zentrylockers.com/taquillas-melamina/",
+    "https://zentrylockers.com/",
+    "https://zentrylockers.com/taquillas-para-gimnasios/",
+    "https://zentrylockers.com/cerraduras-para-taquillas/",
+    "https://zentrylockers.com/taquillas-para-colegios/",
+    "https://zentrylockers.com/taquillas-para-empresas/",
+    "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+    "https://zentrylockers.com/digitalizacion-taquillas/"
+  ],
+  "forbiddenHits": [],
+  "keywordIndexNewOnly": {
+    "taquillas fenolicas|EXACT": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas fenolicas|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas fenolicas vestuarios|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "comprar taquillas fenolicas|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas fenolicas precio|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas melamina|EXACT": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas melamina|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquilla melamina|EXACT": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas de melamina|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "precio taquillas melamina|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "venta de taquillas|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "taquillas gimnasio|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "comprar taquillas|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "precio taquillas|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "venta de lockers|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "taquillas gimnasio|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "taquillas vestuario|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "lockers inteligentes|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "lockers gimnasio|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "taquillas inteligentes|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "cerradura electronica para taquilla|EXACT": [
+      "SEM | Cerraduras inteligentes"
+    ],
+    "cerradura inteligente para taquillas|EXACT": [
+      "SEM | Cerraduras inteligentes"
+    ],
+    "candado inteligente taquilla|EXACT": [
+      "SEM | Cerraduras inteligentes"
+    ],
+    "cerraduras inteligentes taquillas|PHRASE": [
+      "SEM | Cerraduras inteligentes"
+    ],
+    "sistema de cierre inteligente para taquillas|PHRASE": [
+      "SEM | Cerraduras inteligentes"
+    ],
+    "cerradura smart taquilla|PHRASE": [
+      "SEM | Cerraduras inteligentes"
+    ],
+    "taquillas colegio|EXACT": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas para colegios|EXACT": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas escolares|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas para colegios|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas de colegio|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "casilleros colegio|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas colegio|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "lockers para empresas|EXACT": [
+      "SEM | Sector | Empresas"
+    ],
+    "taquillas para empresas|EXACT": [
+      "SEM | Sector | Empresas"
+    ],
+    "taquillas inteligentes para oficinas|PHRASE": [
+      "SEM | Sector | Empresas"
+    ],
+    "taquillas corporativas|EXACT": [
+      "SEM | Sector | Empresas"
+    ],
+    "sistema de taquillas para empleados|PHRASE": [
+      "SEM | Sector | Empresas"
+    ],
+    "zentry|EXACT": [
+      "SEM | Marca | Zentry"
+    ],
+    "zentry lockers|EXACT": [
+      "SEM | Marca | Zentry"
+    ],
+    "zentry lockers|PHRASE": [
+      "SEM | Marca | Zentry"
+    ],
+    "zentry taquillas|PHRASE": [
+      "SEM | Marca | Zentry"
+    ]
+  },
+  "keywordIndexAll": {
+    "taquillas fenolicas|EXACT": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas fenolicas|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas fenolicas vestuarios|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "comprar taquillas fenolicas|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas fenolicas precio|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas melamina|EXACT": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas melamina|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquilla melamina|EXACT": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "taquillas de melamina|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "precio taquillas melamina|PHRASE": [
+      "SEM | Producto | Melamina y Fenólicas"
+    ],
+    "venta de taquillas|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "taquillas gimnasio|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "comprar taquillas|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "precio taquillas|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "venta de lockers|EXACT": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "taquillas gimnasio|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "taquillas vestuario|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "lockers inteligentes|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "lockers gimnasio|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "taquillas inteligentes|BROAD": [
+      "SEM | ES | Compra | Taquillas / Gimnasios"
+    ],
+    "cerradura electronica para taquilla|EXACT": [
+      "SEM | Cerraduras inteligentes",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "cerradura inteligente para taquillas|EXACT": [
+      "SEM | Cerraduras inteligentes",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "candado inteligente taquilla|EXACT": [
+      "SEM | Cerraduras inteligentes",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "cerraduras inteligentes taquillas|PHRASE": [
+      "SEM | Cerraduras inteligentes",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "sistema de cierre inteligente para taquillas|PHRASE": [
+      "SEM | Cerraduras inteligentes",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "cerradura smart taquilla|PHRASE": [
+      "SEM | Cerraduras inteligentes",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "taquillas colegio|EXACT": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas para colegios|EXACT": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas escolares|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas para colegios|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas de colegio|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "casilleros colegio|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "taquillas colegio|PHRASE": [
+      "SEM | Sector | Colegios"
+    ],
+    "lockers para empresas|EXACT": [
+      "SEM | Sector | Empresas",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "taquillas para empresas|EXACT": [
+      "SEM | Sector | Empresas",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "taquillas inteligentes para oficinas|PHRASE": [
+      "SEM | Sector | Empresas",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "taquillas corporativas|EXACT": [
+      "SEM | Sector | Empresas",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "sistema de taquillas para empleados|PHRASE": [
+      "SEM | Sector | Empresas",
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "zentry|EXACT": [
+      "SEM | Marca | Zentry"
+    ],
+    "zentry lockers|EXACT": [
+      "SEM | Marca | Zentry"
+    ],
+    "zentry lockers|PHRASE": [
+      "SEM | Marca | Zentry"
+    ],
+    "zentry taquillas|PHRASE": [
+      "SEM | Marca | Zentry"
+    ],
+    "digitalizar taquillas|PHRASE": [
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "digitalización de taquillas|EXACT": [
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "modernizar taquillas antiguas|PHRASE": [
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "actualizar cerraduras de taquillas|PHRASE": [
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "kit digitalización taquillas|EXACT": [
+      "Zentry Lockers - Search ES - Leads B2B"
+    ],
+    "convertir taquillas en inteligentes|EXACT": [
+      "Zentry Lockers - Search ES - Leads B2B"
+    ]
+  },
+  "conversionActions": [
+    {
+      "name": "Envío de formulario para clientes potenciales",
+      "status": "ENABLED",
+      "primaryForGoal": false,
+      "category": "SUBMIT_LEAD_FORM",
+      "type": "WEBPAGE_CODELESS"
+    },
+    {
+      "name": "Formulario de contacto - Enviar",
+      "status": "ENABLED",
+      "primaryForGoal": false,
+      "category": "SUBMIT_LEAD_FORM",
+      "type": "LEAD_FORM_SUBMIT"
+    },
+    {
+      "name": "Envío de formulario para clientes potenciales (1)",
+      "status": "ENABLED",
+      "primaryForGoal": false,
+      "category": "SUBMIT_LEAD_FORM",
+      "type": "WEBPAGE"
+    },
+    {
+      "name": "Solicitud de presupuesto",
+      "status": "ENABLED",
+      "primaryForGoal": false,
+      "category": "REQUEST_QUOTE",
+      "type": "WEBPAGE"
+    },
+    {
+      "name": "www.zentrylockers.com (web) close_convert_lead",
+      "status": "HIDDEN",
+      "primaryForGoal": false,
+      "category": "CONVERTED_LEAD",
+      "type": "GOOGLE_ANALYTICS_4_CLOSE_CONVERT_LEAD"
+    },
+    {
+      "name": "www.zentrylockers.com (web) qualify_lead",
+      "status": "HIDDEN",
+      "primaryForGoal": false,
+      "category": "QUALIFIED_LEAD",
+      "type": "GOOGLE_ANALYTICS_4_QUALIFY_LEAD"
+    },
+    {
+      "name": "www.zentrylockers.com (web) purchase",
+      "status": "HIDDEN",
+      "primaryForGoal": false,
+      "category": "PURCHASE",
+      "type": "GOOGLE_ANALYTICS_4_PURCHASE"
+    },
+    {
+      "name": "www.zentrylockers.com (web) generate_lead_form_submit",
+      "status": "ENABLED",
+      "primaryForGoal": true,
+      "category": "DEFAULT",
+      "type": "GOOGLE_ANALYTICS_4_CUSTOM"
+    },
+    {
+      "name": "www.zentrylockers.com (web) click_whatsapp",
+      "status": "ENABLED",
+      "primaryForGoal": true,
+      "category": "DEFAULT",
+      "type": "GOOGLE_ANALYTICS_4_CUSTOM"
+    },
+    {
+      "name": "www.zentrylockers.com (web) click_phone",
+      "status": "ENABLED",
+      "primaryForGoal": true,
+      "category": "DEFAULT",
+      "type": "GOOGLE_ANALYTICS_4_CUSTOM"
+    },
+    {
+      "name": "www.zentrylockers.com (web) click_request_quote",
+      "status": "ENABLED",
+      "primaryForGoal": false,
+      "category": "DEFAULT",
+      "type": "GOOGLE_ANALYTICS_4_CUSTOM"
+    }
+  ],
+  "duplicateKeywordsAmongNewCampaigns": [],
+  "duplicateKeywordsIncludingLegacy": [
+    {
+      "keyword": "cerradura electronica para taquilla|EXACT",
+      "campaigns": [
+        "SEM | Cerraduras inteligentes",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "cerradura inteligente para taquillas|EXACT",
+      "campaigns": [
+        "SEM | Cerraduras inteligentes",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "candado inteligente taquilla|EXACT",
+      "campaigns": [
+        "SEM | Cerraduras inteligentes",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "cerraduras inteligentes taquillas|PHRASE",
+      "campaigns": [
+        "SEM | Cerraduras inteligentes",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "sistema de cierre inteligente para taquillas|PHRASE",
+      "campaigns": [
+        "SEM | Cerraduras inteligentes",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "cerradura smart taquilla|PHRASE",
+      "campaigns": [
+        "SEM | Cerraduras inteligentes",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "lockers para empresas|EXACT",
+      "campaigns": [
+        "SEM | Sector | Empresas",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "taquillas para empresas|EXACT",
+      "campaigns": [
+        "SEM | Sector | Empresas",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "taquillas inteligentes para oficinas|PHRASE",
+      "campaigns": [
+        "SEM | Sector | Empresas",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "taquillas corporativas|EXACT",
+      "campaigns": [
+        "SEM | Sector | Empresas",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    },
+    {
+      "keyword": "sistema de taquillas para empleados|PHRASE",
+      "campaigns": [
+        "SEM | Sector | Empresas",
+        "Zentry Lockers - Search ES - Leads B2B"
+      ]
+    }
+  ]
+}

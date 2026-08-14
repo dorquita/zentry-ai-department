@@ -1,5 +1,6 @@
 import { google, analyticsdata_v1beta } from "googleapis";
 import { logger } from "../core/logger";
+import { recordCredentialFailure, recordCredentialSuccess } from "../core/credential-health";
 import {
   loadActiveClientAnalyticsConfig,
   resolveActiveClientId,
@@ -225,10 +226,12 @@ export async function getGa4Snapshot(): Promise<Ga4Snapshot> {
       sourceMediumRows: sourceMedium.length,
     });
 
+    recordCredentialSuccess("ga4");
     return { propertyId, measurementId, startDate, endDate, channelTraffic, topLandingPages, events, sourceMedium };
   } catch (err) {
     const safeMessage = sanitizeError(err);
     logger.error("Fallo la lectura de GA4", { error: safeMessage });
+    recordCredentialFailure("ga4", safeMessage);
     throw new Error(`Lectura de GA4 fallo: ${safeMessage}`);
   }
 }

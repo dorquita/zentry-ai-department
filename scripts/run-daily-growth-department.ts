@@ -103,6 +103,7 @@ dotenv.config();
 import * as fs from "fs";
 import * as path from "path";
 import { buildDepartmentRunId } from "../src/core/department-run-id";
+import { runPipelineStep } from "../src/core/pipeline-step";
 import { runSeoWatcher } from "../src/agents/seo-watcher";
 import { runSeoDirector } from "../src/agents/seo-director";
 import { runCompetitorIntelligence } from "../src/agents/competitor-intelligence";
@@ -149,9 +150,18 @@ function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/**
+ * Fase O49.7 -- el cuerpo del email ya NO es el informe ejecutivo completo
+ * envuelto en un `<pre>` (ilegible, parecia un log). Ahora es el resumen
+ * compacto de 8 bloques que growth-director.ts ya construyo (`emailHtml`/
+ * `emailText`, ver src/core/executive-report.ts) -- el informe completo
+ * sigue existiendo integro en `executiveReportPath` para quien quiera el
+ * detalle, solo que ya no es lo que llega al correo.
+ */
 function buildEmailContent(
   departmentRunId: string,
-  executiveReportPath: string,
+  emailHtml: string,
+  emailText: string,
   preparedForReviewCount: number,
   pendingDecisionCount: number
 ): EmailContent {
@@ -161,10 +171,7 @@ function buildEmailContent(
     pendingDecisionCount > 0
       ? `Web & Growth — Informe diario ${dateLabel}: ${preparedForReviewCount} propuesta(s) preparada(s), ${pendingDecisionCount} por aprobar`
       : `Web & Growth — Informe diario ${dateLabel}: ${preparedForReviewCount} propuesta(s) preparada(s), sin decisiones pendientes`;
-  const reportMarkdown = fs.readFileSync(executiveReportPath, "utf-8");
-  const text = reportMarkdown;
-  const html = `<pre style="font-family: monospace; white-space: pre-wrap; font-size: 13px;">${escapeHtml(reportMarkdown)}</pre>`;
-  return { subject, text, html };
+  return { subject, text: emailText, html: emailHtml };
 }
 
 /**
@@ -212,6 +219,25 @@ function runDryRunPass(clientConfig: ClientConfig): void {
   console.log("\nDry-run completo. Ningun agente real se ejecuto, ningun email se envio, ninguna red se toco.");
 }
 
+/**
+ * Fase O49 — email de emergencia cuando Growth Director (paso 25) fallo
+ * de verdad (no solo su fallback interno, que ya existia desde la Fase
+ * O9 — esto es el caso mas raro: una excepcion que ni su propio fallback
+ * pudo absorber). Nunca deja el dia sin ningun email. Cero IDs/rutas/
+ * nombres de agente, igual que exige el resto del informe ejecutivo.
+ */
+function buildEmergencyEmailContent(dateLabel: string, failedStepCount: number): EmailContent {
+  const subject = `Web & Growth — Informe diario ${dateLabel}: fallo al generar el informe, revision tecnica pendiente`;
+  const text = [
+    `El pase diario del departamento Web & Growth se ejecuto el ${dateLabel}, pero el paso final de generacion del informe fallo de forma inesperada.`,
+    "",
+    `${failedStepCount} paso(s) del pase de hoy tambien fallaron y quedaron aislados (no bloquearon al resto).`,
+    "",
+    "Esto es un fallo tecnico del propio sistema de informes, no una decision de negocio pendiente. Se necesita revision manual de los logs del servidor antes del proximo pase.",
+  ].join("\n");
+  return { subject, text, html: `<pre style="font-family: monospace; white-space: pre-wrap; font-size: 13px;">${escapeHtml(text)}</pre>` };
+}
+
 async function runRealPass(): Promise<void> {
   assertRealDataSource();
 
@@ -219,126 +245,188 @@ async function runRealPass(): Promise<void> {
   logger.info("Pase diario del departamento Web & Growth: inicio", { departmentRunId });
   console.log(`departmentRunId: ${departmentRunId}`);
 
-  console.log(`\n[1/${TOTAL_STEPS}] SEO Watcher...`);
-  const seoWatcherResult = await runSeoWatcher(departmentRunId);
-  console.log(`  ${seoWatcherResult.jobs.length} oportunidad(es), ${seoWatcherResult.rowsRead} fila(s) leidas.`);
+  let failedStepCount = 0;
+  const step = async <T>(stepNumber: number, agentName: string, label: string, fn: () => Promise<T>): Promise<T | null> => {
+    const result = await runPipelineStep(departmentRunId, stepNumber, TOTAL_STEPS, agentName, label, fn);
+    if (result === null) failedStepCount += 1;
+    return result;
+  };
 
-  console.log(`[2/${TOTAL_STEPS}] SEO Director...`);
-  const seoDirectorResult = await runSeoDirector(departmentRunId);
-  console.log(`  ${seoDirectorResult.items.length} accion(es) agrupada(s).`);
+  // Fase O49 — cada paso 1-24 esta aislado: si uno lanza, se registra
+  // (step_failed en el bus + credential-health.jsonl para errores de
+  // auth) y el pase CONTINUA con el siguiente paso. Antes de esta fase,
+  // un solo fallo (ej. invalid_grant, ver 2026-08-10) tiraba las 26
+  // etapas y no se enviaba ningun email ese dia.
 
-  console.log(`[3/${TOTAL_STEPS}] Competitor Intelligence...`);
-  const competitorResult = await runCompetitorIntelligence(departmentRunId);
-  console.log(
-    `  ${competitorResult.pages.filter((p) => p.status === "ok").length}/${competitorResult.pages.length} paginas leidas, ${competitorResult.keywordGaps.length} gap(s) de keyword.`
+  const seoWatcherResult = await step(1, "seo-watcher", "SEO Watcher", () => runSeoWatcher(departmentRunId));
+  if (seoWatcherResult) console.log(`  ${seoWatcherResult.jobs.length} oportunidad(es), ${seoWatcherResult.rowsRead} fila(s) leidas.`);
+
+  const seoDirectorResult = await step(2, "seo-director", "SEO Director", () => runSeoDirector(departmentRunId));
+  if (seoDirectorResult) console.log(`  ${seoDirectorResult.items.length} accion(es) agrupada(s).`);
+
+  const competitorResult = await step(3, "competitor-intelligence", "Competitor Intelligence", () => runCompetitorIntelligence(departmentRunId));
+  if (competitorResult)
+    console.log(
+      `  ${competitorResult.pages.filter((p) => p.status === "ok").length}/${competitorResult.pages.length} paginas leidas, ${competitorResult.keywordGaps.length} gap(s) de keyword.`
+    );
+
+  const contentResult = await step(4, "content-planner", "Content Planner", () => runContentPlanner(departmentRunId));
+  if (contentResult) console.log(`  ${contentResult.items.length} propuesta(s) de contenido.`);
+
+  const croResult = await step(5, "cro-landing-reviewer", "CRO / Landing Reviewer", () => runCroLandingReviewer(departmentRunId));
+  if (croResult) console.log(`  ${croResult.reviews.length} landing(s) revisada(s).`);
+
+  const semResult = await step(6, "sem-watcher", "SEM Watcher", () => runSemWatcher(departmentRunId));
+  if (semResult) console.log(`  conectado=${semResult.connected}, campana=${semResult.campaignState.status}.`);
+
+  const analyticsResult = await step(7, "analytics-watcher", "Analytics Watcher", () => runAnalyticsWatcher(departmentRunId));
+  if (analyticsResult) console.log(`  GA4 conectado=${analyticsResult.ga4Connected}, GTM conectado=${analyticsResult.gtmConnected}.`);
+
+  const approvalQueueResult = await step(8, "approval-queue", "Approval Queue (deduplicando y aplicando la politica de autonomia)", () =>
+    runApprovalQueue(departmentRunId)
+  );
+  if (approvalQueueResult)
+    console.log(
+      `  auto_procesadas=${approvalQueueResult.autoProcessedActions.length} auto_aprobadas_planificacion=${approvalQueueResult.autoApprovedForPlanningActions.length} pend_aprobacion=${approvalQueueResult.waitingApprovalActions.length} bloqueadas=${approvalQueueResult.blockedActionsThisRun.length}`
+    );
+
+  const approvedActionPlannerResult = await step(9, "approved-action-planner", "Approved Action Planner (creando work orders draft)", () =>
+    runApprovedActionPlanner(departmentRunId)
+  );
+  if (approvedActionPlannerResult)
+    console.log(
+      `  planificables=${approvedActionPlannerResult.approvedActionCount} (humanas=${approvedActionPlannerResult.humanApprovedCount}, auto=${approvedActionPlannerResult.autoApprovedForPlanningCount}) nuevas_work_orders=${approvedActionPlannerResult.newWorkOrders.length}`
+    );
+
+  const seoWorkOrderResult = await step(10, "seo-work-order-builder", "SEO Work Order Builder", () => runSeoWorkOrderBuilder(departmentRunId));
+  if (seoWorkOrderResult) console.log(`  ${seoWorkOrderResult.enrichedWorkOrders.length} work order(s) SEO ampliada(s).`);
+
+  const contentWorkOrderResult = await step(11, "content-work-order-builder", "Content Work Order Builder", () =>
+    runContentWorkOrderBuilder(departmentRunId)
+  );
+  if (contentWorkOrderResult) console.log(`  ${contentWorkOrderResult.enrichedWorkOrders.length} brief(s) de contenido generado(s).`);
+
+  const croWorkOrderResult = await step(12, "cro-work-order-builder", "CRO Work Order Builder", () => runCroWorkOrderBuilder(departmentRunId));
+  if (croWorkOrderResult) console.log(`  ${croWorkOrderResult.enrichedWorkOrders.length} propuesta(s) CRO generada(s).`);
+
+  const seoChangePackResult = await step(13, "seo-change-pack-builder", "SEO Change Pack Builder", () => runSeoChangePackBuilder(departmentRunId));
+  if (seoChangePackResult) console.log(`  ${seoChangePackResult.newChangePacks.length} change pack(s) SEO nuevo(s).`);
+
+  const contentChangePackResult = await step(14, "content-change-pack-builder", "Content Change Pack Builder", () =>
+    runContentChangePackBuilder(departmentRunId)
+  );
+  if (contentChangePackResult) console.log(`  ${contentChangePackResult.newChangePacks.length} change pack(s) de contenido nuevo(s).`);
+
+  const croChangePackResult = await step(15, "cro-change-pack-builder", "CRO Change Pack Builder", () => runCroChangePackBuilder(departmentRunId));
+  if (croChangePackResult) console.log(`  ${croChangePackResult.newChangePacks.length} change pack(s) CRO nuevo(s).`);
+
+  const uxUiResult = await step(
+    16,
+    "ux-ui-landing-architect",
+    "UX/UI Landing Architect (estructura visual ANTES de escribir HTML, Fase O13.6b)",
+    () => runUxUiLandingArchitect(departmentRunId)
+  );
+  if (uxUiResult) console.log(`  blueprints_nuevos=${uxUiResult.newBlueprints.length} total_blueprints=${uxUiResult.totalBlueprintCount}`);
+
+  const wordpressDraftResult = await step(
+    17,
+    "wordpress-draft-agent",
+    `WordPress Draft Agent (previews locales${process.env.WORDPRESS_DRAFTS_ENABLED === "true" ? " + borradores reales si hay aprobacion" : ""})`,
+    () => runWordpressDraftAgent(departmentRunId)
+  );
+  if (wordpressDraftResult)
+    console.log(
+      `  wordpress_drafts_enabled=${wordpressDraftResult.wordpressDraftsEnabled} wordpress_backend=${wordpressDraftResult.wordpressBackend} wordpress_env=${wordpressDraftResult.wordpressEnv} destino=${wordpressDraftResult.wordpressTargetUrl ?? "(no configurado)"} previews_nuevos=${wordpressDraftResult.newLocalPreviews.length} borradores_wp_nuevos=${wordpressDraftResult.newWordpressDrafts.length} pendientes_aprobacion=${wordpressDraftResult.pendingApprovalCount}`
+    );
+
+  const visualTemplateResult = await step(18, "visual-template-builder", "Visual Template Builder (previews visuales, planificacion)", () =>
+    runVisualTemplateBuilder(departmentRunId)
+  );
+  if (visualTemplateResult)
+    console.log(
+      `  previews_visuales_nuevos=${visualTemplateResult.newVisualPreviews.length} total=${visualTemplateResult.totalVisualPreviewCount}`
+    );
+
+  const visualAssetResult = await step(19, "visual-asset-planner", "Visual Asset Planner (propuesta de assets, n8n NO se ejecuta)", () =>
+    runVisualAssetPlanner(departmentRunId)
+  );
+  if (visualAssetResult)
+    console.log(
+      `  asset_requests_nuevas=${visualAssetResult.newAssetRequests.length} total_propuestas=${visualAssetResult.totalAssetRequestCount} n8n_configurado=${visualAssetResult.n8nConfigured} (no llamado)`
+    );
+
+  const stagingExecutorResult = await step(
+    20,
+    "staging-executor",
+    `Staging Executor (ejecucion controlada${process.env.STAGING_EXECUTION_ENABLED === "true" ? ", real si hay aprobacion" : " — desactivado, solo cola de aprobacion"})`,
+    () => runStagingExecutor(departmentRunId)
+  );
+  if (stagingExecutorResult)
+    console.log(
+      `  puede_escribir=${stagingExecutorResult.canAttemptRealWrites} en_cola_nuevas=${stagingExecutorResult.newPendingExecutions.length} aplicadas=${stagingExecutorResult.appliedThisPass.length} fallidas=${stagingExecutorResult.failedThisPass.length} pendientes_aprobacion=${stagingExecutorResult.pendingApprovalCount}`
+    );
+
+  const stagingQaResult = await step(21, "staging-qa-agent", "Staging QA Agent (solo lectura)", () => runStagingQaAgent(departmentRunId));
+  if (stagingQaResult)
+    console.log(
+      `  staging_200=${stagingQaResult.siteHealth.status200} noindex=${stagingQaResult.siteHealth.noindexPresent} verificados=${stagingQaResult.checkedCount} pasan=${stagingQaResult.passCount} fallan=${stagingQaResult.failCount}`
+    );
+
+  const approvalGatewayResult = await step(
+    22,
+    "approval-gateway",
+    "Approval Gateway (notificando lo que requiera aprobacion real)",
+    () => runApprovalGateway(departmentRunId)
+  );
+  if (approvalGatewayResult)
+    console.log(
+      `  telegram_activo=${approvalGatewayResult.telegramEnabled} nuevas_solicitudes=${approvalGatewayResult.newRequests.length} enviadas=${approvalGatewayResult.sentViaTelegram.length}`
+    );
+
+  const productionPlannerResult = await step(
+    23,
+    "production-deployment-planner",
+    "Production Deployment Planner (solo planificacion, produccion no se toca)",
+    () => runProductionDeploymentPlanner(departmentRunId)
+  );
+  if (productionPlannerResult)
+    console.log(
+      `  planes_nuevos=${productionPlannerResult.newPlans.length} total_planes=${productionPlannerResult.totalPlanCount} omitidos_sin_qa_pass=${productionPlannerResult.skippedNoQaPass} nuevas_solicitudes_aprobacion=${productionPlannerResult.newApprovalRequests} produccion_tocada=false`
+    );
+
+  const productionExecutorResult = await step(
+    24,
+    "production-draft-executor",
+    "Production Draft Executor (ejecucion controlada de produccion, gateada)",
+    () => runProductionDraftExecutor(departmentRunId)
+  );
+  if (productionExecutorResult)
+    console.log(
+      `  can_attempt_real_writes=${productionExecutorResult.canAttemptRealWrites} pendientes_nuevas=${productionExecutorResult.newPendingExecutions.length} aplicadas=${productionExecutorResult.appliedThisPass.length} fallidas=${productionExecutorResult.failedThisPass.length} pendientes_aprobacion_ejecucion=${productionExecutorResult.pendingApprovalCount}`
+    );
+
+  // Fase O49 — pasos 25/26 SIEMPRE se intentan si se llego hasta aqui,
+  // pase lo que pase con los pasos anteriores: el email tiene que salir
+  // si o si. Growth Director ya tenia su propio fallback interno desde
+  // la Fase O9 (buildFallbackExecutiveReportMarkdown); aqui anadimos una
+  // ultima red de seguridad para el caso, mas raro, de que el propio
+  // paso 25 lance una excepcion no capturada dentro.
+  const dateLabelForEmergency = departmentRunId.match(/growth-department-(\d{4}-\d{2}-\d{2})T/)?.[1] ?? new Date().toISOString().slice(0, 10);
+  const growthResult = await step(25, "growth-director", "Growth Director (consolidando informe ejecutivo + tecnico)", () =>
+    runGrowthDirector(departmentRunId)
   );
 
-  console.log(`[4/${TOTAL_STEPS}] Content Planner...`);
-  const contentResult = await runContentPlanner(departmentRunId);
-  console.log(`  ${contentResult.items.length} propuesta(s) de contenido.`);
+  if (!growthResult) {
+    console.log(`[26/${TOTAL_STEPS}] Growth Director fallo — enviando email de emergencia igualmente...`);
+    await sendReportEmail(buildEmergencyEmailContent(dateLabelForEmergency, failedStepCount));
+    logger.error("Pase diario del departamento Web & Growth: Growth Director fallo, se envio email de emergencia", {
+      departmentRunId,
+      failedStepCount,
+    });
+    console.log(`\nPase diario finalizado con fallo en Growth Director. departmentRunId=${departmentRunId}. Pasos fallidos: ${failedStepCount}.`);
+    return;
+  }
 
-  console.log(`[5/${TOTAL_STEPS}] CRO / Landing Reviewer...`);
-  const croResult = await runCroLandingReviewer(departmentRunId);
-  console.log(`  ${croResult.reviews.length} landing(s) revisada(s).`);
-
-  console.log(`[6/${TOTAL_STEPS}] SEM Watcher...`);
-  const semResult = await runSemWatcher(departmentRunId);
-  console.log(`  conectado=${semResult.connected}, campana=${semResult.campaignState.status}.`);
-
-  console.log(`[7/${TOTAL_STEPS}] Analytics Watcher...`);
-  const analyticsResult = await runAnalyticsWatcher(departmentRunId);
-  console.log(`  GA4 conectado=${analyticsResult.ga4Connected}, GTM conectado=${analyticsResult.gtmConnected}.`);
-
-  console.log(`[8/${TOTAL_STEPS}] Approval Queue (deduplicando y aplicando la politica de autonomia)...`);
-  const approvalQueueResult = await runApprovalQueue(departmentRunId);
-  console.log(
-    `  auto_procesadas=${approvalQueueResult.autoProcessedActions.length} auto_aprobadas_planificacion=${approvalQueueResult.autoApprovedForPlanningActions.length} pend_aprobacion=${approvalQueueResult.waitingApprovalActions.length} bloqueadas=${approvalQueueResult.blockedActionsThisRun.length}`
-  );
-
-  console.log(`[9/${TOTAL_STEPS}] Approved Action Planner (creando work orders draft)...`);
-  const approvedActionPlannerResult = await runApprovedActionPlanner(departmentRunId);
-  console.log(
-    `  planificables=${approvedActionPlannerResult.approvedActionCount} (humanas=${approvedActionPlannerResult.humanApprovedCount}, auto=${approvedActionPlannerResult.autoApprovedForPlanningCount}) nuevas_work_orders=${approvedActionPlannerResult.newWorkOrders.length}`
-  );
-
-  console.log(`[10/${TOTAL_STEPS}] SEO Work Order Builder...`);
-  const seoWorkOrderResult = await runSeoWorkOrderBuilder(departmentRunId);
-  console.log(`  ${seoWorkOrderResult.enrichedWorkOrders.length} work order(s) SEO ampliada(s).`);
-
-  console.log(`[11/${TOTAL_STEPS}] Content Work Order Builder...`);
-  const contentWorkOrderResult = await runContentWorkOrderBuilder(departmentRunId);
-  console.log(`  ${contentWorkOrderResult.enrichedWorkOrders.length} brief(s) de contenido generado(s).`);
-
-  console.log(`[12/${TOTAL_STEPS}] CRO Work Order Builder...`);
-  const croWorkOrderResult = await runCroWorkOrderBuilder(departmentRunId);
-  console.log(`  ${croWorkOrderResult.enrichedWorkOrders.length} propuesta(s) CRO generada(s).`);
-
-  console.log(`[13/${TOTAL_STEPS}] SEO Change Pack Builder...`);
-  const seoChangePackResult = await runSeoChangePackBuilder(departmentRunId);
-  console.log(`  ${seoChangePackResult.newChangePacks.length} change pack(s) SEO nuevo(s).`);
-
-  console.log(`[14/${TOTAL_STEPS}] Content Change Pack Builder...`);
-  const contentChangePackResult = await runContentChangePackBuilder(departmentRunId);
-  console.log(`  ${contentChangePackResult.newChangePacks.length} change pack(s) de contenido nuevo(s).`);
-
-  console.log(`[15/${TOTAL_STEPS}] CRO Change Pack Builder...`);
-  const croChangePackResult = await runCroChangePackBuilder(departmentRunId);
-  console.log(`  ${croChangePackResult.newChangePacks.length} change pack(s) CRO nuevo(s).`);
-
-  console.log(`[16/${TOTAL_STEPS}] UX/UI Landing Architect (estructura visual ANTES de escribir HTML, Fase O13.6b)...`);
-  const uxUiResult = await runUxUiLandingArchitect(departmentRunId);
-  console.log(`  blueprints_nuevos=${uxUiResult.newBlueprints.length} total_blueprints=${uxUiResult.totalBlueprintCount}`);
-
-  console.log(`[17/${TOTAL_STEPS}] WordPress Draft Agent (previews locales${process.env.WORDPRESS_DRAFTS_ENABLED === "true" ? " + borradores reales si hay aprobacion" : ""})...`);
-  const wordpressDraftResult = await runWordpressDraftAgent(departmentRunId);
-  console.log(
-    `  wordpress_drafts_enabled=${wordpressDraftResult.wordpressDraftsEnabled} wordpress_backend=${wordpressDraftResult.wordpressBackend} wordpress_env=${wordpressDraftResult.wordpressEnv} destino=${wordpressDraftResult.wordpressTargetUrl ?? "(no configurado)"} previews_nuevos=${wordpressDraftResult.newLocalPreviews.length} borradores_wp_nuevos=${wordpressDraftResult.newWordpressDrafts.length} pendientes_aprobacion=${wordpressDraftResult.pendingApprovalCount}`
-  );
-
-  console.log(`[18/${TOTAL_STEPS}] Visual Template Builder (previews visuales, planificacion)...`);
-  const visualTemplateResult = await runVisualTemplateBuilder(departmentRunId);
-  console.log(
-    `  previews_visuales_nuevos=${visualTemplateResult.newVisualPreviews.length} total=${visualTemplateResult.totalVisualPreviewCount}`
-  );
-
-  console.log(`[19/${TOTAL_STEPS}] Visual Asset Planner (propuesta de assets, n8n NO se ejecuta)...`);
-  const visualAssetResult = await runVisualAssetPlanner(departmentRunId);
-  console.log(
-    `  asset_requests_nuevas=${visualAssetResult.newAssetRequests.length} total_propuestas=${visualAssetResult.totalAssetRequestCount} n8n_configurado=${visualAssetResult.n8nConfigured} (no llamado)`
-  );
-
-  console.log(`[20/${TOTAL_STEPS}] Staging Executor (ejecucion controlada${process.env.STAGING_EXECUTION_ENABLED === "true" ? ", real si hay aprobacion" : " — desactivado, solo cola de aprobacion"})...`);
-  const stagingExecutorResult = await runStagingExecutor(departmentRunId);
-  console.log(
-    `  puede_escribir=${stagingExecutorResult.canAttemptRealWrites} en_cola_nuevas=${stagingExecutorResult.newPendingExecutions.length} aplicadas=${stagingExecutorResult.appliedThisPass.length} fallidas=${stagingExecutorResult.failedThisPass.length} pendientes_aprobacion=${stagingExecutorResult.pendingApprovalCount}`
-  );
-
-  console.log(`[21/${TOTAL_STEPS}] Staging QA Agent (solo lectura)...`);
-  const stagingQaResult = await runStagingQaAgent(departmentRunId);
-  console.log(
-    `  staging_200=${stagingQaResult.siteHealth.status200} noindex=${stagingQaResult.siteHealth.noindexPresent} verificados=${stagingQaResult.checkedCount} pasan=${stagingQaResult.passCount} fallan=${stagingQaResult.failCount}`
-  );
-
-  console.log(`[22/${TOTAL_STEPS}] Approval Gateway (notificando lo que requiera aprobacion real)...`);
-  const approvalGatewayResult = await runApprovalGateway(departmentRunId);
-  console.log(
-    `  telegram_activo=${approvalGatewayResult.telegramEnabled} nuevas_solicitudes=${approvalGatewayResult.newRequests.length} enviadas=${approvalGatewayResult.sentViaTelegram.length}`
-  );
-
-  console.log(`[23/${TOTAL_STEPS}] Production Deployment Planner (solo planificacion, produccion no se toca)...`);
-  const productionPlannerResult = await runProductionDeploymentPlanner(departmentRunId);
-  console.log(
-    `  planes_nuevos=${productionPlannerResult.newPlans.length} total_planes=${productionPlannerResult.totalPlanCount} omitidos_sin_qa_pass=${productionPlannerResult.skippedNoQaPass} nuevas_solicitudes_aprobacion=${productionPlannerResult.newApprovalRequests} produccion_tocada=false`
-  );
-
-  console.log(`[24/${TOTAL_STEPS}] Production Draft Executor (ejecucion controlada de produccion, gateada)...`);
-  const productionExecutorResult = await runProductionDraftExecutor(departmentRunId);
-  console.log(
-    `  can_attempt_real_writes=${productionExecutorResult.canAttemptRealWrites} pendientes_nuevas=${productionExecutorResult.newPendingExecutions.length} aplicadas=${productionExecutorResult.appliedThisPass.length} fallidas=${productionExecutorResult.failedThisPass.length} pendientes_aprobacion_ejecucion=${productionExecutorResult.pendingApprovalCount}`
-  );
-
-  console.log(`[25/${TOTAL_STEPS}] Growth Director (consolidando informe ejecutivo + tecnico)...`);
-  const growthResult = await runGrowthDirector(departmentRunId);
   console.log(
     `  Informe ejecutivo: ${growthResult.executiveReportPath}${growthResult.executiveFallbackUsed ? " (fallback seguro, ver logs)" : ""}`
   );
@@ -347,7 +435,8 @@ async function runRealPass(): Promise<void> {
   console.log(`[26/${TOTAL_STEPS}] Enviando email final unico...`);
   const emailContent = buildEmailContent(
     departmentRunId,
-    growthResult.executiveReportPath,
+    growthResult.emailHtml,
+    growthResult.emailText,
     growthResult.preparedForReviewCount,
     growthResult.pendingDecisionCount
   );
@@ -357,23 +446,30 @@ async function runRealPass(): Promise<void> {
     departmentRunId,
     executiveReportPath: growthResult.executiveReportPath,
     technicalReportPath: growthResult.technicalReportPath,
+    failedStepCount,
   });
 
-  console.log(`\nPase diario completo. departmentRunId=${departmentRunId}`);
+  console.log(`\nPase diario completo. departmentRunId=${departmentRunId}. Pasos fallidos y aislados: ${failedStepCount}.`);
   console.log(`Informe ejecutivo (email): ${growthResult.executiveReportPath}`);
   console.log(`Informe tecnico (interno): ${growthResult.technicalReportPath}`);
-  console.log(`Informe Approval Queue: ${approvalQueueResult.reportPath}`);
-  console.log(`Informe Approved Action Planner: ${approvedActionPlannerResult.reportPath}`);
-  console.log(`Informe Approval Gateway: ${approvalGatewayResult.reportPath}`);
-  console.log(`Change packs nuevos hoy: SEO=${seoChangePackResult.newChangePacks.length} Content=${contentChangePackResult.newChangePacks.length} CRO=${croChangePackResult.newChangePacks.length}`);
-  console.log(`Informe UX/UI Landing Architect: ${uxUiResult.reportPath}`);
-  console.log(`Informe WordPress Draft Agent: ${wordpressDraftResult.reportPath}`);
-  console.log(`Informe Visual Template Builder: ${visualTemplateResult.reportPath}`);
-  console.log(`Informe Visual Asset Planner: ${visualAssetResult.reportPath}`);
-  console.log(`Informe Staging Executor: ${stagingExecutorResult.reportPath}`);
-  console.log(`Informe Staging QA: ${stagingQaResult.reportPath}`);
-  console.log(`Informe Production Deployment Planner: ${productionPlannerResult.reportPath} (planificacion — produccion no se toco)`);
-  console.log(`Informe Production Draft Executor: ${productionExecutorResult.reportPath} (can_attempt_real_writes=${productionExecutorResult.canAttemptRealWrites})`);
+  if (approvalQueueResult) console.log(`Informe Approval Queue: ${approvalQueueResult.reportPath}`);
+  if (approvedActionPlannerResult) console.log(`Informe Approved Action Planner: ${approvedActionPlannerResult.reportPath}`);
+  if (approvalGatewayResult) console.log(`Informe Approval Gateway: ${approvalGatewayResult.reportPath}`);
+  console.log(
+    `Change packs nuevos hoy: SEO=${seoChangePackResult?.newChangePacks.length ?? "(paso fallido)"} Content=${contentChangePackResult?.newChangePacks.length ?? "(paso fallido)"} CRO=${croChangePackResult?.newChangePacks.length ?? "(paso fallido)"}`
+  );
+  if (uxUiResult) console.log(`Informe UX/UI Landing Architect: ${uxUiResult.reportPath}`);
+  if (wordpressDraftResult) console.log(`Informe WordPress Draft Agent: ${wordpressDraftResult.reportPath}`);
+  if (visualTemplateResult) console.log(`Informe Visual Template Builder: ${visualTemplateResult.reportPath}`);
+  if (visualAssetResult) console.log(`Informe Visual Asset Planner: ${visualAssetResult.reportPath}`);
+  if (stagingExecutorResult) console.log(`Informe Staging Executor: ${stagingExecutorResult.reportPath}`);
+  if (stagingQaResult) console.log(`Informe Staging QA: ${stagingQaResult.reportPath}`);
+  if (productionPlannerResult)
+    console.log(`Informe Production Deployment Planner: ${productionPlannerResult.reportPath} (planificacion — produccion no se toco)`);
+  if (productionExecutorResult)
+    console.log(
+      `Informe Production Draft Executor: ${productionExecutorResult.reportPath} (can_attempt_real_writes=${productionExecutorResult.canAttemptRealWrites})`
+    );
 }
 
 async function main(): Promise<void> {

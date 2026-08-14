@@ -1,0 +1,455 @@
+{
+  "generated_at": "2026-08-12T18:43:12.507Z",
+  "counts": {
+    "staging_total": 67,
+    "production_total": 67,
+    "only_in_staging": 0,
+    "only_in_production": 0,
+    "in_both": 67,
+    "products_with_diffs": 53
+  },
+  "only_in_staging": [],
+  "only_in_production": [],
+  "diffs": [
+    {
+      "id": 339,
+      "sku": "",
+      "name": "Taquilla 1 puerta – Módulo 2 (Metálica)",
+      "diffs": [
+        "price: staging=371 prod=199"
+      ]
+    },
+    {
+      "id": 364,
+      "sku": "",
+      "name": "Taquilla 1 puerta – Módulo 3 (Metálica)",
+      "diffs": [
+        "price: staging=499 prod=199"
+      ]
+    },
+    {
+      "id": 372,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 1 (Metálica)",
+      "diffs": [
+        "price: staging=257 prod=199"
+      ]
+    },
+    {
+      "id": 393,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 2 (Metálica)",
+      "diffs": [
+        "price: staging=434 prod=199"
+      ]
+    },
+    {
+      "id": 398,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 3 (Metálica)",
+      "diffs": [
+        "price: staging=634 prod=199"
+      ]
+    },
+    {
+      "id": 408,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 1 (Metálica)",
+      "diffs": [
+        "price: staging=274 prod=199"
+      ]
+    },
+    {
+      "id": 413,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 3 (Metálica)",
+      "diffs": [
+        "price: staging=704 prod=199"
+      ]
+    },
+    {
+      "id": 420,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 2 (Metálica)",
+      "diffs": [
+        "price: staging=481 prod=199"
+      ]
+    },
+    {
+      "id": 425,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 1 (Metálica)",
+      "diffs": [
+        "price: staging=291 prod=199"
+      ]
+    },
+    {
+      "id": 430,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 2 (Metálica)",
+      "diffs": [
+        "price: staging=528 prod=199"
+      ]
+    },
+    {
+      "id": 435,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 3 (Metálica)",
+      "diffs": [
+        "price: staging=778 prod=199"
+      ]
+    },
+    {
+      "id": 440,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L – Módulo 1 (Metálica)",
+      "diffs": [
+        "price: staging=289 prod=199"
+      ]
+    },
+    {
+      "id": 445,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L – Módulo 2 (Metálica)",
+      "diffs": [
+        "price: staging=517 prod=199"
+      ]
+    },
+    {
+      "id": 450,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L – Módulo 3 (Metálica)",
+      "diffs": [
+        "price: staging=756 prod=199"
+      ]
+    },
+    {
+      "id": 489,
+      "sku": "",
+      "name": "Taquilla 1 puerta – Módulo 1 (Fenólica)",
+      "diffs": [
+        "price: staging=451 prod=199"
+      ]
+    },
+    {
+      "id": 499,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 1 (Fenólica)",
+      "diffs": [
+        "price: staging=478 prod=199"
+      ]
+    },
+    {
+      "id": 505,
+      "sku": "",
+      "name": "Taquilla 1 puerta – Módulo 2 (Fenólica)",
+      "diffs": [
+        "price: staging=759 prod=199"
+      ]
+    },
+    {
+      "id": 513,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 1 (Fenólica)",
+      "diffs": [
+        "price: staging=588 prod=199"
+      ]
+    },
+    {
+      "id": 519,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 2 (Fenólica)",
+      "diffs": [
+        "price: staging=796 prod=199"
+      ]
+    },
+    {
+      "id": 525,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 2 (Fenólica)",
+      "diffs": [
+        "price: staging=965 prod=199"
+      ]
+    },
+    {
+      "id": 531,
+      "sku": "",
+      "name": "Taquilla 1 puerta – Módulo 3 (Fenólica)",
+      "diffs": [
+        "price: staging=1112 prod=199"
+      ]
+    },
+    {
+      "id": 537,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 3 (Fenólica)",
+      "diffs": [
+        "price: staging=1194 prod=199"
+      ]
+    },
+    {
+      "id": 543,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 3 (Fenólica)",
+      "diffs": [
+        "price: staging=1382 prod=199"
+      ]
+    },
+    {
+      "id": 549,
+      "sku": "",
+      "name": "Taquilla 1 puerta – Módulo 4 (Fenólica)",
+      "diffs": [
+        "price: staging=1447 prod=199"
+      ]
+    },
+    {
+      "id": 555,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 4 (Fenólica)",
+      "diffs": [
+        "price: staging=1537 prod=199"
+      ]
+    },
+    {
+      "id": 561,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 4 (Fenólica)",
+      "diffs": [
+        "price: staging=1746 prod=199"
+      ]
+    },
+    {
+      "id": 567,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 4 (Fenólica)",
+      "diffs": [
+        "price: staging=2012 prod=199"
+      ]
+    },
+    {
+      "id": 573,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L – Módulo 1 (Fenólica)",
+      "diffs": [
+        "price: staging=508 prod=199"
+      ]
+    },
+    {
+      "id": 579,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L – Módulo 2 (Fenólica)",
+      "diffs": [
+        "price: staging=887 prod=199"
+      ]
+    },
+    {
+      "id": 585,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L – Módulo 3 (Fenólica)",
+      "diffs": [
+        "price: staging=1307 prod=199"
+      ]
+    },
+    {
+      "id": 591,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L – Módulo 4 (Fenólica)",
+      "diffs": [
+        "price: staging=1710 prod=199"
+      ]
+    },
+    {
+      "id": 597,
+      "sku": "",
+      "name": "Taquilla 1 puertas – Módulo 1 (Melamina)",
+      "diffs": [
+        "price: staging=245 prod=199"
+      ]
+    },
+    {
+      "id": 603,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 1 (Melamina)",
+      "diffs": [
+        "price: staging=262 prod=199"
+      ]
+    },
+    {
+      "id": 609,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 1 (Melamina)",
+      "diffs": [
+        "price: staging=282 prod=199"
+      ]
+    },
+    {
+      "id": 1248,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 1 (Fenólica)",
+      "diffs": [
+        "price: staging=701 prod=199"
+      ]
+    },
+    {
+      "id": 1254,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 2 (Fenólica)",
+      "diffs": [
+        "price: staging=1145 prod=199"
+      ]
+    },
+    {
+      "id": 1261,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 3 (Fenólica)",
+      "diffs": [
+        "price: staging=1574 prod=199"
+      ]
+    },
+    {
+      "id": 1286,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 1 (Melamina)",
+      "diffs": [
+        "price: staging=262 prod=199"
+      ]
+    },
+    {
+      "id": 1291,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 1 (Melamina)",
+      "diffs": [
+        "price: staging=298 prod=199"
+      ]
+    },
+    {
+      "id": 1296,
+      "sku": "",
+      "name": "Taquilla 1 puertas – Módulo 2 (Melamina)",
+      "diffs": [
+        "price: staging=383 prod=199"
+      ]
+    },
+    {
+      "id": 1301,
+      "sku": "",
+      "name": "Taquilla 2 puertas – Módulo 2 (Melamina)",
+      "diffs": [
+        "price: staging=417 prod=199"
+      ]
+    },
+    {
+      "id": 1306,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 2 (Melamina)",
+      "diffs": [
+        "price: staging=451 prod=199"
+      ]
+    },
+    {
+      "id": 1311,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 2 (Melamina)",
+      "diffs": [
+        "price: staging=484 prod=199"
+      ]
+    },
+    {
+      "id": 1319,
+      "sku": "",
+      "name": "Taquilla 1 puerta – Módulo 1 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=313 prod=199"
+      ]
+    },
+    {
+      "id": 1325,
+      "sku": "",
+      "name": "Taquilla 2 puerta – Módulo 1 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=326 prod=199"
+      ]
+    },
+    {
+      "id": 1331,
+      "sku": "",
+      "name": "Taquilla 3 puertas – Módulo 1 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=344 prod=199"
+      ]
+    },
+    {
+      "id": 1337,
+      "sku": "",
+      "name": "Taquilla 4 puertas – Módulo 1 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=360 prod=199"
+      ]
+    },
+    {
+      "id": 1343,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L – Módulo 1 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=348 prod=199"
+      ]
+    },
+    {
+      "id": 1349,
+      "sku": "",
+      "name": "Taquilla 1 puerta en altura – Módulo 2 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=481 prod=199"
+      ]
+    },
+    {
+      "id": 1355,
+      "sku": "",
+      "name": "Taquilla 2 puertas en altura – Módulo 2 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=521 prod=199"
+      ]
+    },
+    {
+      "id": 1361,
+      "sku": "",
+      "name": "Taquilla 3 puertas en altura – Módulo 2 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=568 prod=199"
+      ]
+    },
+    {
+      "id": 1367,
+      "sku": "",
+      "name": "Taquilla 4 puertas en altura – Módulo 2 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=605 prod=199"
+      ]
+    },
+    {
+      "id": 1373,
+      "sku": "",
+      "name": "Taquilla 2 puertas en L– Módulo 2 (Melamina-Fenólico)",
+      "diffs": [
+        "price: staging=597 prod=199"
+      ]
+    }
+  ],
+  "categories": {
+    "staging_count": 15,
+    "production_count": 15,
+    "only_in_staging": [],
+    "only_in_production": []
+  },
+  "attributes": {
+    "staging_count": 11,
+    "production_count": 11,
+    "only_in_staging": [],
+    "only_in_production": []
+  },
+  "images": {
+    "staging_missing_real_image_count": 4,
+    "production_missing_real_image_count": 4
+  }
+}

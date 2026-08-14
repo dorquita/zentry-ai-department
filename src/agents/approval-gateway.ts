@@ -8,7 +8,10 @@ import {
   readCurrentApprovalRequests,
   upsertApprovalRequest,
   markApprovalRequestSent,
+  setApprovalRequestStatus,
 } from "../core/approval-requests";
+import { readCurrentProductionDeploymentPlans } from "../core/production-deployment-plans";
+import { readCurrentChangePacks } from "../core/change-packs";
 import {
   getTelegramStatusForReport,
   isTelegramApprovalsEnabled,
@@ -177,10 +180,74 @@ function writeReport(result: ApprovalGatewayRunResult, generatedAt: string): str
   return filePath;
 }
 
+// Fase O49 -- estados "muertos" de cada tipo de entidad relacionada: si
+// una solicitud de aprobacion `pending` apunta a algo que ya llego a uno
+// de estos estados (normalmente porque se supero por una regeneracion
+// posterior, ver docs/opportunity-states.md), la solicitud ya no tiene
+// sentido -- se cierra sola en vez de seguir apareciendo en
+// `approvals:list --status pending` y en el email para siempre. Bug real
+// encontrado en produccion: una solicitud de Telegram del 2026-08-10
+// seguia `pending` 4 dias despues de que su production_deployment_plan
+// pasara a `cancelled`.
+const DEAD_PLAN_STATUSES = new Set(["cancelled", "plan_rejected", "execution_rejected"]);
+const DEAD_CHANGE_PACK_STATUSES = new Set(["rejected", "superseded"]);
+const DEAD_WORK_ORDER_STATUSES = new Set(["rejected", "superseded"]);
+
+function reconcileOrphanedApprovalRequests(deptRunId: string): number {
+  const pending = readCurrentApprovalRequests().filter((r) => r.status === "pending");
+  if (pending.length === 0) return 0;
+
+  const plansById = new Map(readCurrentProductionDeploymentPlans().map((p) => [p.deploymentPlanId, p]));
+  const changePacksById = new Map(readCurrentChangePacks().map((cp) => [cp.changePackId, cp]));
+  const workOrdersById = new Map(readCurrentWorkOrders().map((wo) => [wo.workOrderId, wo]));
+
+  let reconciledCount = 0;
+  for (const request of pending) {
+    let deadReason: string | null = null;
+    if (request.relatedType === "production_deployment_plan") {
+      const plan = plansById.get(request.relatedId);
+      if (plan && DEAD_PLAN_STATUSES.has(plan.status)) deadReason = `El plan de deploy a produccion asociado ya paso a "${plan.status}".`;
+    } else if (request.relatedType === "change_pack") {
+      const cp = changePacksById.get(request.relatedId);
+      if (cp && DEAD_CHANGE_PACK_STATUSES.has(cp.status)) deadReason = `El change pack asociado ya paso a "${cp.status}".`;
+    } else if (request.relatedType === "work_order") {
+      const wo = workOrdersById.get(request.relatedId);
+      if (wo && DEAD_WORK_ORDER_STATUSES.has(wo.status)) deadReason = `La work order asociada ya paso a "${wo.status}".`;
+    }
+    if (!deadReason) continue;
+
+    setApprovalRequestStatus(request.approvalRequestId, "cancelled", {
+      reason: `Fase O49: reconciliada automaticamente — ${deadReason} No requiere respuesta de Pau.`,
+      answeredBy: "system_reconciliation",
+    });
+    reconciledCount += 1;
+    logger.info("Approval Gateway: solicitud pendiente huerfana reconciliada automaticamente", {
+      approvalRequestId: request.approvalRequestId,
+      relatedType: request.relatedType,
+      relatedId: request.relatedId,
+      reason: deadReason,
+    });
+    emitEvent({
+      departmentRunId: deptRunId,
+      agent: AGENT_NAME,
+      type: "agent_finished",
+      priority: "low",
+      summary: `Solicitud de aprobacion huerfana reconciliada (${request.relatedType} ya resuelto): ${request.title}`,
+      payload: { approvalRequestId: request.approvalRequestId, relatedType: request.relatedType, relatedId: request.relatedId },
+    });
+  }
+  return reconciledCount;
+}
+
 export async function runApprovalGateway(departmentRunId?: string): Promise<ApprovalGatewayRunResult> {
   const deptRunId = departmentRunId ?? findLatestDepartmentRunId();
   logger.info("Approval Gateway Agent iniciado", { departmentRunId: deptRunId });
   emitEvent({ departmentRunId: deptRunId, agent: AGENT_NAME, type: "agent_started", summary: "Approval Gateway Agent iniciado" });
+
+  const reconciledCount = reconcileOrphanedApprovalRequests(deptRunId);
+  if (reconciledCount > 0) {
+    logger.info(`Approval Gateway: ${reconciledCount} solicitud(es) huerfana(s) reconciliada(s) automaticamente esta pasada.`);
+  }
 
   const currentRequests = readCurrentApprovalRequests();
   const newRequests: ApprovalRequest[] = [];

@@ -12,6 +12,7 @@ import { emitEvent, readAllEvents } from "../core/department-events";
 import { logger } from "../core/logger";
 import { ChangePack } from "../core/types";
 import { resolveActiveClientPaths } from "../core/client-paths";
+import { evaluateClusterGateForWorkOrder } from "./cluster-gate";
 
 /**
  * CRO Change Pack Builder — READ + PROPOSE only. Convierte work orders de
@@ -19,6 +20,10 @@ import { resolveActiveClientPaths } from "../core/client-paths";
  * `approved_to_prepare`) en un change pack: el mismo CTA/formulario/
  * bloque de confianza/FAQ de la work order, mas pasos de implementacion,
  * checklist de revision y notas de reversion. NUNCA toca WordPress.
+ *
+ * Fase O31 -- cada work order pasa por `evaluateClusterGateForWorkOrder()`
+ * (src/agents/cluster-gate.ts) antes de convertirse en change pack. Ver
+ * seo-change-pack-builder.ts para el detalle de la regla.
  */
 
 const REPORTS_DIR = path.join(resolveActiveClientPaths().reportsDir, "cro-change-packs");
@@ -84,10 +89,17 @@ function buildCurrentAssumptions(proposal: CroProposedChanges): string[] {
   ];
 }
 
+export interface BlockedByClusterGate {
+  keyword: string;
+  page?: string;
+  reason: string;
+}
+
 export interface CroChangePackBuilderRunResult {
   departmentRunId: string;
   newChangePacks: ChangePack[];
   alreadyExisting: ChangePack[];
+  blockedByClusterGate: BlockedByClusterGate[];
   reportPath: string;
 }
 
@@ -114,7 +126,19 @@ function buildReportMarkdown(result: CroChangePackBuilderRunResult, generatedAt:
     lines.push("Ninguno.");
   } else {
     for (const cp of result.newChangePacks) {
-      lines.push(`- [${cp.priority}] \`${cp.changePackId}\` ${cp.keyword} (${cp.page ?? "sin pagina"}) — status: ${cp.status}`);
+      const target = cp.targetWordpressPageId ? ` — actualiza borrador existente ${cp.targetWordpressPageId}` : "";
+      lines.push(`- [${cp.priority}] \`${cp.changePackId}\` ${cp.keyword} (${cp.page ?? "sin pagina"}) — status: ${cp.status}${target}`);
+    }
+  }
+  lines.push("");
+
+  lines.push(`## Bloqueadas por el cluster gate (${result.blockedByClusterGate.length})`);
+  lines.push("");
+  if (result.blockedByClusterGate.length === 0) {
+    lines.push("Ninguna.");
+  } else {
+    for (const b of result.blockedByClusterGate) {
+      lines.push(`- "${b.keyword}" (${b.page ?? "sin pagina"}): ${b.reason}`);
     }
   }
   lines.push("");
@@ -149,8 +173,20 @@ export async function runCroChangePackBuilder(departmentRunId?: string): Promise
 
   const newChangePacks: ChangePack[] = [];
   const alreadyExisting: ChangePack[] = [];
+  const blockedByClusterGate: BlockedByClusterGate[] = [];
 
   for (const workOrder of eligibleWorkOrders) {
+    const gate = evaluateClusterGateForWorkOrder(workOrder);
+    if (gate.verdict === "block") {
+      blockedByClusterGate.push({ keyword: workOrder.keyword, page: workOrder.page, reason: gate.reason });
+      logger.info("CRO Change Pack Builder: work order bloqueada por el cluster gate", {
+        workOrderId: workOrder.workOrderId,
+        keyword: workOrder.keyword,
+        reason: gate.reason,
+      });
+      continue;
+    }
+
     const proposal = workOrder.proposedChanges as unknown as CroProposedChanges;
     const { changePack, isNew } = upsertChangePack(
       {
@@ -163,6 +199,7 @@ export async function runCroChangePackBuilder(departmentRunId?: string): Promise
         risks: buildRisks(proposal),
         rollbackNotes: buildGenericRollbackNotes(workOrder.page ?? "la pagina afectada"),
         sourceAgent: AGENT_NAME,
+        targetWordpressPageId: gate.verdict === "allow_update_existing" ? gate.reuseWordpressPageId : undefined,
       },
       currentChangePacks
     );
@@ -183,16 +220,23 @@ export async function runCroChangePackBuilder(departmentRunId?: string): Promise
   }
 
   const generatedAt = new Date().toISOString();
-  const result: CroChangePackBuilderRunResult = { departmentRunId: deptRunId, newChangePacks, alreadyExisting, reportPath: "" };
+  const result: CroChangePackBuilderRunResult = { departmentRunId: deptRunId, newChangePacks, alreadyExisting, blockedByClusterGate, reportPath: "" };
   result.reportPath = writeReport(result, generatedAt);
 
-  logger.info(`CRO Change Pack Builder finalizado. Nuevos: ${newChangePacks.length}. Informe: ${result.reportPath}`);
+  logger.info(
+    `CRO Change Pack Builder finalizado. Nuevos: ${newChangePacks.length}. Bloqueados por cluster gate: ${blockedByClusterGate.length}. Informe: ${result.reportPath}`
+  );
   emitEvent({
     departmentRunId: deptRunId,
     agent: AGENT_NAME,
     type: "agent_finished",
-    summary: `CRO Change Pack Builder finalizado: ${newChangePacks.length} change pack(s) nuevo(s)`,
-    payload: { newCount: newChangePacks.length, alreadyExistingCount: alreadyExisting.length, reportPath: result.reportPath },
+    summary: `CRO Change Pack Builder finalizado: ${newChangePacks.length} change pack(s) nuevo(s), ${blockedByClusterGate.length} bloqueado(s) por cluster gate`,
+    payload: {
+      newCount: newChangePacks.length,
+      alreadyExistingCount: alreadyExisting.length,
+      blockedByClusterGateCount: blockedByClusterGate.length,
+      reportPath: result.reportPath,
+    },
   });
 
   return result;

@@ -1,0 +1,31 @@
+[
+  {
+    "productId": 603,
+    "productName": "Taquilla 2 puertas – Módulo 1",
+    "uploaded": [
+      {
+        "role": "featured",
+        "ok": true,
+        "id": 3207,
+        "source_url": "https://staging.zentrylockers.com/wp-content/uploads/2026/08/VTMMM1-30P2-19.jpg",
+        "localPath": "Taquilla_MelaminaMel/VTMMM1-30P2-19.jpg"
+      },
+      {
+        "role": "gallery",
+        "ok": true,
+        "id": 3208,
+        "source_url": "https://staging.zentrylockers.com/wp-content/uploads/2026/08/VTMMM1-40P2-19-scaled.jpg",
+        "localPath": "Taquilla_MelaminaMel/VTMMM1-40P2-19.jpg"
+      },
+      {
+        "role": "gallery",
+        "ok": true,
+        "id": 3209,
+        "source_url": "https://staging.zentrylockers.com/wp-content/uploads/2026/08/VTMMM1-30P2-19-2-scaled.jpg",
+        "localPath": "Taquilla_MelaminaMel/VTMMM1-30P2-19 (2).jpg"
+      }
+    ],
+    "errors": [],
+    "productUpdateStatus": 200
+  }
+]

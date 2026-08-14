@@ -76,6 +76,8 @@ export interface CreatePendingExecutionInput {
   page?: string;
   keyword: string;
   rollbackNotes: string[];
+  /** Fase O31 -- ver StagingExecution.targetWordpressPageId en types.ts. */
+  targetWordpressPageId?: number;
 }
 
 export interface UpsertPendingExecutionResult {
@@ -109,6 +111,7 @@ export function upsertPendingExecution(
     changeType: input.changeType,
     page: input.page,
     keyword: input.keyword,
+    targetWordpressPageId: input.targetWordpressPageId,
     status: "pending_approval",
     environment: "staging",
     wordpressBackend: "",

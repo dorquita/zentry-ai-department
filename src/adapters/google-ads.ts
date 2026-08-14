@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import { logger } from "../core/logger";
+import { recordCredentialFailure, recordCredentialSuccess } from "../core/credential-health";
 import {
   loadActiveClientAdsConfig,
   resolveActiveClientId,
@@ -199,6 +200,7 @@ export interface AdsConversionActionSummary {
   status: string;
   category: string;
   type: string;
+  primaryForGoal: boolean;
 }
 
 export interface AdsCampaignMetrics {
@@ -270,7 +272,7 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
         ),
         searchGoogleAds(
           customerId,
-          `SELECT conversion_action.id, conversion_action.name, conversion_action.status, conversion_action.category, conversion_action.type FROM conversion_action ORDER BY conversion_action.id`
+          `SELECT conversion_action.id, conversion_action.name, conversion_action.status, conversion_action.category, conversion_action.type, conversion_action.primary_for_goal FROM conversion_action ORDER BY conversion_action.id`
         ),
         searchGoogleAds(
           customerId,
@@ -331,6 +333,7 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
       status: String(r.conversionAction?.status ?? ""),
       category: String(r.conversionAction?.category ?? ""),
       type: String(r.conversionAction?.type ?? ""),
+      primaryForGoal: Boolean(r.conversionAction?.primaryForGoal),
     }));
 
     const metrics: AdsCampaignMetrics[] = metricRows.map((r) => ({
@@ -352,6 +355,7 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
       conversionActions: conversionActions.length,
     });
 
+    recordCredentialSuccess("google_ads");
     return {
       customerId,
       loginCustomerId,
@@ -367,8 +371,82 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
   } catch (err) {
     const safeMessage = sanitizeError(err);
     logger.error("Fallo la lectura de Google Ads", { error: safeMessage });
+    recordCredentialFailure("google_ads", safeMessage);
     throw new Error(`Lectura de Google Ads fallo: ${safeMessage}`);
   }
+}
+
+export interface KeywordIdea {
+  text: string;
+  avgMonthlySearches: number | null;
+  competition: string;
+  lowTopOfPageBidMicros: number | null;
+  highTopOfPageBidMicros: number | null;
+}
+
+const SPAIN_GEO_TARGET_CONSTANT = "geoTargetConstants/2724";
+const SPANISH_LANGUAGE_CONSTANT = "languageConstants/1003";
+
+/**
+ * Fase O32.4 -- KeywordPlanIdeaService.generateKeywordIdeas: da volumen
+ * mensual medio y rango de puja orientativo para una lista de keywords
+ * semilla. A diferencia de `googleAds:search`, esto NO consulta datos ya
+ * existentes en la cuenta -- es una llamada de "ideas" standalone que NO
+ * crea ningun KeywordPlan ni ningun otro recurso persistente en la
+ * cuenta (esa es la diferencia frente al flujo de "forecast" basado en
+ * KeywordPlan, que si requiere crear recursos via mutate y por eso NO se
+ * usa aqui). Sigue siendo solo lectura: no activa nada, no gasta nada,
+ * no modifica la cuenta.
+ */
+export async function generateKeywordIdeas(seedKeywords: string[]): Promise<KeywordIdea[]> {
+  const customerId = normalizeCustomerId(resolveCustomerId());
+  const developerToken = resolveClientSecret(resolveActiveClientId(), "GOOGLE_ADS_DEVELOPER_TOKEN");
+  const loginCustomerId = normalizeCustomerId(resolveLoginCustomerId());
+  const accessToken = await getAccessToken();
+  const version = resolveApiVersion();
+
+  const url = `https://googleads.googleapis.com/${version}/customers/${customerId}:generateKeywordIdeas`;
+  const body = {
+    keywordSeed: { keywords: seedKeywords },
+    geoTargetConstants: [SPAIN_GEO_TARGET_CONSTANT],
+    language: SPANISH_LANGUAGE_CONSTANT,
+    keywordPlanNetwork: "GOOGLE_SEARCH",
+  };
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        "developer-token": developerToken,
+        "login-customer-id": loginCustomerId,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    throw new Error(`Fallo de red llamando a generateKeywordIdeas (solo lectura): ${sanitizeError(err)}`);
+  }
+
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {
+      bodyText = "";
+    }
+    throw new Error(`Google Ads generateKeywordIdeas respondio ${response.status}: ${sanitizeError(bodyText)}`);
+  }
+
+  const data = (await response.json()) as { results?: Record<string, any>[] };
+  return (data.results ?? []).map((r) => ({
+    text: String(r.text ?? ""),
+    avgMonthlySearches: r.keywordIdeaMetrics?.avgMonthlySearches != null ? Number(r.keywordIdeaMetrics.avgMonthlySearches) : null,
+    competition: String(r.keywordIdeaMetrics?.competition ?? "UNSPECIFIED"),
+    lowTopOfPageBidMicros: r.keywordIdeaMetrics?.lowTopOfPageBidMicros != null ? Number(r.keywordIdeaMetrics.lowTopOfPageBidMicros) : null,
+    highTopOfPageBidMicros: r.keywordIdeaMetrics?.highTopOfPageBidMicros != null ? Number(r.keywordIdeaMetrics.highTopOfPageBidMicros) : null,
+  }));
 }
 
 export { microsToEuros };

@@ -1,5 +1,6 @@
 import { google, tagmanager_v2 } from "googleapis";
 import { logger } from "../core/logger";
+import { recordCredentialFailure, recordCredentialSuccess } from "../core/credential-health";
 import {
   loadActiveClientAnalyticsConfig,
   resolveActiveClientId,
@@ -190,7 +191,7 @@ export async function getGtmSnapshot(): Promise<GtmSnapshot> {
       liveVersionFound: Boolean(liveVersionResp?.data),
     });
 
-    return {
+    const result = {
       accountId,
       containerId,
       containerName: container.name ?? "",
@@ -206,9 +207,12 @@ export async function getGtmSnapshot(): Promise<GtmSnapshot> {
       liveVersionName: liveVersionResp?.data.name ?? null,
       liveVersionId: liveVersionResp?.data.containerVersionId ?? null,
     };
+    recordCredentialSuccess("gtm");
+    return result;
   } catch (err) {
     const safeMessage = sanitizeError(err);
     logger.error("Fallo la lectura de GTM", { error: safeMessage });
+    recordCredentialFailure("gtm", safeMessage);
     throw new Error(`Lectura de GTM fallo: ${safeMessage}`);
   }
 }

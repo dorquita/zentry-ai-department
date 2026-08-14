@@ -28,7 +28,7 @@ import { resolveWordpressBackend, resolveWordpressEnv, WordpressBackend, Wordpre
 import { isTelegramApprovalsEnabled, sendTelegramApprovalRequest, sendTelegramMessage } from "../core/telegram-gateway";
 import { emitEvent, readAllEvents } from "../core/department-events";
 import { logger } from "../core/logger";
-import { extractPreviewFields, buildWordpressContentHtml } from "./wordpress-draft-agent";
+import { extractPreviewFields, buildWordpressContentHtml, PreviewFields } from "./wordpress-draft-agent";
 import { findLandingBlueprintByChangePackId, readCurrentLandingBlueprints } from "../core/landing-blueprints";
 import { resolveActiveClientConfig } from "../core/client-config";
 import { ApprovalRequest, StagingExecution, StagingExecutionSnapshot } from "../core/types";
@@ -226,6 +226,7 @@ export async function runStagingExecutor(departmentRunId?: string): Promise<Stag
         page: changePack.page,
         keyword: changePack.keyword,
         rollbackNotes: [...changePack.rollbackNotes],
+        targetWordpressPageId: changePack.targetWordpressPageId,
       },
       currentExecutions
     );
@@ -406,13 +407,45 @@ export async function runStagingExecutor(departmentRunId?: string): Promise<Stag
       }
 
       try {
-        const priorApplied = readCurrentStagingExecutions().find(
-          (e) => e.canonicalKey === execution.canonicalKey && e.status === "applied_to_staging" && typeof e.wordpressPageId === "number"
-        );
+        // Fase O31 -- si el change pack trae targetWordpressPageId (lo pone
+        // el cluster gate cuando el cluster SEO ya tiene un borrador de
+        // staging para esta intencion), esa pagina manda SIEMPRE sobre la
+        // busqueda por canonicalKey -- una work order nueva nunca comparte
+        // canonicalKey con la ejecucion que creo el borrador original, asi
+        // que sin esto se crearia una pagina duplicada.
+        const reuseTargetPageId = execution.targetWordpressPageId;
+        const priorApplied = reuseTargetPageId
+          ? { wordpressPageId: reuseTargetPageId }
+          : readCurrentStagingExecutions().find(
+              (e) => e.canonicalKey === execution.canonicalKey && e.status === "applied_to_staging" && typeof e.wordpressPageId === "number"
+            );
 
-        const fields = extractPreviewFields(changePack);
-        const blueprint = findLandingBlueprintByChangePackId(changePack.changePackId, readCurrentLandingBlueprints());
-        const contentHtml = buildWordpressContentHtml(fields, blueprint);
+        // Fase O31 -- actualizacion SOLO de title/meta (sin regenerar el
+        // contenido de la pagina): el change pack marca
+        // proposedChanges.metaOnlyUpdate=true y trae title/metaDescription
+        // ya decididos (p.ej. la mejora de O29.1). Requiere
+        // targetWordpressPageId -- nunca crea una pagina nueva.
+        const metaOnly = Boolean((changePack.proposedChanges as Record<string, unknown>).metaOnlyUpdate);
+        if (metaOnly && !reuseTargetPageId) {
+          throw new Error("proposedChanges.metaOnlyUpdate=true pero el change pack no tiene targetWordpressPageId -- no se puede aplicar sin saber que pagina actualizar.");
+        }
+
+        let fields: Pick<PreviewFields, "title" | "metaDescription">;
+        let contentHtml: string;
+        if (metaOnly && reuseTargetPageId) {
+          const currentPage = await getWordpressPage(reuseTargetPageId);
+          const proposed = changePack.proposedChanges as Record<string, unknown>;
+          fields = {
+            title: typeof proposed.proposedTitle === "string" ? proposed.proposedTitle : currentPage.title,
+            metaDescription: typeof proposed.proposedMetaDescription === "string" ? proposed.proposedMetaDescription : "",
+          };
+          contentHtml = currentPage.contentHtml;
+        } else {
+          const previewFields = extractPreviewFields(changePack);
+          const blueprint = findLandingBlueprintByChangePackId(changePack.changePackId, readCurrentLandingBlueprints());
+          contentHtml = buildWordpressContentHtml(previewFields, blueprint);
+          fields = previewFields;
+        }
 
         let snapshot: StagingExecutionSnapshot;
         let result: { wordpressDraftId: number; wordpressDraftUrl: string };

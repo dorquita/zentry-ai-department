@@ -45,6 +45,7 @@
     "staging:qa": "ts-node scripts/run-staging-qa-agent.ts",
     "staging-executions:list": "ts-node scripts/list-staging-executions.ts",
     "staging-executions:update": "ts-node scripts/update-staging-execution-status.ts",
+    "visual-qa:mark": "ts-node scripts/mark-visual-qa.ts",
     "ux-ui-landing:plan": "ts-node scripts/run-ux-ui-landing-architect.ts",
     "visual-templates:build": "ts-node scripts/run-visual-template-builder.ts",
     "visual-assets:plan": "ts-node scripts/run-visual-asset-planner.ts",

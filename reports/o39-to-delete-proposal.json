@@ -1,0 +1,282 @@
+[
+  {
+    "productId": 489,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2274,
+    "regular_price": "489",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 489,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2273,
+    "regular_price": "508",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 499,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2302,
+    "regular_price": "533",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 499,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2301,
+    "regular_price": "545",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 505,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2330,
+    "regular_price": "830",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 505,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2329,
+    "regular_price": "864",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 513,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2358,
+    "regular_price": "645",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 513,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2357,
+    "regular_price": "669",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 519,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2386,
+    "regular_price": "876",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 519,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2385,
+    "regular_price": "912",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 525,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2414,
+    "regular_price": "1054",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 525,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2413,
+    "regular_price": "1099",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 531,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2442,
+    "regular_price": "1211",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 531,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2441,
+    "regular_price": "1263",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 537,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2470,
+    "regular_price": "1304",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 537,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2469,
+    "regular_price": "1363",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 543,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2498,
+    "regular_price": "1498",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 543,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2497,
+    "regular_price": "1569",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 549,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2526,
+    "regular_price": "1577",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 549,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2525,
+    "regular_price": "1647",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 555,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2554,
+    "regular_price": "1676",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 555,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2553,
+    "regular_price": "1757",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 561,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2582,
+    "regular_price": "1918",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 561,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2581,
+    "regular_price": "1987",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 567,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2610,
+    "regular_price": "2191",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 567,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2609,
+    "regular_price": "2261",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 573,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2638,
+    "regular_price": "590",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 573,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2637,
+    "regular_price": "651",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 579,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2666,
+    "regular_price": "1007",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 579,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2665,
+    "regular_price": "1126",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 585,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2694,
+    "regular_price": "1477",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 585,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2693,
+    "regular_price": "1622",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 591,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2722,
+    "regular_price": "1925",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 591,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2721,
+    "regular_price": "2024",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 1248,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2792,
+    "regular_price": "767",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 1248,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2791,
+    "regular_price": "790",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 1254,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2820,
+    "regular_price": "1241",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 1254,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2819,
+    "regular_price": "1287",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 1261,
+    "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2848,
+    "regular_price": "1736",
+    "reason": "does_not_match_staging_regular_price"
+  },
+  {
+    "productId": 1261,
+    "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+    "id": 2847,
+    "regular_price": "1806",
+    "reason": "does_not_match_staging_regular_price"
+  }
+]

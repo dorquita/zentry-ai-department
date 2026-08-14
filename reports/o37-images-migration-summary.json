@@ -1,0 +1,234 @@
+[
+  {
+    "id": 334,
+    "name": "Taquilla 1 puerta – Módulo 1 (Metálica)",
+    "stagingImageCount": 6,
+    "uploadedCount": 6,
+    "errors": [],
+    "newProductImageCount": 6
+  },
+  {
+    "id": 339,
+    "name": "Taquilla 1 puerta – Módulo 2 (Metálica)",
+    "stagingImageCount": 4,
+    "uploadedCount": 4,
+    "errors": [],
+    "newProductImageCount": 4
+  },
+  {
+    "id": 364,
+    "name": "Taquilla 1 puerta – Módulo 3 (Metálica)",
+    "stagingImageCount": 6,
+    "uploadedCount": 6,
+    "errors": [],
+    "newProductImageCount": 6
+  },
+  {
+    "id": 372,
+    "name": "Taquilla 2 puertas – Módulo 1 (Metálica)",
+    "stagingImageCount": 3,
+    "uploadedCount": 3,
+    "errors": [],
+    "newProductImageCount": 3
+  },
+  {
+    "id": 393,
+    "name": "Taquilla 2 puertas – Módulo 2 (Metálica)",
+    "stagingImageCount": 5,
+    "uploadedCount": 5,
+    "errors": [],
+    "newProductImageCount": 5
+  },
+  {
+    "id": 398,
+    "name": "Taquilla 2 puertas – Módulo 3 (Metálica)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 425,
+    "name": "Taquilla 4 puertas – Módulo 1 (Metálica)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 430,
+    "name": "Taquilla 4 puertas – Módulo 2 (Metálica)",
+    "stagingImageCount": 4,
+    "uploadedCount": 4,
+    "errors": [],
+    "newProductImageCount": 4
+  },
+  {
+    "id": 435,
+    "name": "Taquilla 4 puertas – Módulo 3 (Metálica)",
+    "stagingImageCount": 6,
+    "uploadedCount": 6,
+    "errors": [],
+    "newProductImageCount": 6
+  },
+  {
+    "id": 440,
+    "name": "Taquilla 2 puertas en L – Módulo 1 (Metálica)",
+    "stagingImageCount": 3,
+    "uploadedCount": 3,
+    "errors": [],
+    "newProductImageCount": 3
+  },
+  {
+    "id": 445,
+    "name": "Taquilla 2 puertas en L – Módulo 2 (Metálica)",
+    "stagingImageCount": 3,
+    "uploadedCount": 3,
+    "errors": [],
+    "newProductImageCount": 3
+  },
+  {
+    "id": 450,
+    "name": "Taquilla 2 puertas en L – Módulo 3 (Metálica)",
+    "stagingImageCount": 5,
+    "uploadedCount": 5,
+    "errors": [],
+    "newProductImageCount": 5
+  },
+  {
+    "id": 489,
+    "name": "Taquilla 1 puerta – Módulo 1 (Fenólica)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 499,
+    "name": "Taquilla 2 puertas – Módulo 1 (Fenólica)",
+    "stagingImageCount": 3,
+    "uploadedCount": 3,
+    "errors": [],
+    "newProductImageCount": 3
+  },
+  {
+    "id": 505,
+    "name": "Taquilla 1 puerta – Módulo 2 (Fenólica)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 519,
+    "name": "Taquilla 2 puertas – Módulo 2 (Fenólica)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 531,
+    "name": "Taquilla 1 puerta – Módulo 3 (Fenólica)",
+    "stagingImageCount": 1,
+    "uploadedCount": 1,
+    "errors": [],
+    "newProductImageCount": 1
+  },
+  {
+    "id": 537,
+    "name": "Taquilla 2 puertas – Módulo 3 (Fenólica)",
+    "stagingImageCount": 1,
+    "uploadedCount": 1,
+    "errors": [],
+    "newProductImageCount": 1
+  },
+  {
+    "id": 549,
+    "name": "Taquilla 1 puerta – Módulo 4 (Fenólica)",
+    "stagingImageCount": 3,
+    "uploadedCount": 3,
+    "errors": [],
+    "newProductImageCount": 3
+  },
+  {
+    "id": 555,
+    "name": "Taquilla 2 puertas – Módulo 4 (Fenólica)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 573,
+    "name": "Taquilla 2 puertas en L – Módulo 1 (Fenólica)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 579,
+    "name": "Taquilla 2 puertas en L – Módulo 2 (Fenólica)",
+    "stagingImageCount": 3,
+    "uploadedCount": 3,
+    "errors": [],
+    "newProductImageCount": 3
+  },
+  {
+    "id": 603,
+    "name": "Taquilla 2 puertas – Módulo 1 (Melamina)",
+    "stagingImageCount": 3,
+    "uploadedCount": 3,
+    "errors": [],
+    "newProductImageCount": 3
+  },
+  {
+    "id": 1296,
+    "name": "Taquilla 1 puertas – Módulo 2 (Melamina)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 1306,
+    "name": "Taquilla 3 puertas – Módulo 2 (Melamina)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 1343,
+    "name": "Taquilla 2 puertas en L – Módulo 1 (Melamina-Fenólico)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  },
+  {
+    "id": 1349,
+    "name": "Taquilla 1 puerta en altura – Módulo 2 (Melamina-Fenólico)",
+    "stagingImageCount": 3,
+    "uploadedCount": 3,
+    "errors": [],
+    "newProductImageCount": 3
+  },
+  {
+    "id": 1355,
+    "name": "Taquilla 2 puertas en altura – Módulo 2 (Melamina-Fenólico)",
+    "stagingImageCount": 4,
+    "uploadedCount": 4,
+    "errors": [],
+    "newProductImageCount": 4
+  },
+  {
+    "id": 1373,
+    "name": "Taquilla 2 puertas en L– Módulo 2 (Melamina-Fenólico)",
+    "stagingImageCount": 2,
+    "uploadedCount": 2,
+    "errors": [],
+    "newProductImageCount": 2
+  }
+]

@@ -1,0 +1,606 @@
+{
+  "path": "accounts/6364338615/containers/257386510/versions/3",
+  "accountId": "6364338615",
+  "containerId": "257386510",
+  "containerVersionId": "3",
+  "name": "GA4 events + conversion tracking v1",
+  "description": "Configuración inicial de eventos GA4 para Zentry Lockers: formulario enviado en /gracias/, clics en WhatsApp, teléfono, descarga de catálogo y botones de contacto/presupuesto. Ajustados activadores con RegEx para mejorar la detección de clics.",
+  "container": {
+    "path": "accounts/6364338615/containers/257386510",
+    "accountId": "6364338615",
+    "containerId": "257386510",
+    "name": "www.zentrylockers.com",
+    "publicId": "GTM-MSPSGLK5",
+    "usageContext": [
+      "web"
+    ],
+    "fingerprint": "1783184116147",
+    "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6364338615/containers/257386510/workspaces?apiLink=container",
+    "features": {
+      "supportUserPermissions": true,
+      "supportEnvironments": true,
+      "supportWorkspaces": true,
+      "supportGtagConfigs": false,
+      "supportBuiltInVariables": true,
+      "supportClients": false,
+      "supportFolders": true,
+      "supportTags": true,
+      "supportTemplates": true,
+      "supportTriggers": true,
+      "supportVariables": true,
+      "supportVersions": true,
+      "supportZones": true,
+      "supportTransformations": false
+    },
+    "tagIds": [
+      "GTM-MSPSGLK5"
+    ]
+  },
+  "tag": [
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "tagId": "3",
+      "name": "Google Tag - GA4 - Zentry",
+      "type": "googtag",
+      "parameter": [
+        {
+          "type": "template",
+          "key": "tagId",
+          "value": "G-Z9TSGVENQY"
+        }
+      ],
+      "fingerprint": "1783275914850",
+      "firingTriggerId": [
+        "2147479573"
+      ],
+      "tagFiringOption": "oncePerEvent",
+      "monitoringMetadata": {
+        "type": "map"
+      },
+      "consentSettings": {
+        "consentStatus": "notSet"
+      }
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "tagId": "4",
+      "name": "GA4 Event - generate_lead_form_submit",
+      "type": "gaawe",
+      "parameter": [
+        {
+          "type": "boolean",
+          "key": "sendEcommerceData",
+          "value": "false"
+        },
+        {
+          "type": "template",
+          "key": "eventName",
+          "value": "generate_lead_form_submit"
+        },
+        {
+          "type": "template",
+          "key": "measurementIdOverride",
+          "value": "G-Z9TSGVENQY"
+        }
+      ],
+      "fingerprint": "1783276490205",
+      "firingTriggerId": [
+        "5"
+      ],
+      "tagFiringOption": "oncePerEvent",
+      "monitoringMetadata": {
+        "type": "map"
+      },
+      "consentSettings": {
+        "consentStatus": "notSet"
+      }
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "tagId": "6",
+      "name": "GA4 Event - click_phone",
+      "type": "gaawe",
+      "parameter": [
+        {
+          "type": "boolean",
+          "key": "sendEcommerceData",
+          "value": "false"
+        },
+        {
+          "type": "template",
+          "key": "eventName",
+          "value": "click_phone"
+        },
+        {
+          "type": "template",
+          "key": "measurementIdOverride",
+          "value": "G-Z9TSGVENQY"
+        }
+      ],
+      "fingerprint": "1783280195707",
+      "firingTriggerId": [
+        "7"
+      ],
+      "tagFiringOption": "oncePerEvent",
+      "monitoringMetadata": {
+        "type": "map"
+      },
+      "consentSettings": {
+        "consentStatus": "notSet"
+      }
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "tagId": "9",
+      "name": "GA4 Event - click_catalog_download",
+      "type": "gaawe",
+      "parameter": [
+        {
+          "type": "boolean",
+          "key": "sendEcommerceData",
+          "value": "false"
+        },
+        {
+          "type": "template",
+          "key": "eventName",
+          "value": "click_catalog_download"
+        },
+        {
+          "type": "template",
+          "key": "measurementIdOverride",
+          "value": "G-Z9TSGVENQY"
+        }
+      ],
+      "fingerprint": "1783280374919",
+      "firingTriggerId": [
+        "8"
+      ],
+      "tagFiringOption": "oncePerEvent",
+      "monitoringMetadata": {
+        "type": "map"
+      },
+      "consentSettings": {
+        "consentStatus": "notSet"
+      }
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "tagId": "11",
+      "name": "GA4 Event - click_request_quote",
+      "type": "gaawe",
+      "parameter": [
+        {
+          "type": "boolean",
+          "key": "sendEcommerceData",
+          "value": "false"
+        },
+        {
+          "type": "template",
+          "key": "eventName",
+          "value": "click_request_quote"
+        },
+        {
+          "type": "template",
+          "key": "measurementIdOverride",
+          "value": "G-Z9TSGVENQY"
+        }
+      ],
+      "fingerprint": "1783280647346",
+      "firingTriggerId": [
+        "10"
+      ],
+      "tagFiringOption": "oncePerEvent",
+      "monitoringMetadata": {
+        "type": "map"
+      },
+      "consentSettings": {
+        "consentStatus": "notSet"
+      }
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "tagId": "13",
+      "name": "GA4 Event - view_quote_page",
+      "type": "gaawe",
+      "parameter": [
+        {
+          "type": "boolean",
+          "key": "sendEcommerceData",
+          "value": "false"
+        },
+        {
+          "type": "template",
+          "key": "eventName",
+          "value": "view_quote_page"
+        },
+        {
+          "type": "template",
+          "key": "measurementIdOverride",
+          "value": "G-Z9TSGVENQY"
+        }
+      ],
+      "fingerprint": "1783280922684",
+      "firingTriggerId": [
+        "12"
+      ],
+      "tagFiringOption": "oncePerEvent",
+      "monitoringMetadata": {
+        "type": "map"
+      },
+      "consentSettings": {
+        "consentStatus": "notSet"
+      }
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "tagId": "15",
+      "name": "GA4 Event - view_contact_page",
+      "type": "gaawe",
+      "parameter": [
+        {
+          "type": "boolean",
+          "key": "sendEcommerceData",
+          "value": "false"
+        },
+        {
+          "type": "template",
+          "key": "eventName",
+          "value": "view_contact_page"
+        },
+        {
+          "type": "template",
+          "key": "measurementIdOverride",
+          "value": "G-Z9TSGVENQY"
+        }
+      ],
+      "fingerprint": "1783281403385",
+      "firingTriggerId": [
+        "14"
+      ],
+      "tagFiringOption": "oncePerEvent",
+      "monitoringMetadata": {
+        "type": "map"
+      },
+      "consentSettings": {
+        "consentStatus": "notSet"
+      }
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "tagId": "18",
+      "name": "GA4 Event - click_whatsapp",
+      "type": "gaawe",
+      "parameter": [
+        {
+          "type": "boolean",
+          "key": "sendEcommerceData",
+          "value": "false"
+        },
+        {
+          "type": "template",
+          "key": "eventName",
+          "value": "click_whatsapp"
+        },
+        {
+          "type": "template",
+          "key": "measurementIdOverride",
+          "value": "G-Z9TSGVENQY"
+        }
+      ],
+      "fingerprint": "1783397804199",
+      "firingTriggerId": [
+        "17"
+      ],
+      "tagFiringOption": "oncePerEvent",
+      "monitoringMetadata": {
+        "type": "map"
+      },
+      "consentSettings": {
+        "consentStatus": "notSet"
+      }
+    }
+  ],
+  "trigger": [
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "triggerId": "5",
+      "name": "Vista de una página - /gracias",
+      "type": "pageview",
+      "filter": [
+        {
+          "type": "equals",
+          "parameter": [
+            {
+              "type": "template",
+              "key": "arg0",
+              "value": "{{Page Path}}"
+            },
+            {
+              "type": "template",
+              "key": "arg1",
+              "value": "/gracias/"
+            }
+          ]
+        }
+      ],
+      "fingerprint": "1783276470106"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "triggerId": "7",
+      "name": "click_phone",
+      "type": "linkClick",
+      "filter": [
+        {
+          "type": "matchRegex",
+          "parameter": [
+            {
+              "type": "template",
+              "key": "arg0",
+              "value": "{{Click URL}}"
+            },
+            {
+              "type": "template",
+              "key": "arg1",
+              "value": "^tel:"
+            }
+          ]
+        }
+      ],
+      "waitForTags": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "checkValidation": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "waitForTagsTimeout": {
+        "type": "template",
+        "value": "2000"
+      },
+      "uniqueTriggerId": {
+        "type": "template"
+      },
+      "fingerprint": "1783399316758"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "triggerId": "8",
+      "name": "click_catalog_download",
+      "type": "linkClick",
+      "filter": [
+        {
+          "type": "contains",
+          "parameter": [
+            {
+              "type": "template",
+              "key": "arg0",
+              "value": "{{Click URL}}"
+            },
+            {
+              "type": "template",
+              "key": "arg1",
+              "value": "descargas/"
+            }
+          ]
+        }
+      ],
+      "waitForTags": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "checkValidation": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "waitForTagsTimeout": {
+        "type": "template",
+        "value": "2000"
+      },
+      "uniqueTriggerId": {
+        "type": "template"
+      },
+      "fingerprint": "1783281941195"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "triggerId": "10",
+      "name": "/solicitar-presupuesto/",
+      "type": "linkClick",
+      "filter": [
+        {
+          "type": "matchRegex",
+          "parameter": [
+            {
+              "type": "template",
+              "key": "arg0",
+              "value": "{{Click URL}}"
+            },
+            {
+              "type": "template",
+              "key": "arg1",
+              "value": "(contacto|solicitar-presupuesto)"
+            }
+          ]
+        }
+      ],
+      "waitForTags": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "checkValidation": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "waitForTagsTimeout": {
+        "type": "template",
+        "value": "2000"
+      },
+      "uniqueTriggerId": {
+        "type": "template"
+      },
+      "fingerprint": "1783399359378"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "triggerId": "12",
+      "name": "Page Path equals /solicitar-presupuesto/",
+      "type": "pageview",
+      "filter": [
+        {
+          "type": "equals",
+          "parameter": [
+            {
+              "type": "template",
+              "key": "arg0",
+              "value": "{{Page Path}}"
+            },
+            {
+              "type": "template",
+              "key": "arg1",
+              "value": "/solicitar-presupuesto/"
+            }
+          ]
+        }
+      ],
+      "fingerprint": "1783280788043"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "triggerId": "14",
+      "name": "visita contacto",
+      "type": "pageview",
+      "filter": [
+        {
+          "type": "equals",
+          "parameter": [
+            {
+              "type": "template",
+              "key": "arg0",
+              "value": "{{Page Path}}"
+            },
+            {
+              "type": "template",
+              "key": "arg1",
+              "value": "/contacto/"
+            }
+          ]
+        }
+      ],
+      "fingerprint": "1783280955331"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "triggerId": "17",
+      "name": "click_whatsapp",
+      "type": "linkClick",
+      "filter": [
+        {
+          "type": "matchRegex",
+          "parameter": [
+            {
+              "type": "template",
+              "key": "arg0",
+              "value": "{{Click URL}}"
+            },
+            {
+              "type": "template",
+              "key": "arg1",
+              "value": "(wa\\.me|api\\.whatsapp\\.com|whatsapp\\.com)"
+            }
+          ]
+        }
+      ],
+      "waitForTags": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "checkValidation": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "waitForTagsTimeout": {
+        "type": "template",
+        "value": "2000"
+      },
+      "uniqueTriggerId": {
+        "type": "template"
+      },
+      "fingerprint": "1783399409951"
+    }
+  ],
+  "builtInVariable": [
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "pageUrl",
+      "name": "Page URL"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "pageHostname",
+      "name": "Page Hostname"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "pagePath",
+      "name": "Page Path"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "referrer",
+      "name": "Referrer"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "event",
+      "name": "Event"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "clickClasses",
+      "name": "Click Classes"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "clickId",
+      "name": "Click ID"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "clickUrl",
+      "name": "Click URL"
+    },
+    {
+      "accountId": "6364338615",
+      "containerId": "257386510",
+      "type": "clickText",
+      "name": "Click Text"
+    }
+  ],
+  "fingerprint": "1783399511956",
+  "tagManagerUrl": "https://tagmanager.google.com/#/versions/accounts/6364338615/containers/257386510/versions/3?apiLink=version"
+}

@@ -12,6 +12,7 @@ import { emitEvent, readAllEvents } from "../core/department-events";
 import { logger } from "../core/logger";
 import { ChangePack, WorkOrder } from "../core/types";
 import { resolveActiveClientPaths } from "../core/client-paths";
+import { evaluateClusterGateForWorkOrder } from "./cluster-gate";
 
 /**
  * SEO Change Pack Builder — READ + PROPOSE only. Convierte work orders
@@ -20,6 +21,14 @@ import { resolveActiveClientPaths } from "../core/client-paths";
  * copy/FAQs/enlaces/schema de la work order, mas pasos de implementacion
  * concretos, checklist de revision humana y notas de reversion. NUNCA
  * toca WordPress: solo repaqueta la propuesta que ya existia.
+ *
+ * Fase O31 -- antes de crear un change pack, cada work order pasa por
+ * `evaluateClusterGateForWorkOrder()` (src/agents/cluster-gate.ts): si su
+ * keyword no esta clustered, si el cluster esta rechazado/pospuesto, o
+ * si tiene canibalizacion sin resolver, NO se crea change pack. Si el
+ * cluster ya tiene un borrador de staging para esa intencion, el change
+ * pack se marca con `targetWordpressPageId` para que se ACTUALICE ese
+ * borrador en vez de crear una pagina nueva duplicada.
  */
 
 const REPORTS_DIR = path.join(resolveActiveClientPaths().reportsDir, "seo-change-packs");
@@ -84,10 +93,17 @@ function buildCurrentAssumptions(proposal: SeoProposedChanges): string[] {
   ];
 }
 
+export interface BlockedByClusterGate {
+  keyword: string;
+  page?: string;
+  reason: string;
+}
+
 export interface SeoChangePackBuilderRunResult {
   departmentRunId: string;
   newChangePacks: ChangePack[];
   alreadyExisting: ChangePack[];
+  blockedByClusterGate: BlockedByClusterGate[];
   reportPath: string;
 }
 
@@ -114,7 +130,21 @@ function buildReportMarkdown(result: SeoChangePackBuilderRunResult, generatedAt:
     lines.push("Ninguno.");
   } else {
     for (const cp of result.newChangePacks) {
-      lines.push(`- [${cp.priority}] \`${cp.changePackId}\` ${cp.keyword} (${cp.page ?? "sin pagina"}) — status: ${cp.status}`);
+      const target = cp.targetWordpressPageId ? ` — actualiza borrador existente ${cp.targetWordpressPageId}` : "";
+      lines.push(`- [${cp.priority}] \`${cp.changePackId}\` ${cp.keyword} (${cp.page ?? "sin pagina"}) — status: ${cp.status}${target}`);
+    }
+  }
+  lines.push("");
+
+  lines.push(`## Bloqueadas por el cluster gate (${result.blockedByClusterGate.length})`);
+  lines.push("");
+  lines.push("Fase O31 -- work orders que NO se convirtieron en change pack porque su cluster SEO esta rechazado/pospuesto, sin clustered, con canibalizacion sin resolver, o requieren un borrador de staging previo que todavia no existe.");
+  lines.push("");
+  if (result.blockedByClusterGate.length === 0) {
+    lines.push("Ninguna.");
+  } else {
+    for (const b of result.blockedByClusterGate) {
+      lines.push(`- "${b.keyword}" (${b.page ?? "sin pagina"}): ${b.reason}`);
     }
   }
   lines.push("");
@@ -149,8 +179,20 @@ export async function runSeoChangePackBuilder(departmentRunId?: string): Promise
 
   const newChangePacks: ChangePack[] = [];
   const alreadyExisting: ChangePack[] = [];
+  const blockedByClusterGate: BlockedByClusterGate[] = [];
 
   for (const workOrder of eligibleWorkOrders) {
+    const gate = evaluateClusterGateForWorkOrder(workOrder);
+    if (gate.verdict === "block") {
+      blockedByClusterGate.push({ keyword: workOrder.keyword, page: workOrder.page, reason: gate.reason });
+      logger.info("SEO Change Pack Builder: work order bloqueada por el cluster gate", {
+        workOrderId: workOrder.workOrderId,
+        keyword: workOrder.keyword,
+        reason: gate.reason,
+      });
+      continue;
+    }
+
     const proposal = workOrder.proposedChanges as unknown as SeoProposedChanges;
     const { changePack, isNew } = upsertChangePack(
       {
@@ -163,6 +205,7 @@ export async function runSeoChangePackBuilder(departmentRunId?: string): Promise
         risks: buildRisks(proposal),
         rollbackNotes: buildGenericRollbackNotes(workOrder.page ?? "la pagina afectada"),
         sourceAgent: AGENT_NAME,
+        targetWordpressPageId: gate.verdict === "allow_update_existing" ? gate.reuseWordpressPageId : undefined,
       },
       currentChangePacks
     );
@@ -183,16 +226,23 @@ export async function runSeoChangePackBuilder(departmentRunId?: string): Promise
   }
 
   const generatedAt = new Date().toISOString();
-  const result: SeoChangePackBuilderRunResult = { departmentRunId: deptRunId, newChangePacks, alreadyExisting, reportPath: "" };
+  const result: SeoChangePackBuilderRunResult = { departmentRunId: deptRunId, newChangePacks, alreadyExisting, blockedByClusterGate, reportPath: "" };
   result.reportPath = writeReport(result, generatedAt);
 
-  logger.info(`SEO Change Pack Builder finalizado. Nuevos: ${newChangePacks.length}. Informe: ${result.reportPath}`);
+  logger.info(
+    `SEO Change Pack Builder finalizado. Nuevos: ${newChangePacks.length}. Bloqueados por cluster gate: ${blockedByClusterGate.length}. Informe: ${result.reportPath}`
+  );
   emitEvent({
     departmentRunId: deptRunId,
     agent: AGENT_NAME,
     type: "agent_finished",
-    summary: `SEO Change Pack Builder finalizado: ${newChangePacks.length} change pack(s) nuevo(s)`,
-    payload: { newCount: newChangePacks.length, alreadyExistingCount: alreadyExisting.length, reportPath: result.reportPath },
+    summary: `SEO Change Pack Builder finalizado: ${newChangePacks.length} change pack(s) nuevo(s), ${blockedByClusterGate.length} bloqueado(s) por cluster gate`,
+    payload: {
+      newCount: newChangePacks.length,
+      alreadyExistingCount: alreadyExisting.length,
+      blockedByClusterGateCount: blockedByClusterGate.length,
+      reportPath: result.reportPath,
+    },
   });
 
   return result;

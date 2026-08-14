@@ -1,0 +1,41 @@
+{
+  "createdAt": "2026-08-14T04:42:44.625Z",
+  "workspaceId": "6",
+  "triggers": [
+    {
+      "event": "click_presupuesto_personalizado",
+      "triggerId": "19",
+      "name": "click_presupuesto_personalizado"
+    },
+    {
+      "event": "click_whatsapp_floating",
+      "triggerId": "20",
+      "name": "click_whatsapp_floating"
+    },
+    {
+      "event": "sticky_presupuesto_click",
+      "triggerId": "21",
+      "name": "sticky_presupuesto_click"
+    }
+  ],
+  "tags": [
+    {
+      "event": "click_presupuesto_personalizado",
+      "tagId": "22",
+      "name": "GA4 Event - click_presupuesto_personalizado",
+      "firingTriggerId": "19"
+    },
+    {
+      "event": "click_whatsapp_floating",
+      "tagId": "23",
+      "name": "GA4 Event - click_whatsapp_floating",
+      "firingTriggerId": "20"
+    },
+    {
+      "event": "sticky_presupuesto_click",
+      "tagId": "24",
+      "name": "GA4 Event - sticky_presupuesto_click",
+      "firingTriggerId": "21"
+    }
+  ]
+}

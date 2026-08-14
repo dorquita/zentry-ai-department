@@ -12,6 +12,7 @@ import { emitEvent, readAllEvents } from "../core/department-events";
 import { logger } from "../core/logger";
 import { ChangePack, WorkOrder } from "../core/types";
 import { resolveActiveClientPaths } from "../core/client-paths";
+import { evaluateClusterGateForWorkOrder } from "./cluster-gate";
 
 /**
  * Content Change Pack Builder — READ + PROPOSE only. Convierte work
@@ -21,6 +22,13 @@ import { resolveActiveClientPaths } from "../core/client-paths";
  * implementacion, checklist de revision y notas de reversion. NUNCA
  * escribe en WordPress ni redacta el articulo final — sigue siendo un
  * brief, no contenido publicable.
+ *
+ * Fase O31 -- cada work order pasa por `evaluateClusterGateForWorkOrder()`
+ * (src/agents/cluster-gate.ts). Si el cluster ya tiene un borrador de
+ * staging para esa intencion, el changeType se fuerza a "content_update"
+ * (nunca "new_content_page", aunque la work order fuera
+ * "content:new_landing") y se marca `targetWordpressPageId` para
+ * actualizar ese borrador en vez de crear uno nuevo duplicado.
  */
 
 const REPORTS_DIR = path.join(resolveActiveClientPaths().reportsDir, "content-change-packs");
@@ -88,10 +96,17 @@ function buildCurrentAssumptions(proposal: ContentProposedChanges, workOrder: Wo
   return assumptions;
 }
 
+export interface BlockedByClusterGate {
+  keyword: string;
+  page?: string;
+  reason: string;
+}
+
 export interface ContentChangePackBuilderRunResult {
   departmentRunId: string;
   newChangePacks: ChangePack[];
   alreadyExisting: ChangePack[];
+  blockedByClusterGate: BlockedByClusterGate[];
   reportPath: string;
 }
 
@@ -118,7 +133,19 @@ function buildReportMarkdown(result: ContentChangePackBuilderRunResult, generate
     lines.push("Ninguno.");
   } else {
     for (const cp of result.newChangePacks) {
-      lines.push(`- [${cp.priority}] \`${cp.changePackId}\` ${cp.keyword} (${cp.changeType}) — status: ${cp.status}`);
+      const target = cp.targetWordpressPageId ? ` — actualiza borrador existente ${cp.targetWordpressPageId}` : "";
+      lines.push(`- [${cp.priority}] \`${cp.changePackId}\` ${cp.keyword} (${cp.changeType}) — status: ${cp.status}${target}`);
+    }
+  }
+  lines.push("");
+
+  lines.push(`## Bloqueadas por el cluster gate (${result.blockedByClusterGate.length})`);
+  lines.push("");
+  if (result.blockedByClusterGate.length === 0) {
+    lines.push("Ninguna.");
+  } else {
+    for (const b of result.blockedByClusterGate) {
+      lines.push(`- "${b.keyword}" (${b.page ?? "sin pagina"}): ${b.reason}`);
     }
   }
   lines.push("");
@@ -153,13 +180,31 @@ export async function runContentChangePackBuilder(departmentRunId?: string): Pro
 
   const newChangePacks: ChangePack[] = [];
   const alreadyExisting: ChangePack[] = [];
+  const blockedByClusterGate: BlockedByClusterGate[] = [];
 
   for (const workOrder of eligibleWorkOrders) {
+    const gate = evaluateClusterGateForWorkOrder(workOrder);
+    if (gate.verdict === "block") {
+      blockedByClusterGate.push({ keyword: workOrder.keyword, page: workOrder.page, reason: gate.reason });
+      logger.info("Content Change Pack Builder: work order bloqueada por el cluster gate", {
+        workOrderId: workOrder.workOrderId,
+        keyword: workOrder.keyword,
+        reason: gate.reason,
+      });
+      continue;
+    }
+
+    // Si el cluster ya tiene un borrador de staging, esto SIEMPRE es una
+    // actualizacion (nunca "new_content_page"), aunque la work order
+    // origen fuera "content:new_landing" -- evita crear una pagina
+    // nueva duplicada para una intencion ya cubierta.
+    const changeType = gate.verdict === "allow_update_existing" ? "content_update" : resolveChangeType(workOrder);
+
     const proposal = workOrder.proposedChanges as unknown as ContentProposedChanges;
     const { changePack, isNew } = upsertChangePack(
       {
         workOrder,
-        changeType: resolveChangeType(workOrder),
+        changeType,
         proposedChanges: workOrder.proposedChanges,
         currentAssumptions: buildCurrentAssumptions(proposal, workOrder),
         implementationSteps: buildImplementationSteps(),
@@ -167,6 +212,7 @@ export async function runContentChangePackBuilder(departmentRunId?: string): Pro
         risks: buildRisks(proposal),
         rollbackNotes: buildGenericRollbackNotes(workOrder.page ?? "la pagina/contenido afectado"),
         sourceAgent: AGENT_NAME,
+        targetWordpressPageId: gate.verdict === "allow_update_existing" ? gate.reuseWordpressPageId : undefined,
       },
       currentChangePacks
     );
@@ -187,16 +233,23 @@ export async function runContentChangePackBuilder(departmentRunId?: string): Pro
   }
 
   const generatedAt = new Date().toISOString();
-  const result: ContentChangePackBuilderRunResult = { departmentRunId: deptRunId, newChangePacks, alreadyExisting, reportPath: "" };
+  const result: ContentChangePackBuilderRunResult = { departmentRunId: deptRunId, newChangePacks, alreadyExisting, blockedByClusterGate, reportPath: "" };
   result.reportPath = writeReport(result, generatedAt);
 
-  logger.info(`Content Change Pack Builder finalizado. Nuevos: ${newChangePacks.length}. Informe: ${result.reportPath}`);
+  logger.info(
+    `Content Change Pack Builder finalizado. Nuevos: ${newChangePacks.length}. Bloqueados por cluster gate: ${blockedByClusterGate.length}. Informe: ${result.reportPath}`
+  );
   emitEvent({
     departmentRunId: deptRunId,
     agent: AGENT_NAME,
     type: "agent_finished",
-    summary: `Content Change Pack Builder finalizado: ${newChangePacks.length} change pack(s) nuevo(s)`,
-    payload: { newCount: newChangePacks.length, alreadyExistingCount: alreadyExisting.length, reportPath: result.reportPath },
+    summary: `Content Change Pack Builder finalizado: ${newChangePacks.length} change pack(s) nuevo(s), ${blockedByClusterGate.length} bloqueado(s) por cluster gate`,
+    payload: {
+      newCount: newChangePacks.length,
+      alreadyExistingCount: alreadyExisting.length,
+      blockedByClusterGateCount: blockedByClusterGate.length,
+      reportPath: result.reportPath,
+    },
   });
 
   return result;

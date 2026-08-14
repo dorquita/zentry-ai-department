@@ -1,0 +1,19 @@
+{
+  "results": {
+    "bar_created": {
+      "id": 22,
+      "code_error": null
+    },
+    "bar_activated": {
+      "id": 22,
+      "active": true,
+      "code_error": null
+    },
+    "snippet18_updated": {
+      "id": 18,
+      "active": true,
+      "code_error": null
+    }
+  },
+  "activated": true
+}

@@ -1,0 +1,15 @@
+{
+  "id": 16,
+  "name": "O33.2 - Cross-sell cerraduras en fichas de taquillas",
+  "desc": "Bloque visual junto a la zona de compra en fichas de taquillas, enlazando a /cerraduras-para-taquillas/. Solo AÑADE contenido tras el resumen del producto (woocommerce_single_product_summary prioridad 35, despues del formulario de compra que va a prioridad 30), nunca sustituye precio ni boton de compra. Solo se muestra en categorias de taquillas. Fase O33.2 tarea 4 -- creado inactivo, se activa tras validar.",
+  "code": "add_action('woocommerce_single_product_summary', function () {\n    global $product;\n    if (!$product instanceof WC_Product) return;\n    if (!has_term(['taquillas', 'taquillas-fenolicas', 'taquillas-de-melamina', 'taquillas-metalicas'], 'product_cat', $product->get_id())) return;\n\n    $url = 'https://staging.zentrylockers.com/cerraduras-para-taquillas/';\n    echo '<div class=\"zentry-lock-crosssell\">\n        <div class=\"zentry-lock-crosssell__icon\">&#128274;</div>\n        <div class=\"zentry-lock-crosssell__body\">\n            <p class=\"zentry-lock-crosssell__title\">&iquest;Dudas sobre qu&eacute; cerradura elegir?</p>\n            <p class=\"zentry-lock-crosssell__text\">Tambi&eacute;n puedes consultar las cerraduras disponibles y elegir la opci&oacute;n m&aacute;s adecuada para tu proyecto.</p>\n        </div>\n        <a class=\"zentry-lock-crosssell__btn\" href=\"' . esc_url($url) . '\">Ver cerraduras para taquillas</a>\n    </div>';\n}, 35);\n\nadd_action('wp_head', function () {\n    if (!is_product()) return;\n    echo '<style>\n    .zentry-lock-crosssell{\n        display:flex; align-items:center; gap:1rem; flex-wrap:wrap;\n        margin:1.25rem 0; padding:1rem 1.25rem;\n        background:#eaf0ff; border:1px solid #b9cdfa; border-radius:10px;\n    }\n    .zentry-lock-crosssell__icon{ font-size:1.6rem; line-height:1; flex-shrink:0; }\n    .zentry-lock-crosssell__body{ flex:1 1 220px; min-width:180px; }\n    .zentry-lock-crosssell__title{ margin:0 0 .2rem; font-weight:700; color:#132a63; font-size:.98rem; }\n    .zentry-lock-crosssell__text{ margin:0; color:#3a4763; font-size:.88rem; line-height:1.4; }\n    .zentry-lock-crosssell__btn{\n        display:inline-block; flex-shrink:0; white-space:nowrap;\n        background:#2657d9; color:#fff !important; text-decoration:none;\n        font-weight:600; font-size:.88rem; padding:.6rem 1.1rem; border-radius:7px;\n        transition:background .15s ease;\n    }\n    .zentry-lock-crosssell__btn:hover{ background:#1c3fa0; }\n    @media (max-width:480px){\n        .zentry-lock-crosssell{ flex-direction:column; align-items:flex-start; }\n        .zentry-lock-crosssell__btn{ width:100%; text-align:center; }\n    }\n    </style>';\n});",
+  "tags": [],
+  "scope": "front-end",
+  "condition_id": 0,
+  "active": true,
+  "priority": 10,
+  "network": false,
+  "shared_network": false,
+  "modified": "2026-08-11 08:57:57",
+  "code_error": null
+}

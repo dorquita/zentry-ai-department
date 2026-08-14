@@ -1,0 +1,310 @@
+{
+  "takenAt": "2026-08-13T17:06:53.227Z",
+  "source": "O43 pre-change backup",
+  "customerId": "8369126564",
+  "conversionActions": [
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7560422559",
+        "status": "ENABLED",
+        "type": "WEBPAGE_CODELESS",
+        "category": "SUBMIT_LEAD_FORM",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "MANY_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "AVAILABLE"
+        },
+        "id": "7560422559",
+        "name": "Envío de formulario para clientes potenciales",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": true,
+        "clickThroughLookbackWindowDays": "30",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": true
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7560422598",
+        "status": "ENABLED",
+        "type": "LEAD_FORM_SUBMIT",
+        "category": "SUBMIT_LEAD_FORM",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "XXX",
+          "alwaysUseDefaultValue": true
+        },
+        "countingType": "ONE_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_ADS_LAST_CLICK",
+          "dataDrivenModelStatus": "NEVER_GENERATED"
+        },
+        "id": "7560422598",
+        "name": "Formulario de contacto - Enviar",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": true,
+        "clickThroughLookbackWindowDays": "1",
+        "viewThroughLookbackWindowDays": "30",
+        "primaryForGoal": true
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7560709627",
+        "status": "ENABLED",
+        "type": "WEBPAGE",
+        "category": "SUBMIT_LEAD_FORM",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "ONE_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "AVAILABLE"
+        },
+        "id": "7560709627",
+        "name": "Envío de formulario para clientes potenciales (1)",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": false,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": false
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7560824781",
+        "status": "ENABLED",
+        "type": "WEBPAGE",
+        "category": "REQUEST_QUOTE",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "ONE_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "AVAILABLE"
+        },
+        "id": "7560824781",
+        "name": "Solicitud de presupuesto",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": false,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": false
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7704254284",
+        "status": "HIDDEN",
+        "type": "GOOGLE_ANALYTICS_4_CLOSE_CONVERT_LEAD",
+        "category": "CONVERTED_LEAD",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "MANY_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "NEVER_GENERATED"
+        },
+        "id": "7704254284",
+        "name": "www.zentrylockers.com (web) close_convert_lead",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": false,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": false,
+        "googleAnalytics4Settings": {
+          "eventName": "close_convert_lead",
+          "propertyId": "544190531"
+        }
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7704254287",
+        "status": "HIDDEN",
+        "type": "GOOGLE_ANALYTICS_4_QUALIFY_LEAD",
+        "category": "QUALIFIED_LEAD",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "MANY_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "NEVER_GENERATED"
+        },
+        "id": "7704254287",
+        "name": "www.zentrylockers.com (web) qualify_lead",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": false,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": false,
+        "googleAnalytics4Settings": {
+          "eventName": "qualify_lead",
+          "propertyId": "544190531"
+        }
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7704254290",
+        "status": "HIDDEN",
+        "type": "GOOGLE_ANALYTICS_4_PURCHASE",
+        "category": "PURCHASE",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "MANY_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "AVAILABLE"
+        },
+        "id": "7704254290",
+        "name": "www.zentrylockers.com (web) purchase",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": false,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": false,
+        "googleAnalytics4Settings": {
+          "eventName": "purchase",
+          "propertyId": "544190531"
+        }
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7704254293",
+        "status": "ENABLED",
+        "type": "GOOGLE_ANALYTICS_4_CUSTOM",
+        "category": "DEFAULT",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "MANY_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "AVAILABLE"
+        },
+        "id": "7704254293",
+        "name": "www.zentrylockers.com (web) generate_lead_form_submit",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": true,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": true,
+        "googleAnalytics4Settings": {
+          "eventName": "generate_lead_form_submit",
+          "propertyId": "544190531"
+        }
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7704254296",
+        "status": "ENABLED",
+        "type": "GOOGLE_ANALYTICS_4_CUSTOM",
+        "category": "DEFAULT",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "MANY_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "AVAILABLE"
+        },
+        "id": "7704254296",
+        "name": "www.zentrylockers.com (web) click_whatsapp",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": true,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": true,
+        "googleAnalytics4Settings": {
+          "eventName": "click_whatsapp",
+          "propertyId": "544190531"
+        }
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7704254299",
+        "status": "ENABLED",
+        "type": "GOOGLE_ANALYTICS_4_CUSTOM",
+        "category": "DEFAULT",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "MANY_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "AVAILABLE"
+        },
+        "id": "7704254299",
+        "name": "www.zentrylockers.com (web) click_phone",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": true,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": true,
+        "googleAnalytics4Settings": {
+          "eventName": "click_phone",
+          "propertyId": "544190531"
+        }
+      }
+    },
+    {
+      "conversionAction": {
+        "resourceName": "customers/8369126564/conversionActions/7704254302",
+        "status": "ENABLED",
+        "type": "GOOGLE_ANALYTICS_4_CUSTOM",
+        "category": "DEFAULT",
+        "valueSettings": {
+          "defaultValue": 1,
+          "defaultCurrencyCode": "EUR",
+          "alwaysUseDefaultValue": false
+        },
+        "countingType": "MANY_PER_CLICK",
+        "attributionModelSettings": {
+          "attributionModel": "GOOGLE_SEARCH_ATTRIBUTION_DATA_DRIVEN",
+          "dataDrivenModelStatus": "AVAILABLE"
+        },
+        "id": "7704254302",
+        "name": "www.zentrylockers.com (web) click_request_quote",
+        "ownerCustomer": "customers/8369126564",
+        "includeInConversionsMetric": false,
+        "clickThroughLookbackWindowDays": "90",
+        "viewThroughLookbackWindowDays": "1",
+        "primaryForGoal": false,
+        "googleAnalytics4Settings": {
+          "eventName": "click_request_quote",
+          "propertyId": "544190531"
+        }
+      }
+    }
+  ]
+}

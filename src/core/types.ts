@@ -103,7 +103,12 @@ export type DepartmentEventType =
   | "action_proposed"
   | "approval_required"
   | "competitor_keyword_detected"
-  | "brand_intent_classified";
+  | "brand_intent_classified"
+  // Fase O49 — un paso del pase diario lanzo una excepcion y el
+  // orquestador lo aislo (ver src/core/pipeline-step.ts) en vez de abortar
+  // las 26 etapas. El paso que falla queda documentado aqui; el resto de
+  // la pasada continua con normalidad.
+  | "step_failed";
 
 export type EventPriority = "low" | "medium" | "high";
 
@@ -459,6 +464,8 @@ export interface ChangePack {
   changeType: string;
   priority: Priority;
   status: ChangePackStatus;
+  /** Fase O31 -- si esta puesto, este change pack debe ACTUALIZAR ese borrador de staging ya existente en vez de crear una pagina nueva (viene de SeoCluster.relatedStagingPageIds via cluster-gate.ts). staging-executor.ts lo prioriza sobre la busqueda por canonicalKey. */
+  targetWordpressPageId?: number;
   proposedChanges: Record<string, unknown>;
   currentAssumptions: string[];
   implementationSteps: string[];
@@ -581,6 +588,8 @@ export interface StagingExecution {
   status: StagingExecutionStatus;
   environment: "staging";
   wordpressBackend: string;
+  /** Fase O31 -- copiado del change pack de origen: si esta puesto, aplicar contra ESTA pagina de staging en vez de buscar por canonicalKey. */
+  targetWordpressPageId?: number;
   wordpressPageId?: number;
   wordpressDraftUrl?: string;
   snapshot?: StagingExecutionSnapshot;
@@ -986,6 +995,99 @@ export interface LandingBlueprint {
   finalCta: { headline: string; cta: LandingCtaSpec };
   internalLinks: string[];
   visualHierarchyNotes: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- SEO Strategy & Keyword Clustering Agent (data/seo-clusters.jsonl) — Fase O29 ---
+// Regla base pedida por Pau: una keyword NO equivale a una pagina. Este
+// registro es la capa de estrategia que se interpone ENTRE el backlog de
+// oportunidades sueltas (una fila por keyword, tal como llegan de
+// Search Console/SEO Watcher) y la ejecucion real (Carril A) -- agrupa
+// keywords en clusters con una unica intencion de busqueda, una unica
+// URL objetivo y una unica decision, para no generar una tarea (ni una
+// pagina) por cada variante de la misma keyword.
+
+export type SeoSearchIntent =
+  | "comercial"
+  | "informativo"
+  | "comparativo"
+  | "local_geografico"
+  | "producto"
+  | "sector"
+  | "navegacion_marca"
+  | "transaccional"
+  | "mixta";
+
+export type SeoClusterAction =
+  | "update_existing_page"
+  | "new_page_candidate"
+  | "merge"
+  | "differentiate"
+  | "redirect_candidate"
+  | "reject"
+  | "postpone";
+
+export type SeoClusterPriority = "alta" | "media" | "baja" | "rechazar_postponer";
+
+export type SeoClusterCannibalizationRisk = "bajo" | "medio" | "alto";
+
+// Los 20 estados pedidos por Pau -- una keyword suelta nunca pasa
+// directa a "staging_draft_created": primero clustered, luego mapeada a
+// una URL, luego se decide la accion, y SOLO entonces puede generar una
+// tarea ejecutable.
+export type SeoClusterStatus =
+  | "detected"
+  | "clustered"
+  | "mapped_to_existing_page"
+  | "mapped_to_new_page_candidate"
+  | "duplicate_detected"
+  | "cannibalization_risk"
+  | "needs_content_update"
+  | "needs_visual_design"
+  | "staging_draft_created"
+  | "technical_qa_passed"
+  | "content_qa_passed"
+  | "visual_review_needed"
+  | "visually_approved"
+  | "production_candidate"
+  | "approved_for_production_plan"
+  | "done"
+  | "rejected"
+  | "postponed"
+  | "superseded_by"
+  | "needs_revalidation";
+
+export interface SeoClusterMetrics {
+  maxImpressions: number;
+  bestPosition: number | null;
+  keywordCount: number;
+  distinctTargetPages: number;
+}
+
+export interface SeoCluster {
+  clusterId: string;
+  label: string;
+  keywords: string[];
+  searchIntent: SeoSearchIntent;
+  targetUrl?: string;
+  targetPageId?: number;
+  relatedStagingPageIds: number[];
+  action: SeoClusterAction;
+  priority: SeoClusterPriority;
+  priorityScore: number;
+  cannibalizationRisk: SeoClusterCannibalizationRisk;
+  reason: string;
+  status: SeoClusterStatus;
+  /** actionId de data/action-backlog.jsonl que este cluster consolida -- nunca se muta el backlog original, esto es la capa de encima. */
+  coveredActionIds: string[];
+  /** cuantos de esos actionIds son literalmente el mismo keyword+page repetido (duplicados reales, no solo variantes). */
+  duplicateActionCount: number;
+  /** Fase O29.1 -- actionIds cuyo `page` real no coincide con `targetUrl`: la keyword del cluster esta apuntando a una pagina de produccion distinta a la decidida. Si el cluster ya tiene una decision "differentiate" con cannibalizationRisk resuelto, estos actionIds se cierran (rejected) por un script explicito, nunca automaticamente dentro del agente. */
+  misroutedActionIds: string[];
+  recommendedTitle?: string;
+  recommendedMetaDescription?: string;
+  metrics: SeoClusterMetrics;
   createdAt: string;
   updatedAt: string;
 }

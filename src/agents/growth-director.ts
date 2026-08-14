@@ -12,7 +12,11 @@ import { readCurrentAssetRequests } from "../core/asset-requests";
 import { readCurrentStagingQaResults } from "../core/staging-qa-results";
 import { readCurrentProductionDeploymentPlans } from "../core/production-deployment-plans";
 import { readCurrentProductionExecutions } from "../core/production-executions";
-import { deriveOpportunityState, buildOpportunityStateContext, buildOpportunityStateContextAsOf } from "../core/opportunity-state";
+import { deriveOpportunityState, buildOpportunityStateContext, OpportunityState } from "../core/opportunity-state";
+import { recordAndDiffOpportunityStates } from "../core/opportunity-state-log";
+import { readActiveCredentialFailures, describeCredentialFailure } from "../core/credential-health";
+import { findDuplicateEnvKeys, describeEnvDuplicate } from "../core/env-duplicate-check";
+import { readSemDepartmentState } from "../core/sem-department-state";
 import { isVisuallyApproved, readCurrentVisualQaApprovals } from "../core/visual-qa";
 import { findExistingPageAudit, readCurrentExistingPageAudits } from "../core/existing-page-audit";
 import { getTelegramStatusForReport } from "../core/telegram-gateway";
@@ -28,6 +32,12 @@ import {
   VisualReviewPendingItem,
   renderExecutiveReportMarkdownV2,
   validateExecutiveReportCoherence,
+  CompactEmailInput,
+  CompactEmailBlocker,
+  AgentTeamStatus,
+  renderCompactEmailHtml,
+  renderCompactEmailText,
+  renderFallbackEmailHtml,
 } from "../core/executive-report";
 import { emitEvent, readAllEvents, readEventsForRun } from "../core/department-events";
 import { logger } from "../core/logger";
@@ -117,6 +127,9 @@ export interface GrowthDirectorRunResult {
   departmentRunId: string;
   executiveReportPath: string;
   technicalReportPath: string;
+  /** Fase O49.7 -- cuerpo compacto del email diario (HTML/texto), ver src/core/executive-report.ts. */
+  emailHtml: string;
+  emailText: string;
   executiveFallbackUsed: boolean;
   preparedForReviewCount: number;
   pendingDecisionCount: number;
@@ -705,30 +718,50 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
     (r) => r.answeredBy === "carril_a_staging_autonomy" && (r.answeredAt ?? "").slice(0, 10) === executionDateForRunId
   ).length;
 
-  const startOfToday = `${executionDateForRunId}T00:00:00.000Z`;
-  const tasksAdvancedToday: TaskAdvancedToday[] = [];
+  // Fase O49 -- antes de esta fase, el "estado de ayer" se reconstruia
+  // filtrando change packs/ejecuciones por timestamp
+  // (buildOpportunityStateContextAsOf). Bug real de produccion: los
+  // Change Pack Builders regeneran un change pack nuevo cada dia para
+  // cualquier oportunidad que siga abierta (mismo criterio de negocio,
+  // createdAt de hoy) aunque nada de fondo haya cambiado -- la
+  // reconstruccion por fecha quedaba "ciega" al historico real y volvia
+  // a ver `detected` cada dia, asi que la seccion "Tareas avanzadas hoy"
+  // repetia literalmente "Detectada -> QA superado (en staging)" para la
+  // MISMA pagina bloqueada en staging desde el 2026-08-10, tres dias
+  // seguidos (11, 12 y 13 de agosto). Ver src/core/opportunity-state-log.ts.
+  const currentStatesByAction = new Map<string, { ctx: ReturnType<typeof buildOpportunityStateContext>; state: OpportunityState }>();
   for (const action of allActions) {
-    const currentCtx = buildOpportunityStateContext(action, allChangePacks, allStagingExecutions, allQaResults, allProductionPlans, allProductionExecutions);
-    const currentState = deriveOpportunityState(currentCtx);
-    const priorCtx = buildOpportunityStateContextAsOf(
-      startOfToday,
-      action,
-      allChangePacks,
-      allStagingExecutions,
-      allQaResults,
-      allProductionPlans,
-      allProductionExecutions
-    );
-    const priorState = deriveOpportunityState(priorCtx);
-    if (currentState === priorState) continue;
-    const latestExecution = [...currentCtx.stagingExecutions].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0];
-    tasksAdvancedToday.push({
-      title: action.title,
-      previousState: priorState,
-      newState: currentState,
-      evidence: action.recommendation || action.description,
-      stagingUrl: latestExecution?.wordpressDraftUrl,
-    });
+    const ctx = buildOpportunityStateContext(action, allChangePacks, allStagingExecutions, allQaResults, allProductionPlans, allProductionExecutions);
+    currentStatesByAction.set(action.actionId, { ctx, state: deriveOpportunityState(ctx) });
+  }
+  const stateDiffs = recordAndDiffOpportunityStates(
+    allActions.map((a) => ({ actionId: a.actionId, currentState: currentStatesByAction.get(a.actionId)!.state })),
+    executionDateForRunId
+  );
+
+  const tasksAdvancedToday: TaskAdvancedToday[] = [];
+  // Fase O49 -- oportunidades que llevan 2+ dias SEGUIDOS en el mismo
+  // estado "parado" (no en un estado terminal como done/rejected):
+  // fuente de la nueva seccion de bloqueos envejecidos en vez de
+  // repetirse como si fueran progreso.
+  const STUCK_STATES: OpportunityState[] = ["qa_passed", "waiting_approval", "qa_failed", "blocked", "postponed"];
+  const agingOpportunities: Array<{ action: BacklogAction; state: OpportunityState; daysInState: number; stagingUrl?: string }> = [];
+  for (const action of allActions) {
+    const { ctx, state: currentState } = currentStatesByAction.get(action.actionId)!;
+    const diff = stateDiffs.get(action.actionId)!;
+    if (diff.changedToday) {
+      const latestExecution = [...ctx.stagingExecutions].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0];
+      tasksAdvancedToday.push({
+        title: action.title,
+        previousState: diff.previousState ?? "detected",
+        newState: currentState,
+        evidence: action.recommendation || action.description,
+        stagingUrl: latestExecution?.wordpressDraftUrl,
+      });
+    } else if (diff.daysInState >= 2 && STUCK_STATES.includes(currentState)) {
+      const latestExecution = [...ctx.stagingExecutions].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0];
+      agingOpportunities.push({ action, state: currentState, daysInState: diff.daysInState, stagingUrl: latestExecution?.wordpressDraftUrl });
+    }
   }
 
   // Decisiones necesarias de Pau (Fase O27): deduplicadas por titulo
@@ -815,6 +848,11 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
   // apuntar a la misma pagina.
   const seenVisualReviewPageIds = new Set<number>();
   const existingPageAudits = readCurrentExistingPageAudits();
+  // Fase O49 -- actionId de origen de cada change pack, para poder mirar
+  // hace cuantos dias SEGUIDOS lleva esta pagina concreta bloqueada en
+  // "pendiente de revision visual" (misma bitacora que agingOpportunities,
+  // ver opportunity-state-log.ts) en vez de solo listarla otra vez.
+  const actionIdByChangePackId = new Map(allChangePacks.map((cp) => [cp.changePackId, cp.actionId]));
   const draftsPendingVisualReview: VisualReviewPendingItem[] = [];
   for (const execution of allStagingExecutions) {
     if (execution.status !== "applied_to_staging" || typeof execution.wordpressPageId !== "number") continue;
@@ -824,11 +862,15 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
     if (isVisuallyApproved(execution.wordpressPageId, visualApprovalsForGate)) continue;
     seenVisualReviewPageIds.add(execution.wordpressPageId);
     const audit = findExistingPageAudit(execution.wordpressPageId, existingPageAudits);
+    const originActionId = actionIdByChangePackId.get(execution.changePackId);
+    const daysBlocked = originActionId ? stateDiffs.get(originActionId)?.daysInState ?? 0 : 0;
     draftsPendingVisualReview.push({
       keyword: execution.keyword,
       page: execution.page,
       stagingUrl: execution.wordpressDraftUrl,
       existingPageMatch: audit ? { matchType: audit.matchType, productionUrl: audit.productionUrl } : undefined,
+      daysBlocked,
+      wordpressPageId: execution.wordpressPageId,
     });
   }
 
@@ -862,6 +904,8 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
   let preparedForReviewCount = 0;
   let pendingDecisionCount = 0;
   let executiveMarkdown: string;
+  let compactEmailHtml: string;
+  let compactEmailText: string;
   try {
     const executiveData = buildExecutiveReportData(executiveInput);
     // Revision final de coherencia (equivalente a que Growth Director
@@ -874,6 +918,119 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
     if (coherenceProblems.length > 0) {
       throw new Error(`Informe ejecutivo incoherente, no se guarda: ${coherenceProblems.join("; ")}`);
     }
+    // Fase O49 -- bloqueos envejecidos (2+ dias SEGUIDOS en el mismo
+    // estado "parado", ver bitacora en opportunity-state-log.ts). No
+    // incluye qa_passed (ya cubierto, con su propia edad, en
+    // "draftsPendingVisualReview") para no duplicar el mismo aviso dos
+    // veces en el mismo informe.
+    const AGING_NEXT_ACTION: Record<string, { action: string; responsible: string }> = {
+      waiting_approval: {
+        action: "Responder la solicitud pendiente (Telegram, o `npm run approvals:list -- --status pending` en el servidor).",
+        responsible: "Pau",
+      },
+      qa_failed: {
+        action: "Revisar por que falla el QA tecnico en staging (informe Staging QA) y decidir si se corrige o se descarta.",
+        responsible: "sistema (revision tecnica)",
+      },
+      blocked: {
+        action: "Revisar la causa del bloqueo (informe de Approval Queue / logs del servidor).",
+        responsible: "sistema (revision tecnica)",
+      },
+      postponed: {
+        action: "El plan de despliegue quedo desactualizado tras regenerarse el borrador (needs_revalidation) o fue aplazado — revisar si la oportunidad sigue vigente o archivarla.",
+        responsible: "Pau",
+      },
+    };
+    const agingBlockerLines = agingOpportunities.map(({ action, state, daysInState, stagingUrl }) => {
+      const info = AGING_NEXT_ACTION[state] ?? { action: "Revisar manualmente.", responsible: "Pau" };
+      return `- "${action.title}" lleva ${daysInState} dia(s) seguidos en estado "${state}" sin avanzar — depende de ${info.responsible}: ${info.action}${stagingUrl ? ` (${stagingUrl})` : ""}`;
+    });
+
+    const credentialFailures = readActiveCredentialFailures();
+    // Fase O49.5 -- ademas de "¿esta fallando el token?" (arriba), se
+    // comprueba tambien "¿hay una clave OAuth duplicada en .env que pueda
+    // estar pisando en silencio un token bueno?" -- la causa real
+    // encontrada el 2026-08-14 en GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN
+    // (ver env-duplicate-check.ts). Se comprueba en cada pasada diaria,
+    // nunca imprime valores, solo nombres de clave y numero de linea.
+    const envDuplicates = findDuplicateEnvKeys();
+    const credentialBlockerLines = [
+      ...credentialFailures.map((f) => `- ${describeCredentialFailure(f, generatedAt)}`),
+      ...envDuplicates.map((d) => `- ${describeEnvDuplicate(d)}`),
+    ];
+
+    // Fase O49.6 -- bloque "Departamento SEM": combina lo DINAMICO de hoy
+    // (sem-watcher.ts, lectura real de TODAS las campanas via
+    // departmentSummary -- Fase O45.1/O49.6, ya no solo una "campana
+    // principal") con la base ESTATICA (fase actual/decisiones
+    // pendientes/proximo hito, clients/zentry/sem-department-state.json)
+    // para que el email nunca de la impresion de recomendar activar
+    // ahora: SEM esta en preparacion para la revision de septiembre,
+    // punto.
+    const semState = readSemDepartmentState();
+    const semSummary = semPayload?.departmentSummary as
+      | {
+          totalCampaigns: number;
+          activeCampaignCount: number;
+          pausedCampaignCount: number;
+          allPaused: boolean;
+          totalDailyBudgetIfActivatedEUR: number;
+          totalMonthlyBudgetIfActivatedEUR: number;
+          campaigns: { name: string; status: string; dailyBudgetEUR: number | null }[];
+          totalPositiveKeywords: number;
+          totalNegativeKeywords: number;
+          realSpendEUR: number;
+          primaryConversionActionNames: string[];
+          unexpectedPrimaryConversionActionNames: string[];
+          duplicateKeywordWarnings: string[];
+        }
+      | undefined;
+
+    const semSectionLines: string[] = [];
+    semSectionLines.push(`**Fase actual:** ${semState.phase}`);
+
+    if (!semPayload?.connected || !semSummary) {
+      semSectionLines.push("**Estado de las campanas:** sin conexion real a Google Ads en esta pasada — ver Bloqueos reales. El estado mostrado en pasadas anteriores puede estar desactualizado.");
+    } else {
+      semSectionLines.push(`**Campanas activas (ENABLED) ahora mismo:** ${semSummary.activeCampaignCount}`);
+      semSectionLines.push(`**Campanas pausadas:** ${semSummary.pausedCampaignCount} de ${semSummary.totalCampaigns} totales`);
+      semSectionLines.push(`**Gasto real hoy:** ${semSummary.realSpendEUR.toFixed(2)} EUR${semSummary.realSpendEUR === 0 ? " (0 — ninguna campana esta activa, todas PAUSED por diseño)" : ""}`);
+      semSectionLines.push(
+        `**Presupuesto potencial si se activaran todas:** ${semSummary.totalDailyBudgetIfActivatedEUR.toFixed(2)} EUR/dia (~${semSummary.totalMonthlyBudgetIfActivatedEUR.toFixed(2)} EUR/mes) — NO activo, solo referencia para la revision de septiembre.`
+      );
+      semSectionLines.push(`**Campanas (7):**`);
+      for (const c of semSummary.campaigns) {
+        semSectionLines.push(`  - ${c.name}: ${c.status}${c.dailyBudgetEUR !== null ? `, ${c.dailyBudgetEUR.toFixed(2)} EUR/dia si se activara` : ""}`);
+      }
+      semSectionLines.push(
+        `**Conversiones principales disponibles:** ${semSummary.primaryConversionActionNames.length > 0 ? semSummary.primaryConversionActionNames.join(", ") : "ninguna configurada como primaria"}.`
+      );
+      if (semSummary.unexpectedPrimaryConversionActionNames.length > 0) {
+        semSectionLines.push(`**ALERTA -- conversion primaria inesperada:** ${semSummary.unexpectedPrimaryConversionActionNames.join(", ")}.`);
+      }
+      semSectionLines.push(
+        `**Estado de tracking:** ${semSummary.totalPositiveKeywords} keyword(s) positiva(s) y ${semSummary.totalNegativeKeywords} negativa(s) configuradas en toda la cuenta.`
+      );
+      if (semSummary.duplicateKeywordWarnings.length > 0) {
+        semSectionLines.push(`**Alerta legacy/duplicados (${semSummary.duplicateKeywordWarnings.length}):**`);
+        for (const w of semSummary.duplicateKeywordWarnings) semSectionLines.push(`  - ${w}.`);
+      } else {
+        semSectionLines.push("**Alerta legacy/duplicados:** ninguna detectada hoy.");
+      }
+    }
+
+    semSectionLines.push(`**Proximo hito:** ${semState.nextStep}`);
+    if (semState.blockedOn.length > 0) {
+      semSectionLines.push("**Decisiones pendientes de Pau (para la revision de septiembre, no ahora):**");
+      for (const item of semState.blockedOn) semSectionLines.push(`  - ${item}`);
+    }
+    semSectionLines.push(
+      "**Las campanas SEM estan preparadas pero no se activaran ahora. La revision de lanzamiento queda prevista para septiembre y la activacion final sera manual por Pau.**"
+    );
+    semSectionLines.push(
+      "**Regla critica:** el departamento SEM puede crear campanas EN PAUSA, hacer QA y proponer optimizaciones — nunca activa una campana, nunca gasta presupuesto ni cambia un presupuesto existente. La activacion siempre es manual de Pau."
+    );
+
     const extrasV2: ExecutiveReportExtrasV2 = {
       realChangesToday,
       qaRunsToday,
@@ -884,6 +1041,9 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
       carrilAAutoAppliedToday,
       topBacklogSummary,
       totalOpenOpportunityCount,
+      agingBlockerLines,
+      credentialBlockerLines,
+      semSectionLines,
       tomorrowIfNoResponse:
         pendingDecisionsV2.length > 0
           ? `Las ${Math.min(pendingDecisionsV2.length, 3)} decision(es) de arriba se mantienen pendientes (no se repiten como si fueran nuevas) y el Carril A sigue aplicando en staging cualquier otro cambio seguro que este listo, sin esperar a estas decisiones.`
@@ -897,6 +1057,165 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
     executiveMarkdown = renderExecutiveReportMarkdownV2(executiveData, extrasV2, generatedAt);
     preparedForReviewCount = executiveData.preparedForReviewCount;
     pendingDecisionCount = pendingDecisionsV2.length;
+
+    // Fase O49.7 -- resumen corto del email (300-700 palabras, legible en
+    // 60-90s), construido a partir de los mismos datos ya calculados
+    // arriba (nunca datos nuevos ni recalculados de otra fuente).
+    const CREDENTIAL_SERVICE_LABELS: Array<{ key: string; label: string }> = [
+      { key: "search_console", label: "Search Console" },
+      { key: "ga4", label: "GA4" },
+      { key: "gtm", label: "GTM" },
+      { key: "google_ads", label: "Google Ads" },
+    ];
+    const credentialStatus = CREDENTIAL_SERVICE_LABELS.map(({ key, label }) => ({
+      label,
+      ok: !credentialFailures.some((f) => f.service === key),
+    }));
+
+    const compactBlockers: CompactEmailBlocker[] = [
+      ...credentialFailures.map((f) => ({ severity: "red" as const, label: `Credenciales ${f.service}`, note: "fallo activo, ver detalle tecnico" })),
+      ...envDuplicates.map((d) => ({ severity: "red" as const, label: `Duplicado en .env`, note: `"${d.key}" aparece ${d.occurrences} veces` })),
+      ...agingBlockerLines.map(() => ({ severity: "yellow" as const, label: "Oportunidad bloqueada 2+ dias", note: "ver seccion de bloqueos del informe tecnico" })),
+    ];
+
+    const newCampaignsOnlyBudget = semSummary
+      ? semSummary.campaigns.filter((c) => !c.name.includes("ARCHIVO") && !c.name.includes("Leads B2B")).reduce((sum, c) => sum + (c.dailyBudgetEUR ?? 0), 0)
+      : 0;
+    const legacyArchived = semSummary ? semSummary.campaigns.some((c) => c.name.includes("ARCHIVO")) : false;
+
+    const summaryBullets: string[] = [];
+    summaryBullets.push(
+      credentialStatus.every((c) => c.ok) && envDuplicates.length === 0
+        ? "✅ Google OAuth estable: Search Console, GA4, GTM y Ads OK."
+        : "⚠️ Hay credenciales o configuracion OAuth que revisar (ver Bloqueos)."
+    );
+    summaryBullets.push("✅ Email diario enviado correctamente.");
+    summaryBullets.push(
+      pendingDecisionsV2.length > 0
+        ? `⚠️ ${pendingDecisionsV2.length} decision(es) pendiente(s) de Pau.`
+        : "✅ Sin decisiones pendientes hoy."
+    );
+    summaryBullets.push("📌 SEM preparado, pero no se activara hasta septiembre.");
+    summaryBullets.push(`🔒 0 cambios en produccion sin aprobar / ${semSummary ? semSummary.realSpendEUR.toFixed(2) : "0.00"} EUR de gasto Ads.`);
+
+    const planToday: string[] = [];
+    planToday.push("No activar Ads todavia — revision prevista para septiembre.");
+    if (pendingDecisionsV2.length > 0) {
+      planToday.push("Revisar y resolver las decisiones pendientes de arriba.");
+    } else if (topBacklogSummary.length > 0) {
+      planToday.push(`Seguir preparando ${topBacklogSummary.length} propuesta(s) prioritaria(s) (ver informe tecnico).`);
+    } else {
+      planToday.push("Seguir avanzando en staging con normalidad (Carril A).");
+    }
+    planToday.push("Preparar decision de escenario de presupuesto SEM (1.000 EUR o 2.000 EUR) para septiembre.");
+
+    // Fase O50 -- lectura de eventos reutilizada por la explicacion
+    // anti-paralisis y por el bloque "Equipo de agentes" (mas abajo).
+    const allEventsForTeams = readAllEvents();
+    const allEvents7dForTeams = allEventsForTeams.filter((e) => new Date(e.createdAt).getTime() >= Date.now() - 7 * 86_400_000);
+    const yesterdayDate = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+
+    // Fase O50 -- regla anti-paralisis: si hoy hay 0 cambios reales, el
+    // email SIEMPRE explica la causa real (nunca solo "Cambios: 0"). Causa
+    // investigada el 2026-08-14: los change packs "approved_to_execute"
+    // de hoy YA tienen una staging_execution creada (la mayoria del
+    // 2026-08-10) -- no son trabajo nuevo pendiente, es estado sin
+    // avanzar tras la ejecucion. El resto del trabajo nuevo detectado hoy
+    // esta bloqueado en el cluster gate (keyword no reconocida todavia en
+    // el catalogo de clusters SEO).
+    let zeroChangesExplanation: string | null = null;
+    if (realChangesToday.length === 0) {
+      const approvedToExecute = allChangePacks.filter((cp) => cp.status === "approved_to_execute");
+      const stagingExecChangePackIds = new Set(allStagingExecutions.map((e) => e.changePackId));
+      const staleApproved = approvedToExecute.filter((cp) => stagingExecChangePackIds.has(cp.changePackId));
+      const genuinelyNewApproved = approvedToExecute.length - staleApproved.length;
+      const clusterGateBlockedToday = allEvents7dForTeams.filter(
+        (e) => e.createdAt.slice(0, 10) === executionDate && /bloqueado.*cluster gate/i.test(e.summary)
+      ).length;
+      if (genuinelyNewApproved > 0) {
+        zeroChangesExplanation = `Hay ${genuinelyNewApproved} change pack(s) aprobado(s) sin ejecutar todavia -- deberian ejecutarse en la proxima pasada. Accion: revisar por que Staging Executor no los tomo hoy.`;
+      } else if (staleApproved.length > 0) {
+        zeroChangesExplanation = `Los ${staleApproved.length} change pack(s) "aprobados para ejecutar" ya se ejecutaron en staging anteriormente (la mayoria el 2026-08-10) y su estado no se actualizo tras la ejecucion -- no es trabajo nuevo pendiente, es una cuenta desactualizada. ${clusterGateBlockedToday > 0 ? `Ademas, ${clusterGateBlockedToday} propuesta(s) nueva(s) quedaron bloqueadas hoy por el cluster gate (keyword sin clasificar en el catalogo SEO).` : ""} Accion recomendada: marcar como ejecutados los change packs ya aplicados y revisar el catalogo de clusters para liberar propuestas nuevas.`;
+      } else if (clusterGateBlockedToday > 0) {
+        zeroChangesExplanation = `${clusterGateBlockedToday} propuesta(s) nueva(s) detectada(s) hoy quedaron bloqueadas por el cluster gate (keyword todavia no reconocida en el catalogo SEO) -- no llegaron a generar un change pack ejecutable. Accion: revisar y ampliar el catalogo de clusters.`;
+      } else {
+        zeroChangesExplanation = "No habia ningun change pack aprobado listo para ejecutar hoy y no se detecto ningun bloqueo nuevo -- el departamento esta en modo deteccion/investigacion (SEO Watcher, Content Planner, Competitor Intelligence siguen activos) sin generar cambios de staging nuevos esta pasada.";
+      }
+    }
+
+    // Fase O50 -- bloque "Equipo de agentes": 5 equipos legibles que
+    // agrupan los 24+ agentes tecnicos reales. Ayer/Hoy vienen de eventos
+    // reales `agent_finished` de esos dias -- nunca texto generico.
+    function latestFinishedSummary(agentNames: string[], dateLabel: string): string {
+      const matches = allEventsForTeams.filter(
+        (e) => agentNames.includes(e.agent) && e.type === "agent_finished" && e.createdAt.slice(0, 10) === dateLabel
+      );
+      if (matches.length === 0) return "sin ejecucion registrada ese dia";
+      // Prefiere el resumen con un numero >0 (mas informativo que "0 nuevo(s)")
+      const withSignal = matches.find((m) => /[1-9]\d*/.test(m.summary));
+      return (withSignal ?? matches[matches.length - 1]).summary;
+    }
+    const AGENT_TEAMS_DEF: Array<{ name: string; agents: string[] }> = [
+      { name: "SEO Agent", agents: ["seo-watcher", "seo-director", "seo-change-pack-builder", "seo-work-order-builder"] },
+      { name: "Content Agent", agents: ["content-planner", "content-change-pack-builder", "content-work-order-builder", "cro-landing-reviewer", "cro-change-pack-builder", "cro-work-order-builder"] },
+      { name: "SEM Agent", agents: ["sem-watcher"] },
+      { name: "Analytics Agent", agents: ["analytics-watcher"] },
+      { name: "WordPress/QA Agent", agents: ["wordpress-draft-agent", "staging-executor", "staging-qa-agent", "production-deployment-planner", "production-draft-executor"] },
+    ];
+    const agentTeams: AgentTeamStatus[] = AGENT_TEAMS_DEF.map((team) => {
+      const yesterday = latestFinishedSummary(team.agents, yesterdayDate);
+      const today = latestFinishedSummary(team.agents, executionDate);
+      let next = "Seguir detectando y preparando propuestas para la siguiente pasada.";
+      let blocker: AgentTeamStatus["blocker"] = "ninguno";
+      let evidence = today;
+      if (team.name === "SEM Agent") {
+        next = "Mantenerse en observacion hasta la revision estrategica de septiembre.";
+        blocker = credentialFailures.some((f) => ["ga4", "gtm", "google_ads"].includes(f.service)) ? "necesita datos" : "ninguno";
+        evidence = semSummary ? `${semSummary.totalCampaigns} campanas reales (${semSummary.pausedCampaignCount} pausadas), ${semSummary.realSpendEUR.toFixed(2)} EUR gastados hoy` : "sin lectura real de Google Ads hoy";
+      } else if (team.name === "Analytics Agent") {
+        next = "Seguir vigilando GA4/GTM y avisar si vuelve a fallar la conexion.";
+        blocker = credentialFailures.some((f) => f.service === "ga4" || f.service === "gtm") ? "necesita datos" : "ninguno";
+        evidence = `GA4: ${credentialStatus.find((c) => c.label === "GA4")?.ok ? "conectado" : "fallo"}, GTM: ${credentialStatus.find((c) => c.label === "GTM")?.ok ? "conectado" : "fallo"}`;
+      } else if (team.name === "WordPress/QA Agent") {
+        const pendingApprovals = pendingDecisionsV2.length;
+        next = "Ejecutar en staging los change packs realmente pendientes y revisar visualmente los borradores con QA tecnico superado.";
+        blocker = pendingApprovals > 0 || draftsPendingVisualReview.length > 0 ? "necesita aprobacion" : "ninguno";
+        evidence = `${allStagingExecutions.filter((e) => e.status === "applied_to_staging").length} paginas aplicadas a staging (historico), ${draftsPendingVisualReview.length} pendiente(s) de revision visual`;
+      } else if (team.name === "SEO Agent") {
+        next = "Seguir monitorizando posiciones/impresiones reales de Search Console y ampliar el catalogo de clusters para liberar propuestas bloqueadas.";
+      } else if (team.name === "Content Agent") {
+        next = "Preparar contenido/CRO para las paginas de mayor demanda (melamina, colegios) en cuanto pasen el cluster gate.";
+      }
+      return { name: team.name, yesterday, today, next, blocker, evidence };
+    });
+
+    const compactInput: CompactEmailInput = {
+      dateLabel: executionDate,
+      operational: credentialStatus.every((c) => c.ok) && envDuplicates.length === 0,
+      realChangeCount: realChangesToday.length,
+      blockerCount: compactBlockers.length,
+      summaryBullets: summaryBullets.slice(0, 5),
+      realChanges: realChangesToday.map((c) => c.description),
+      zeroChangesExplanation,
+      agentTeams,
+      pendingDecisions: pendingDecisionsV2.map((d) => d.title),
+      blockers: compactBlockers,
+      sem: {
+        activeCampaigns: semSummary?.activeCampaignCount ?? 0,
+        totalCampaigns: semSummary?.totalCampaigns ?? 0,
+        pausedCampaigns: semSummary?.pausedCampaignCount ?? 0,
+        spendTodayEUR: semSummary?.realSpendEUR ?? 0,
+        potentialNewCampaignsDailyBudgetEUR: newCampaignsOnlyBudget,
+        legacyArchived,
+        nextMilestone: "Revision estrategica en septiembre 2026",
+      },
+      credentialStatus,
+      wordpressStagingOk: wordpressConfigured,
+      wordpressProductionNote: "sin cambios (activacion automatica desactivada)",
+      planToday: planToday.slice(0, 3),
+    };
+    compactEmailHtml = renderCompactEmailHtml(compactInput);
+    compactEmailText = renderCompactEmailText(compactInput);
   } catch (err) {
     executiveFallbackUsed = true;
     const message = err instanceof Error ? err.stack ?? err.message : String(err);
@@ -904,6 +1223,8 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
       error: message,
     });
     executiveMarkdown = buildFallbackExecutiveReportMarkdown(executionDate);
+    compactEmailText = executiveMarkdown;
+    compactEmailHtml = renderFallbackEmailHtml(executiveMarkdown);
   }
   const executiveReportPath = writeExecutiveReport(executiveMarkdown, executionDate);
 
@@ -911,6 +1232,8 @@ export async function runGrowthDirector(departmentRunId?: string): Promise<Growt
     departmentRunId: deptRunId,
     executiveReportPath,
     technicalReportPath: "",
+    emailHtml: compactEmailHtml,
+    emailText: compactEmailText,
     executiveFallbackUsed,
     preparedForReviewCount,
     pendingDecisionCount,

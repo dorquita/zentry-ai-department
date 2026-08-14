@@ -91,6 +91,8 @@ export interface CreateChangePackInput {
   risks: string[];
   rollbackNotes: string[];
   sourceAgent: string;
+  /** Fase O31 -- ver ChangePack.targetWordpressPageId en types.ts. */
+  targetWordpressPageId?: number;
 }
 
 export interface UpsertChangePackResult {
@@ -129,6 +131,7 @@ export function upsertChangePack(input: CreateChangePackInput, current: ChangePa
     page: input.workOrder.page,
     keyword: input.workOrder.keyword,
     changeType: input.changeType,
+    targetWordpressPageId: input.targetWordpressPageId,
     priority: input.workOrder.priority,
     status: "ready_for_review",
     proposedChanges: input.proposedChanges,

@@ -1,0 +1,63 @@
+{
+  "phase": "Preparacion completa (O45.0 investigacion, O45.1 construccion, O45.2 QA, O45.3 justificacion estrategica) — 6 campanas nuevas + 1 legacy en la cuenta, TODAS pausadas. En observacion, sin activar. La revision de activacion queda prevista para septiembre de 2026, tras revisar estrategia/justificacion/presupuesto/timing comercial con Pau.",
+  "lastResearchDate": "2026-08-14",
+  "historicalSpendEur": 42.72,
+  "historicalConversions": 0,
+  "clusters": [
+    {
+      "name": "Melamina + fenolicas",
+      "priority": "alta",
+      "status": "campana_construida",
+      "note": "Campana 'SEM | Producto | Melamina y Fenolicas' construida y pausada (8 EUR/dia si se activara). Mayor demanda organica sin cobertura detectada (~1.330 impresiones agregadas en GSC, 0 clics, posicion organica ~40)."
+    },
+    {
+      "name": "Gimnasios / deportivo",
+      "priority": "alta",
+      "status": "campana_construida",
+      "note": "Campana 'SEM | ES | Compra | Taquillas / Gimnasios' (antes 'SEM | ES | Compra | Taquillas') renombrada, RSA actualizado y pausada (10 EUR/dia si se activara). Unico cluster con volumen y CPC confirmados por Keyword Planner (480 busquedas/mes agregadas)."
+    },
+    {
+      "name": "Cerraduras inteligentes",
+      "priority": "alta",
+      "status": "campana_construida",
+      "note": "Campana dedicada 'SEM | Cerraduras inteligentes' construida y pausada (7 EUR/dia si se activara), landing corregida a la oficial de O22 (id 2060, con CTA+sticky bar). El ad group legacy equivalente en 'Zentry Lockers - Search ES - Leads B2B' sigue apuntando a la landing antigua (id 1865) y duplica keywords con esta campana nueva — no se recomienda activar el legacy."
+    },
+    {
+      "name": "Colegios",
+      "priority": "media",
+      "status": "campana_construida",
+      "note": "Campana 'SEM | Sector | Colegios' construida y pausada (2 EUR/dia si se activara) — primera vez con ad group propio, segundo mayor volumen KWP confirmado (110/mes)."
+    },
+    {
+      "name": "Empresas / oficinas",
+      "priority": "media",
+      "status": "campana_construida",
+      "note": "Campana dedicada 'SEM | Sector | Empresas' construida y pausada (5 EUR/dia si se activara). El ad group legacy equivalente en 'Zentry Lockers - Search ES - Leads B2B' duplica 5 keywords con esta campana nueva — no se recomienda activar el legacy."
+    },
+    {
+      "name": "Fenolicas geo-difusas",
+      "priority": "media",
+      "status": "propuesto",
+      "note": "Senal real pero explicitamente NO recomendado crear campanas por ciudad (riesgo de dispersion sin volumen suficiente por geo) — cubierto en concordancia amplia dentro de la campana de Melamina y Fenolicas."
+    },
+    {
+      "name": "Marca",
+      "priority": "defensiva",
+      "status": "campana_construida",
+      "note": "Campana 'SEM | Marca | Zentry' construida y pausada (2 EUR/dia si se activara). 'zentry lockers' ya es la mejor query organica del sitio (13 clics, posicion 2.3) — proteger, no atacar."
+    },
+    {
+      "name": "Digitalizacion",
+      "priority": "baja-media",
+      "status": "propuesto",
+      "note": "NO se construyo como campana propia (fase 2) — el ad group legacy dentro de 'Zentry Lockers - Search ES - Leads B2B' sigue existiendo, pausado, 0 EUR gastado historico nunca."
+    }
+  ],
+  "budgetScenariosEur": [1000, 2000],
+  "nextStep": "Revision estrategica de activacion prevista para septiembre de 2026: confirmar timing comercial, revisar el informe de justificacion (Fase O45.3) y decidir escenario de presupuesto (1.000 EUR/mes o 2.000 EUR/mes) antes de que Pau active nada manualmente. Ninguna campana se activa por defecto ni por el sistema.",
+  "blockedOn": [
+    "Pau: decidir en septiembre si activar las 6 campanas nuevas (recomendacion del informe O45.3: Escenario A, 1.000 EUR/mes, sin la legacy).",
+    "Pau: decidir que hacer con la campana legacy 'Zentry Lockers - Search ES - Leads B2B' (duplica keywords con Cerraduras y Empresas) — mantenerla pausada/archivada o retirarla, nunca activarla junto a las nuevas.",
+    "Pau: confirmar fecha exacta de activacion dentro de septiembre cuando decida seguir adelante — el sistema nunca activa nada por su cuenta."
+  ]
+}

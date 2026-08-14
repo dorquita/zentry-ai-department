@@ -1,10 +1,10 @@
 # Preview VISUAL (local, no publicado) — fenolicas con perfil
 
 - **draftId:** `d74f2ae2-5c33-4809-a54f-8c6bb0f3cee9`
-- **changePackId:** `17f7c707-cfb7-4039-84db-d5d138936301` (status: ready_for_review)
-- **Plantilla visual:** `blog_article` — Articulo de blog / contenido informativo
-- **Por que esta plantilla:** Cuando el change pack es un brief editorial informativo (changeType "new_content_page"/"content_update" sin intencion transaccional clara) — el contenido es mas informativo que de venta directa.
-- **Generado:** 2026-08-10T13:22:34.351Z
+- **changePackId:** `17f7c707-cfb7-4039-84db-d5d138936301` (status: approved_to_execute)
+- **Plantilla visual:** `product_landing` — Landing de producto/material
+- **Por que esta plantilla:** Cuando el change pack gira en torno a un MATERIAL o modelo concreto (melamina, fenolica, metalica, madera) detectado via material_terms — p.ej. "taquillas de melamina", "taquilla madera".
+- **Generado:** 2026-08-14T11:14:01.484Z
 
 > Este fichero es un preview VISUAL local (Fase O12.4), complementario al preview de texto ya generado por el WordPress Draft Agent (`d74f2ae2-5c33-4809-a54f-8c6bb0f3cee9.md`, sin tocar). No se ha llamado a WordPress ni generado ninguna imagen real.
 
@@ -12,66 +12,66 @@
 
 ## 🔝 HERO
 
-> 🖼️ **[Imagen — hero, 1600x900px]** — Placeholder hoy: bloque solido/icono generico de Kadence (sin imagen real). Imagen editorial/de contexto, no necesariamente de producto — estilo mas fotografico/lifestyle que las plantillas transaccionales. Se sustituye por una imagen real solo cuando exista una peticion de asset "generated"/"uploaded_to_wordpress" — ver docs/asset-generation-workflow.md. Nunca se genera ni se sube nada en esta fase.
+> 🖼️ **[Imagen — hero, 1600x900px]** — Placeholder hoy: bloque solido/icono generico de Kadence (sin imagen real). Foto de producto real del material concreto, fondo neutro o de proyecto instalado. Se sustituye por una imagen real solo cuando exista una peticion de asset "generated"/"uploaded_to_wordpress" — ver docs/asset-generation-workflow.md. Nunca se genera ni se sube nada en esta fase.
 
-### fenolicas con perfil
+### Taquillas de fenolica | Fabricante Zentry
 
-Bajada editorial breve, tono informativo — nunca lenguaje de venta directa aqui.
+Fabricacion directa en fenolica: medidas, acabados y precios a medida.
 
-**[ (sin CTA fuerte en el hero — es contenido informativo) ]**
+**[ Pedir presupuesto ]**
 
 ## 🖼️ IMAGEN DESTACADA
 
-> 🖼️ **[Imagen — card, 800x600px]** — Placeholder hoy: bloque solido/icono generico de Kadence (sin imagen real). Miniatura para el listado del blog y para compartir en redes. Se sustituye por una imagen real solo cuando exista una peticion de asset "generated"/"uploaded_to_wordpress" — ver docs/asset-generation-workflow.md. Nunca se genera ni se sube nada en esta fase.
+> 🖼️ **[Imagen — product_context, 1200x1200px]** — Placeholder hoy: bloque solido/icono generico de Kadence (sin imagen real). Imagen de producto en contexto de uso (no solo el objeto aislado). Se sustituye por una imagen real solo cuando exista una peticion de asset "generated"/"uploaded_to_wordpress" — ver docs/asset-generation-workflow.md. Nunca se genera ni se sube nada en esta fase.
 
-## ✅ Puntos clave
+## ✅ Ventajas de la fenolica
 
-_(3-4 items — Equivalente informativo del bloque beneficios: un resumen de 3-4 ideas clave del articulo (no beneficios de producto/marca).)_
+_(3-4 items — Beneficios TECNICOS del material (resistencia a humedad, mantenimiento, acabado, durabilidad) — nunca beneficios genericos de marca que no dependan del material.)_
 
 (brief de contenido, no copy final) No se detectaron otras keywords del backlog para formar cluster todavia.
 
-## 🧱 Productos relacionados (mencion contextual)
+## 🧱 Modelos, medidas y acabados disponibles
 
-Mencion breve y no intrusiva de productos Zentry relacionados con el tema del articulo, con enlace — nunca el foco principal del articulo.
+Este es el bloque PRINCIPAL de esta plantilla (a diferencia de sector_landing, donde es secundario): tabla o lista de modelos/medidas/acabados reales, con precio orientativo si se dispone de el.
 
-- H2: ¿Buscas mueble, cerradura o ambos?
-- H2: Solucion Zentry (mobiliario)
-- H2: Solucion Tukandado (cerradura)
-- H2: Como elegir segun tu caso
+- ¿Buscas mueble, cerradura o ambos?
+- Solucion Zentry (mobiliario)
+- Solucion Tukandado (cerradura)
+- Como elegir segun tu caso
 
-## 🔐 Relacionado: cerraduras inteligentes
+## 🔐 Anade cerradura electronica a estas taquillas
 
 > 🖼️ **[Imagen — icon, 256x256px]** — Icono de cerradura electronica/control de acceso.
 
-Mencion contextual opcional si el tema del articulo se cruza con seguridad/control de acceso.
+Mencion breve de que el modelo es compatible con cerradura electronica Tukandado como opcion, con enlace — no un bloque extenso.
 
-## ❓ Preguntas frecuentes sobre este tema
+## ❓ Preguntas frecuentes sobre taquillas de fenolica
 
-_(2-3 preguntas — Opcional en esta plantilla (a diferencia de las demas, donde es casi siempre recomendable) — solo si el tema genera preguntas reales.)_
+_(2-4 preguntas — Preguntas sobre el material especifico (limpieza, resistencia, garantia, plazos de fabricacion a medida).)_
 
 Ninguna FAQ propuesta por el change pack de origen todavia.
 ## 🎯 CTA FINAL
 
-**[ Ver catalogo de taquillas Zentry ]**
+**[ Pedir presupuesto sin compromiso ]**
 
-_CTA suave (descubrir mas contenido/catalogo), nunca un CTA de venta directa agresivo en un articulo informativo._
+_Mismo CTA que el hero._
 
 ## 🔗 Enlaces internos
 
-Enlazar a otros articulos del mismo cluster de contenido y, de forma secundaria, a paginas de producto relacionadas — el enlace interno aqui prioriza SEO topical authority sobre conversion directa.
+Enlazar a: (1) otras paginas de material dentro del cluster SEO (evitar canibalizacion, ver risks del change pack), (2) landing general de taquillas, (3) cerraduras inteligentes si aplica.
 
 - Enlazar hacia contenido Zentry (mobiliario)
 - Enlazar hacia contenido Tukandado (cerradura)
 
 ## 🏷️ Schema recomendado
 
-- `Article`
-- `FAQPage`
+- `Product`
 
 ## 🧩 Notas de diseno Kadence/Gutenberg
 
-- Usar la plantilla de entrada de blog estandar del tema (no forzar los mismos bloques Kadence de landing transaccional).
-- Imagen destacada obligatoria para que el articulo se vea bien en el listado del blog y al compartir en redes sociales.
+- Hero: imagen de producto grande a la derecha, texto a la izquierda (layout Kadence de 2 columnas).
+- Bloque de modelos/medidas: tabla Kadence Table o Info Box en grid, nunca una lista de texto plano si hay 3+ modelos.
+- Imagen destacada: formato cuadrado o casi cuadrado (ver dimensions), pensado para poder reutilizarse como miniatura de catalogo.
 
 ## Confirmacion de seguridad
 

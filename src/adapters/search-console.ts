@@ -3,6 +3,7 @@ import { google, searchconsole_v1 } from "googleapis";
 import { SearchConsoleRow, SeoDataResult } from "../core/types";
 import { logger } from "../core/logger";
 import { loadActiveClientSeoConfig, resolveActiveClientId, resolveClientSecret } from "../core/client-config";
+import { recordCredentialFailure, recordCredentialSuccess } from "../core/credential-health";
 
 const READONLY_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
 
@@ -248,8 +249,10 @@ export async function getSearchConsoleData(): Promise<SeoDataResult> {
   } catch (err) {
     const safeMessage = sanitizeError(err);
     logger.error("Fallo la consulta a Search Console", { error: safeMessage });
+    recordCredentialFailure("search_console", safeMessage);
     throw new Error(`Search Console query fallo: ${safeMessage}`);
   }
+  recordCredentialSuccess("search_console");
 
   const apiRows = response.data.rows ?? [];
   logger.info(`Search Console devolvio ${apiRows.length} fila(s)`);

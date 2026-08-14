@@ -1,0 +1,15 @@
+{
+  "id": 22,
+  "name": "O40 - JS tracking CTA + WhatsApp + sticky - PRODUCCION",
+  "desc": "Listener delegado de clicks sobre [data-zentry-event] (click_presupuesto_personalizado, click_whatsapp_floating, sticky_presupuesto_click), envia evento via gtag() si existe o dataLayer.push como fallback. No activa conversiones ni campanas de Ads. Replicado desde staging. Fase O41.",
+  "code": "add_action('wp_footer', function () {\n    ?>\n    <script>\n    (function(){\n      window.dataLayer = window.dataLayer || [];\n      document.addEventListener('click', function (e) {\n        var el = e.target && e.target.closest ? e.target.closest('[data-zentry-event]') : null;\n        if (!el) return;\n        try {\n          var eventName = el.getAttribute('data-zentry-event');\n          window.dataLayer.push({\n            event: eventName,\n            page_url: window.location.href,\n            page_title: document.title,\n            origen: eventName,\n            producto: el.getAttribute('data-zentry-producto') || '',\n            categoria: el.getAttribute('data-zentry-categoria') || '',\n            link_url: el.getAttribute('data-zentry-url') || window.location.href\n          });\n        } catch (err) { /* tracking must never break navigation */ }\n      }, false);\n    })();\n    </script>\n    <?php\n}, 99);",
+  "tags": [],
+  "scope": "front-end",
+  "condition_id": 0,
+  "active": true,
+  "priority": 10,
+  "network": false,
+  "shared_network": false,
+  "modified": "2026-08-14 05:14:59",
+  "code_error": null
+}

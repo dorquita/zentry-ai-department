@@ -1012,6 +1012,9 @@ export interface VisualReviewPendingItem {
   stagingUrl?: string;
   /** Fase O27.3 -- ver src/core/existing-page-audit.ts. Ausente si todavia no se ha auditado. */
   existingPageMatch?: { matchType: "update_existing_page" | "new_page_candidate"; productionUrl?: string };
+  /** Fase O49 -- dias SEGUIDOS que esta pagina lleva en este mismo estado (ver src/core/opportunity-state-log.ts). */
+  daysBlocked?: number;
+  wordpressPageId?: number;
 }
 
 export interface ExecutiveReportExtrasV2 {
@@ -1027,6 +1030,12 @@ export interface ExecutiveReportExtrasV2 {
   tomorrowIfNoResponse: string;
   tomorrowIfApproved: string;
   stagingKeepsAdvancing: string;
+  /** Fase O49 -- ver opportunity-state-log.ts: oportunidades bloqueadas 2+ dias seguidos en el mismo estado (fuera de qa_passed, que ya tiene su propia seccion). */
+  agingBlockerLines: string[];
+  /** Fase O49 -- ver credential-health.ts: credenciales OAuth fallando (invalid_grant y similares), con antiguedad real y comando de arreglo. */
+  credentialBlockerLines: string[];
+  /** Fase O49 -- ver sem-department-state.ts: bloque "Departamento SEM" ya formateado en lineas. */
+  semSectionLines: string[];
 }
 
 function renderPendingDecisionV2(d: PendingDecisionV2, index: number): string[] {
@@ -1110,7 +1119,18 @@ export function renderExecutiveReportMarkdownV2(data: ExecutiveReportData, extra
         : d.existingPageMatch.matchType === "update_existing_page"
           ? ` [ACTUALIZA pagina existente: ${d.existingPageMatch.productionUrl ?? "producción"}]`
           : " [candidata a pagina nueva -- sin equivalente en producción]";
-      lines.push(`- ${d.keyword}${d.page ? ` (${d.page})` : ""}${d.stagingUrl ? ` — ${d.stagingUrl}` : ""}${matchLabel}`);
+      // Fase O49 -- si lleva 2+ dias esperando, se escala en vez de
+      // repetir el mismo texto sin mas: opciones explicitas + comando
+      // exacto para resolverlo (aprobar/rechazar visualmente).
+      const ageLabel =
+        d.daysBlocked && d.daysBlocked >= 2
+          ? ` — **lleva ${d.daysBlocked} dias esperando revision. Opciones: A) aprobar B) rechazar C) aplazar.**${
+              d.wordpressPageId
+                ? ` Comando: \`npm run visual-qa:mark -- approve ${d.wordpressPageId}\` (o \`reject\` en vez de \`approve\`).`
+                : ""
+            }`
+          : "";
+      lines.push(`- ${d.keyword}${d.page ? ` (${d.page})` : ""}${d.stagingUrl ? ` — ${d.stagingUrl}` : ""}${matchLabel}${ageLabel}`);
     }
   }
   lines.push("");
@@ -1143,10 +1163,17 @@ export function renderExecutiveReportMarkdownV2(data: ExecutiveReportData, extra
   lines.push("## 4. Bloqueos reales");
   lines.push("");
   const realBlockers = data.blockers.filter((b) => b !== "No se ha detectado ningun bloqueo importante hoy.");
-  if (realBlockers.length === 0) {
+  // Fase O49 -- ademas de los bloqueos de V1 (data.blockers), se anaden
+  // aqui las credenciales OAuth fallando (con antiguedad real, nunca
+  // silenciosas mas de un dia) y las oportunidades bloqueadas 2+ dias
+  // seguidos en el mismo estado (ver opportunity-state-log.ts) — cada una
+  // con causa, responsable y siguiente accion, en vez de repetir el mismo
+  // parrafo cada dia.
+  const allRealBlockers = [...extras.credentialBlockerLines, ...realBlockers.map((b) => `- ${b}`), ...extras.agingBlockerLines];
+  if (allRealBlockers.length === 0) {
     lines.push("Ningun bloqueo real hoy.");
   } else {
-    for (const b of realBlockers) lines.push(`- ${b}`);
+    for (const b of allRealBlockers) lines.push(b.startsWith("-") ? b : `- ${b}`);
   }
   lines.push("");
 
@@ -1163,13 +1190,292 @@ export function renderExecutiveReportMarkdownV2(data: ExecutiveReportData, extra
 
   lines.push("## 6. Próxima ejecución");
   lines.push("");
+  lines.push(
+    extras.topBacklogSummary.length > 0
+      ? `Plan de hoy: seguir preparando ${extras.topBacklogSummary.length} propuesta(s) prioritaria(s) (ver seccion 5) y avanzar cualquier decision que resuelvas de la seccion 3.`
+      : "Plan de hoy: sin propuestas nuevas destacadas — el departamento se centra en resolver los bloqueos de la seccion 4."
+  );
   lines.push(`Si no respondes: ${extras.tomorrowIfNoResponse}`);
   lines.push(`Si apruebas: ${extras.tomorrowIfApproved}`);
   lines.push(`Seguira avanzando en staging sin esperar tu respuesta: ${extras.stagingKeepsAdvancing}`);
+  lines.push("");
+
+  // Fase O49 -- SEM no aparecia nunca en el informe ejecutivo (solo en un
+  // stub de conectividad del informe tecnico) pese a que sem-watcher.ts
+  // ya hace lectura real de Google Ads cada dia. Esta seccion combina esa
+  // lectura diaria con la base de investigacion ya hecha (Fase O45.0).
+  lines.push("## 7. Departamento SEM");
+  lines.push("");
+  for (const line of extras.semSectionLines) lines.push(line);
   lines.push("");
 
   lines.push(`_Generado automaticamente el ${generatedAt.slice(0, 10)}. Para el detalle tecnico completo, consulta el informe interno del mismo dia._`);
   lines.push("");
 
   return stripEnvVarTokens(lines.join("\n"));
+}
+
+/**
+ * Fase O49.7 -- rediseno visual del email diario. El informe ejecutivo
+ * completo (`renderExecutiveReportMarkdownV2`, arriba) sigue siendo la
+ * fuente de verdad y se guarda entero en `reports/daily/executive-
+ * <fecha>.md` -- estas funciones son SOLO para el CUERPO DEL EMAIL, que
+ * a partir de ahora es un resumen corto (300-700 palabras) pensado para
+ * leerse en 60-90 segundos, no el informe completo envuelto en un
+ * `<pre>`. Cualquier detalle que no quepa aqui sigue disponible integro
+ * en el informe tecnico/ejecutivo guardado en disco.
+ */
+
+export interface CompactEmailBlocker {
+  label: string;
+  severity: "red" | "yellow" | "green";
+  note: string;
+}
+
+export interface CompactSemSummary {
+  activeCampaigns: number;
+  totalCampaigns: number;
+  pausedCampaigns: number;
+  spendTodayEUR: number;
+  /** Presupuesto potencial SOLO de las campanas nuevas (excluye la legacy archivada). */
+  potentialNewCampaignsDailyBudgetEUR: number;
+  legacyArchived: boolean;
+  nextMilestone: string;
+}
+
+export interface CompactCredentialStatus {
+  label: string;
+  ok: boolean;
+}
+
+/**
+ * Fase O50 -- una fila del bloque "Equipo de agentes". Consolida varios
+ * agentes tecnicos reales (ver src/agents/*.ts) en 5 equipos legibles
+ * para Pau. Todo el contenido viene de datos reales (eventos del dia/
+ * ayer, contadores de staging/change packs/SEM) -- nunca texto generico
+ * fijo sin evidencia real detras.
+ */
+export interface AgentTeamStatus {
+  name: string;
+  yesterday: string;
+  today: string;
+  next: string;
+  blocker: "ninguno" | "necesita aprobacion" | "necesita datos";
+  evidence: string;
+}
+
+export interface CompactEmailInput {
+  dateLabel: string;
+  operational: boolean;
+  realChangeCount: number;
+  blockerCount: number;
+  summaryBullets: string[];
+  realChanges: string[];
+  /** Fase O50 -- regla anti-paralisis: obligatorio y no vacio cuando realChangeCount === 0. */
+  zeroChangesExplanation: string | null;
+  pendingDecisions: string[];
+  blockers: CompactEmailBlocker[];
+  sem: CompactSemSummary;
+  credentialStatus: CompactCredentialStatus[];
+  wordpressStagingOk: boolean;
+  wordpressProductionNote: string;
+  planToday: string[];
+  agentTeams: AgentTeamStatus[];
+}
+
+function escapeHtmlCompact(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+const SEVERITY_DOT: Record<CompactEmailBlocker["severity"], string> = { red: "🔴", yellow: "🟡", green: "🟢" };
+
+function htmlCard(innerHtml: string, extraStyle = ""): string {
+  return `<div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;margin:0 0 14px;${extraStyle}">${innerHtml}</div>`;
+}
+
+function htmlList(items: string[], emptyText: string): string {
+  if (items.length === 0) {
+    return `<p style="margin:0;color:#6b7280;">${escapeHtmlCompact(emptyText)}</p>`;
+  }
+  const lis = items.map((i) => `<li style="margin:0 0 4px;">${i}</li>`).join("");
+  return `<ul style="margin:0;padding-left:18px;">${lis}</ul>`;
+}
+
+/** Cuerpo HTML compacto del email diario (Fase O49.7). Inline styles a proposito: maxima compatibilidad con clientes de correo. */
+export function renderCompactEmailHtml(input: CompactEmailInput): string {
+  const statusDot = input.operational ? "✅" : "⚠️";
+  const statusLabel = input.operational ? "Operativo" : "Revisar";
+  const semLabel = input.sem.activeCampaigns > 0 ? `${input.sem.activeCampaigns} activa(s)` : "pausado hasta septiembre";
+
+  const summaryHtml = htmlList(
+    input.summaryBullets.map((b) => escapeHtmlCompact(b)),
+    "Sin novedades destacadas hoy."
+  );
+
+  const decisionsHtml = htmlList(
+    input.pendingDecisions.map((d) => `☐ ${escapeHtmlCompact(d)}`),
+    "Ninguna decision pendiente hoy."
+  );
+
+  // Fase O50 -- regla anti-paralisis: "Cambios: 0" nunca se envia sin
+  // explicar la causa real y una accion concreta para desbloquear.
+  const changesHtml =
+    input.realChanges.length > 0
+      ? htmlList(input.realChanges.map((c) => escapeHtmlCompact(c)), "Ninguno hoy.")
+      : `<p style="margin:0;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;">${escapeHtmlCompact(
+          input.zeroChangesExplanation ?? "0 cambios reales hoy — causa no determinada, revisar informe tecnico."
+        )}</p>`;
+
+  const agentTeamsHtml = input.agentTeams
+    .map(
+      (t) => `
+    <div style="margin:0 0 12px;">
+      <div style="font-weight:700;font-size:14px;color:#111827;">${escapeHtmlCompact(t.name)}</div>
+      <ul style="margin:2px 0 0;padding-left:18px;font-size:13px;color:#374151;">
+        <li style="margin:0 0 2px;"><strong>Ayer:</strong> ${escapeHtmlCompact(t.yesterday)}</li>
+        <li style="margin:0 0 2px;"><strong>Hoy:</strong> ${escapeHtmlCompact(t.today)}</li>
+        <li style="margin:0 0 2px;"><strong>Proximo:</strong> ${escapeHtmlCompact(t.next)}</li>
+        <li style="margin:0 0 2px;"><strong>Bloqueo:</strong> ${escapeHtmlCompact(t.blocker)}</li>
+        <li style="margin:0;"><strong>Evidencia:</strong> ${escapeHtmlCompact(t.evidence)}</li>
+      </ul>
+    </div>`
+    )
+    .join("");
+
+  const blockersHtml =
+    input.blockers.length === 0
+      ? `<p style="margin:0;color:#6b7280;">Ningun bloqueo real hoy.</p>`
+      : `<ul style="margin:0;padding-left:18px;">${input.blockers
+          .map((b) => `<li style="margin:0 0 4px;">${SEVERITY_DOT[b.severity]} <strong>${escapeHtmlCompact(b.label)}</strong> — ${escapeHtmlCompact(b.note)}</li>`)
+          .join("")}</ul>`;
+
+  const semHtml = `
+    <ul style="margin:0 0 8px;padding-left:18px;">
+      <li style="margin:0 0 4px;">Campanas activas: <strong>${input.sem.activeCampaigns}</strong></li>
+      <li style="margin:0 0 4px;">Campanas pausadas: <strong>${input.sem.pausedCampaigns}/${input.sem.totalCampaigns}</strong></li>
+      <li style="margin:0 0 4px;">Gasto hoy: <strong>${input.sem.spendTodayEUR.toFixed(2)} EUR</strong></li>
+      <li style="margin:0 0 4px;">Presupuesto potencial (campanas nuevas): <strong>~${input.sem.potentialNewCampaignsDailyBudgetEUR.toFixed(0)} EUR/dia</strong></li>
+      <li style="margin:0 0 4px;">Legacy archivada: <strong>${input.sem.legacyArchived ? "si" : "no"}</strong></li>
+      <li style="margin:0;">Proximo hito: <strong>${escapeHtmlCompact(input.sem.nextMilestone)}</strong></li>
+    </ul>
+    <p style="margin:8px 0 0;font-size:13px;color:#4b5563;">SEM esta en preparacion para septiembre. No se activara ninguna campana ahora. La activacion final sera manual por Pau.</p>
+  `;
+
+  const credentialsHtml = input.credentialStatus
+    .map((c) => `<li style="margin:0 0 4px;">${escapeHtmlCompact(c.label)}: ${c.ok ? "✅ OK" : "❌ fallo"}</li>`)
+    .join("");
+  const techHtml = `<ul style="margin:0;padding-left:18px;">${credentialsHtml}<li style="margin:0 0 4px;">WordPress staging: ${input.wordpressStagingOk ? "✅ OK" : "⚠️ revisar"}</li><li style="margin:0;">WordPress produccion: ${escapeHtmlCompact(input.wordpressProductionNote)}</li></ul>`;
+
+  const planHtml =
+    input.planToday.length === 0
+      ? `<p style="margin:0;color:#6b7280;">Sin acciones destacadas hoy.</p>`
+      : `<ol style="margin:0;padding-left:18px;">${input.planToday.map((p) => `<li style="margin:0 0 4px;">${escapeHtmlCompact(p)}</li>`).join("")}</ol>`;
+
+  return `
+<div style="max-width:680px;margin:0 auto;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45;color:#1f2937;">
+  <div style="margin:0 0 16px;">
+    <div style="font-size:16px;font-weight:700;color:#111827;">Zentry AI Department · Daily Brief</div>
+    <div style="font-size:13px;color:#4b5563;margin-top:2px;">${escapeHtmlCompact(input.dateLabel)} · Estado: ${statusDot} ${statusLabel} · Cambios: ${input.realChangeCount} · Bloqueos: ${input.blockerCount} · SEM: ${escapeHtmlCompact(semLabel)}</div>
+  </div>
+
+  ${htmlCard(`<div style="font-size:15px;font-weight:700;margin:0 0 8px;color:#111827;">Resumen</div>${summaryHtml}`)}
+
+  ${htmlCard(`<div style="font-size:15px;font-weight:700;margin:0 0 8px;color:#111827;">Decisiones pendientes</div>${decisionsHtml}`, "border-color:#fbbf24;")}
+
+  <div style="font-size:15px;font-weight:700;margin:0 0 8px;color:#111827;">Cambios reales</div>
+  <div style="margin:0 0 16px;">${changesHtml}</div>
+
+  ${htmlCard(`<div style="font-size:15px;font-weight:700;margin:0 0 8px;color:#111827;">Bloqueos</div>${blockersHtml}`)}
+
+  ${htmlCard(`<div style="font-size:15px;font-weight:700;margin:0 0 4px;color:#111827;">Departamento SEM</div>${semHtml}`)}
+
+  <div style="font-size:15px;font-weight:700;margin:0 0 8px;color:#111827;">Equipo de agentes</div>
+  <div style="margin:0 0 16px;">${agentTeamsHtml}</div>
+
+  <div style="font-size:15px;font-weight:700;margin:0 0 8px;color:#111827;">Estado tecnico</div>
+  <div style="margin:0 0 16px;">${techHtml}</div>
+
+  <div style="font-size:15px;font-weight:700;margin:0 0 8px;color:#111827;">Plan recomendado</div>
+  <div style="margin:0 0 16px;">${planHtml}</div>
+
+  <div style="border-top:1px solid #e5e7eb;padding-top:10px;font-size:12px;color:#9ca3af;">Generado automaticamente el ${escapeHtmlCompact(input.dateLabel)}. Detalle tecnico completo en el informe interno del mismo dia.</div>
+</div>`.trim();
+}
+
+/** Version texto plano del mismo resumen compacto (clientes sin HTML). */
+export function renderCompactEmailText(input: CompactEmailInput): string {
+  const lines: string[] = [];
+  const statusLabel = input.operational ? "Operativo" : "Revisar";
+  const semLabel = input.sem.activeCampaigns > 0 ? `${input.sem.activeCampaigns} activa(s)` : "pausado hasta septiembre";
+
+  lines.push("Zentry AI Department · Daily Brief");
+  lines.push(`${input.dateLabel} · Estado: ${statusLabel} · Cambios: ${input.realChangeCount} · Bloqueos: ${input.blockerCount} · SEM: ${semLabel}`);
+  lines.push("");
+
+  lines.push("RESUMEN");
+  if (input.summaryBullets.length === 0) lines.push("- Sin novedades destacadas hoy.");
+  for (const b of input.summaryBullets) lines.push(`- ${b}`);
+  lines.push("");
+
+  lines.push("DECISIONES PENDIENTES");
+  if (input.pendingDecisions.length === 0) lines.push("- Ninguna decision pendiente hoy.");
+  for (const d of input.pendingDecisions) lines.push(`[ ] ${d}`);
+  lines.push("");
+
+  lines.push("CAMBIOS REALES");
+  if (input.realChanges.length === 0) {
+    lines.push(`- 0. ${input.zeroChangesExplanation ?? "Causa no determinada, revisar informe tecnico."}`);
+  }
+  for (const c of input.realChanges) lines.push(`- ${c}`);
+  lines.push("");
+
+  lines.push("EQUIPO DE AGENTES");
+  for (const t of input.agentTeams) {
+    lines.push(`${t.name}:`);
+    lines.push(`  Ayer: ${t.yesterday}`);
+    lines.push(`  Hoy: ${t.today}`);
+    lines.push(`  Proximo: ${t.next}`);
+    lines.push(`  Bloqueo: ${t.blocker}`);
+    lines.push(`  Evidencia: ${t.evidence}`);
+  }
+  lines.push("");
+
+  lines.push("BLOQUEOS");
+  if (input.blockers.length === 0) lines.push("- Ningun bloqueo real hoy.");
+  for (const b of input.blockers) lines.push(`- [${b.severity.toUpperCase()}] ${b.label} — ${b.note}`);
+  lines.push("");
+
+  lines.push("DEPARTAMENTO SEM");
+  lines.push(`- Campanas activas: ${input.sem.activeCampaigns}`);
+  lines.push(`- Campanas pausadas: ${input.sem.pausedCampaigns}/${input.sem.totalCampaigns}`);
+  lines.push(`- Gasto hoy: ${input.sem.spendTodayEUR.toFixed(2)} EUR`);
+  lines.push(`- Presupuesto potencial (campanas nuevas): ~${input.sem.potentialNewCampaignsDailyBudgetEUR.toFixed(0)} EUR/dia`);
+  lines.push(`- Legacy archivada: ${input.sem.legacyArchived ? "si" : "no"}`);
+  lines.push(`- Proximo hito: ${input.sem.nextMilestone}`);
+  lines.push("SEM esta en preparacion para septiembre. No se activara ninguna campana ahora. La activacion final sera manual por Pau.");
+  lines.push("");
+
+  lines.push("ESTADO TECNICO");
+  for (const c of input.credentialStatus) lines.push(`- ${c.label}: ${c.ok ? "OK" : "FALLO"}`);
+  lines.push(`- WordPress staging: ${input.wordpressStagingOk ? "OK" : "revisar"}`);
+  lines.push(`- WordPress produccion: ${input.wordpressProductionNote}`);
+  lines.push("");
+
+  lines.push("PLAN RECOMENDADO");
+  if (input.planToday.length === 0) lines.push("- Sin acciones destacadas hoy.");
+  input.planToday.forEach((p, i) => lines.push(`${i + 1}. ${p}`));
+  lines.push("");
+
+  lines.push(`Generado automaticamente el ${input.dateLabel}. Detalle tecnico completo en el informe interno del mismo dia.`);
+
+  return stripEnvVarTokens(lines.join("\n"));
+}
+
+/** Fallback minimo (Fase O49.7) para cuando el informe ejecutivo completo fallo -- nunca se usa el diseno de 8 bloques con datos que no son de fiar. */
+export function renderFallbackEmailHtml(fallbackText: string): string {
+  return `
+<div style="max-width:680px;margin:0 auto;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45;color:#1f2937;">
+  <div style="font-size:16px;font-weight:700;color:#111827;margin:0 0 12px;">Zentry AI Department · Daily Brief</div>
+  <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px 16px;white-space:pre-wrap;">${escapeHtmlCompact(fallbackText)}</div>
+</div>`.trim();
 }

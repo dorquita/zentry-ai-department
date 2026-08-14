@@ -1,0 +1,1489 @@
+[
+  {
+    "id": 334,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-1-metalica",
+    "name": "Taquilla 1 puerta – Módulo 1 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "194",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30cm|40cm",
+      "Color cuerpo en stock (RAL):amarillo RAL 1003|arena RAL 1015|azul RAL 5023|blanco RAL 9010|Color cuerpo (RAL)|grafito RAL 7024|gris met RAL 9006|gris RAL 7035|naranja RAL 2004|negro RAL 9005|rojo RAL 3000|verde RAL 6011",
+      "Color puerta en stock (RAL):amarillo RAL 1003|arena RAL 1015|azul RAL 5023|blanco RAL 9010|Color puerta (RAL)|grafito RAL 7024|gris met RAL 9006|gris RAL 7035|naranja RAL 2004|negro RAL 9005|rojo RAL 3000|verde RAL 6011",
+      "Tipo de cerradura:Cerradura de bombillo"
+    ],
+    "image_count": 6,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:40:32"
+  },
+  {
+    "id": 339,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-2",
+    "name": "Taquilla 1 puerta – Módulo 2 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "371",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 4,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:40:47"
+  },
+  {
+    "id": 364,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-3-metalica",
+    "name": "Taquilla 1 puerta – Módulo 3 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "499",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 6,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:41:16"
+  },
+  {
+    "id": 372,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-1-metalica",
+    "name": "Taquilla 2 puertas – Módulo 1 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "257",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 3,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:41:27"
+  },
+  {
+    "id": 393,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-2-metalica",
+    "name": "Taquilla 2 puertas – Módulo 2 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "434",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 5,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:41:46"
+  },
+  {
+    "id": 398,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-3-metalica",
+    "name": "Taquilla 2 puertas – Módulo 3 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "634",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:41:53"
+  },
+  {
+    "id": 408,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-1-metalica",
+    "name": "Taquilla 3 puertas – Módulo 1 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "274",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T08:54:50"
+  },
+  {
+    "id": 413,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-2-metalica",
+    "name": "Taquilla 3 puertas – Módulo 3 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "704",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:41:55"
+  },
+  {
+    "id": 420,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-2-metalica-2",
+    "name": "Taquilla 3 puertas – Módulo 2 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "481",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T08:55:36"
+  },
+  {
+    "id": 425,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-1-metalica",
+    "name": "Taquilla 4 puertas – Módulo 1 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "291",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:42:02"
+  },
+  {
+    "id": 430,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-2-metalica",
+    "name": "Taquilla 4 puertas – Módulo 2 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "528",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 4,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:42:21"
+  },
+  {
+    "id": 435,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-3-metalica",
+    "name": "Taquilla 4 puertas – Módulo 3 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "778",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 6,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:42:51"
+  },
+  {
+    "id": 440,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-1-metalica",
+    "name": "Taquilla 2 puertas en L – Módulo 1 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "289",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 3,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:43:04"
+  },
+  {
+    "id": 445,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-2-metalica",
+    "name": "Taquilla 2 puertas en L – Módulo 2 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "517",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 3,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:43:16"
+  },
+  {
+    "id": 450,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-3-metalica-copia",
+    "name": "Taquilla 2 puertas en L – Módulo 3 (Metálica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "756",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-metalicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de bombillo|Cerradura de moneda|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 5,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:43:34"
+  },
+  {
+    "id": 489,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-1-fenolica",
+    "name": "Taquilla 1 puerta – Módulo 1 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "451",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:43:42"
+  },
+  {
+    "id": 499,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-1-fenolica",
+    "name": "Taquilla 2 puertas – Módulo 1 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "478",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 3,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:43:51"
+  },
+  {
+    "id": 505,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-2-fenolica",
+    "name": "Taquilla 1 puerta – Módulo 2 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "759",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:01"
+  },
+  {
+    "id": 513,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-1-fenolica-2",
+    "name": "Taquilla 3 puertas – Módulo 1 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "588",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:07"
+  },
+  {
+    "id": 519,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-2-fenolica",
+    "name": "Taquilla 2 puertas – Módulo 2 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "796",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:15"
+  },
+  {
+    "id": 525,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-2-fenolica-2",
+    "name": "Taquilla 3 puertas – Módulo 2 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "965",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:19"
+  },
+  {
+    "id": 531,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-3-fenolica",
+    "name": "Taquilla 1 puerta – Módulo 3 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1112",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:23"
+  },
+  {
+    "id": 537,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-3-fenolica",
+    "name": "Taquilla 2 puertas – Módulo 3 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1194",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:26"
+  },
+  {
+    "id": 543,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-3-fenolica",
+    "name": "Taquilla 3 puertas – Módulo 3 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1382",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:30"
+  },
+  {
+    "id": 549,
+    "sku": "",
+    "slug": "taquilla-1-puertas-modulo-4-fenolica",
+    "name": "Taquilla 1 puerta – Módulo 4 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1447",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 3,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:40"
+  },
+  {
+    "id": 555,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-4-fenolica",
+    "name": "Taquilla 2 puertas – Módulo 4 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1537",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:49"
+  },
+  {
+    "id": 561,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-4-fenolica",
+    "name": "Taquilla 3 puertas – Módulo 4 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1746",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:51"
+  },
+  {
+    "id": 567,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-4-fenolica",
+    "name": "Taquilla 4 puertas – Módulo 4 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "2012",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:54"
+  },
+  {
+    "id": 573,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-1-fenolica",
+    "name": "Taquilla 2 puertas en L – Módulo 1 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "508",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:44:58"
+  },
+  {
+    "id": 579,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-2-fenolica",
+    "name": "Taquilla 2 puertas en L – Módulo 2 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "887",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 3,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:09"
+  },
+  {
+    "id": 585,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-3-fenolica",
+    "name": "Taquilla 2 puertas en L – Módulo 3 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1307",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:13"
+  },
+  {
+    "id": 591,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-4-fenolica",
+    "name": "Taquilla 2 puertas en L – Módulo 4 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1710",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:15"
+  },
+  {
+    "id": 597,
+    "sku": "",
+    "slug": "taquilla-1-puertas-modulo-1-melamina",
+    "name": "Taquilla 1 puertas – Módulo 1 (Melamina)",
+    "type": "variable",
+    "status": "publish",
+    "price": "245",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:38:29"
+  },
+  {
+    "id": 603,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-1-melamina",
+    "name": "Taquilla 2 puertas – Módulo 1 (Melamina)",
+    "type": "variable",
+    "status": "publish",
+    "price": "262",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 3,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:39:13"
+  },
+  {
+    "id": 609,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-1-melamina",
+    "name": "Taquilla 3 puertas – Módulo 1 (Melamina)",
+    "type": "variable",
+    "status": "publish",
+    "price": "282",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:21"
+  },
+  {
+    "id": 1248,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-1-fenolica-copia",
+    "name": "Taquilla 4 puertas – Módulo 1 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "701",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:27"
+  },
+  {
+    "id": 1254,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-2-fenolica-copia-2",
+    "name": "Taquilla 4 puertas – Módulo 2 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1145",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:32"
+  },
+  {
+    "id": 1261,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-3-fenolica-copia",
+    "name": "Taquilla 4 puertas – Módulo 3 (Fenólica)",
+    "type": "variable",
+    "status": "publish",
+    "price": "1574",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:35"
+  },
+  {
+    "id": 1286,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-1-melamina-2",
+    "name": "Taquilla 2 puertas – Módulo 1 (Melamina)",
+    "type": "variable",
+    "status": "private",
+    "price": "262",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-fenolicas"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T13:41:04"
+  },
+  {
+    "id": 1291,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-1-melamina",
+    "name": "Taquilla 4 puertas – Módulo 1 (Melamina)",
+    "type": "variable",
+    "status": "publish",
+    "price": "298",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:41"
+  },
+  {
+    "id": 1296,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-2-melamina",
+    "name": "Taquilla 1 puertas – Módulo 2 (Melamina)",
+    "type": "variable",
+    "status": "publish",
+    "price": "383",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:46"
+  },
+  {
+    "id": 1301,
+    "sku": "",
+    "slug": "taquilla-2-puertas-modulo-2-melamina",
+    "name": "Taquilla 2 puertas – Módulo 2 (Melamina)",
+    "type": "variable",
+    "status": "publish",
+    "price": "417",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:50"
+  },
+  {
+    "id": 1306,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-2-melamina",
+    "name": "Taquilla 3 puertas – Módulo 2 (Melamina)",
+    "type": "variable",
+    "status": "publish",
+    "price": "451",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:45:57"
+  },
+  {
+    "id": 1311,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-2-melamina",
+    "name": "Taquilla 4 puertas – Módulo 2 (Melamina)",
+    "type": "variable",
+    "status": "publish",
+    "price": "484",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:46:01"
+  },
+  {
+    "id": 1319,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-1-melamina-fenolico",
+    "name": "Taquilla 1 puerta – Módulo 1 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "313",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:46:07"
+  },
+  {
+    "id": 1325,
+    "sku": "",
+    "slug": "taquilla-2-puerta-modulo-1-melamina-fenolico",
+    "name": "Taquilla 2 puerta – Módulo 1 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "326",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:46:13"
+  },
+  {
+    "id": 1331,
+    "sku": "",
+    "slug": "taquilla-3-puertas-modulo-1-melamina-fenolico",
+    "name": "Taquilla 3 puertas – Módulo 1 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "344",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:46:19"
+  },
+  {
+    "id": 1337,
+    "sku": "",
+    "slug": "taquilla-4-puertas-modulo-1-melamina-fenolico",
+    "name": "Taquilla 4 puertas – Módulo 1 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "360",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:46:25"
+  },
+  {
+    "id": 1343,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-1-melamina-fenolico",
+    "name": "Taquilla 2 puertas en L – Módulo 1 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "348",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:46:31"
+  },
+  {
+    "id": 1349,
+    "sku": "",
+    "slug": "taquilla-1-puerta-modulo-2-melamina-fenolico",
+    "name": "Taquilla 1 puerta en altura – Módulo 2 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "481",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 3,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:46:40"
+  },
+  {
+    "id": 1355,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-altura-modulo-2-melamina-fenolico",
+    "name": "Taquilla 2 puertas en altura – Módulo 2 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "521",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 4,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:46:56"
+  },
+  {
+    "id": 1361,
+    "sku": "",
+    "slug": "taquilla-3-puertas-en-altura-modulo-2-melamina-fenolico",
+    "name": "Taquilla 3 puertas en altura – Módulo 2 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "568",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:47:00"
+  },
+  {
+    "id": 1367,
+    "sku": "",
+    "slug": "taquilla-4-puertas-en-altura-modulo-2-melamina-fenolico",
+    "name": "Taquilla 4 puertas en altura – Módulo 2 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "605",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:47:05"
+  },
+  {
+    "id": 1373,
+    "sku": "",
+    "slug": "taquilla-2-puertas-en-l-modulo-2-melamina-fenolico",
+    "name": "Taquilla 2 puertas en L– Módulo 2 (Melamina-Fenólico)",
+    "type": "variable",
+    "status": "publish",
+    "price": "597",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "taquillas",
+      "taquillas-de-melamina"
+    ],
+    "attributes": [
+      "Anchura:30 cm|40 cm",
+      "Espesor:10 mm|12 mm",
+      "Tipo de cerradura:Cerradura de resbalón|Cerradura de moneda|Cerradura candado|ARES electrónica|ORBIS electrónica|BOXIS electrónica|NEO electrónica"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-11T14:47:11"
+  },
+  {
+    "id": 1988,
+    "sku": "VBANPSE",
+    "slug": "banco-vestuario-pino",
+    "name": "Banco de vestuario de pino",
+    "type": "variable",
+    "status": "publish",
+    "price": "119",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-pino",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:23:17"
+  },
+  {
+    "id": 1989,
+    "sku": "VBANPPE",
+    "slug": "banco-vestuario-pino-perchero",
+    "name": "Banco de vestuario de pino con respaldo y perchero",
+    "type": "variable",
+    "status": "publish",
+    "price": "206",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-pino",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Cara:Doble|Única",
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:23:31"
+  },
+  {
+    "id": 1990,
+    "sku": "VBANPPZ",
+    "slug": "banco-vestuario-pino-zapatero",
+    "name": "Banco de vestuario de pino con respaldo, perchero y zapatero",
+    "type": "variable",
+    "status": "publish",
+    "price": "240",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-pino",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Cara:Doble|Única",
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:23:44"
+  },
+  {
+    "id": 1991,
+    "sku": "VBANFESE",
+    "slug": "banco-vestuario-fenolico",
+    "name": "Banco de vestuario fenólico",
+    "type": "variable",
+    "status": "publish",
+    "price": "143",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-fenolicos",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:23:51"
+  },
+  {
+    "id": 1992,
+    "sku": "VBANFEPE",
+    "slug": "banco-vestuario-fenolico-perchero",
+    "name": "Banco de vestuario fenólico con respaldo y perchero",
+    "type": "variable",
+    "status": "publish",
+    "price": "228",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-fenolicos",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Cara:Doble|Única",
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:24:02"
+  },
+  {
+    "id": 1993,
+    "sku": "VBANFEPZ",
+    "slug": "banco-vestuario-fenolico-zapatero",
+    "name": "Banco de vestuario fenólico con respaldo, perchero y zapatero",
+    "type": "variable",
+    "status": "publish",
+    "price": "306",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-fenolicos",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Cara:Doble|Única",
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:24:11"
+  },
+  {
+    "id": 1994,
+    "sku": "VBANMESE",
+    "slug": "banco-vestuario-melamina",
+    "name": "Banco de vestuario de melamina",
+    "type": "variable",
+    "status": "publish",
+    "price": "92",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-melamina",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 1,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:24:15"
+  },
+  {
+    "id": 1995,
+    "sku": "VBANMEPE",
+    "slug": "banco-vestuario-melamina-perchero",
+    "name": "Banco de vestuario de melamina con respaldo y perchero",
+    "type": "variable",
+    "status": "publish",
+    "price": "173",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-melamina",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Cara:Doble|Única",
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:24:23"
+  },
+  {
+    "id": 1996,
+    "sku": "VBANMEPZ",
+    "slug": "banco-vestuario-melamina-zapatero",
+    "name": "Banco de vestuario de melamina con respaldo, perchero y zapatero",
+    "type": "variable",
+    "status": "publish",
+    "price": "201",
+    "regular_price": "",
+    "stock_status": "instock",
+    "categories": [
+      "bancos-de-melamina",
+      "bancos-de-vestuario"
+    ],
+    "attributes": [
+      "Cara:Doble|Única",
+      "Longitud:1000mm|1500mm|2000mm"
+    ],
+    "image_count": 2,
+    "has_real_image": true,
+    "date_modified": "2026-08-07T20:24:32"
+  },
+  {
+    "id": 2056,
+    "sku": "TKD-ARES",
+    "slug": "ares",
+    "name": "ARES",
+    "type": "simple",
+    "status": "publish",
+    "price": "51",
+    "regular_price": "51",
+    "stock_status": "instock",
+    "categories": [
+      "cerraduras-electronicas"
+    ],
+    "attributes": [],
+    "image_count": 0,
+    "has_real_image": false,
+    "date_modified": "2026-08-08T08:27:55"
+  },
+  {
+    "id": 2057,
+    "sku": "TKD-ORBIS",
+    "slug": "orbis",
+    "name": "ORBIS",
+    "type": "simple",
+    "status": "publish",
+    "price": "39",
+    "regular_price": "39",
+    "stock_status": "instock",
+    "categories": [
+      "cerraduras-electronicas"
+    ],
+    "attributes": [],
+    "image_count": 0,
+    "has_real_image": false,
+    "date_modified": "2026-08-08T08:27:57"
+  },
+  {
+    "id": 2058,
+    "sku": "TKD-BOXIS",
+    "slug": "boxis",
+    "name": "BOXIS",
+    "type": "simple",
+    "status": "publish",
+    "price": "54",
+    "regular_price": "54",
+    "stock_status": "instock",
+    "categories": [
+      "cerraduras-electronicas"
+    ],
+    "attributes": [],
+    "image_count": 0,
+    "has_real_image": false,
+    "date_modified": "2026-08-08T08:28:00"
+  },
+  {
+    "id": 2059,
+    "sku": "TKD-NEO",
+    "slug": "neo",
+    "name": "NEO",
+    "type": "simple",
+    "status": "publish",
+    "price": "51",
+    "regular_price": "51",
+    "stock_status": "instock",
+    "categories": [
+      "cerraduras-electronicas"
+    ],
+    "attributes": [],
+    "image_count": 0,
+    "has_real_image": false,
+    "date_modified": "2026-08-08T08:28:03"
+  }
+]

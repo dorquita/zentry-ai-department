@@ -1,0 +1,506 @@
+[
+  {
+    "productId": 334,
+    "stagingCount": 52,
+    "prodCountBefore": 50,
+    "created": 2,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 339,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 364,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 372,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 393,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 398,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 408,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 413,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 420,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 425,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 430,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 435,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 440,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 445,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 450,
+    "stagingCount": 14,
+    "prodCountBefore": 4,
+    "created": 12,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 489,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 499,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 505,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 513,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 519,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 525,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 531,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 537,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 543,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 549,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 555,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 561,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 567,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 573,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 579,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 585,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 591,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 597,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 603,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 609,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1248,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1254,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1261,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1286,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1291,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1296,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1301,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1306,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1311,
+    "stagingCount": 16,
+    "prodCountBefore": 4,
+    "created": 14,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1319,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1325,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1331,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1337,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1343,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1349,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1355,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1361,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1367,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1373,
+    "stagingCount": 30,
+    "prodCountBefore": 4,
+    "created": 28,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1988,
+    "stagingCount": 3,
+    "prodCountBefore": 3,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1989,
+    "stagingCount": 6,
+    "prodCountBefore": 6,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1990,
+    "stagingCount": 6,
+    "prodCountBefore": 6,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1991,
+    "stagingCount": 3,
+    "prodCountBefore": 3,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1992,
+    "stagingCount": 6,
+    "prodCountBefore": 6,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1993,
+    "stagingCount": 6,
+    "prodCountBefore": 6,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1994,
+    "stagingCount": 3,
+    "prodCountBefore": 3,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1995,
+    "stagingCount": 6,
+    "prodCountBefore": 6,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  },
+  {
+    "productId": 1996,
+    "stagingCount": 6,
+    "prodCountBefore": 6,
+    "created": 0,
+    "updated": 0,
+    "errors": []
+  }
+]
