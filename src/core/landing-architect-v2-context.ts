@@ -1,6 +1,7 @@
 import { extractPreviewFields } from "../agents/wordpress-draft-agent";
 import { selectVisualTemplate } from "./visual-templates";
 import { detectTerm, SECTOR_TERMS, MATERIAL_TERMS, smartLocksBlockApplies } from "../agents/visual-template-builder";
+import { isRealInternalUrl } from "./internal-url-guard";
 import { BrandIntentCategory, BrandTarget, ChangePack, ChangePackStatus, Priority } from "./types";
 
 /**
@@ -44,13 +45,6 @@ export interface LandingArchitectContext {
 
 const LOCK_TOPIC_TERMS = ["cerradura inteligente", "cerraduras inteligentes", "control de acceso", "taquilla inteligente", "taquillas inteligentes"];
 
-function isRealInternalUrl(value: string): boolean {
-  const trimmed = value.trim();
-  if (/^https?:\/\/\S+$/i.test(trimmed)) return true;
-  if (/^\/\S*$/.test(trimmed)) return true;
-  return false;
-}
-
 function isSmartLockTopic(changePack: ChangePack): boolean {
   const haystack = `${changePack.keyword} ${changePack.page ?? ""}`.toLowerCase();
   return LOCK_TOPIC_TERMS.some((term) => haystack.includes(term));
@@ -78,7 +72,11 @@ export function buildLandingArchitectContext(changePack: ChangePack): LandingArc
     templateHint: templateId,
     proposedHeadings: fields.h2s,
     existingFaqs: fields.faqs,
-    internalLinks: fields.internalLinks.filter(isRealInternalUrl),
+    // Wrapper explicito (nunca pasar isRealInternalUrl directo a .filter):
+    // Array.prototype.filter llama al callback con (elemento, indice,
+    // array) -- el indice se colaria como segundo argumento
+    // (authorizedHosts) y rompería la validacion.
+    internalLinks: fields.internalLinks.filter((link) => isRealInternalUrl(link)),
     currentAssumptions: changePack.currentAssumptions,
   };
 }

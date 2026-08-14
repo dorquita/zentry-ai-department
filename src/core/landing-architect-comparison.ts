@@ -101,19 +101,121 @@ export function validateV2Output(raw: unknown): LandingArchitectV2Output {
   return o as unknown as LandingArchitectV2Output;
 }
 
-// Patrones de cifras/plazos/garantias concretas -- exactamente el tipo
-// de dato que zentry-brand (SKILL) prohibe fabricar. No es un check
-// semantico completo (no entiende contexto), es una red de seguridad
-// textual: cualquier coincidencia se reporta como WARNING para revision
-// humana, nunca bloquea nada automaticamente (este runner solo genera
-// reportes locales, no aplica nada).
-const FABRICATION_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
-  { pattern: /\d+\s*€/g, label: "precio en euros" },
-  { pattern: /desde\s+\d+/gi, label: "precio \"desde X\"" },
-  { pattern: /\d+\s*(dias|d[ií]as|semanas|meses)\b/gi, label: "plazo de entrega concreto" },
-  { pattern: /garant[ií]a\s+de\s+\d+\s*(a[nñ]os?|meses)/gi, label: "condicion de garantia concreta" },
-  { pattern: /\d+\s*%/g, label: "porcentaje/descuento concreto" },
+// Auditoria de afirmaciones sensibles no respaldadas -- NO es un check
+// semantico completo (no "entiende" el texto), es una red de seguridad
+// textual de dos pasos por categoria: (1) ¿el texto de salida de V2
+// contiene una AFIRMACION de esta categoria? (2) si es asi, ¿el input
+// la RESPALDA (aparece ya, sin marcarla como pendiente de confirmar)?
+// Si la afirmacion no esta respaldada, se reporta como WARNING para
+// revision humana -- nunca bloquea nada automaticamente (este runner
+// solo genera reportes locales, no aplica nada).
+//
+// Bug real corregido tras revision (ver docs/ux-ui-landing-architect-v2-experiment.md):
+// la version anterior solo buscaba CIFRAS concretas ("garantia de 5
+// anos"), asi que una afirmacion cualitativa sin numero ("cuentan con
+// garantia de fabricante") pasaba como falso negativo aunque el input
+// marcara la garantia como "pendiente de confirmar". Las categorias de
+// abajo cubren tanto cifras como afirmaciones cualitativas.
+interface ClaimCategory {
+  id: string;
+  label: string;
+  // Cualquier coincidencia en el texto de SALIDA de V2 se trata como una
+  // afirmacion de esta categoria.
+  assertionPattern: RegExp;
+  // Termino que debe aparecer en una frase del INPUT (sin lenguaje de
+  // "pendiente"/"confirmar" en esa misma frase) para considerar la
+  // categoria respaldada.
+  topicPattern: RegExp;
+  // "exact_value": la coincidencia CONCRETA (p.ej. "20 dias") debe
+  // aparecer literalmente en alguna frase de respaldo del input (sin
+  // lenguaje de "pendiente/confirmar" en esa frase) -- protege contra
+  // que V2 reutilice el TEMA (plazos/precio) pero invente un valor
+  // distinto al que ya existe. "topic_presence": basta con que el TEMA
+  // de la categoria este respaldado (sin hedge) en alguna frase del
+  // input, sin exigir el mismo valor exacto -- para afirmaciones
+  // cualitativas (garantia/fabricante directo/funcionalidad) donde no
+  // hay un "valor" que comparar caracter a caracter.
+  verification: "exact_value" | "topic_presence";
+}
+
+const HEDGE_TERMS_PATTERN = /pendiente|confirmar|indicar|por definir|segun el modelo|segun stock|segun disponibilidad/i;
+
+const CLAIM_CATEGORIES: ClaimCategory[] = [
+  {
+    id: "garantia",
+    label: "garantía",
+    assertionPattern:
+      /garant[ií]a\s+de\s+\d+\s*(a[nñ]os?|meses)|garant[ií]a\s+de\s+fabricante|cuenta[n]?\s+con\s+garant[ií]a|tiene[n]?\s+garant[ií]a|incluye[n]?\s+garant[ií]a/gi,
+    topicPattern: /garant[ií]a/i,
+    verification: "topic_presence",
+  },
+  {
+    id: "precio",
+    label: "precio",
+    assertionPattern: /\d+\s*€|desde\s+\d+\s*€?|\d+\s*%|precio\s+(fijo|cerrado)/gi,
+    topicPattern: /precio|presupuesto|coste|tarifa/i,
+    verification: "exact_value",
+  },
+  {
+    id: "plazo_entrega",
+    label: "plazo de entrega",
+    assertionPattern: /\d+\s*(dias|d[ií]as|semanas|meses)\b|entrega\s+(inmediata|garantizada|en\s+\d+)/gi,
+    topicPattern: /plazo|entrega|env[ií]o/i,
+    verification: "exact_value",
+  },
+  {
+    id: "fabricante_directo",
+    label: "fabricante directo / sin intermediarios",
+    assertionPattern: /fabricante\s+directo|sin\s+intermediarios|venta\s+directa|fabrica(mos)?\s+y\s+vende(mos)?\s+directamente/gi,
+    topicPattern: /fabricante\s+directo|sin\s+intermediarios|venta\s+directa|fabrica(mos)?\s+y\s+vende(mos)?\s+directamente/i,
+    verification: "topic_presence",
+  },
+  {
+    id: "funcionalidad_producto",
+    label: "funcionalidad de producto",
+    assertionPattern: /todas?\s+(las\s+)?(taquillas|cerraduras)\s+(incluyen|tienen|cuentan\s+con)|incluye[n]?\s+(app|conectividad|wifi|bluetooth|registro\s+de\s+accesos)\b/gi,
+    topicPattern: /\bapp\b|conectividad|wifi|bluetooth|registro\s+de\s+accesos/i,
+    verification: "topic_presence",
+  },
 ];
+
+/**
+ * Trocea un texto en "frases" (delimitadas por puntuacion de frase O un
+ * guion/raya rodeado de espacios, para no acoplar clausulas distintas de
+ * una misma oracion larga tipo "Al ser fabricante directo, los plazos
+ * son mas cortos -- confirmar plazo exacto segun stock."). Una frase que
+ * menciona el topic de una categoria SIN lenguaje de "pendiente/
+ * confirmar" cuenta como respaldo real; si el topic solo aparece junto a
+ * lenguaje de "pendiente/confirmar", NO cuenta como respaldo.
+ */
+function splitIntoClauses(text: string): string[] {
+  return text
+    .split(/[.!?\n;:]+|\s[-—–]\s/)
+    .map((clause) => clause.trim())
+    .filter((clause) => clause.length > 0);
+}
+
+/**
+ * Frases de respaldo: solo `currentAssumptions` y las RESPUESTAS de
+ * `existingFaqs` (nunca las preguntas -- una pregunta como "¿Que
+ * garantia tienen las taquillas?" menciona el topic pero no lo afirma
+ * como hecho confirmado) ni los headings (son titulos de seccion, no
+ * afirmaciones).
+ */
+function buildSupportClauses(context: LandingArchitectContext): string[] {
+  const assertiveTexts = [...context.currentAssumptions, ...context.existingFaqs.map((f) => f.answer)];
+  return splitIntoClauses(assertiveTexts.join(". "));
+}
+
+function isCategorySupported(supportClauses: string[], category: ClaimCategory): boolean {
+  return supportClauses.some((clause) => category.topicPattern.test(clause) && !HEDGE_TERMS_PATTERN.test(clause));
+}
+
+/** Para categorias "exact_value": el valor concreto (no solo el tema) debe aparecer, sin hedge, en alguna frase del input. */
+function isExactValueSupported(supportClauses: string[], match: string): boolean {
+  const needle = match.toLowerCase();
+  return supportClauses.some((clause) => clause.toLowerCase().includes(needle) && !HEDGE_TERMS_PATTERN.test(clause));
+}
 
 function collectTextFields(v2: LandingArchitectV2Output): string[] {
   const texts: string[] = [v2.hero.headline, v2.hero.subheadline, v2.ctaPrimary.label, v2.finalCta.headline, v2.finalCta.cta.label];
@@ -132,23 +234,27 @@ function collectTextFields(v2: LandingArchitectV2Output): string[] {
 }
 
 /**
- * Compara cada coincidencia de FABRICATION_PATTERNS contra el texto de
- * entrada (keyword + currentAssumptions + headings + FAQs existentes) --
- * si la misma cifra ya aparecia en el input, no es fabricacion, es
- * reutilizacion legitima de un dato real. Solo se marca como warning lo
- * que aparece en la salida de V2 y NO aparece literalmente en el input.
+ * Para cada categoria de CLAIM_CATEGORIES, busca afirmaciones en el
+ * texto de salida de V2 y las contrasta contra el respaldo real del
+ * input (ver buildSupportClauses/isCategorySupported). Una afirmacion
+ * de una categoria SIN respaldo en el input -- incluido el caso en que
+ * el input SI menciona el tema pero lo marca como pendiente de
+ * confirmar -- se reporta como warning.
  */
 export function auditV2OutputForFabrication(context: LandingArchitectContext, v2: LandingArchitectV2Output): string[] {
-  const inputHaystack = [context.keyword, ...context.currentAssumptions, ...context.proposedHeadings, ...context.existingFaqs.flatMap((f) => [f.question, f.answer])].join(" \n ").toLowerCase();
+  const supportClauses = buildSupportClauses(context);
+  const topicSupport = new Map(CLAIM_CATEGORIES.map((category) => [category.id, isCategorySupported(supportClauses, category)]));
 
   const warnings: string[] = [];
   for (const text of collectTextFields(v2)) {
-    for (const { pattern, label } of FABRICATION_PATTERNS) {
-      const matches = text.match(pattern) ?? [];
+    for (const category of CLAIM_CATEGORIES) {
+      const matches = text.match(category.assertionPattern) ?? [];
       for (const match of matches) {
-        if (!inputHaystack.includes(match.toLowerCase())) {
-          warnings.push(`Posible dato fabricado (${label}): "${match}" en "${text.slice(0, 80)}${text.length > 80 ? "..." : ""}" -- no aparece en el input.`);
-        }
+        const supported = category.verification === "exact_value" ? isExactValueSupported(supportClauses, match) : topicSupport.get(category.id) ?? false;
+        if (supported) continue;
+        warnings.push(
+          `Afirmacion sensible no respaldada (${category.label}): "${match}" en "${text.slice(0, 80)}${text.length > 80 ? "..." : ""}" -- el input no lo confirma (o lo marca como pendiente de confirmar).`
+        );
       }
     }
   }
@@ -224,7 +330,7 @@ export function buildStructuralDiff(v1: V1BlueprintInput, v2Output: LandingArchi
 export const EVALUATION_CRITERIA: string[] = [
   "Un unico H1 (headline del hero) -- no hay headings H1 duplicados en secciones.",
   "CTA principal presente, con label claro y target valido (real o placeholder honesto marcado como tal).",
-  "Cero cifras de precio/plazo/garantia/porcentaje que no vengan ya en el input (ver auditoria de fabricacion).",
+  "Cero afirmaciones de garantia/precio/plazo/fabricante-directo/funcionalidad que no vengan ya respaldadas por el input (ver auditoria de fabricacion).",
   "Cada seccion aporta informacion especifica del tema (material/control de acceso), no relleno generico repetido.",
   "FAQ real (preguntas y respuestas especificas), no una unica entrada generica.",
   "Jerarquia visual: beneficios/materiales en bloques o cards, no solo parrafos sueltos.",
@@ -310,7 +416,7 @@ export function renderComparisonMarkdown(artifact: LandingArchitectComparisonArt
       lines.push(`**⚠️ Auditoria de fabricacion: ${artifact.v2.fabricationWarnings.length} aviso(s) para revision humana:**`);
       for (const warning of artifact.v2.fabricationWarnings) lines.push(`- ${warning}`);
     } else {
-      lines.push("Auditoria de fabricacion: sin avisos (ninguna cifra/plazo/garantia/porcentaje detectado fuera del input).");
+      lines.push("Auditoria de fabricacion: sin avisos (ninguna afirmacion sensible de garantia/precio/plazo/fabricante-directo/funcionalidad sin respaldo en el input).");
     }
   }
   lines.push("");

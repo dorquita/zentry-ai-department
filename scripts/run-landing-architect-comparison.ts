@@ -39,7 +39,7 @@ import { readCurrentChangePacks, findChangePackById } from "../src/core/change-p
 import { buildBlueprintInput } from "../src/agents/ux-ui-landing-architect";
 import { buildLandingArchitectContext } from "../src/core/landing-architect-v2-context";
 import { auditV2OutputForFabrication, buildComparisonArtifact, renderComparisonMarkdown, validateV2Output, V2Result } from "../src/core/landing-architect-comparison";
-import { hasNoExternalWriteTools } from "../src/core/subagent-tool-guard";
+import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
 import { resolveActiveClientPaths } from "../src/core/client-paths";
 import { ChangePack } from "../src/core/types";
 
@@ -152,12 +152,12 @@ async function main(): Promise<void> {
 
   // Segunda capa de seguridad (defensa en profundidad, ver
   // src/core/subagent-tool-guard.ts): aunque este runner nunca invoca al
-  // subagente por si mismo (ver cabecera), se verifica igualmente que la
-  // configuracion declarada de ux-ui-landing-architect-v2 sigue sin
-  // herramientas de escritura externa antes de preparar nada.
-  if (!hasNoExternalWriteTools(AGENT_NAME)) {
-    throw new Error(`Subagent Tool Guard: "${AGENT_NAME}" tiene herramientas de escritura externa concedidas en config/subagent-tool-allowlist.json -- abortando por seguridad. Revisa el allowlist antes de continuar.`);
-  }
+  // subagente por si mismo (ver cabecera), se verifica igualmente que
+  // ux-ui-landing-architect-v2 sigue cumpliendo las 4 condiciones de
+  // "cero herramientas" (allowlist presente, allowedTools/externalWriteToolsGranted
+  // vacios, frontmatter tools: [] ) antes de preparar nada. Cualquier
+  // inconsistencia aborta con el motivo exacto.
+  assertSubagentIsToolless(AGENT_NAME);
 
   const outDir = path.join(resolveActiveClientPaths().reportsDir, "ux-ui-landing-comparison", changePack.changePackId);
   fs.mkdirSync(outDir, { recursive: true });

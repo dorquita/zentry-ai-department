@@ -16,6 +16,21 @@ import * as path from "path";
  * `.md` no es la unica proteccion contra que un subagente gane
  * herramientas de escritura.
  *
+ * Fail-closed en DOS ejes, no solo uno:
+ *   1. Un agente que no esta en el allowlist NUNCA se trata como
+ *      "confirmado seguro" -- `hasNoExternalWriteTools()` devuelve
+ *      `false` para un agente desconocido (no `true`: la ausencia de
+ *      registro no es evidencia de ausencia de riesgo, ver bug corregido
+ *      tras revision -- antes devolvia `true`, dando una falsa garantia).
+ *   2. Una herramienta que no esta clasificada en NINGUNA categoria de
+ *      `toolCategories` (ni siquiera en `external_write`) nunca se trata
+ *      implicitamente como segura -- se clasifica como "unknown" y
+ *      cuenta como riesgo, exactamente igual que si fuera de escritura
+ *      externa conocida. El catalogo de ejemplos de `external_write` es
+ *      deliberadamente no exhaustivo (ver el propio JSON); lo que
+ *      protege de verdad es que CUALQUIER herramienta no reconocida se
+ *      trata como no segura, nunca al reves.
+ *
  * Este modulo no ejecuta ni invoca ningun subagente -- es unicamente la
  * capa de decision/verificacion, pensada para usarse desde tests (ver
  * test/subagent-tool-guard.test.ts) y desde cualquier runner que quiera
@@ -25,7 +40,7 @@ import * as path from "path";
 const ALLOWLIST_PATH = path.join(__dirname, "..", "..", "config", "subagent-tool-allowlist.json");
 const AGENTS_DIR = path.join(__dirname, "..", "..", ".claude", "agents");
 
-interface SubagentAllowlistEntry {
+export interface SubagentAllowlistEntry {
   definitionFile: string;
   description: string;
   allowedTools: string[];
@@ -34,14 +49,14 @@ interface SubagentAllowlistEntry {
   notes?: string;
 }
 
-interface ToolCategory {
+export interface ToolCategory {
   label: string;
   examples: string[];
   isExternalWrite: boolean;
   note?: string;
 }
 
-interface SubagentAllowlistFile {
+export interface SubagentAllowlistFile {
   version: string;
   toolCategories: Record<string, ToolCategory>;
   defaultForUnlistedAgent: string;
@@ -52,18 +67,38 @@ interface SubagentAllowlistFile {
 /**
  * Sin cache, relee el JSON en cada llamada -- mismo patron que
  * novamira-guard.ts/autonomy-policy.ts, para que un cambio en el
- * fichero de politica se refleje de inmediato.
+ * fichero de politica se refleje de inmediato. Todas las funciones de
+ * este modulo aceptan un `allowlist` inyectable (por defecto, esta
+ * lectura fresca) para que los tests puedan verificar casos de
+ * inconsistencia sin tener que mutar el fichero real del repositorio.
  */
 export function loadSubagentToolAllowlist(): SubagentAllowlistFile {
   const raw = fs.readFileSync(ALLOWLIST_PATH, "utf-8");
   return JSON.parse(raw) as SubagentAllowlistFile;
 }
 
-export function getKnownExternalWriteTools(): string[] {
-  const allowlist = loadSubagentToolAllowlist();
+export function getKnownExternalWriteTools(allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): string[] {
   return Object.values(allowlist.toolCategories)
     .filter((category) => category.isExternalWrite)
     .flatMap((category) => category.examples);
+}
+
+export type ToolRiskClassification = "read_only" | "local_write" | "external_read" | "external_write" | "unknown";
+
+/**
+ * Clasifica una herramienta segun en que categoria de `toolCategories`
+ * aparece su nombre. Fail-closed: si no aparece en NINGUNA categoria,
+ * devuelve "unknown" -- nunca se asume "read_only"/segura por omision.
+ * `hasNoExternalWriteTools()` trata "unknown" igual de mal que
+ * "external_write" a proposito.
+ */
+export function classifyToolRisk(toolName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): ToolRiskClassification {
+  for (const [categoryId, category] of Object.entries(allowlist.toolCategories)) {
+    if (category.examples.includes(toolName)) {
+      return categoryId as ToolRiskClassification;
+    }
+  }
+  return "unknown";
 }
 
 export interface SubagentToolGuardResult {
@@ -76,8 +111,7 @@ export interface SubagentToolGuardResult {
  * desconocido -> denegado; agente conocido pero herramienta fuera de su
  * `allowedTools` -> denegado. Nunca hay un "permitido por defecto".
  */
-export function isSubagentToolAllowed(agentName: string, toolName: string): SubagentToolGuardResult {
-  const allowlist = loadSubagentToolAllowlist();
+export function isSubagentToolAllowed(agentName: string, toolName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): SubagentToolGuardResult {
   const entry = allowlist.agents[agentName];
 
   if (!entry) {
@@ -98,30 +132,34 @@ export function isSubagentToolAllowed(agentName: string, toolName: string): Suba
 }
 
 /** Version que lanza -- para integrarla en cualquier punto que vaya a invocar un subagente de verdad. */
-export function assertSubagentToolAllowed(agentName: string, toolName: string): void {
-  const result = isSubagentToolAllowed(agentName, toolName);
+export function assertSubagentToolAllowed(agentName: string, toolName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): void {
+  const result = isSubagentToolAllowed(agentName, toolName, allowlist);
   if (!result.allowed) {
     throw new Error(`Subagent Tool Guard: ${result.reason}`);
   }
 }
 
 /**
- * Un subagente esta "limpio" de escritura externa si ninguna de sus
- * `allowedTools` aparece en el catalogo de herramientas de escritura
- * externa (`toolCategories.external_write.examples`) Y su propio
- * `externalWriteToolsGranted` (override explicito, pensado para que
- * quede visible en el propio JSON si algun dia se concede una) esta
- * vacio. Fail-closed tambien aqui: un agente inexistente en el
- * allowlist cuenta como "sin herramientas" (no como "sin restriccion").
+ * Un subagente esta "confirmado limpio" de escritura externa SOLO si:
+ *   (a) esta presente en el allowlist (un agente desconocido NUNCA
+ *       cuenta como confirmado -- fail-closed, ver bug corregido: antes
+ *       devolvia `true` para un agente inexistente, una falsa garantia
+ *       de seguridad),
+ *   (b) `externalWriteToolsGranted` esta vacio, y
+ *   (c) ninguna de sus `allowedTools` se clasifica como
+ *       "external_write" NI como "unknown" -- una herramienta no
+ *       reconocida en ninguna categoria nunca se trata implicitamente
+ *       como segura.
  */
-export function hasNoExternalWriteTools(agentName: string): boolean {
-  const allowlist = loadSubagentToolAllowlist();
+export function hasNoExternalWriteTools(agentName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): boolean {
   const entry = allowlist.agents[agentName];
-  if (!entry) return true;
+  if (!entry) return false;
+  if (entry.externalWriteToolsGranted.length > 0) return false;
 
-  const knownWriteTools = new Set(getKnownExternalWriteTools());
-  const grantedKnownWrite = entry.allowedTools.some((tool) => knownWriteTools.has(tool));
-  return !grantedKnownWrite && entry.externalWriteToolsGranted.length === 0;
+  return entry.allowedTools.every((tool) => {
+    const risk = classifyToolRisk(tool, allowlist);
+    return risk !== "external_write" && risk !== "unknown";
+  });
 }
 
 /**
@@ -134,8 +172,7 @@ export function hasNoExternalWriteTools(agentName: string): boolean {
  * Claude Code -- por eso los tests exigen que la clave este SIEMPRE
  * presente y explicita para cualquier agente de este experimento).
  */
-export function parseAgentFrontmatterTools(agentName: string): string[] | undefined {
-  const allowlist = loadSubagentToolAllowlist();
+export function parseAgentFrontmatterTools(agentName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): string[] | undefined {
   const entry = allowlist.agents[agentName];
   const definitionFile = entry?.definitionFile ?? `.claude/agents/${agentName}.md`;
   const absolutePath = path.join(__dirname, "..", "..", definitionFile);
@@ -156,6 +193,55 @@ export function parseAgentFrontmatterTools(agentName: string): string[] | undefi
     .split(",")
     .map((tool) => tool.trim().replace(/^["']|["']$/g, ""))
     .filter((tool) => tool.length > 0);
+}
+
+export interface ToollessCheckResult {
+  ok: boolean;
+  reasons: string[];
+}
+
+/**
+ * Chequeo estricto "cero herramientas", pensado para agentes como
+ * ux-ui-landing-architect-v2 cuyo diseno exige las 4 condiciones a la
+ * vez (ver docs/ux-ui-landing-architect-v2-experiment.md):
+ *   1. el agente esta presente en el allowlist,
+ *   2. `allowedTools` esta vacio,
+ *   3. `externalWriteToolsGranted` esta vacio,
+ *   4. el frontmatter `tools:` del propio `.md` tambien esta vacio y
+ *      declarado explicitamente (nunca ausente).
+ * Cualquier inconsistencia entre estas 4 condiciones se reporta en
+ * `reasons` -- `assertSubagentIsToolless()` la convierte en excepcion.
+ */
+export function checkSubagentIsToolless(agentName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): ToollessCheckResult {
+  const entry = allowlist.agents[agentName];
+  if (!entry) {
+    return { ok: false, reasons: [`"${agentName}" no esta presente en config/subagent-tool-allowlist.json.`] };
+  }
+
+  const reasons: string[] = [];
+  if (entry.allowedTools.length !== 0) {
+    reasons.push(`allowedTools no esta vacio: [${entry.allowedTools.join(", ")}].`);
+  }
+  if (entry.externalWriteToolsGranted.length !== 0) {
+    reasons.push(`externalWriteToolsGranted no esta vacio: [${entry.externalWriteToolsGranted.join(", ")}].`);
+  }
+
+  const frontmatterTools = parseAgentFrontmatterTools(agentName, allowlist);
+  if (frontmatterTools === undefined) {
+    reasons.push(`El frontmatter de "${entry.definitionFile}" no declara "tools:" explicitamente (deberia declarar tools: []).`);
+  } else if (frontmatterTools.length !== 0) {
+    reasons.push(`El frontmatter de "${entry.definitionFile}" declara tools: [${frontmatterTools.join(", ")}], deberia ser [].`);
+  }
+
+  return { ok: reasons.length === 0, reasons };
+}
+
+/** Version que lanza -- cualquier inconsistencia en las 4 condiciones aborta con un motivo explicito. */
+export function assertSubagentIsToolless(agentName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): void {
+  const result = checkSubagentIsToolless(agentName, allowlist);
+  if (!result.ok) {
+    throw new Error(`Subagent Tool Guard: "${agentName}" no cumple el requisito de cero herramientas -- ${result.reasons.join(" ")}`);
+  }
 }
 
 export function listDefinedAgentFiles(): string[] {

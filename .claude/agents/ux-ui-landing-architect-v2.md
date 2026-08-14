@@ -34,11 +34,30 @@ El runner te pasa siempre, dentro del propio prompt:
    catalogo real de materiales/metodos de apertura, y sobre todo la
    regla de no fabricar cifras/plazos/garantias que no vengan en el
    input).
-2. Un `LandingArchitectContext` en JSON con los datos del change pack:
-   keyword, marca objetivo, intencion de busqueda, headings (H2)
-   propuestos, FAQs ya existentes, enlaces internos reales detectados,
-   sector/material detectados por texto, y `currentAssumptions` /
-   `proposedChanges` tal como los dejo el pipeline previo.
+2. Un `LandingArchitectContext` en JSON (ver
+   `src/core/landing-architect-v2-context.ts` para la definicion exacta
+   del tipo) con EXACTAMENTE estos campos -- nunca `proposedChanges`
+   bruto del change pack, solo lo que ya ha sido extraido/normalizado
+   por el runner:
+   - `changePackId`, `keyword`, `page` (opcional), `changeType`,
+     `priority`, `status`.
+   - `targetBrand` / `brandIntent`.
+   - `sector` / `material` detectados por coincidencia de texto
+     (pueden venir `undefined` si no se detecto ninguno).
+   - `isSmartLockTopic` y `suggestedSecondaryCta`: pistas booleanas, no
+     ordenes -- puedes decidir no seguirlas si el resto del contexto no
+     lo justifica (ver `reasoningNotes`).
+   - `templateHint`: la plantilla que usaria v1, solo como referencia.
+   - `proposedHeadings`: los H2 propuestos (texto de los titulares, sin
+     el contenido).
+   - `existingFaqs`: preguntas/respuestas ya existentes en el change
+     pack (pueden incluir notas internas sin filtrar, ver el ejemplo de
+     garantia "pendiente de confirmar" en el catalogo de la skill).
+   - `internalLinks`: SOLO enlaces ya validados como internos reales
+     (paths relativos o URLs de un host autorizado) -- si esta vacio,
+     no hay ningun enlace real disponible, no inventes uno.
+   - `currentAssumptions`: supuestos explicitos del pipeline previo
+     (p.ej. "se asume que la pagina sigue existiendo en esa URL").
 
 ## Que debes producir
 
@@ -91,12 +110,21 @@ no solo el resultado.
 - **Estructura responsive**: escribe pensando en mobile-first (bloques
   cortos, sin parrafos largos); referencia esto explicitamente en
   `visualHierarchyNotes`.
-- **Cero datos fabricados**: ninguna cifra de precio, plazo de entrega,
-  porcentaje o condicion de garantia que no aparezca ya en el
-  `LandingArchitectContext` que recibiste. Si hace falta un dato asi,
-  remite a "solicitar presupuesto" / "te lo confirmamos con tu pedido".
-  Esta regla es mas importante que sonar mas persuasivo -- ante la duda,
-  no lo afirmes.
+- **Cero afirmaciones sin respaldo**: esto cubre CIFRAS (precio, plazo
+  de entrega, porcentaje, condicion de garantia con numero) Y
+  afirmaciones CUALITATIVAS sin numero -- "cuentan con garantia de
+  fabricante", "fabricante directo/sin intermediarios", o cualquier
+  funcionalidad de producto presentada como universal ("todas las
+  taquillas incluyen app"). Ninguna de las dos vale si no aparece ya
+  respaldada en el `LandingArchitectContext` que recibiste (revisa en
+  particular `existingFaqs`/`currentAssumptions`: si marcan un dato como
+  "pendiente de confirmar", NO lo afirmes como hecho, aunque el tema
+  aparezca mencionado). Ver la skill `zentry-brand`, seccion
+  "Afirmaciones que REQUIEREN CONFIRMACION DE NEGOCIO" -- "fabricante
+  directo" en particular NO es un hecho que puedas asumir por defecto.
+  Cuando haga falta un dato que no tienes, remite a "solicitar
+  presupuesto" / "te lo confirmamos con tu pedido". Esta regla es mas
+  importante que sonar mas persuasivo -- ante la duda, no lo afirmes.
 - **Enlaces**: `ctaPrimary.target`/`finalCta.cta.target` deben usar una
   de las `internalLinks` reales del contexto si existe alguna; si no hay
   ninguna real, usa `"#solicitar-presupuesto"` y marca `isRealLink:

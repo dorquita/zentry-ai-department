@@ -71,23 +71,56 @@ sigue siendo codigo determinista, igual que en v1:
    concede ninguna herramienta, ni de lectura ni de escritura.
 2. **`config/subagent-tool-allowlist.json`** -- fail-closed: el propio
    agente aparece con `allowedTools: []` y `externalWriteToolsGranted:
-   []`. Cualquier agente que no aparezca en este fichero se trata como
-   "sin herramientas" por defecto.
+   []`. Un agente que NO aparezca en este fichero se trata como
+   **denegado**, nunca como "confirmado sin herramientas" -- la ausencia
+   de registro es tratada como riesgo, no como garantia de seguridad
+   (bug real corregido tras revision: `hasNoExternalWriteTools()` llego a
+   devolver `true` para un agente inexistente; hoy devuelve `false`, ver
+   test de regresion en el punto 4).
 3. **`src/core/subagent-tool-guard.ts`** -- capa de codigo que lee ese
-   JSON y expone `isSubagentToolAllowed()` / `hasNoExternalWriteTools()`;
-   el runner llama a `hasNoExternalWriteTools()` antes de preparar nada,
-   como defensa en profundidad (aunque el runner nunca invoca al
-   subagente por si mismo, ver mas abajo).
-4. **`test/subagent-tool-guard.test.ts`** -- verifica: (a) el allowlist
-   deniega por defecto a cualquier agente/herramienta no listados
-   explicitamente, (b) `ux-ui-landing-architect-v2` no tiene ninguna
-   herramienta de escritura externa concedida, (c) el `tools:` del
-   frontmatter del `.md` coincide exactamente con `allowedTools` del
-   JSON (para detectar drift entre ambos ficheros).
-5. **Auditoria de fabricacion de datos** (`auditV2OutputForFabrication`)
-   -- busca en la salida de V2 patrones de precio/plazo/garantia/
-   porcentaje que no aparezcan ya en el input, y los reporta como avisos
-   en el artefacto de comparacion para revision humana.
+   JSON. Expone `isSubagentToolAllowed()` (permiso puntual
+   agente+herramienta), `hasNoExternalWriteTools()` (ninguna herramienta
+   concedida se clasifica como `external_write` NI como `unknown` --
+   una herramienta no reconocida en ninguna categoria NUNCA se trata
+   implicitamente como segura) y `checkSubagentIsToolless()`/
+   `assertSubagentIsToolless()` (chequeo estricto de las 4 condiciones:
+   agente presente en el allowlist, `allowedTools` vacio,
+   `externalWriteToolsGranted` vacio, frontmatter `tools:` vacio y
+   declarado explicitamente). El runner llama a
+   `assertSubagentIsToolless()` antes de preparar nada, como defensa en
+   profundidad (aunque el runner nunca invoca al subagente por si mismo,
+   ver mas abajo) -- cualquier inconsistencia entre estas 4 condiciones
+   aborta con el motivo exacto.
+4. **`test/subagent-tool-guard.test.ts`** -- verifica, entre otras cosas:
+   (a) un agente/herramienta no listados se deniegan (fail-closed), (b)
+   `hasNoExternalWriteTools()` devuelve `false` (no `true`) para un
+   agente desconocido, (c) una herramienta no categorizada en ningun
+   `toolCategories` se clasifica como riesgo, nunca como segura por
+   omision, (d) `ux-ui-landing-architect-v2` cumple las 4 condiciones de
+   `checkSubagentIsToolless()`, (e) usando un fixture deliberadamente
+   inconsistente (`test/fixtures/fake-agent-with-tools.md`), que el
+   guard SI detecta un frontmatter `tools:` no vacio aunque el JSON diga
+   `allowedTools: []` (drift entre ambos ficheros).
+5. **Auditoria de afirmaciones sensibles no respaldadas**
+   (`auditV2OutputForFabrication`, `src/core/landing-architect-comparison.ts`)
+   -- por categoria (garantia, precio, plazo de entrega, "fabricante
+   directo/sin intermediarios", funcionalidad de producto), busca
+   afirmaciones en la salida de V2 y las contrasta contra el input: si
+   el input no la respalda, o la marca explicitamente como "pendiente de
+   confirmar", se reporta como warning para revision humana. Cubre tanto
+   cifras concretas ("garantia de 5 años") como afirmaciones cualitativas
+   sin numero ("cuentan con garantia de fabricante") -- esta segunda
+   categoria se añadio tras un falso negativo real detectado en revision
+   (ver `test/landing-architect-comparison.test.ts`, primer test,
+   marcado `REGRESION`).
+6. **`src/core/internal-url-guard.ts`** -- un enlace del change pack solo
+   se trata como "interno real" si es un path relativo autentico (nunca
+   uno protocol-relative tipo `//host/algo`, que un navegador resuelve
+   contra un host externo) o si su host coincide EXACTAMENTE con
+   `productionUrl`/`stagingUrl` del cliente activo (nunca por
+   subcadena/`includes`, que permitiria un host tipo
+   `zentrylockers.com.evil.com`). Antes de esta correccion, cualquier
+   `https://` se aceptaba como interno. Ver `test/internal-url-guard.test.ts`.
 
 ## Como se ejecuta hoy (dos pasos, manuales)
 
@@ -127,6 +160,16 @@ Bajo `reports/ux-ui-landing-comparison/<changePackId>/`:
 - `v2-output-raw-invalid.json` -- solo si `--v2-output` apuntaba a una
   respuesta que no paso la validacion de forma (`validateV2Output`), para
   poder inspeccionarla.
+
+**`reports/ux-ui-landing-comparison/` esta en `.gitignore`.** Es salida
+generada localmente (prompts + propuestas sobre change packs reales del
+negocio) -- no se versiona. Para ver el FORMATO exacto del artefacto sin
+ejecutar nada, usa el fixture sanitizado
+`test/fixtures/landing-architect-comparison-example.json` (datos de
+ejemplo, ningun changePackId/keyword/URL real), verificado por
+`test/landing-architect-comparison.test.ts` (se renderiza sin lanzar y
+sus warnings de fabricacion se recalculan contra la logica real de
+auditoria, para que el fixture no quede desincronizado del codigo).
 
 ## Como leer un artefacto de comparacion
 

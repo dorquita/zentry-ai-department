@@ -6,3 +6,11 @@ dist/
 build/
 *.log
 *.lock
+
+# Salida generada por el runner de comparacion del experimento
+# ux-ui-landing-architect-v2 (ver docs/ux-ui-landing-architect-v2-experiment.md).
+# Son datos operativos de una ejecucion local (prompts + propuestas V1/V2
+# de change packs reales) -- no se versionan. Para un ejemplo del formato
+# usado en tests/docs, ver test/fixtures/landing-architect-comparison-example.json
+# (fixture sanitizado, sin datos operativos reales).
+reports/ux-ui-landing-comparison/
