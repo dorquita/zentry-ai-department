@@ -16,6 +16,7 @@ import { runLandingArchitectComparisonTests } from "../test/landing-architect-co
 import { runLandingArchitectChangePackSelectionTests } from "../test/landing-architect-change-pack-selection.test";
 import { runLandingArchitectV2OutputSchemaTests } from "../test/landing-architect-v2-output-schema.test";
 import { runRunnerResultParserTests } from "../test/runner-result-parser.test";
+import { runComparisonArtifactReaderTests } from "../test/comparison-artifact-reader.test";
 
 interface TestCase {
   name: string;
@@ -33,6 +34,7 @@ function main(): void {
     { suiteName: "landing-architect-change-pack-selection", cases: runLandingArchitectChangePackSelectionTests() },
     { suiteName: "landing-architect-v2-output-schema", cases: runLandingArchitectV2OutputSchemaTests() },
     { suiteName: "runner-result-parser", cases: runRunnerResultParserTests() },
+    { suiteName: "comparison-artifact-reader", cases: runComparisonArtifactReaderTests() },
   ];
 
   let passed = 0;

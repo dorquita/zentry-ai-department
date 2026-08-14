@@ -282,7 +282,7 @@ jobs:
             echo ""
             echo "- **changePackId:** \`$CHANGE_PACK_ID\`"
             echo "- **keyword:** $KEYWORD"
-            echo "- **Claude execution:** ${{ steps.claude.outputs.conclusion }}"
+            echo "- **Claude execution:** ${{ steps.claude.conclusion }}"
             echo "- **v2Status:** \`$V2_STATUS\`"
             echo "- **fabricationWarnings:** $FABRICATION_WARNING_COUNT"
             echo "- **artifact generado:** \`ux-ui-landing-architect-v2-$CHANGE_PACK_ID\`"
@@ -290,7 +290,7 @@ jobs:
             echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             echo ""
             if [ "$FABRICATION_WARNING_COUNT" != "0" ] && [ "$FABRICATION_WARNING_COUNT" != "null" ]; then
-              echo "> ⚠️ Hay avisos de posible fabricacion de datos sin respaldo en el input -- revisar \`comparison.md\` en el artifact antes de dar por buena esta propuesta. No se han descartado ni reinterpretado."
+              echo "> ⚠️ Hay avisos de posible fabricacion de datos sin respaldo en el input (listados abajo, y tambien en \`comparison.md\` del artifact) -- revisar antes de dar por buena esta propuesta. No se han descartado ni reinterpretado."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
         env:
@@ -298,3 +298,13 @@ jobs:
           KEYWORD: ${{ steps.step2.outputs.keyword }}
           V2_STATUS: ${{ steps.step2.outputs.v2Status }}
           FABRICATION_WARNING_COUNT: ${{ steps.step2.outputs.fabricationWarningCount }}
+
+      # Muestra los fabricationWarnings REALES (leidos tal cual de
+      # comparison.json via extractFabricationWarnings(), src/core/comparison-artifact-reader.ts)
+      # en el Step Summary cuando los hay -- nunca se le pide a Claude que
+      # los resuma ni reinterprete. No escribe nada (y no falla) si el
+      # array esta vacio.
+      - name: Mostrar fabricationWarnings reales en el Step Summary (si los hay)
+        run: npm run landing-architect:print-fabrication-warnings-for-ci -- "$COMPARISON_JSON_PATH"
+        env:
+          COMPARISON_JSON_PATH: ${{ steps.step2.outputs.comparisonJsonPath }}
