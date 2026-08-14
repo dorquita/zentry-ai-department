@@ -11,7 +11,7 @@ import { RunnerResultSummary } from "./landing-architect-comparison";
  * pending_execution; paso 2: valida la respuesta de Claude) SIN parsear
  * el resto de la salida en texto libre ni usar `grep`/`sed` sobre
  * contenido potencialmente multi-linea -- ver
- * scripts/ci/parse-runner-result.ts para el wrapper de CLI que usa el
+ * scripts/parse-runner-result-for-ci.ts para el wrapper de CLI que usa el
  * workflow.
  */
 
@@ -65,7 +65,7 @@ export function parseRunnerResultJson(jsonText: string): RunnerResultSummary {
   return o as unknown as RunnerResultSummary;
 }
 
-/** Combina las dos funciones de arriba -- el punto de entrada que usa scripts/ci/parse-runner-result.ts. */
+/** Combina las dos funciones de arriba -- el punto de entrada que usa scripts/parse-runner-result-for-ci.ts. */
 export function extractAndParseRunnerResult(log: string): RunnerResultSummary {
   const jsonText = extractLastRunnerResultJsonLine(log);
   if (jsonText === undefined) {

@@ -1,4 +1,4 @@
-name: UX/UI Landing Architect v2 (Claude Cloud)
+name: UX/UI Landing Architect v2 (GitHub Actions + Claude)
 
 # Objetivo de este workflow (ver docs/ux-ui-landing-architect-v2-experiment.md):
 # ejecutar el subagente ux-ui-landing-architect-v2 de principio a fin en
@@ -172,11 +172,21 @@ jobs:
       # --- Invocacion real de Claude: LA SESION PRINCIPAL de claude-code-action
       # ES ux-ui-landing-architect-v2 (--agent), no una sesion generica que
       # a su vez invoca Agent/Task. Verificado contra el codigo fuente real
-      # de anthropics/claude-code-action@v1 (Claude Agent SDK 0.3.233):
-      # `agent` es una opcion de primer nivel de Options ("This is
-      # equivalent to the --agent CLI flag"), y --json-schema/structured_output
-      # es el mecanismo oficial documentado (docs/usage.md del propio
-      # repositorio de la Action).
+      # del commit fijado abajo (Claude Agent SDK 0.3.233 -- el propio
+      # mensaje de ese commit en anthropics/claude-code-action dice "chore:
+      # bump Claude Code to 2.1.233 and Agent SDK to 0.3.233"): `agent` es
+      # una opcion de primer nivel de Options ("This is equivalent to the
+      # --agent CLI flag"), y --json-schema/structured_output es el
+      # mecanismo oficial documentado (docs/usage.md del propio
+      # repositorio de la Action, ese mismo commit).
+      #
+      # IMPORTANTE (por que un SHA y no @v1): este job recibe
+      # CLAUDE_CODE_OAUTH_TOKEN/ANTHROPIC_API_KEY -- @v1 es un tag movible
+      # que Anthropic puede reapuntar a otro commit en cualquier momento,
+      # asi que se fija el commit exacto auditado para este PR en vez de
+      # confiar en que el tag siga apuntando ahi. Al actualizar
+      # deliberadamente a una version mas nueva: repetir la verificacion
+      # de este bloque de comentarios contra el nuevo commit.
       #
       # tools: [] se respeta en dos capas independientes:
       #   1) el propio frontmatter de .claude/agents/ux-ui-landing-architect-v2.md
@@ -184,7 +194,7 @@ jobs:
       #      docs/ux-ui-landing-architect-v2-experiment.md).
       #   2) `--disallowedTools "mcp__*"` aqui, como defensa en profundidad
       #      adicional. NO se anade `--tools ""`: se verifico leyendo
-      #      claude-code-action@v1 (base-action/src/parse-sdk-options.ts)
+      #      base-action/src/parse-sdk-options.ts (mismo commit fijado)
       #      que su parser de claude_args trata un valor vacio ("") como
       #      "sin valor" (JS: cadena vacia es falsy), asi que `--tools ""`
       #      se interpretaria como el flag booleano `--tools` sin argumento
@@ -212,7 +222,12 @@ jobs:
       - name: Ejecutar ux-ui-landing-architect-v2 (Claude Code Action)
         id: claude
         if: steps.claude-auth.outputs.method != 'none'
-        uses: anthropics/claude-code-action@v1
+        # SHA fijado (no el tag movible @v1) -- ver el bloque de
+        # comentarios de arriba para el porque. Corresponde a los tags
+        # "v1" y "v1.0.193" en anthropics/claude-code-action en el
+        # momento de auditar este PR (verificado con `git ls-remote`
+        # directo contra ese repositorio, no asumido).
+        uses: anthropics/claude-code-action@9d7150bc8a3dae8149739a88019d192b579ad90c # v1.0.193
         timeout-minutes: 10
         with:
           prompt: ${{ steps.read_prompt.outputs.content }}
