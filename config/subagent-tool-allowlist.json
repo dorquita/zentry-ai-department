@@ -1,0 +1,79 @@
+{
+  "version": "1.0",
+  "experiment": "ux-ui-landing-architect-v2",
+  "updatedAt": "2026-08-14",
+  "description": "Allowlist de seguridad para las herramientas (tools) de Claude Code que puede usar cada subagente definido en .claude/agents/. Modelo fail-closed: cualquier subagente que no aparezca aqui, o cualquier herramienta que no este en su allowedTools, se trata como DENEGADA por defecto -- nunca 'permitida por no estar prohibida explicitamente'. Este fichero es independiente del campo `tools:` del frontmatter de cada agente (que ya lo restringe a nivel de Claude Code) -- existe como segunda capa, legible/testeable desde codigo, para que un cambio accidental en el frontmatter de un agente no sea la unica proteccion contra que gane herramientas de escritura.",
+  "toolCategories": {
+    "read_only": {
+      "label": "Solo lectura, sin efectos secundarios",
+      "examples": ["Read", "Grep", "Glob"],
+      "isExternalWrite": false
+    },
+    "local_write": {
+      "label": "Escritura local (repositorio/filesystem de este proyecto)",
+      "examples": ["Write", "Edit", "NotebookEdit", "Bash"],
+      "isExternalWrite": false,
+      "note": "No es 'escritura externa', pero tampoco se concede a subagentes de solo-analisis/propuesta como ux-ui-landing-architect-v2."
+    },
+    "external_read": {
+      "label": "Lectura de sistemas externos (red)",
+      "examples": ["WebFetch", "WebSearch"],
+      "isExternalWrite": false
+    },
+    "external_write": {
+      "label": "Escritura o accion en un sistema externo (WordPress, GitHub, Slack, Google Ads, GA4/GTM, Search Console, VPS/systemd, MCPs de terceros con abilities de escritura...)",
+      "examples": [
+        "mcp__github__create_or_update_file",
+        "mcp__github__push_files",
+        "mcp__github__merge_pull_request",
+        "mcp__github__create_pull_request",
+        "mcp__github__delete_file",
+        "mcp__github__create_branch",
+        "mcp__github__create_repository",
+        "mcp__github__issue_write",
+        "mcp__github__pull_request_review_write",
+        "mcp__github__update_pull_request",
+        "mcp__github__update_pull_request_branch",
+        "mcp__github__enable_pr_auto_merge",
+        "mcp__github__disable_pr_auto_merge",
+        "mcp__github__add_issue_comment",
+        "mcp__github__add_comment_to_pending_review",
+        "mcp__github__add_reply_to_pull_request_comment",
+        "mcp__github__sub_issue_write",
+        "mcp__github__fork_repository",
+        "mcp__github__run_secret_scanning",
+        "mcp__github__actions_run_trigger",
+        "mcp__Claude_Code_Remote__create_session",
+        "mcp__Claude_Code_Remote__send_later",
+        "mcp__Claude_Code_Remote__create_trigger",
+        "mcp__Claude_Code_Remote__fire_trigger",
+        "mcp__Claude_Code_Remote__delete_trigger",
+        "mcp__Claude_Code_Remote__update_trigger",
+        "mcp__Claude_Code_Remote__archive_session",
+        "mcp__Claude_Code_Remote__unarchive_session",
+        "mcp__Claude_Code_Remote__interrupt_session",
+        "mcp__Claude_Code_Remote__set_session_title",
+        "mcp__Claude_Code_Remote__set_session_tags",
+        "mcp__Claude_Code_Remote__register_repo_root",
+        "mcp__Claude_Code_Remote__add_repo",
+        "SendUserFile",
+        "Artifact",
+        "PushNotification"
+      ],
+      "isExternalWrite": true,
+      "note": "Lista de ejemplo, no exhaustiva -- cualquier herramienta cuyo nombre no este en `allowedTools` de un agente esta denegada de todas formas por el modelo fail-closed, aunque no aparezca en este ejemplo. No hace falta mantener esta lista al dia para que la proteccion funcione."
+    }
+  },
+  "defaultForUnlistedAgent": "denied_all_tools",
+  "defaultForUnlistedTool": "denied",
+  "agents": {
+    "ux-ui-landing-architect-v2": {
+      "definitionFile": ".claude/agents/ux-ui-landing-architect-v2.md",
+      "description": "Subagente experimental Claude (v2) de arquitectura de landing pages. Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-landing-architect-comparison.ts -- cero acceso indiscriminado al repositorio, cero escritura externa.",
+      "allowedTools": [],
+      "externalWriteToolsGranted": [],
+      "maxRiskCategory": "none",
+      "notes": "Fase 1 del experimento: cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt (change pack + skill zentry-brand), construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+    }
+  }
+}

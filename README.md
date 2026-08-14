@@ -30,7 +30,7 @@ con **25 agentes coordinados** (no aislados): comparten un
 | SEO Change Pack Builder | Convierte work orders SEO en paquetes de cambio concretos |
 | Content Change Pack Builder | Convierte work orders de contenido en paquetes de cambio concretos |
 | CRO Change Pack Builder | Convierte work orders CRO en paquetes de cambio concretos |
-| UX/UI Landing Architect | Fase O13.6b (postmortem calidad visual): convierte cada change pack en una estructura visual de landing (hero/CTAs/bloques/cards/secciones/FAQ) ANTES de que se escriba ningun HTML |
+| UX/UI Landing Architect | Fase O13.6b (postmortem calidad visual): convierte cada change pack en una estructura visual de landing (hero/CTAs/bloques/cards/secciones/FAQ) ANTES de que se escriba ningun HTML. Existe un experimento paralelo con un subagente Claude real (`ux-ui-landing-architect-v2`, cero herramientas de escritura), sin sustituir a este — ver [`docs/ux-ui-landing-architect-v2-experiment.md`](docs/ux-ui-landing-architect-v2-experiment.md) |
 | WordPress Draft Agent | Renderiza el blueprint del UX/UI Landing Architect en HTML real (bloques Gutenberg: botones, columnas) y, solo con triple aprobacion, crea borradores reales de WordPress (nunca publicados) |
 | Visual Template Builder | Fase O12.4: genera un preview visual adicional mapeando el change pack sobre una de 5 plantillas (sector/producto/SEO/comparativa/blog) — nunca toca WordPress |
 | Visual Asset Planner | Fase O12.4: propone que imagenes necesitaria cada change pack (prompt, negative prompt, alt text...) — NUNCA llama a n8n ni genera/sube imagenes |

@@ -10,6 +10,7 @@
 import { runExecutiveReportTests } from "../test/executive-report.test";
 import { runNovamiraGuardTests } from "../test/novamira-guard.test";
 import { runClientConfigTests } from "../test/client-config.test";
+import { runSubagentToolGuardTests } from "../test/subagent-tool-guard.test";
 
 interface TestCase {
   name: string;
@@ -21,6 +22,7 @@ function main(): void {
     { suiteName: "executive-report", cases: runExecutiveReportTests() },
     { suiteName: "novamira-guard", cases: runNovamiraGuardTests() },
     { suiteName: "client-config", cases: runClientConfigTests() },
+    { suiteName: "subagent-tool-guard", cases: runSubagentToolGuardTests() },
   ];
 
   let passed = 0;
