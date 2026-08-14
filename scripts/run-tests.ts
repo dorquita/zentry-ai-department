@@ -17,6 +17,7 @@ import { runLandingArchitectChangePackSelectionTests } from "../test/landing-arc
 import { runLandingArchitectV2OutputSchemaTests } from "../test/landing-architect-v2-output-schema.test";
 import { runRunnerResultParserTests } from "../test/runner-result-parser.test";
 import { runComparisonArtifactReaderTests } from "../test/comparison-artifact-reader.test";
+import { runExecutionFileResultExtractorTests } from "../test/execution-file-result-extractor.test";
 
 interface TestCase {
   name: string;
@@ -35,6 +36,7 @@ function main(): void {
     { suiteName: "landing-architect-v2-output-schema", cases: runLandingArchitectV2OutputSchemaTests() },
     { suiteName: "runner-result-parser", cases: runRunnerResultParserTests() },
     { suiteName: "comparison-artifact-reader", cases: runComparisonArtifactReaderTests() },
+    { suiteName: "execution-file-result-extractor", cases: runExecutionFileResultExtractorTests() },
   ];
 
   let passed = 0;

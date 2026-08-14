@@ -410,33 +410,74 @@ mas abajo deben revisarse contra el commit nuevo.
 | En este workflow (`workflow_dispatch`/`schedule`, sin evento de PR/issue) no se instala ningun servidor MCP propio de la Action | Leido `src/mcp/install-mcp-server.ts` de ese commit: los servidores `github_comment`/`github_ci`/`github_inline_comment`/`github` solo se instalan si se piden herramientas `mcp__*` explicitas o si hay contexto de PR -- ninguna de las dos condiciones aplica aqui. |
 | Pasar `github_token` explicito evita que la Action pida su propio token con permisos de escritura por defecto | Leido `base-action/src/github/token.ts` de ese commit: sin `github_token` de entrada, la Action pide un token OIDC contra el GitHub App oficial de Claude con `DEFAULT_PERMISSIONS = {contents: write, pull_requests: write, issues: write}`, sin importar el `permissions:` del workflow -- y requiere `id-token: write`. |
 | Todo el pipeline determinista (paso 1 del runner -> parseo de `RUNNER_RESULT_JSON` -> lectura del prompt -> escritura simulada de una respuesta V2 -> paso 2 del runner -> parseo final) funciona de extremo a extremo | Simulado localmente con una respuesta V2 ficticia (sin invocar a Claude de verdad): `v2Status` termino en `"executed"` con `fabricationWarningCount: 0`, exactamente el contrato que espera el workflow. |
-| La invocacion REAL del commit fijado de `claude-code-action` dentro del runner de GitHub Actions (con Claude de verdad, `--agent` de verdad) | **NO VERIFICADO TODAVIA.** Ver bloqueo abajo. |
+| La invocacion REAL del commit fijado de `claude-code-action` dentro del runner de GitHub Actions (con Claude de verdad, `--agent` de verdad) | **VERIFICADA PARCIALMENTE.** Claude SI arranco, razono y respondio -- pero `--json-schema` fallo en entregar `structured_output` en los dos intentos reales. Ver el run real documentado abajo y el fallback que anade PR #4. |
 
-### Bloqueo real para la prueba end-to-end (PR #3, sin merge)
+### Primeras ejecuciones reales (PR #3 mergeado a `main`) -- ambas fallaron por la misma causa
 
-Se intento disparar `workflow_dispatch` del workflow nuevo via la API de
-GitHub (`POST /repos/.../actions/workflows/ux-ui-landing-architect-v2.yml/dispatches`)
-apuntando a la rama del PR. Resultado: **`404 Not Found`.**
-`GET /repos/.../actions/workflows` confirma la causa: solo aparece `CI`
-(`.github/workflows/ci.yml`, ya en `main`) -- GitHub solo registra un
-workflow como "dispatchable" (via API o UI) despues de que su fichero
-exista en la rama por defecto del repositorio al menos una vez, aunque
-luego SI se pueda elegir ejecutarlo contra cualquier rama con el
-parametro `ref`. Con el workflow viviendo solo en
-`claude/automate-landing-architect-v2-fege7j` (PR #3, sin mergear a
-proposito, ver instrucciones de esa iteracion), no hay ninguna forma de
-dispararlo -- ni por API ni por la UI de GitHub -- hasta que llegue a
-`main`.
+Tras mergear PR #3, `workflow_dispatch` SI se pudo disparar (el bloqueo de
+plataforma de la seccion anterior desaparecio en cuanto el workflow llego
+a `main`, como se predijo). Dos ejecuciones reales, mismo resultado:
 
-Esto significa que, a dia de hoy, la invocacion real de Claude dentro de
-GitHub Actions (con `--agent`/`--json-schema` de verdad, autenticacion de
-verdad) **sigue sin probarse end-to-end**, no por un fallo del mecanismo
-disenado, sino por esta restriccion de plataforma que solo se resuelve
-mergeando el workflow a `main`. La primera ejecucion real de
-`workflow_dispatch` tras el merge debe documentarse aqui (reemplazando
-esta fila) con el resultado exacto: `run_id`, `changePackId` procesado,
-`v2Status`, numero de `fabricationWarnings`, y si la autenticacion
-(`CLAUDE_CODE_OAUTH_TOKEN` / `ANTHROPIC_API_KEY`) estaba configurada.
+- Run [`31848972712`](https://github.com/dorquita/zentry-ai-department/actions/runs/31848972712) -- `conclusion: failure`.
+- Run [`31849377643`](https://github.com/dorquita/zentry-ai-department/actions/runs/31849377643) -- `conclusion: failure`.
+
+Diagnostico exacto, leido de los logs reales del job (no inventado):
+
+- Auto-detected mode: `agent` (correcto, sin `@claude` mention, disparado por `workflow_dispatch`).
+- `claude_args` recibido por la Action, tal cual se genero: `--agent ux-ui-landing-architect-v2 --disallowedTools "mcp__*" --max-turns 8 --json-schema '<schema completo>'` -- confirma que `--agent` SI se paso.
+- Claude Code CLI instalado: `2.1.233`. `@anthropic-ai/claude-agent-sdk@0.3.233` instalado -- coincide exactamente con lo documentado para el SHA fijado.
+- Modelo usado: `claude-sonnet-5` (mensaje `system`/`init`).
+- Mensaje final `result`: `subtype: "success"`, `is_error: false`, `num_turns: 1`, `permission_denials_count: 0` (cero intentos de usar herramientas -- consistente con `tools: []`), `total_cost_usd: 0.175569` (inferencia real, no un fallo de arranque).
+- La propia Action fallo DESPUES de eso, con el mensaje exacto: `--json-schema was provided but Claude did not return structured_output. Result subtype: success`.
+- Todos los steps posteriores (escribir structured_output, paso 2 del runner, subir artifact, Step Summary) quedaron `skipped` -- el job entero termino en `failure` sin llegar a producir ningun artifact.
+
+**Que se pudo demostrar y que no:**
+
+- DEMOSTRADO (logs reales): Claude arranco como `ux-ui-landing-architect-v2` (`--agent` presente en `claude_args`), razono sin usar ninguna herramienta, y el propio SDK reporto `subtype: "success"` -- osea, esto NO fue un fallo de Claude ni de `--agent` ni de autenticacion. El fallo fue especificamente que `structured_output` quedo vacio en el mensaje `result`.
+- DEMOSTRADO (documentacion oficial de Anthropic, `code.claude.com/docs/en/agent-sdk/structured-outputs`, seccion "Error handling", citada tal cual): *"A result can also end with subtype success but no structured_output value, for example when the run completes without the agent producing a structured output. Treat that case as a failure as well."* -- esto es un comportamiento oficialmente documentado del Agent SDK con `--json-schema`, no una anomalia de este proyecto.
+- NO DEMOSTRADO (hipotesis, no verificable con la evidencia disponible): la causa EXACTA de por que Claude no completo `structured_output` en estos dos runs concretos (¿el schema resulto demasiado complejo para el validador interno? ¿el modelo genero texto libre en vez de JSON? ¿se agoto el presupuesto interno de reintentos del SDK?). El `execution_file` (`claude-execution-output.json`, que SI contiene el mensaje `result` completo, incluido el campo `result: string` con el texto final de Claude) nunca se subio como artifact en estos dos runs -- el step que lo habria escrito quedo `skipped` tras el fallo -- y el runner efimero ya no existe, asi que no se puede inspeccionar retroactivamente el texto exacto que genero Claude en ese intento. No se inventa un contenido que no se pudo leer.
+
+### Fallback deterministico (PR #4) -- corrige esto sin relajar la validacion
+
+En vez de intentar "arreglarlo" con prompt engineering (pedirle a Claude
+con mas enfasis que devuelva JSON), PR #4 anade un fallback deterministico
+verificado contra el codigo fuente real del MISMO commit fijado
+(`9d7150bc8a3dae8149739a88019d192b579ad90c`):
+
+- `base-action/src/run-claude-sdk.ts` escribe el array COMPLETO de
+  mensajes SDK a un fichero (`writeExecutionFile()`) ANTES de comprobar
+  si `structured_output` esta presente.
+- `src/entrypoints/run.ts` (el entrypoint real de `claude-code-action@v1`)
+  sigue fijando el output `execution_file` de la Action
+  (`setExecutionFileOutputIfPresent()`) DENTRO de su propio bloque
+  `catch`, incluso cuando el step termina fallando por falta de
+  `structured_output` -- el fichero completo sigue disponible para el
+  step siguiente del mismo job.
+- El mensaje final de tipo `"result"` con `subtype: "success"` SIEMPRE
+  tiene un campo `result: string` (el texto final "clasico" de Claude
+  Code), exista o no `structured_output` -- confirmado en
+  `SDKResultSuccess` de `@anthropic-ai/claude-agent-sdk@0.3.233`.
+
+Con eso verificado, `.github/workflows/ux-ui-landing-architect-v2.yml`
+anade `continue-on-error: true` (acotado a un unico step, justificado en
+un comentario extenso en el propio workflow) en el step de Claude, mas
+dos steps nuevos: uno que intenta recuperar el resultado del
+`execution_file` cuando `structured_output` esta vacio
+(`src/core/execution-file-result-extractor.ts`, reutilizando SIN
+modificar `extractJsonFromModelResponse()` y `validateV2Output()`), y otro
+que decide cual de los dos usar -- o falla explicitamente (`exit 1`) si
+ninguno esta disponible. La autoridad sobre si la salida es valida sigue
+siendo el runner determinista, nunca Claude ni la Action.
+
+`--json-schema` se MANTIENE (no se retira): el fallback via
+`execution_file` esta confirmado como tecnicamente viable contra el
+codigo real, asi que no hacia falta la alternativa de quitarlo por
+completo.
+
+**La primera ejecucion real de `workflow_dispatch` DESPUES de este
+fallback (PR #4) debe documentarse aqui, reemplazando este parrafo, con:
+`run_id`, si se uso el caso A (structured_output directo) o el caso B
+(fallback), `v2Status`, y numero de `fabricationWarnings`.**
 
 ## Que falta para que esto deje de ser un experimento
 
