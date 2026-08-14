@@ -219,9 +219,37 @@ jobs:
       # GITHUB_TOKEN por defecto del workflow evita esa via por completo:
       # el token que ve Claude queda limitado a `contents: read`, y no
       # requiere instalar ninguna GitHub App de terceros en este repo.
+      # `continue-on-error: true` -- JUSTIFICADO Y ACOTADO (no indiscriminado),
+      # unicamente en este step, con un fail-closed explicito inmediatamente
+      # despues (ver el step "Decidir y escribir..." mas abajo). Motivo real,
+      # observado en un run real de este workflow (ver
+      # docs/ux-ui-landing-architect-v2-experiment.md): claude-code-action
+      # puede terminar `subtype: "success", is_error: false` (Claude SI
+      # respondio, sin fallo real) pero sin `structured_output` -- un
+      # comportamiento documentado oficialmente por Anthropic, no un bug
+      # nuestro (https://code.claude.com/docs/en/agent-sdk/structured-outputs,
+      # seccion "Error handling": "A result can also end with subtype
+      # success but no structured_output value"). Cuando eso pasa, el
+      # commit fijado abajo hace el equivalente de `process.exit(1)` en ese
+      # mismo step (ver src/entrypoints/run.ts y
+      # base-action/src/run-claude-sdk.ts del repositorio de la Action) --
+      # sin continue-on-error, ese exit tumbaria el job ENTERO antes de que
+      # pudieramos distinguir "Claude fallo de verdad" de "Claude respondio
+      # bien pero el empaquetado de structured_output fallo". Verificado
+      # (no asumido) que esto es seguro: ese mismo commit sigue fijando el
+      # output `execution_file` con `setExecutionFileOutputIfPresent()`
+      # DENTRO de su propio catch, antes de fallar -- así que el fichero
+      # completo de mensajes SDK (incluido el mensaje final "result", que
+      # SIEMPRE tiene un campo `result: string` exista o no
+      # structured_output) sigue disponible en disco para el step
+      # siguiente. La autoridad sobre si la salida es valida NUNCA deja de
+      # ser nuestro runner: el step de mas abajo falla explicitamente
+      # (`exit 1`) si no hay nada recuperable, exactamente igual que si
+      # continue-on-error no existiera.
       - name: Ejecutar ux-ui-landing-architect-v2 (Claude Code Action)
         id: claude
         if: steps.claude-auth.outputs.method != 'none'
+        continue-on-error: true
         # SHA fijado (no el tag movible @v1) -- ver el bloque de
         # comentarios de arriba para el porque. Corresponde a los tags
         # "v1" y "v1.0.193" en anthropics/claude-code-action en el
@@ -240,11 +268,46 @@ jobs:
             --max-turns 8
             --json-schema '${{ steps.schema.outputs.json }}'
 
-      # --- Escritura segura de la salida estructurada (nunca interpolada en shell) ---
-      - name: Escribir structured_output en expectedV2OutputPath
-        run: printf '%s' "$STRUCTURED_OUTPUT" > "$EXPECTED_V2_OUTPUT_PATH"
+      # --- Fallback deterministico (caso B): structured_output ausente pero
+      # el execution_file contiene un resultado recuperable. Solo se
+      # ejecuta cuando hace falta (structured_output vacio Y execution_file
+      # presente) -- si el caso A (structured_output presente) ya se
+      # cumplio, este step no hace nada. Reutiliza, SIN modificar,
+      # extractJsonFromModelResponse() y validateV2Output()
+      # (src/core/landing-architect-comparison.ts) -- ver
+      # src/core/execution-file-result-extractor.ts. Nunca le pide a otro
+      # modelo que resuma o repare el JSON.
+      - name: "Fallback: recuperar salida V2 del execution_file si structured_output esta ausente"
+        id: recover
+        if: steps.claude-auth.outputs.method != 'none' && steps.claude.outputs.structured_output == '' && steps.claude.outputs.execution_file != ''
+        run: npm run landing-architect:recover-v2-output-from-execution-file-for-ci -- "$EXECUTION_FILE"
+        env:
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+
+      # --- Decidir cual de los dos resultados usar (o fallar) + escritura
+      # segura (nunca interpolada en shell, ver printf) --:
+      #   A) structured_output presente -> usarlo tal cual.
+      #   B) ausente pero el fallback de arriba lo recupero -> usar eso.
+      #   C) ninguno de los dos -> fallo real de Claude, no recuperable:
+      #      el workflow debe terminar FAILED aqui mismo, antes del paso 2
+      #      del runner (nunca se sigue adelante con un fichero vacio o
+      #      inventado).
+      - name: Decidir y escribir la salida V2 (structured_output o fallback recuperado) en expectedV2OutputPath
+        if: steps.claude-auth.outputs.method != 'none'
+        run: |
+          if [ -n "$STRUCTURED_OUTPUT" ]; then
+            echo "Caso A: usando structured_output de claude-code-action."
+            printf '%s' "$STRUCTURED_OUTPUT" > "$EXPECTED_V2_OUTPUT_PATH"
+          elif [ -n "$RECOVERED_TEXT" ]; then
+            echo "Caso B: structured_output ausente -- usando el resultado recuperado deterministicamente del execution_file (ver step Fallback)."
+            printf '%s' "$RECOVERED_TEXT" > "$EXPECTED_V2_OUTPUT_PATH"
+          else
+            echo "::error::Caso C: ni structured_output ni un resultado recuperable del execution_file estan disponibles -- fallo real de Claude, no recuperable. Abortando antes del paso 2 del runner."
+            exit 1
+          fi
         env:
           STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}
+          RECOVERED_TEXT: ${{ steps.recover.outputs.recoveredText }}
           EXPECTED_V2_OUTPUT_PATH: ${{ steps.step1.outputs.expectedV2OutputPath }}
 
       # --- Paso 2 del runner: valida + audita fabricacion + comparacion V1/V2 ---
@@ -282,7 +345,8 @@ jobs:
             echo ""
             echo "- **changePackId:** \`$CHANGE_PACK_ID\`"
             echo "- **keyword:** $KEYWORD"
-            echo "- **Claude execution:** ${{ steps.claude.conclusion }}"
+            echo "- **Claude execution (outcome del step, sin enmascarar por continue-on-error):** $CLAUDE_OUTCOME"
+            echo "- **Origen de la salida V2:** $V2_SOURCE"
             echo "- **v2Status:** \`$V2_STATUS\`"
             echo "- **fabricationWarnings:** $FABRICATION_WARNING_COUNT"
             echo "- **artifact generado:** \`ux-ui-landing-architect-v2-$CHANGE_PACK_ID\`"
@@ -298,6 +362,13 @@ jobs:
           KEYWORD: ${{ steps.step2.outputs.keyword }}
           V2_STATUS: ${{ steps.step2.outputs.v2Status }}
           FABRICATION_WARNING_COUNT: ${{ steps.step2.outputs.fabricationWarningCount }}
+          # steps.claude.outcome (no .conclusion): con continue-on-error:
+          # true en el step de Claude, .conclusion queda SIEMPRE
+          # enmascarado a "success" para no tumbar el job -- .outcome es el
+          # resultado real, sin enmascarar, del step tal cual lo vio el
+          # runner de Actions.
+          CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
+          V2_SOURCE: ${{ steps.claude.outputs.structured_output != '' && 'structured_output directo (caso A)' || (steps.recover.outputs.recoveredText != '' && 'fallback via execution_file (caso B)' || 'ninguno (caso C, el workflow ya deberia haber fallado antes de este step)') }}
 
       # Muestra los fabricationWarnings REALES (leidos tal cual de
       # comparison.json via extractFabricationWarnings(), src/core/comparison-artifact-reader.ts)

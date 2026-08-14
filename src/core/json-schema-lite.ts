@@ -3,19 +3,32 @@
  * dependencias nuevas (mismo principio que validateV2Output() en
  * src/core/landing-architect-comparison.ts: "sin librerias externas").
  *
- * Existe UNICAMENTE para el test de deriva (drift) entre
- * config/landing-architect-v2-output.schema.json y la interfaz TypeScript
- * LandingArchitectV2Output (ver test/landing-architect-v2-output-schema.test.ts)
- * -- nunca se usa en runtime de produccion. La validacion "real" del JSON
- * Schema la hace el propio Claude Agent SDK dentro de claude-code-action
- * (--json-schema), no este codigo.
+ * Usado en DOS sitios, sobre el MISMO fichero
+ * config/landing-architect-v2-output.schema.json (una unica definicion
+ * del contrato, nunca dos mantenidas a mano por separado):
+ *
+ *   1. test/landing-architect-v2-output-schema.test.ts -- test de deriva
+ *      (drift) entre el schema y la interfaz TypeScript
+ *      LandingArchitectV2Output / validateV2Output().
+ *   2. src/core/execution-file-result-extractor.ts -- validacion en
+ *      RUNTIME del fallback (caso B: structured_output ausente, se
+ *      recupera el resultado del execution_file). El camino normal
+ *      (caso A) ya pasa por esta misma validacion dentro de
+ *      claude-code-action, hecha por el Claude Agent SDK contra este
+ *      mismo fichero de schema (--json-schema); el fallback deberia
+ *      exigir EXACTAMENTE el mismo contrato, incluido
+ *      `additionalProperties: false` -- sin esto, un JSON con campos
+ *      extra que --json-schema habria rechazado en el caso A podria
+ *      colarse por el caso B, relajando el contrato sin querer.
  *
  * Soporta solo lo que usa config/landing-architect-v2-output.schema.json:
  * type (object/array/string/boolean/number), properties, required, items,
  * enum, additionalProperties: false, y $ref interno resuelto contra
  * rootSchema.definitions. Cualquier otra feature de JSON Schema no
  * declarada aqui simplemente se ignora (no es un validador de proposito
- * general).
+ * general) -- si config/landing-architect-v2-output.schema.json llegara a
+ * necesitar una feature no soportada aqui, hay que ampliar este modulo
+ * (y sus tests) en el mismo commit.
  */
 export type JsonSchemaLite = {
   type?: string;

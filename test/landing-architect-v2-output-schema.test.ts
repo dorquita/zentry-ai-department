@@ -2,7 +2,7 @@ import * as assert from "node:assert/strict";
 import * as fs from "fs";
 import * as path from "path";
 import { validateV2Output, LandingArchitectComparisonArtifact } from "../src/core/landing-architect-comparison";
-import { JsonSchemaLite, validateAgainstSchema } from "./helpers/json-schema-lite";
+import { JsonSchemaLite, validateAgainstSchema } from "../src/core/json-schema-lite";
 
 /**
  * Test de DERIVA (drift) entre config/landing-architect-v2-output.schema.json
@@ -14,12 +14,18 @@ import { JsonSchemaLite, validateAgainstSchema } from "./helpers/json-schema-lit
  * proyecto (mismo principio que validateV2Output(): "sin librerias
  * externas"), asi que en vez de mantener dos contratos sincronizados a
  * mano, este test corre los MISMOS fixtures contra las DOS capas (el
- * mini-validador de test/helpers/json-schema-lite.ts sobre el JSON Schema,
+ * mini-validador de src/core/json-schema-lite.ts sobre el JSON Schema,
  * y validateV2Output() sobre la interfaz TypeScript real) y exige que
  * coincidan para los casos estructurales (campo requerido ausente, tipo
  * incorrecto, enum invalido). Un cambio en una interfaz sin el
  * correspondiente cambio en el schema (o viceversa) deberia romper este
  * test.
+ *
+ * src/core/json-schema-lite.ts (no test/helpers/) porque el mismo
+ * validador se reutiliza tambien en RUNTIME, no solo en tests -- ver
+ * src/core/execution-file-result-extractor.ts, que lo usa para exigir el
+ * mismo contrato (incluido additionalProperties: false) en el camino de
+ * fallback que en el camino normal (--json-schema).
  */
 export interface TestCase {
   name: string;
