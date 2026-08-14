@@ -27,8 +27,13 @@
  *   artefacto de comparacion con v2.status = "executed" (o
  *   "invalid_output" si la respuesta no tiene la forma esperada).
  *
- * Sin --changePackId, usa el primer change pack elegible
- * (ready_for_review / approved_to_execute) que encuentre.
+ * Sin --changePackId, elige UN change pack elegible AL AZAR
+ * (ready_for_review / approved_to_execute) -- ver
+ * src/core/landing-architect-change-pack-selection.ts. Aleatorio (no
+ * "el primero") a proposito: una ejecucion automatica recurrente (ver
+ * docs/ux-ui-landing-architect-v2-experiment.md, "Ejecucion autonoma en
+ * Claude Cloud") que siempre comparase el mismo change pack no aportaria
+ * cobertura nueva dia a dia.
  */
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -38,13 +43,13 @@ import * as path from "path";
 import { readCurrentChangePacks, findChangePackById } from "../src/core/change-packs";
 import { buildBlueprintInput } from "../src/agents/ux-ui-landing-architect";
 import { buildLandingArchitectContext } from "../src/core/landing-architect-v2-context";
-import { auditV2OutputForFabrication, buildComparisonArtifact, renderComparisonMarkdown, validateV2Output, V2Result } from "../src/core/landing-architect-comparison";
+import { selectRandomEligibleChangePack } from "../src/core/landing-architect-change-pack-selection";
+import { auditV2OutputForFabrication, buildComparisonArtifact, extractJsonFromModelResponse, renderComparisonMarkdown, validateV2Output, V2Result } from "../src/core/landing-architect-comparison";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
 import { resolveActiveClientPaths } from "../src/core/client-paths";
 import { ChangePack } from "../src/core/types";
 
 const AGENT_NAME = "ux-ui-landing-architect-v2";
-const ELIGIBLE_STATUSES: ChangePack["status"][] = ["ready_for_review", "approved_to_execute"];
 
 function parseArgs(argv: string[]): Record<string, string> {
   const args: Record<string, string> = {};
@@ -65,11 +70,11 @@ function resolveTargetChangePack(changePackId: string | undefined): ChangePack {
     if (!found) throw new Error(`No existe ningun change pack con id "${changePackId}". Usa "npm run change-packs:list" para ver los disponibles.`);
     return found;
   }
-  const eligible = readCurrentChangePacks().filter((cp) => ELIGIBLE_STATUSES.includes(cp.status));
-  if (eligible.length === 0) {
+  const selected = selectRandomEligibleChangePack(readCurrentChangePacks());
+  if (!selected) {
     throw new Error("No hay ningun change pack elegible (ready_for_review / approved_to_execute). Pasa --changePackId <id> explicitamente o genera change packs primero.");
   }
-  return eligible[0];
+  return selected;
 }
 
 function buildV2PromptMarkdown(context: ReturnType<typeof buildLandingArchitectContext>, changePackId: string): string {
@@ -115,8 +120,10 @@ function buildV2PromptMarkdown(context: ReturnType<typeof buildLandingArchitectC
 function resolveV2Result(v2OutputArg: string | undefined, outDir: string, context: ReturnType<typeof buildLandingArchitectContext>, changePack: ChangePack): V2Result {
   if (!v2OutputArg) {
     const promptPath = path.join(outDir, "v2-prompt.md");
+    const expectedOutputPath = path.join(outDir, "v2-output.json");
     fs.writeFileSync(promptPath, buildV2PromptMarkdown(context, changePack.changePackId), "utf-8");
-    console.log(`V2: prompt preparado en ${promptPath}. Ejecuta el subagente y vuelve a llamar con --v2-output <fichero.json> para completar la comparacion.`);
+    console.log(`V2: prompt preparado en ${promptPath}.`);
+    console.log(`Siguiente paso: invocar el subagente ${AGENT_NAME} con ese prompt (herramienta Agent), guardar su respuesta JSON en ${expectedOutputPath}, y volver a llamar con --v2-output ${expectedOutputPath}.`);
     return { status: "pending_execution", promptFilePath: promptPath };
   }
 
@@ -126,7 +133,12 @@ function resolveV2Result(v2OutputArg: string | undefined, outDir: string, contex
 
   let raw: unknown;
   try {
-    raw = JSON.parse(rawText);
+    // Tolerante a fences de markdown (```json ... ```) alrededor del
+    // JSON -- ver extractJsonFromModelResponse: la respuesta cruda de un
+    // subagente Claude puede incluirlos aunque sus instrucciones pidan
+    // no hacerlo (ver caso real documentado en
+    // docs/ux-ui-landing-architect-v2-experiment.md).
+    raw = extractJsonFromModelResponse(rawText);
   } catch (err) {
     fs.writeFileSync(rawCopyPath, rawText, "utf-8");
     console.error(`V2: JSON invalido en ${v2OutputPath}.`);
@@ -183,6 +195,30 @@ async function main(): Promise<void> {
   console.log(`(JSON: ${jsonPath})`);
   console.log("");
   console.log("Recordatorio: ninguna de las dos propuestas se ha aplicado a WordPress/staging/produccion. Solo lectura + reportes locales.");
+
+  // Linea unica, machine-readable, para que una sesion Claude Cloud
+  // orquestando este runner (ver docs/ux-ui-landing-architect-v2-experiment.md,
+  // "Ejecucion autonoma en Claude Cloud") no tenga que parsear el resto
+  // de la salida en texto libre para saber que paso toca a continuacion
+  // ni cuantos avisos de fabricacion hubo.
+  console.log(
+    "RUNNER_RESULT_JSON=" +
+      JSON.stringify({
+        changePackId: changePack.changePackId,
+        keyword: changePack.keyword,
+        v2Status: v2Result.status,
+        fabricationWarningCount: v2Result.status === "executed" ? v2Result.fabricationWarnings.length : null,
+        comparisonJsonPath: jsonPath,
+        comparisonMdPath: mdPath,
+      })
+  );
+
+  // Fail-closed para automatizacion: una salida V2 invalida debe ser
+  // detectable por codigo de salida (nunca silenciosa), aunque el
+  // artefacto ya se haya guardado para inspeccion humana.
+  if (v2Result.status === "invalid_output") {
+    process.exitCode = 1;
+  }
 }
 
 main().catch((err) => {

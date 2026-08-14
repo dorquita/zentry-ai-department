@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import * as fs from "fs";
 import * as path from "path";
-import { auditV2OutputForFabrication, LandingArchitectComparisonArtifact, LandingArchitectV2Output, renderComparisonMarkdown } from "../src/core/landing-architect-comparison";
+import { auditV2OutputForFabrication, extractJsonFromModelResponse, LandingArchitectComparisonArtifact, LandingArchitectV2Output, renderComparisonMarkdown } from "../src/core/landing-architect-comparison";
 import { LandingArchitectContext } from "../src/core/landing-architect-v2-context";
 
 export interface TestCase {
@@ -216,6 +216,46 @@ export function runLandingArchitectComparisonTests(): TestCase[] {
 
         const recomputedWarnings = auditV2OutputForFabrication(artifact.input, artifact.v2.output);
         assert.ok(recomputedWarnings.length > 0, "el fixture ilustra un caso CON warning -- si esto falla, el fixture quedo desincronizado con la logica de auditoria real");
+      },
+    },
+
+    // --- extractJsonFromModelResponse (ver ejecucion real en Claude Cloud, docs/ux-ui-landing-architect-v2-experiment.md) ---
+    {
+      name: "extractJsonFromModelResponse parsea JSON sin fences",
+      fn: () => {
+        const result = extractJsonFromModelResponse('{"a": 1}');
+        assert.deepEqual(result, { a: 1 });
+      },
+    },
+    {
+      name: "extractJsonFromModelResponse quita un fence ```json ... ``` (caso real observado en la ejecucion via Agent tool)",
+      fn: () => {
+        const raw = '```json\n{"a": 1, "b": [1, 2]}\n```';
+        const result = extractJsonFromModelResponse(raw);
+        assert.deepEqual(result, { a: 1, b: [1, 2] });
+      },
+    },
+    {
+      name: "extractJsonFromModelResponse quita un fence generico sin la etiqueta 'json'",
+      fn: () => {
+        const raw = '```\n{"a": 1}\n```';
+        const result = extractJsonFromModelResponse(raw);
+        assert.deepEqual(result, { a: 1 });
+      },
+    },
+    {
+      name: "extractJsonFromModelResponse tolera espacio en blanco alrededor del fence",
+      fn: () => {
+        const raw = '  \n```json\n  {"a": 1}  \n```\n  ';
+        const result = extractJsonFromModelResponse(raw);
+        assert.deepEqual(result, { a: 1 });
+      },
+    },
+    {
+      name: "extractJsonFromModelResponse falla (fail-closed) con texto que no es JSON, con o sin fence",
+      fn: () => {
+        assert.throws(() => extractJsonFromModelResponse("esto no es JSON"));
+        assert.throws(() => extractJsonFromModelResponse("```json\nesto tampoco\n```"));
       },
     },
   ];
