@@ -47,3 +47,10 @@ reports/content-strategist/
 # ejecuciones locales sobre change packs reales -- no se versionan. Ver
 # test/fixtures/web-engineer-spec-example.json para un fixture sanitizado.
 reports/web-engineer/
+
+# Salida generada por el runner del empleado qa-reviewer (ver
+# scripts/run-qa-reviewer.ts, docs/claude-employee-runtime.md). Son datos
+# operativos de una ejecucion local (prompt + artifact revisado + salida
+# de Claude) -- no se versionan, se suben como artifact de GitHub Actions
+# en CI (nunca se commitea, ver .github/workflows/qa-reviewer.yml).
+reports/qa-reviewer/

@@ -1,0 +1,103 @@
+{
+  "_readme": "Fixture SANITIZADO usado como artifact de review por defecto de qa-reviewer cuando scripts/run-qa-reviewer.ts se invoca SIN --artifact-path (ver docs/claude-employee-runtime.md, seccion de desarrollo con fixtures). Contenido IDENTICO a test/fixtures/landing-architect-comparison-example.json (prestado tal cual, con atribucion -- NO es propiedad de qa-reviewer, es el unico artifact real disponible de otro empleado en el momento de crear este fixture, ver src/core/landing-architect-comparison.ts / LandingArchitectComparisonArtifact). Contiene deliberadamente un fabricationWarning real (garantia de fabricante no respaldada por el input) para que qa-reviewer tenga algo concreto que evaluar en unsupportedClaims/findings. No contiene ningun dato operativo real -- todo el contenido es de ejemplo.",
+  "changePackId": "example-change-pack-001",
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "input": {
+    "changePackId": "example-change-pack-001",
+    "keyword": "producto de ejemplo",
+    "page": "/producto-ejemplo/",
+    "changeType": "seo_on_page_update",
+    "priority": "medium",
+    "status": "approved_to_execute",
+    "targetBrand": "zentry",
+    "brandIntent": "zentry_locker_core",
+    "sector": "oficina",
+    "material": "melamina",
+    "isSmartLockTopic": false,
+    "suggestedSecondaryCta": false,
+    "templateHint": "product_landing",
+    "proposedHeadings": ["Modelos y medidas disponibles", "Precios y presupuesto sin compromiso", "Preguntas frecuentes sobre producto de ejemplo"],
+    "existingFaqs": [
+      {
+        "question": "¿Que garantia tiene el producto de ejemplo?",
+        "answer": "Indicar la garantia real del producto (pendiente de confirmar con el equipo)."
+      }
+    ],
+    "internalLinks": [],
+    "currentAssumptions": ["Se asume que la pagina de ejemplo sigue existiendo en esa URL."]
+  },
+  "v1": {
+    "output": {
+      "changePackId": "example-change-pack-001",
+      "templateType": "product_landing",
+      "hero": { "headline": "Producto de ejemplo | Fabricante Zentry", "subheadline": "Fabricacion directa: medidas, acabados y precios a medida." },
+      "heroImageCaption": "Imagen de producto — pendiente de sesion fotografica (producto de ejemplo)",
+      "benefitsHeading": "Por que elegir producto de ejemplo",
+      "comparisonTable": {
+        "title": "Comparativa de materiales",
+        "headers": ["Criterio", "Melamina", "Fenolica", "Metalica"],
+        "rows": [["Resistencia a la humedad", "Media", "Alta", "Media"]]
+      },
+      "useCases": ["Oficinas", "Colegios"],
+      "processSteps": ["Nos cuentas que necesitas.", "Te preparamos un presupuesto.", "Fabricamos y coordinamos la entrega."],
+      "ctaPrimary": { "label": "Pedir presupuesto", "target": "#solicitar-presupuesto", "isRealLink": false },
+      "benefitBlocks": [{ "title": "Fabricante directo", "description": "Sin intermediarios." }],
+      "cards": [{ "title": "Melamina", "description": "Acabado calido tipo madera." }],
+      "sections": [{ "heading": "Modelos y medidas disponibles", "body": "Texto de ejemplo generado por V1.", "searchIntent": "commercial" }],
+      "faq": [{ "question": "¿Que garantia tiene el producto de ejemplo?", "answer": "Te confirmamos los detalles exactos de tu caso al preparar el presupuesto." }],
+      "finalCta": { "headline": "Solicita presupuesto sin compromiso", "cta": { "label": "Pedir presupuesto", "target": "#solicitar-presupuesto", "isRealLink": false } },
+      "internalLinks": [],
+      "visualHierarchyNotes": ["Un solo H1 (el headline del hero).", "CTA principal visible above the fold."]
+    }
+  },
+  "v2": {
+    "status": "executed",
+    "output": {
+      "hero": { "headline": "Producto de ejemplo a medida, directo de fabrica", "subheadline": "Acabado calido, buena relacion calidad-precio." },
+      "heroImageCaption": "Imagen de producto — pendiente de sesion fotografica (producto de ejemplo)",
+      "benefitsHeading": "Por que elegir producto de ejemplo",
+      "comparisonTable": {
+        "title": "Comparativa de materiales",
+        "headers": ["Criterio", "Melamina", "Fenolica", "Metalica"],
+        "rows": [["Resistencia a la humedad", "Media", "Alta", "Media"]]
+      },
+      "useCases": ["Oficinas", "Colegios"],
+      "processSteps": ["Nos cuentas que necesitas.", "Te preparamos un presupuesto a medida.", "Fabricamos y coordinamos la entrega contigo."],
+      "ctaPrimary": { "label": "Solicitar presupuesto sin compromiso", "target": "#solicitar-presupuesto", "isRealLink": false },
+      "benefitBlocks": [{ "title": "Fabricante directo", "description": "Ejemplo de claim que requeriria confirmacion de negocio (ver skill zentry-brand)." }],
+      "cards": [{ "title": "Melamina", "description": "Acabado calido tipo madera, buena relacion calidad-precio." }],
+      "sections": [{ "heading": "Modelos y medidas disponibles", "body": "Texto de ejemplo generado por V2, con razonamiento propio.", "searchIntent": "commercial" }],
+      "faq": [{ "question": "¿Que garantia tiene el producto de ejemplo?", "answer": "Todas nuestras unidades cuentan con garantia de fabricante." }],
+      "finalCta": { "headline": "Solicita presupuesto sin compromiso", "cta": { "label": "Solicitar presupuesto sin compromiso", "target": "#solicitar-presupuesto", "isRealLink": false } },
+      "internalLinks": [],
+      "visualHierarchyNotes": ["Un solo H1 (el headline del hero).", "Estructura mobile-first: secciones cortas."],
+      "reasoningNotes": ["Ejemplo de nota de razonamiento: por que se eligio esta estructura de secciones."]
+    },
+    "fabricationWarnings": [
+      "Afirmacion sensible no respaldada (garantía): \"cuentan con garantia\" en \"Todas nuestras unidades cuentan con garantia de fabricante.\" -- el input no lo confirma (o lo marca como pendiente de confirmar)."
+    ]
+  },
+  "structuralDiff": [
+    { "field": "sections", "v1": 1, "v2": 1, "same": true },
+    { "field": "faq", "v1": 1, "v2": 1, "same": true },
+    { "field": "cards", "v1": 1, "v2": 1, "same": true },
+    { "field": "benefitBlocks", "v1": 1, "v2": 1, "same": true },
+    { "field": "hasComparisonTable", "v1": true, "v2": true, "same": true },
+    { "field": "hasCtaSecondary", "v1": false, "v2": false, "same": true },
+    { "field": "internalLinksUsed", "v1": 0, "v2": 0, "same": true },
+    { "field": "heroHeadlineLength", "v1": 26, "v2": 41, "same": false },
+    { "field": "heroSubheadlineLength", "v1": 55, "v2": 43, "same": false }
+  ],
+  "evaluationCriteria": [
+    "Un unico H1 (headline del hero) -- no hay headings H1 duplicados en secciones.",
+    "CTA principal presente, con label claro y target valido (real o placeholder honesto marcado como tal).",
+    "Cero afirmaciones de garantia/precio/plazo/fabricante-directo/funcionalidad que no vengan ya respaldadas por el input (ver auditoria de fabricacion).",
+    "Cada seccion aporta informacion especifica del tema (material/control de acceso), no relleno generico repetido.",
+    "FAQ real (preguntas y respuestas especificas), no una unica entrada generica.",
+    "Jerarquia visual: beneficios/materiales en bloques o cards, no solo parrafos sueltos.",
+    "CTA final coherente con el CTA principal (mismo objetivo de conversion).",
+    "Tono conforme a la skill zentry-brand (cercano, sin superlativos vacios, sin mezclar marcas sin motivo).",
+    "Estructura pensada para mobile-first (bloques cortos, sin parrafos largos)."
+  ],
+  "note": "Artefacto de solo lectura/comparacion. Ninguna de las dos propuestas se ha aplicado a WordPress, staging ni produccion. La eleccion entre V1/V2 (si la hubiera) la hace un humano, nunca este runner ni el propio subagente."
+}

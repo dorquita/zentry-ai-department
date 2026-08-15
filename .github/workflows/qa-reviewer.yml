@@ -1,0 +1,209 @@
+name: QA Reviewer (GitHub Actions + Claude)
+
+# Objetivo de este workflow (ver docs/claude-employee-runtime.md):
+# ejecutar el subagente qa-reviewer de principio a fin en GitHub Actions,
+# SIN portatil encendido, SIN VPS, SIN Claude Routines y SIN Agent/Task
+# anidado. La sesion principal de claude-code-action ES directamente el
+# empleado (--agent qa-reviewer) -- nunca una sesion generica que a su vez
+# invoca un subagente.
+#
+# Este workflow NO implementa el runtime generico el mismo (auth,
+# invocacion de claude-code-action, fallback via execution_file, y
+# validacion contra el JSON Schema versionado): eso lo hace
+# .github/actions/claude-employee-runtime/action.yml, compartido por
+# cualquier empleado Claude. Este fichero solo contiene lo ESPECIFICO del
+# dominio de qa-reviewer: seleccion del artifact a revisar, preparacion
+# de su prompt, y la validacion/auditoria propia de QaReviewerOutput --
+# ver src/employees/qa-reviewer/, sin modificar el runtime comun.
+#
+# No hace deploy, no publica nada, no toca WordPress/staging/produccion/
+# Ads/GA4/GTM/Search Console/n8n/VPS, no vuelve a hacer el trabajo
+# original del artifact revisado. El resultado se sube como artifact de
+# GitHub Actions, nunca se commitea.
+#
+# SOLO workflow_dispatch por ahora -- sin schedule (ver
+# docs/claude-employee-runtime.md, "Como anadir un nuevo empleado", paso
+# 6: schedule solo se activa tras una validacion end-to-end real, que este
+# workflow todavia no tiene porque no puede dispararse via API hasta que
+# este fichero exista en la rama por defecto).
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifactPath:
+        description: >-
+          Ruta (relativa al repo) al artifact JSON a revisar (opcional,
+          solo para debugging manual). Vacio (por defecto) = el runner
+          usa el fixture embebido
+          test/fixtures/qa-reviewer-example-artifact.json (no hay todavia
+          garantia de que exista ningun artifact real de otro empleado
+          nuevo en cada ejecucion).
+        required: false
+        type: string
+
+# Un solo empleado qa-reviewer corriendo a la vez: si ya hay una
+# ejecucion en curso, la nueva ejecucion espera en cola en vez de correr
+# en paralelo y arriesgarse a que dos ejecuciones escriban a la vez sobre
+# los mismos reports/qa-reviewer/<artifactId>/.
+concurrency:
+  group: qa-reviewer
+  cancel-in-progress: false
+
+# Principio de minimo privilegio: este empleado NUNCA escribe en el repo
+# (no commit, no push, no PR, no comentarios en issues/PRs). Con
+# `contents: read` alcanza.
+permissions:
+  contents: read
+
+jobs:
+  run-qa-reviewer:
+    name: Ejecutar qa-reviewer
+    runs-on: ubuntu-latest
+    # Backstop de tiempo en dos capas (ver docs/claude-employee-runtime.md,
+    # seccion de timeouts): timeout-minutes: 20 aqui es el limite del JOB
+    # completo (incluye los pasos de dominio antes y despues del runtime).
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --- [DOMINIO] Paso 1 del runner: carga el artifact a revisar
+      # (explicito o fixture embebido) + construye el contexto +
+      # prompt.md -- src/employees/qa-reviewer/context.ts,
+      # scripts/run-qa-reviewer.ts, sin modificar el runtime comun. ---
+      - name: "[DOMINIO] Runner (paso 1): preparar artifact + contexto"
+        id: prepare
+        run: |
+          set -o pipefail
+          if [ -n "$ARTIFACT_PATH" ]; then
+            npm run qa-reviewer:run -- --artifact-path "$ARTIFACT_PATH" 2>&1 | tee runner-step1.log
+          else
+            npm run qa-reviewer:run -- 2>&1 | tee runner-step1.log
+          fi
+        env:
+          ARTIFACT_PATH: ${{ inputs.artifactPath }}
+
+      - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 1)"
+        id: step1
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- runner-step1.log
+
+      - name: "[DOMINIO] Validar estado tras el paso 1 (pending_execution + prompt existe)"
+        run: |
+          if [ "$QA_STATUS" != "pending_execution" ]; then
+            echo "::error::qaStatus inesperado tras el paso 1 del runner: \"$QA_STATUS\" (se esperaba pending_execution). Abortando antes de invocar a Claude."
+            exit 1
+          fi
+          if [ ! -f "$PROMPT_FILE_PATH" ]; then
+            echo "::error::promptFilePath no existe en disco: $PROMPT_FILE_PATH"
+            exit 1
+          fi
+          echo "OK: qaStatus=pending_execution, promptFilePath existe ($PROMPT_FILE_PATH)."
+        env:
+          QA_STATUS: ${{ steps.step1.outputs.qaStatus }}
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      - name: "[DOMINIO] Leer contenido completo de prompt.md"
+        id: read_prompt
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      # --- [RUNTIME COMUN] Autenticacion + invocacion de
+      # claude-code-action (--agent qa-reviewer) + resolucion
+      # structured_output/fallback via execution_file + validacion contra
+      # config/qa-reviewer-output.schema.json. Identico para cualquier
+      # empleado Claude -- ver docs/claude-employee-runtime.md. ---
+      - name: "[RUNTIME] Ejecutar qa-reviewer (Claude Employee Runtime)"
+        id: runtime
+        # timeout-minutes SI es valido aqui (step normal del workflow
+        # caller, no un step interno de la composite action) -- limita
+        # TODA la composite action (auth + preflights + claude-code-action
+        # + resolucion de salida) a 10 min. Ver
+        # docs/claude-employee-runtime.md, seccion de timeouts.
+        timeout-minutes: 10
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: qa-reviewer
+          prompt: ${{ steps.read_prompt.outputs.content }}
+          output-schema-path: config/qa-reviewer-output.schema.json
+          expected-output-path: ${{ steps.step1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ github.token }}
+
+      # --- [DOMINIO] Paso 2 del runner: valida contra QaReviewerOutput +
+      # verifica que reviewedArtifact coincide con lo suministrado + monta
+      # el artifact final de revision -- sin modificar el runtime comun.
+      # Sale con codigo != 0 (sin continue-on-error) si qaStatus queda en
+      # "invalid_output". El fichero que lee (expectedOutputPath) ya lo
+      # escribio el runtime comun en el step anterior. ---
+      - name: "[DOMINIO] Runner (paso 2): validar salida de Claude + verificar identidad del artifact"
+        run: |
+          set -o pipefail
+          if [ -n "$ARTIFACT_PATH" ]; then
+            npm run qa-reviewer:run -- --artifact-path "$ARTIFACT_PATH" --qa-reviewer-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee runner-step2.log
+          else
+            npm run qa-reviewer:run -- --qa-reviewer-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee runner-step2.log
+          fi
+        env:
+          ARTIFACT_PATH: ${{ inputs.artifactPath }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.step1.outputs.expectedOutputPath }}
+
+      - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 2)"
+        id: step2
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- runner-step2.log
+
+      - name: "[DOMINIO] Subir artifact (review.json, review.md, output.json)"
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-reviewer-${{ steps.step2.outputs.artifactId }}
+          path: |
+            ${{ steps.step2.outputs.reviewJsonPath }}
+            ${{ steps.step2.outputs.reviewMdPath }}
+            ${{ steps.step1.outputs.expectedOutputPath }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: "[DOMINIO] Generar GitHub Step Summary"
+        run: |
+          {
+            echo "## QA Reviewer"
+            echo ""
+            echo "- **agent:** qa-reviewer"
+            echo "- **artifact revisado:** \`$ARTIFACT_ID\` (tipo: \`$ARTIFACT_TYPE\`, sourceEmployee: \`$SOURCE_EMPLOYEE\`)"
+            echo "- **artifactPath:** \`$ARTIFACT_PATH_OUT\`"
+            echo "- **Claude execution (outcome del step, sin enmascarar por continue-on-error):** $CLAUDE_OUTCOME"
+            echo "- **Origen de la salida:** $QA_SOURCE"
+            echo "- **qaStatus:** \`$QA_STATUS\`"
+            echo "- **findings:** $FINDINGS_COUNT"
+            echo "- **artifact generado:** \`qa-reviewer-$ARTIFACT_ID\`"
+            echo "- **Escritura externa realizada:** ninguna (WordPress/staging/produccion/Ads/GA4/GTM/Search Console/n8n/VPS no se han tocado; nada se ha commiteado; qa-reviewer no vuelve a hacer el trabajo original)."
+            echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          ARTIFACT_ID: ${{ steps.step2.outputs.artifactId }}
+          ARTIFACT_TYPE: ${{ steps.step2.outputs.artifactType }}
+          SOURCE_EMPLOYEE: ${{ steps.step2.outputs.sourceEmployee }}
+          ARTIFACT_PATH_OUT: ${{ steps.step2.outputs.artifactPath }}
+          QA_STATUS: ${{ steps.step2.outputs.qaStatus }}
+          FINDINGS_COUNT: ${{ steps.step2.outputs.findingsCount }}
+          # steps.runtime.outputs.claude-outcome / .output-source: outputs
+          # declarados por la composite action del runtime comun (ver
+          # .github/actions/claude-employee-runtime/action.yml).
+          CLAUDE_OUTCOME: ${{ steps.runtime.outputs.claude-outcome }}
+          QA_SOURCE: ${{ steps.runtime.outputs.output-source == 'structured_output' && 'structured_output directo (caso A)' || (steps.runtime.outputs.output-source == 'execution_file_fallback' && 'fallback via execution_file (caso B)' || 'ninguno (caso C, el workflow ya deberia haber fallado antes de este step)') }}

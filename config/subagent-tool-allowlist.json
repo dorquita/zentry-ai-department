@@ -122,6 +122,14 @@
       "externalWriteToolsGranted": [],
       "maxRiskCategory": "none",
       "notes": "Fase de solo especificacion: cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita (ChangePack + auditoria real de paginas existentes + resultado real de Staging QA, cuando hay datos) se le inyecta ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. No tiene, ni tendra en esta fase, ninguna capacidad de escritura en WordPress/staging/produccion ni en ningun otro sistema externo."
+    },
+    "qa-reviewer": {
+      "definitionFile": ".claude/agents/qa-reviewer.md",
+      "description": "Revisor independiente de calidad del departamento IA. Solo debe razonar sobre el artifact (de otro empleado o un fixture) que scripts/run-qa-reviewer.ts le entrega ya resuelto en el prompt -- cero acceso indiscriminado al repositorio, cero escritura externa, no vuelve a hacer el trabajo original.",
+      "allowedTools": [],
+      "externalWriteToolsGranted": [],
+      "maxRiskCategory": "none",
+      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita (identidad del artifact + su contenido JSON completo) se le inyecta ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. Su salida NUNCA se trata como autoridad para saltarse ningun guard deterministico existente (subagent-tool-guard.ts, json-schema-lite.ts) -- solo evalua calidad de contenido."
     }
   }
 }
