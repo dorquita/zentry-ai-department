@@ -320,17 +320,34 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       },
     },
     {
-      name: "El workflow NUNCA invoca la fase que escribe de verdad (department:apply --phase apply): solo planifica",
+      name: "La pasada diaria puede tocar STAGING, pero NUNCA produccion (ni la fase, ni los interruptores, ni las credenciales)",
       fn: () => {
         const configLines = readWorkflowConfigLines();
-        assert.ok(configLines.includes("--phase plan"), "el workflow debe planificar el contrato de apply");
-        assert.ok(
-          !/--phase\s+apply/.test(configLines),
-          "el workflow del departamento NO puede lanzar la fase de escritura real: exige aprobacion humana registrada y los interruptores de entorno"
-        );
-        for (const forbidden of ["DEPARTMENT_APPLY_ENABLED", "WORDPRESS_DRAFTS_ENABLED", "WORDPRESS_APP_PASSWORD"]) {
-          assert.ok(!configLines.includes(forbidden), `el workflow no debe recibir "${forbidden}": no puede escribir en WordPress`);
+
+        // Lo que SI puede hacer desde la fase serverless: planificar,
+        // aplicar en staging y pedir la aprobacion. Nada de esto toca
+        // produccion.
+        for (const phase of ["--phase plan", "--phase stage", "--phase notify"]) {
+          assert.ok(configLines.includes(phase), `la pasada diaria deberia ejecutar "${phase}"`);
         }
+
+        // Lo que NUNCA puede hacer. Publicar en produccion ocurre en UN
+        // solo sitio (department-production-apply.yml) y siempre despues
+        // de una aprobacion humana explicita.
+        assert.ok(!/--phase\s+production/.test(configLines), "la pasada diaria NO puede lanzar la fase de produccion");
+        for (const forbidden of [
+          "DEPARTMENT_PRODUCTION_APPLY_ENABLED",
+          "PRODUCTION_EXECUTION_ENABLED",
+          "PRODUCTION_DRAFTS_ENABLED",
+          "PRODUCTION_BACKEND",
+          "WORDPRESS_PRODUCTION_APP_PASSWORD",
+          "WORDPRESS_PRODUCTION_USERNAME",
+          "WORDPRESS_PRODUCTION_BASE_URL",
+        ]) {
+          assert.ok(!configLines.includes(forbidden), `la pasada diaria no debe recibir "${forbidden}": no puede escribir en produccion`);
+        }
+        // Y no puede fijar el entorno de WordPress a produccion a mano.
+        assert.ok(!/WORDPRESS_ENV:\s*["']?production/.test(configLines), "la pasada diaria nunca apunta su adaptador a produccion");
       },
     },
     {

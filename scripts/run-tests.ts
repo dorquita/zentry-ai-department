@@ -64,6 +64,7 @@ import { runDepartmentApplyRegistryTests } from "../test/department-apply-regist
 import { runDepartmentApplyTelegramTests } from "../test/department-apply-telegram.test";
 import { runDepartmentApplyTraceabilityTests } from "../test/department-apply-traceability.test";
 import { runDepartmentBriefEmailTests } from "../test/department-brief-email.test";
+import { runApprovalsHumanFeedbackTests } from "../test/approvals-human-feedback.test";
 import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
 
 interface TestCase {
@@ -136,6 +137,7 @@ async function main(): Promise<void> {
     { suiteName: "department-apply-telegram", cases: runDepartmentApplyTelegramTests() },
     { suiteName: "department-apply-traceability", cases: runDepartmentApplyTraceabilityTests() },
     { suiteName: "department-brief-email", cases: runDepartmentBriefEmailTests() },
+    { suiteName: "approvals-human-feedback", cases: runApprovalsHumanFeedbackTests() },
   ];
 
   let passed = 0;
