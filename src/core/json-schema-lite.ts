@@ -3,32 +3,33 @@
  * dependencias nuevas (mismo principio que validateV2Output() en
  * src/core/landing-architect-comparison.ts: "sin librerias externas").
  *
- * Usado en DOS sitios, sobre el MISMO fichero
- * config/landing-architect-v2-output.schema.json (una unica definicion
- * del contrato, nunca dos mantenidas a mano por separado):
+ * Modulo GENERICO (sin conocimiento de ningun dominio de negocio) --
+ * ver docs/claude-employee-runtime.md. Usado en dos capas:
  *
- *   1. test/landing-architect-v2-output-schema.test.ts -- test de deriva
- *      (drift) entre el schema y la interfaz TypeScript
- *      LandingArchitectV2Output / validateV2Output().
- *   2. src/core/execution-file-result-extractor.ts -- validacion en
- *      RUNTIME del fallback (caso B: structured_output ausente, se
- *      recupera el resultado del execution_file). El camino normal
- *      (caso A) ya pasa por esta misma validacion dentro de
- *      claude-code-action, hecha por el Claude Agent SDK contra este
- *      mismo fichero de schema (--json-schema); el fallback deberia
- *      exigir EXACTAMENTE el mismo contrato, incluido
- *      `additionalProperties: false` -- sin esto, un JSON con campos
- *      extra que --json-schema habria rechazado en el caso A podria
- *      colarse por el caso B, relajando el contrato sin querer.
+ *   1. src/core/claude-employee-runtime.ts -- resolveClaudeEmployeeOutput(),
+ *      el runtime comun de CUALQUIER empleado Claude: valida contra el
+ *      JSON Schema versionado propio de CADA empleado (nunca uno
+ *      hardcodeado aqui), tanto si la salida vino de `structured_output`
+ *      (caso A, ya validado tambien dentro de claude-code-action por el
+ *      Claude Agent SDK) como si se recupero del `execution_file`
+ *      (caso B) -- exigiendo el MISMO contrato en ambos caminos,
+ *      incluido `additionalProperties: false`, para que un JSON con
+ *      campos extra que --json-schema habria rechazado en el caso A no
+ *      pueda colarse por el caso B.
+ *   2. test/landing-architect-v2-output-schema.test.ts -- test de deriva
+ *      (drift), especifico del primer empleado, entre
+ *      config/landing-architect-v2-output.schema.json y la interfaz
+ *      TypeScript LandingArchitectV2Output / validateV2Output().
  *
- * Soporta solo lo que usa config/landing-architect-v2-output.schema.json:
- * type (object/array/string/boolean/number), properties, required, items,
- * enum, additionalProperties: false, y $ref interno resuelto contra
- * rootSchema.definitions. Cualquier otra feature de JSON Schema no
- * declarada aqui simplemente se ignora (no es un validador de proposito
- * general) -- si config/landing-architect-v2-output.schema.json llegara a
- * necesitar una feature no soportada aqui, hay que ampliar este modulo
- * (y sus tests) en el mismo commit.
+ * Soporta el subconjunto de JSON Schema draft-07 que exige el Claude
+ * Agent SDK: type (object/array/string/boolean/number), properties,
+ * required, items, enum, additionalProperties: false, y $ref interno
+ * resuelto contra rootSchema.definitions. Cualquier otra feature de
+ * JSON Schema no declarada aqui simplemente se ignora (no es un
+ * validador de proposito general) -- si el schema de algun empleado
+ * llegara a necesitar una feature no soportada aqui, hay que ampliar
+ * este modulo (y sus tests) en el mismo commit, para TODOS los
+ * empleados que lo usan.
  */
 export type JsonSchemaLite = {
   type?: string;

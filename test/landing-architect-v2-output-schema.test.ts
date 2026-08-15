@@ -23,9 +23,11 @@ import { JsonSchemaLite, validateAgainstSchema } from "../src/core/json-schema-l
  *
  * src/core/json-schema-lite.ts (no test/helpers/) porque el mismo
  * validador se reutiliza tambien en RUNTIME, no solo en tests -- ver
- * src/core/execution-file-result-extractor.ts, que lo usa para exigir el
- * mismo contrato (incluido additionalProperties: false) en el camino de
- * fallback que en el camino normal (--json-schema).
+ * src/core/claude-employee-runtime.ts (resolveClaudeEmployeeOutput()),
+ * el runtime comun de CUALQUIER empleado Claude, que lo usa para exigir
+ * el mismo contrato (incluido additionalProperties: false) tanto si la
+ * salida vino de `structured_output` (caso A) como si se recupero del
+ * `execution_file` (caso B, fallback).
  */
 export interface TestCase {
   name: string;

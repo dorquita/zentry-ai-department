@@ -44,7 +44,8 @@ import { readCurrentChangePacks, findChangePackById } from "../src/core/change-p
 import { buildBlueprintInput } from "../src/agents/ux-ui-landing-architect";
 import { buildLandingArchitectContext } from "../src/core/landing-architect-v2-context";
 import { selectRandomEligibleChangePack } from "../src/core/landing-architect-change-pack-selection";
-import { auditV2OutputForFabrication, buildComparisonArtifact, buildRunnerResultSummary, extractJsonFromModelResponse, renderComparisonMarkdown, validateV2Output, V2Result } from "../src/core/landing-architect-comparison";
+import { auditV2OutputForFabrication, buildComparisonArtifact, buildRunnerResultSummary, renderComparisonMarkdown, validateV2Output, V2Result } from "../src/core/landing-architect-comparison";
+import { extractJsonFromModelResponse } from "../src/core/claude-employee-runtime";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
 import { resolveActiveClientPaths } from "../src/core/client-paths";
 import { ChangePack } from "../src/core/types";
