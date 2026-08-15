@@ -64,6 +64,7 @@ import { runDepartmentApplyTelegramTests } from "../test/department-apply-telegr
 import { runDepartmentApplyTraceabilityTests } from "../test/department-apply-traceability.test";
 import { runDepartmentBriefEmailTests } from "../test/department-brief-email.test";
 import { runApprovalsHumanFeedbackTests } from "../test/approvals-human-feedback.test";
+import { runApprovalsManualDecisionTests } from "../test/approvals-manual-decision.test";
 import { runApprovalsHttpStoreTests } from "../test/approvals-http-store.test";
 import { runProductionApplyRunnerTests } from "../test/production-apply-runner.test";
 import { runWorkerWebhookTests } from "../test/worker-webhook.test";
@@ -141,6 +142,7 @@ async function main(): Promise<void> {
     { suiteName: "department-apply-traceability", cases: runDepartmentApplyTraceabilityTests() },
     { suiteName: "department-brief-email", cases: runDepartmentBriefEmailTests() },
     { suiteName: "approvals-human-feedback", cases: runApprovalsHumanFeedbackTests() },
+    { suiteName: "approvals-manual-decision", cases: runApprovalsManualDecisionTests() },
     { suiteName: "approvals-http-store", cases: runApprovalsHttpStoreTests() },
     { suiteName: "production-apply-runner", cases: runProductionApplyRunnerTests() },
     { suiteName: "worker-webhook", cases: runWorkerWebhookTests() },
