@@ -4,7 +4,7 @@ import { WebEngineerOutput } from "../employees/web-engineer/types";
 import { SeoSpecialistOutput } from "../employees/seo-specialist/domain";
 import { ContentStrategistOutput } from "../employees/content-strategist/output";
 import { AnalyticsSpecialistOutput } from "../employees/analytics-specialist/types";
-import { DepartmentApplyStatus, DepartmentApplySummary, emptyApplyCounts } from "./apply/types";
+import { APPLY_STATUS_LABEL, DepartmentApplyStatus, DepartmentApplySummary, emptyApplyCounts } from "./apply/types";
 import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./employee-runs";
 import { DepartmentPromotionResult } from "./promotion";
 import { attributeEvidenceRefToEmployees, LoadedSpecialistInputs } from "./specialist-inputs";
@@ -73,16 +73,26 @@ export interface DailyBriefApplySection {
   counts: Record<DepartmentApplyStatus, number>;
   externalWritesPerformed: boolean;
   notAttemptedReason: string;
+  /** `true` solo si se ha escrito en PRODUCCION en esta pasada. Se reporta aparte de staging a proposito. */
+  productionWritesPerformed: boolean;
   items: {
     rank: number;
     title: string;
     applyStatus: DepartmentApplyStatus;
+    /** Etiqueta legible del estado (STAGING READY, AWAITING APPROVAL, ...). */
+    applyStatusLabel: string;
     capability: string;
     capabilityReason: string;
     humanApproval: string;
     humanApprovalReason: string;
     validationStatus: string;
     rollbackStatus: string;
+    /** URL REAL donde revisar el cambio en staging. Vacia = todavia no aplicado. */
+    stagingUrl: string;
+    /** URL REAL en produccion, solo si se llego a publicar. */
+    productionUrl: string;
+    /** Motivo del rechazo tal cual lo escribio la persona. Vacio si no hay rechazo. */
+    rejectionReason: string;
   }[];
 }
 
@@ -150,7 +160,7 @@ const BRIEF_NOTE_BASE =
 
 const BRIEF_NOTE_NO_WRITES = `${BRIEF_NOTE_BASE} En esta pasada NO se ha escrito en ningun sistema externo.`;
 
-const BRIEF_NOTE_WITH_WRITES = `${BRIEF_NOTE_BASE} En esta pasada SI se han aplicado cambios reversibles en STAGING (nunca produccion), cada uno con aprobacion humana explicita, snapshot previo, validacion posterior y rollback automatico si la validacion falla -- ver la seccion de APPLY.`;
+const BRIEF_NOTE_WITH_WRITES = `${BRIEF_NOTE_BASE} En esta pasada SI se han aplicado cambios reversibles en STAGING, cada uno con snapshot previo, validacion posterior y rollback automatico si la validacion falla -- ver la seccion de APPLY. Staging es el entorno de trabajo y revision y NO requiere aprobacion previa; produccion sigue siendo zona protegida y solo se toca con una aprobacion humana explicita de la version exacta que hay en staging.`;
 
 function truncate(text: string, max = 220): string {
   const flat = text.replace(/\s+/g, " ").trim();
@@ -406,17 +416,22 @@ function buildApplySection(apply: DepartmentApplySummary | null | undefined): Da
     planned: true,
     counts: { ...emptyApplyCounts(), ...apply.counts },
     externalWritesPerformed: apply.externalWritesPerformed,
+    productionWritesPerformed: apply.productionWritesPerformed,
     notAttemptedReason: apply.applyNotAttemptedReason,
     items: apply.items.map((item) => ({
       rank: item.recommendationRank,
       title: item.title,
       applyStatus: item.applyStatus,
+      applyStatusLabel: APPLY_STATUS_LABEL[item.applyStatus],
       capability: item.applyCapability.supported ? String(item.applyCapability.id) : "ninguna",
       capabilityReason: item.applyCapability.reason,
       humanApproval: item.humanApproval.status,
       humanApprovalReason: item.humanApproval.reason,
       validationStatus: item.validationStatus,
       rollbackStatus: item.rollbackStatus,
+      stagingUrl: item.traceability.stagingUrl ?? "",
+      productionUrl: item.traceability.productionUrl ?? "",
+      rejectionReason: item.humanApproval.status === "rejected" ? item.humanApproval.reason : "",
     })),
   };
 }
@@ -443,9 +458,11 @@ export function buildDepartmentDailyBrief(input: DailyBriefInput): DepartmentDai
     approvalsNeeded: buildApprovalsNeeded(input, topPriorities),
     stageStatuses: input.manifest.stages,
     departmentQaStatus: input.promotion.departmentQaStatus,
-    externalWrites: apply?.externalWritesPerformed
-      ? "staging (title/meta de borradores ya existentes, con snapshot y rollback) -- ver la seccion de APPLY"
-      : "none",
+    externalWrites: apply?.productionWritesPerformed
+      ? "produccion (paginas ya publicadas, con aprobacion humana explicita, snapshot y rollback) + staging -- ver la seccion de APPLY"
+      : apply?.externalWritesPerformed
+        ? "staging (title/meta de paginas ya publicadas en staging, con snapshot y rollback) -- ver la seccion de APPLY"
+        : "none",
     apply,
     cost: input.cost ?? null,
     note: apply?.externalWritesPerformed ? BRIEF_NOTE_WITH_WRITES : BRIEF_NOTE_NO_WRITES,
@@ -554,22 +571,33 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
     lines.push("");
   } else {
     lines.push(
-      `Escrituras externas realizadas en esta pasada: **${brief.apply.externalWritesPerformed ? "SI (staging, reversibles)" : "ninguna"}**.`
+      `Escrituras externas realizadas en esta pasada: **${
+        brief.apply.productionWritesPerformed ? "SI (staging + PRODUCCION, con aprobacion humana)" : brief.apply.externalWritesPerformed ? "SI (staging, reversibles)" : "ninguna"
+      }**.`
     );
     if (brief.apply.notAttemptedReason) lines.push(`Motivo: ${brief.apply.notAttemptedReason}`);
     lines.push("");
-    lines.push("| # | Accion | Estado APPLY | Capacidad | Aprobacion humana | Validacion | Rollback |");
-    lines.push("| --- | --- | --- | --- | --- | --- | --- |");
+    lines.push("| # | Accion | Estado | Capacidad | Aprobacion humana | Validacion | Rollback | Staging |");
+    lines.push("| --- | --- | --- | --- | --- | --- | --- | --- |");
     for (const item of brief.apply.items) {
       lines.push(
-        `| ${item.rank} | ${truncate(item.title, 90).replace(/\|/g, "\\|")} | \`${item.applyStatus}\` | ${item.capability} | \`${item.humanApproval}\` | ${item.validationStatus} | ${item.rollbackStatus} |`
+        `| ${item.rank} | ${truncate(item.title, 90).replace(/\|/g, "\\|")} | **${item.applyStatusLabel}** | ${item.capability} | \`${item.humanApproval}\` | ${item.validationStatus} | ${item.rollbackStatus} | ${item.stagingUrl || "-"} |`
       );
     }
     lines.push("");
     for (const item of brief.apply.items) {
-      lines.push(`- **#${item.rank}** ${truncate(item.title, 120)}: ${truncate(item.capabilityReason, 260)} Aprobacion: ${truncate(item.humanApprovalReason, 220)}`);
+      lines.push(`- **#${item.rank}** ${truncate(item.title, 120)} -- \`${item.applyStatus}\`: ${truncate(item.capabilityReason, 260)} Aprobacion: ${truncate(item.humanApprovalReason, 220)}`);
+      if (item.productionUrl) lines.push(`  - Publicado en produccion: ${item.productionUrl}`);
+      if (item.rejectionReason) lines.push(`  - Motivo del rechazo (feedback humano, disponible para las siguientes propuestas): ${truncate(item.rejectionReason, 300)}`);
     }
     lines.push("");
+    const awaiting = brief.apply.counts.awaiting_approval + brief.apply.counts.staging_applied;
+    if (awaiting > 0) {
+      lines.push(
+        `> ${awaiting} cambio(s) estan aplicados y validados en STAGING y esperan decision. La aprobacion se hace por TELEGRAM (canal operativo de esta fase): ✅ APROBAR / ❌ RECHAZAR / 👁 VER CAMBIOS. Aprobar publica esa version exacta en produccion; si staging cambia entre medias, la aprobacion caduca (\`approval_stale\`) y se vuelve a pedir.`
+      );
+      lines.push("");
+    }
   }
 
   lines.push("## 12. COSTE DE LA PASADA");
@@ -618,8 +646,9 @@ export function renderDepartmentStepSummary(brief: DepartmentDailyBrief): string
   lines.push(`- **Decisiones pendientes de Pau:** ${brief.approvalsNeeded.length}`);
   lines.push(`- **Escrituras externas:** ${brief.externalWrites === "none" ? "ninguna (nada se ha aplicado, nada se ha commiteado)" : brief.externalWrites}`);
   if (brief.apply) {
+    const c = brief.apply.counts;
     lines.push(
-      `- **APPLY:** ${brief.apply.counts.awaiting_approval} esperando aprobacion, ${brief.apply.counts.approved} aprobada(s), ${brief.apply.counts.applied} aplicada(s), ${brief.apply.counts.requires_manual_implementation} requieren implementacion manual, ${brief.apply.counts.blocked} bloqueada(s), ${brief.apply.counts.rolled_back} revertida(s)`
+      `- **APPLY:** ${c.staging_applied} STAGING READY, ${c.awaiting_approval} AWAITING APPROVAL, ${c.approved} APPROVED, ${c.rejected} REJECTED, ${c.production_applied} PRODUCTION APPLIED, ${c.requires_manual_staging_implementation} REQUIRES MANUAL STAGING IMPLEMENTATION, ${c.blocked} BLOCKED`
     );
   }
   if (brief.cost) {

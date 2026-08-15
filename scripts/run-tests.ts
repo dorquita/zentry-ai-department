@@ -57,7 +57,11 @@ import { runDepartmentSpecialistInputsTests } from "../test/department-specialis
 import { runDepartmentDailyBriefTests } from "../test/department-daily-brief.test";
 import { runDepartmentCoordinationSafetyTests } from "../test/department-coordination-safety.test";
 import { runDepartmentApplyApprovalTests } from "../test/department-apply-approval.test";
-import { runDepartmentApplyExecutorTests } from "../test/department-apply-executor.test";
+import { runDepartmentApplyStateMachineTests } from "../test/department-apply-state-machine.test";
+import { runDepartmentApplyStagingTests } from "../test/department-apply-staging.test";
+import { runDepartmentApplyProductionTests } from "../test/department-apply-production.test";
+import { runDepartmentApplyRegistryTests } from "../test/department-apply-registry.test";
+import { runDepartmentApplyTelegramTests } from "../test/department-apply-telegram.test";
 import { runDepartmentApplyTraceabilityTests } from "../test/department-apply-traceability.test";
 import { runDepartmentBriefEmailTests } from "../test/department-brief-email.test";
 import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
@@ -125,7 +129,11 @@ async function main(): Promise<void> {
     { suiteName: "department-coordination-safety", cases: runDepartmentCoordinationSafetyTests() },
     { suiteName: "department-employee-runs", cases: runDepartmentEmployeeRunsTests() },
     { suiteName: "department-apply-approval", cases: runDepartmentApplyApprovalTests() },
-    { suiteName: "department-apply-executor", cases: runDepartmentApplyExecutorTests() },
+    { suiteName: "department-apply-state-machine", cases: runDepartmentApplyStateMachineTests() },
+    { suiteName: "department-apply-staging", cases: runDepartmentApplyStagingTests() },
+    { suiteName: "department-apply-production", cases: runDepartmentApplyProductionTests() },
+    { suiteName: "department-apply-registry", cases: runDepartmentApplyRegistryTests() },
+    { suiteName: "department-apply-telegram", cases: runDepartmentApplyTelegramTests() },
     { suiteName: "department-apply-traceability", cases: runDepartmentApplyTraceabilityTests() },
     { suiteName: "department-brief-email", cases: runDepartmentBriefEmailTests() },
   ];

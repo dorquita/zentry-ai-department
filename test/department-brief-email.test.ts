@@ -101,8 +101,7 @@ function applySummary(): DepartmentApplySummary {
     departmentRunId: RUN_ID,
     promotion,
     webEngineer: { status: "executed", output: SPEC },
-    ownedStagingPages: [{ wordpressPageId: 2091, stagingUrl: "https://staging.zentrylockers.com/?page_id=2091" }],
-    approvalRequests: [],
+    ownedStagingPages: [{ wordpressPageId: 2091, stagingUrl: "https://staging.zentrylockers.com/taquillas-melamina/" }],
     now: NOW,
   });
 }
@@ -209,13 +208,44 @@ export function runDepartmentBriefEmailTests(): TestCase[] {
 
     // --- APPLY en el email ---
     {
-      name: "El email distingue los estados de APPLY con sus etiquetas propias",
+      name: "El email distingue los estados de APPLY con sus etiquetas operativas",
       fn: () => {
         const summary = applySummary();
         const email = buildDailyBriefEmail({ brief: brief(), apply: summary, cost: COST, runUrl: "" });
-        assert.ok(email.text.includes("READY FOR APPROVAL"), "la prioridad con executor espera aprobacion");
-        assert.ok(email.text.includes("REQUIRES MANUAL IMPLEMENTATION"), "la prioridad sin executor se marca como manual");
-        assert.ok(email.html.includes("READY FOR APPROVAL"));
+        assert.ok(email.text.includes("REQUIRES MANUAL STAGING IMPLEMENTATION"), "la prioridad sin executor se marca como manual EN STAGING");
+        assert.ok(email.text.includes("PROPOSED"), "la prioridad con executor esta pendiente de aplicarse en staging");
+        assert.ok(email.html.includes("REQUIRES MANUAL STAGING IMPLEMENTATION"));
+      },
+    },
+
+    {
+      name: "El email remite a TELEGRAM para aprobar: en esta fase no se aprueba por email",
+      fn: () => {
+        const summary = applySummary();
+        const ready = {
+          ...summary,
+          items: summary.items.map((item, i) => (i === 0 ? { ...item, applyStatus: "awaiting_approval" as const } : item)),
+          counts: { ...summary.counts, proposed: summary.counts.proposed - 1, awaiting_approval: summary.counts.awaiting_approval + 1 },
+        };
+        const lines = buildExecutiveLines({ brief: brief(), apply: ready, cost: COST, runUrl: "" });
+        assert.ok(lines.some((l) => /listos para revisar en Telegram/i.test(l)), `ninguna linea remite a Telegram: ${lines.join(" | ")}`);
+        assert.ok(lines.some((l) => /La aprobacion se hace alli, no por email/i.test(l)));
+      },
+    },
+    {
+      name: "El email distingue staging de PRODUCCION al declarar escrituras externas",
+      fn: () => {
+        const summary = applySummary();
+        const stagingOnly = buildExecutiveLines({ brief: brief(), apply: { ...summary, externalWritesPerformed: true }, cost: COST, runUrl: "" });
+        assert.ok(stagingOnly.some((l) => /STAGING/.test(l) && /Produccion no se ha tocado/i.test(l)));
+
+        const published = buildExecutiveLines({
+          brief: brief(),
+          apply: { ...summary, externalWritesPerformed: true, productionWritesPerformed: true },
+          cost: COST,
+          runUrl: "",
+        });
+        assert.ok(published.some((l) => /PRODUCCION/.test(l) && /aprobacion humana explicita/i.test(l)));
       },
     },
 

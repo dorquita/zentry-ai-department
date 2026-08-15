@@ -857,7 +857,20 @@ export interface TelegramProcessedUpdate {
     | "error"
     // Fase O28.7 -- rechazo con feedback ambiguo: se pide aclaracion,
     // nunca se borra ni se decide nada.
-    | "feedback_needs_clarification";
+    | "feedback_needs_clarification"
+    // Fase TELEGRAM APPROVAL SYSTEM + STAGING-FIRST APPLY -- flujo de
+    // aprobacion de los cambios del DEPARTAMENTO (callback `dept:*`).
+    // Se distinguen de los outcomes historicos a proposito: son otro
+    // flujo, con otra maquina de estados y otro registro persistente
+    // (data/department-changes.jsonl).
+    | "department_view_changes"
+    | "department_approved"
+    | "department_production_reported"
+    | "department_approval_stale"
+    | "department_rejected_awaiting_reason"
+    | "department_rejection_reason_recorded"
+    | "department_ignored_unauthorized"
+    | "department_ignored";
   approvalRequestId?: string;
   relatedType?: ApprovalRelatedType;
   processedAt: string;

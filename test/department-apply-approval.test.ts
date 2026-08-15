@@ -3,21 +3,20 @@ import { APPROVAL_VALIDITY_HOURS, ApprovalSnapshotLike, DEPARTMENT_APPLY_RELATED
 import { buildApplyPlan } from "../src/department/apply/plan";
 import { DepartmentPromotionResult, DepartmentRecommendation } from "../src/department/promotion";
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
+import { NOW, OWNED_PAGES, PROMOTION, RUN_ID, SPEC, STAGING_URL } from "./department-apply-fixtures";
 
 export interface TestCase {
   name: string;
   fn: () => void;
 }
 
-const NOW = new Date("2026-08-15T12:00:00.000Z");
-const DEPARTMENT_RUN_ID = "dept-2026-08-15T120000Z";
-const APPLY_ITEM_ID = `${DEPARTMENT_RUN_ID}#apply-1`;
+const CHANGE_ID = `${RUN_ID}#change-1-v1`;
 
 function request(overrides: Partial<ApprovalSnapshotLike> = {}): ApprovalSnapshotLike {
   return {
     approvalRequestId: "req-1",
     relatedType: DEPARTMENT_APPLY_RELATED_TYPE,
-    relatedId: APPLY_ITEM_ID,
+    relatedId: CHANGE_ID,
     status: "approved",
     answeredBy: "telegram",
     answeredAt: "2026-08-15T11:00:00.000Z",
@@ -28,189 +27,184 @@ function request(overrides: Partial<ApprovalSnapshotLike> = {}): ApprovalSnapsho
 }
 
 function recommendation(overrides: Partial<DepartmentRecommendation> = {}): DepartmentRecommendation {
-  return {
-    rank: 1,
-    title: "Reescribir metas de la familia melamina",
-    rationale: "239 impresiones con CTR 0% en la pagina de melamina.",
-    impact: "medium",
-    confidence: "high",
-    effort: "low",
-    dependsOn: [],
-    evidenceRefs: ["dept-seo-1"],
-    decision: "promoted",
-    blockedBy: [],
-    qaWarnings: [],
-    ...overrides,
-  };
+  return { ...PROMOTION.promoted[0], ...overrides };
 }
 
 function promotion(overrides: Partial<DepartmentPromotionResult> = {}): DepartmentPromotionResult {
-  return {
-    departmentRunId: DEPARTMENT_RUN_ID,
-    departmentQaStatus: "PASS",
-    qaReviewStatus: "pass",
-    globalBlockReason: null,
-    promoted: [recommendation()],
-    blocked: [],
-    unattributedBlockingSignals: [],
-    qaSummary: { criticalFindings: 0, warningFindings: 0, safetyConcerns: 0, contradictions: 0, unsupportedClaims: 0, requiredCorrections: 0 },
-    ...overrides,
-  };
+  return { ...PROMOTION, ...overrides };
 }
 
-/** Especificacion que SI cumple el formato maquina y apunta a una pagina propia conocida. */
-function executableSpec(): WebEngineerOutput {
-  return {
-    implementationSummary: "Actualizar title y meta description del borrador de staging de melamina.",
-    targetPages: ["https://staging.zentrylockers.com/?page_id=2091"],
-    targetComponents: [],
-    proposedChanges: [
-      {
-        description: "Reescribir metas de la familia melamina en page_id=2091.\nTITLE: Taquillas de melamina para vestuarios | Zentry\nMETA: Taquillas de melamina resistentes para vestuarios y colegios.",
-        rationale: "CTR 0% con 239 impresiones.",
-        targetPageOrComponent: "https://staging.zentrylockers.com/?page_id=2091",
-      },
-    ],
-    filesOrSystemsAffected: ["WordPress staging"],
-    acceptanceCriteria: ["El borrador sigue en draft"],
-    validationPlan: ["Releer la pagina"],
-    rollbackPlan: ["Restaurar title/meta previos"],
-    dependencies: [],
-    risks: [],
-    approvalRequired: true,
-    unknowns: [],
-  };
-}
-
-const OWNED_PAGES = [{ wordpressPageId: 2091, stagingUrl: "https://staging.zentrylockers.com/?page_id=2091" }];
-
-function plan(requests: ApprovalSnapshotLike[], overrides: { promotion?: DepartmentPromotionResult; spec?: WebEngineerOutput | null } = {}) {
+function plan(overrides: { promotion?: DepartmentPromotionResult; spec?: WebEngineerOutput | null; pages?: typeof OWNED_PAGES } = {}) {
   return buildApplyPlan({
-    departmentRunId: DEPARTMENT_RUN_ID,
+    departmentRunId: RUN_ID,
     promotion: overrides.promotion ?? promotion(),
-    webEngineer: overrides.spec === null ? { status: "not_available" } : { status: "executed", output: overrides.spec ?? executableSpec() },
-    ownedStagingPages: OWNED_PAGES,
-    approvalRequests: requests,
+    webEngineer: overrides.spec === null ? { status: "not_available" } : { status: "executed", output: overrides.spec ?? SPEC },
+    ownedStagingPages: overrides.pages ?? OWNED_PAGES,
     now: NOW,
   });
 }
 
 export function runDepartmentApplyApprovalTests(): TestCase[] {
   return [
-    // --- La regla central de toda la fase ---
+    // --- Planificacion: staging NO necesita aprobacion previa; produccion SI ---
     {
-      name: "QA PASS SIN aprobacion humana NO permite apply: el elemento queda awaiting_approval",
+      name: "Una recomendacion con executor soportado queda `proposed`: staging se aplica sin aprobacion previa",
       fn: () => {
-        const summary = plan([]);
-        const item = summary.items[0];
+        const item = plan().items[0];
         assert.equal(item.qaStatus, "PASS");
-        assert.equal(item.applyCapability.supported, true, "el executor existe...");
-        assert.equal(item.humanApproval.status, "none", "...pero nadie lo ha aprobado");
-        assert.equal(item.applyStatus, "awaiting_approval");
-        assert.match(item.humanApproval.reason, /no es una aprobacion/i);
+        assert.equal(item.applyCapability.supported, true);
+        assert.equal(item.applyCapability.id, "staging_published_meta_update");
+        assert.equal(item.applyStatus, "proposed");
+        // Y la aprobacion todavia no existe: se pide DESPUES, sobre la version ya validada.
+        assert.equal(item.humanApproval.status, "none");
+        assert.match(item.humanApproval.reason, /DESPUES de aplicar y validar el cambio en staging/i);
       },
     },
     {
-      name: "Aprobacion humana RECHAZADA -> rejected, nunca entra al executor",
+      name: "Planificar no escribe en ningun sistema externo",
       fn: () => {
-        const summary = plan([request({ status: "rejected", answeredBy: "telegram" })]);
-        assert.equal(summary.items[0].humanApproval.status, "rejected");
-        assert.equal(summary.items[0].applyStatus, "rejected");
+        const summary = plan();
+        assert.equal(summary.externalWritesPerformed, false);
+        assert.equal(summary.productionWritesPerformed, false);
       },
     },
     {
-      name: "Aprobacion humana explicita y vigente -> approved (unico estado que puede entrar al executor)",
+      name: "Sin executor determinista -> requires_manual_staging_implementation (nunca se inventa uno)",
       fn: () => {
-        const summary = plan([request()]);
-        assert.equal(summary.items[0].humanApproval.status, "approved");
-        assert.equal(summary.items[0].humanApproval.answeredBy, "telegram");
-        assert.equal(summary.items[0].applyStatus, "approved");
+        const noDirectives: WebEngineerOutput = {
+          ...SPEC,
+          proposedChanges: [{ description: "Mejorar el copy de la pagina para que conecte mejor.", rationale: "Suena flojo.", targetPageOrComponent: STAGING_URL }],
+        };
+        const item = plan({ spec: noDirectives }).items[0];
+        assert.equal(item.applyStatus, "requires_manual_staging_implementation");
+        assert.equal(item.applyCapability.supported, false);
+        assert.match(item.applyCapability.reason, /formato ejecutable/i);
       },
     },
     {
-      name: "Estado de aprobacion DESCONOCIDO -> fail-closed: unknown -> blocked",
+      name: "Sin especificacion de web-engineer no hay nada ejecutable",
       fn: () => {
-        const summary = plan([request({ status: "quiza" })]);
-        assert.equal(summary.items[0].humanApproval.status, "unknown");
-        assert.equal(summary.items[0].applyStatus, "blocked");
+        const item = plan({ spec: null }).items[0];
+        assert.equal(item.applyStatus, "requires_manual_staging_implementation");
+        assert.match(item.applyCapability.reason, /Sin especificacion/i);
       },
     },
     {
-      name: "Varias solicitudes para el mismo elemento -> fail-closed (unknown), no se elige ninguna",
+      name: "Una pagina de staging SIN URL publica no es destino valido: no seria revisable desde el movil",
       fn: () => {
-        const summary = plan([request({ approvalRequestId: "req-1" }), request({ approvalRequestId: "req-2", status: "rejected" })]);
-        assert.equal(summary.items[0].humanApproval.status, "unknown");
-        assert.equal(summary.items[0].applyStatus, "blocked");
+        const item = plan({ pages: [{ wordpressPageId: 2091, stagingUrl: "" }] }).items[0];
+        assert.equal(item.applyStatus, "requires_manual_staging_implementation");
+      },
+    },
+    {
+      name: "Una recomendacion bloqueada por QA nunca llega a plantearse: `blocked`",
+      fn: () => {
+        const item = plan({
+          promotion: promotion({ promoted: [], blocked: [recommendation({ decision: "blocked", blockedBy: ["QA la bloqueo"] })] }),
+        }).items[0];
+        assert.equal(item.applyStatus, "blocked");
+        assert.equal(item.applyCapability.supported, false);
+        assert.equal(item.qaStatus, "BLOCKED");
+      },
+    },
+    {
+      name: "Una especificacion que cita dos paginas distintas es ambigua: fail-closed",
+      fn: () => {
+        const ambiguous: WebEngineerOutput = {
+          ...SPEC,
+          proposedChanges: [
+            {
+              description: "Cambiar page_id=2091 y tambien page_id=2103.\nTITLE: Uno\nMETA: Dos",
+              rationale: "r",
+              targetPageOrComponent: STAGING_URL,
+            },
+          ],
+        };
+        const item = plan({
+          spec: ambiguous,
+          pages: [...OWNED_PAGES, { wordpressPageId: 2103, stagingUrl: "https://staging.zentrylockers.com/taquillas-inteligentes/" }],
+        }).items[0];
+        assert.equal(item.applyStatus, "requires_manual_staging_implementation");
+        assert.match(item.applyCapability.reason, /UN destino/i);
       },
     },
 
-    // --- Casos limite de la puerta pura ---
+    // --- Puerta de aprobacion sobre el registro comun del proyecto ---
     {
-      name: "pending y snoozed nunca son aprobacion",
+      name: "Sin solicitud registrada, la aprobacion humana es `none` y nunca autoriza produccion",
+      fn: () => {
+        const approval = resolveHumanApproval({ relatedId: CHANGE_ID, requests: [], now: NOW });
+        assert.equal(approval.status, "none");
+        assert.match(approval.reason, /no es una aprobacion/i);
+      },
+    },
+    {
+      name: "pending / snoozed nunca son aprobacion",
       fn: () => {
         for (const status of ["pending", "snoozed"]) {
-          const approval = resolveHumanApproval({ applyItemId: APPLY_ITEM_ID, requests: [request({ status })], now: NOW });
-          assert.equal(approval.status, "pending", `status "${status}" no puede aprobar`);
+          assert.equal(resolveHumanApproval({ relatedId: CHANGE_ID, requests: [request({ status })], now: NOW }).status, "pending");
         }
       },
     },
     {
-      name: "expired y cancelled cuentan como rechazo, no como pendiente",
+      name: "rejected / cancelled / expired nunca son aprobacion",
       fn: () => {
-        for (const status of ["expired", "cancelled"]) {
-          const approval = resolveHumanApproval({ applyItemId: APPLY_ITEM_ID, requests: [request({ status })], now: NOW });
-          assert.equal(approval.status, "rejected", `status "${status}" no puede quedar en pendiente`);
+        for (const status of ["rejected", "cancelled", "expired"]) {
+          assert.equal(resolveHumanApproval({ relatedId: CHANGE_ID, requests: [request({ status })], now: NOW }).status, "rejected");
         }
       },
     },
     {
-      name: "Una aprobacion caducada por tiempo deja de valer (no se aplica algo aprobado hace semanas)",
+      name: "Una aprobacion caducada deja de valer",
       fn: () => {
-        const stale = request({ answeredAt: new Date(NOW.getTime() - (APPROVAL_VALIDITY_HOURS + 1) * 3600_000).toISOString() });
-        const approval = resolveHumanApproval({ applyItemId: APPLY_ITEM_ID, requests: [stale], now: NOW });
-        assert.equal(approval.status, "rejected");
-        assert.match(approval.reason, /ya no es vigente/);
+        const old = request({ answeredAt: new Date(NOW.getTime() - (APPROVAL_VALIDITY_HOURS + 1) * 3600_000).toISOString() });
+        assert.equal(resolveHumanApproval({ relatedId: CHANGE_ID, requests: [old], now: NOW }).status, "rejected");
       },
     },
     {
-      name: 'Una aprobacion "approved" sin autor no se acepta (fail-closed)',
+      name: "Una aprobacion sin autor no se acepta: `unknown` (que bloquea)",
       fn: () => {
-        const approval = resolveHumanApproval({ applyItemId: APPLY_ITEM_ID, requests: [request({ answeredBy: "" })], now: NOW });
+        assert.equal(resolveHumanApproval({ relatedId: CHANGE_ID, requests: [request({ answeredBy: "" })], now: NOW }).status, "unknown");
+      },
+    },
+    {
+      name: "Dos solicitudes para el mismo cambio -> `unknown`: no se elige la mejor",
+      fn: () => {
+        const approval = resolveHumanApproval({
+          relatedId: CHANGE_ID,
+          requests: [request({ approvalRequestId: "a" }), request({ approvalRequestId: "b" })],
+          now: NOW,
+        });
         assert.equal(approval.status, "unknown");
       },
     },
     {
-      name: "Una aprobacion de OTRO tipo o de OTRO elemento no cuenta para este elemento",
+      name: "Un status desconocido en el registro comun -> `unknown` (fail-closed)",
       fn: () => {
-        const otherType = resolveHumanApproval({ applyItemId: APPLY_ITEM_ID, requests: [request({ relatedType: "staging_execution" })], now: NOW });
-        assert.equal(otherType.status, "none");
-        const otherId = resolveHumanApproval({ applyItemId: APPLY_ITEM_ID, requests: [request({ relatedId: `${DEPARTMENT_RUN_ID}#apply-9` })], now: NOW });
-        assert.equal(otherId.status, "none");
-      },
-    },
-
-    // --- Interaccion con la puerta de QA ---
-    {
-      name: "Una recomendacion BLOQUEADA por QA queda blocked aunque exista una aprobacion humana valida",
-      fn: () => {
-        const summary = plan([request()], {
-          promotion: promotion({
-            departmentQaStatus: "BLOCKED",
-            promoted: [],
-            blocked: [recommendation({ decision: "blocked", blockedBy: ["[safetyConcern] afirmacion sin respaldo"] })],
-            globalBlockReason: "QA marco el conjunto como BLOCKED",
-          }),
-        });
-        assert.equal(summary.items[0].applyStatus, "blocked");
-        assert.equal(summary.items[0].qaStatus, "BLOCKED");
+        assert.equal(resolveHumanApproval({ relatedId: CHANGE_ID, requests: [request({ status: "vete-a-saber" })], now: NOW }).status, "unknown");
       },
     },
     {
-      name: "Sin especificacion de web-engineer no hay executor: requires_manual_implementation (ni siquiera awaiting_approval)",
+      name: "La aprobacion se busca por changeId: la de OTRA version no sirve",
       fn: () => {
-        const summary = plan([request()], { spec: null });
-        assert.equal(summary.items[0].applyCapability.supported, false);
-        assert.equal(summary.items[0].applyStatus, "requires_manual_implementation");
+        const otherVersion = request({ relatedId: `${RUN_ID}#change-1-v2` });
+        assert.equal(resolveHumanApproval({ relatedId: CHANGE_ID, requests: [otherVersion], now: NOW }).status, "none");
+      },
+    },
+    {
+      name: "Una aprobacion de otro tipo de solicitud del proyecto no cuenta como aprobacion de un cambio",
+      fn: () => {
+        const otherType = request({ relatedType: "change_pack" });
+        assert.equal(resolveHumanApproval({ relatedId: CHANGE_ID, requests: [otherType], now: NOW }).status, "none");
+      },
+    },
+    {
+      name: "Una aprobacion valida y vigente se reconoce, con autor y fecha reales",
+      fn: () => {
+        const approval = resolveHumanApproval({ relatedId: CHANGE_ID, requests: [request()], now: NOW });
+        assert.equal(approval.status, "approved");
+        assert.equal(approval.approvalRequestId, "req-1");
+        assert.equal(approval.answeredBy, "telegram");
       },
     },
   ];

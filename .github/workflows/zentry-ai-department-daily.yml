@@ -34,10 +34,17 @@ name: Zentry AI Department -- Daily Brief (coordinacion real)
 #   not_available (pendiente) y nunca bloquea la pasada.
 # - APPLY: este workflow solo PLANIFICA el contrato de apply
 #   (`department:apply -- --phase plan`), que no escribe en ningun sistema
-#   externo. La fase que si escribe (`--phase apply`) NO se invoca aqui:
-#   necesita aprobacion humana explicita registrada + los interruptores de
-#   entorno, y se lanza donde vive el proyecto de forma persistente. Ver
-#   docs/department-apply.md.
+#   externo.
+#
+#   Las fases que SI escriben o deciden (`--phase stage`, `--phase notify`,
+#   `--phase production`) NO se invocan aqui, y no es una omision: el
+#   estado de una aprobacion no puede depender del filesystem EFIMERO de
+#   un runner de GitHub Actions. El registro persistente de cambios
+#   (`data/department-changes.jsonl`) y el registro comun de aprobaciones
+#   viven donde el proyecto es persistente -- el VPS, junto al servicio
+#   permanente de Telegram (deploy/zentry-telegram-approvals.service).
+#   Una aprobacion tiene que sobrevivir al final de este workflow.
+#   Ver docs/telegram-approval-system.md.
 # - EMAIL: se envia el Daily Brief a la direccion configurada en los
 #   secretos del repositorio. Si falta configuracion, no se envia nada y
 #   se reporta que NOMBRES de variables faltan (nunca sus valores).
@@ -659,11 +666,12 @@ jobs:
       # FASE 4.5 -- PLANIFICACION DEL APPLY (determinista, sin Claude)
       #
       # Construye el contrato de apply de la pasada: por cada recomendacion,
-      # si existe un executor determinista y reversible para ella, y si hay
-      # una aprobacion HUMANA explicita registrada. Aqui NO se escribe en
-      # ningun sistema externo: eso es `--phase apply`, que este workflow no
-      # invoca a proposito (necesita el registro de aprobaciones persistente
-      # y los interruptores de entorno). Ver docs/department-apply.md.
+      # si existe un executor determinista y reversible para ella. Aqui NO
+      # se escribe en ningun sistema externo, no se crea ningun registro de
+      # cambio y no se envia ninguna solicitud de aprobacion: eso son las
+      # fases `stage` / `notify` / `production`, que este workflow no invoca
+      # a proposito (necesitan el registro persistente y los interruptores
+      # de entorno). Ver docs/telegram-approval-system.md.
       #
       # `continue-on-error`: no poder planificar el apply degrada el informe,
       # pero nunca debe impedir que el Daily Brief se genere y se envie.
@@ -752,7 +760,7 @@ jobs:
           {
             echo ""
             echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "- **Escrituras en sistemas de contenido:** ninguna desde este workflow. Solo se PLANIFICA el contrato de apply; la fase de ejecucion real no se invoca aqui y exige aprobacion humana explicita (ver docs/department-apply.md)."
+            echo "- **Escrituras en sistemas de contenido:** ninguna desde este workflow. Solo se PLANIFICA el contrato de apply; el apply real en staging, el envio a Telegram y la publicacion en produccion corren donde el proyecto es persistente (ver docs/telegram-approval-system.md)."
             echo "- **Email del Daily Brief:** resultado del step [EMAIL] = \`${EMAIL_OUTCOME}\` (si falta configuracion, no se envia nada y el log dice que NOMBRES de variables faltan)."
             echo "- **SEM:** pendiente / fuera de esta fase por decision explicita."
           } >> "$GITHUB_STEP_SUMMARY"

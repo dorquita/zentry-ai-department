@@ -1,48 +1,58 @@
-import { DepartmentApplyCapability, StagingDraftMetaUpdateTarget } from "./types";
+import { DepartmentApplyCapability, StagingPublishedMetaUpdateTarget } from "./types";
 
 /**
  * REGISTRO DE CAPACIDADES DE APPLY -- que puede ejecutar de verdad este
  * sistema, y que NO.
  *
- * Principio: una recomendacion solo es aplicable si existe YA un executor
- * determinista, validado y REVERSIBLE para ella. No se fabrican executors
- * nuevos para recomendaciones arbitrarias. Todo lo que no encaje de forma
- * INEQUIVOCA aqui sale como `requires_manual_implementation` con el
- * motivo exacto -- nunca "se intenta a ver si cuela".
+ * Principio, sin excepciones: una recomendacion solo es aplicable si
+ * existe YA un executor determinista, validado y REVERSIBLE para ella.
+ * No se fabrican executors nuevos para recomendaciones arbitrarias, y
+ * Claude nunca ejecuta codigo sobre WordPress: razona y propone; este
+ * catalogo decide si eso se traduce a una operacion permitida, y el
+ * executor de TypeScript ejecuta solo esa operacion.
  *
- * Unica capacidad soportada hoy: `staging_draft_meta_update`
- * (title/meta description de un borrador de staging que YA existe y que
- * YA pertenece a este sistema). Se apoya en `updateWordpressDraftPage()`
- * de src/adapters/wordpress.ts, que:
+ * Unica capacidad soportada hoy: `staging_published_meta_update`
+ * (title/meta description de una pagina de staging que YA esta
+ * PUBLICADA y que YA pertenece a este sistema). Se apoya en
+ * `updateStagingPublishedPageContent()` de src/adapters/wordpress.ts,
+ * que:
  *
  *   - exige `WORDPRESS_DRAFTS_ENABLED=true`,
  *   - llama a `assertWordpressWriteAllowed()` (produccion BLOQUEADA de
- *     forma incondicional),
+ *     forma incondicional en ese adaptador),
  *   - relee la pagina y rechaza escribir si su status actual no es
- *     `draft` (nunca toca una pagina publicada).
+ *     `publish` (nunca publica ni despublica nada),
+ *   - nunca toca el slug.
+ *
+ * Por que PUBLICADA y no borrador: staging es el entorno VISUAL de
+ * revision de este flujo. Un borrador de WordPress no se puede abrir
+ * como una URL normal desde el movil, asi que un cambio en borrador no
+ * es revisable y por tanto no es aprobable.
  *
  * Este modulo es PURO: no lee ficheros, no llama a WordPress. Recibe ya
- * resuelto el catalogo de paginas de staging que este sistema posee.
+ * resuelto el catalogo de paginas de staging publicadas que este sistema
+ * posee.
  *
  * FORMATO MAQUINA (deliberadamente estricto). Para que una propuesta de
  * web-engineer sea ejecutable debe cumplir LAS DOS cosas:
  *
  *   1. Apuntar a EXACTAMENTE UNA pagina del catalogo, citada de forma no
- *      ambigua (`page_id=<N>` o la URL exacta del borrador).
+ *      ambigua (`page_id=<N>` o la URL exacta de staging).
  *   2. Declarar el nuevo contenido en lineas propias:
  *
  *          TITLE: <nuevo title>
  *          META: <nueva meta description>
  *
  * Cualquier ambiguedad (ninguna pagina, varias paginas, ningun valor
- * nuevo, valores vacios) -> no soportado. Es intencionadamente dificil de
- * satisfacer por accidente: el coste de un falso positivo aqui es
+ * nuevo, valores vacios) -> no soportado. Es intencionadamente dificil
+ * de satisfacer por accidente: el coste de un falso positivo aqui es
  * escribir en un sitio real.
  */
 
-/** Una pagina de staging que este sistema creo y sigue controlando (viene del registro de ejecuciones de staging). */
+/** Una pagina de staging PUBLICADA que este sistema controla. */
 export interface OwnedStagingPage {
   wordpressPageId: number;
+  /** URL publica de staging. Vacia = no consta, y entonces no sirve como destino revisable. */
   stagingUrl: string;
 }
 
@@ -63,7 +73,7 @@ export const MAX_TITLE_LENGTH = 200;
 export const MAX_META_LENGTH = 400;
 
 function normalizeUrl(url: string): string {
-  return url.trim().toLowerCase().replace(/\/+$/, "");
+  return String(url ?? "").trim().toLowerCase().replace(/\/+$/, "");
 }
 
 /**
@@ -73,7 +83,7 @@ function normalizeUrl(url: string): string {
  */
 export function findReferencedStagingPages(texts: string[], ownedStagingPages: OwnedStagingPage[]): number[] {
   const ownedById = new Map(ownedStagingPages.map((p) => [p.wordpressPageId, p]));
-  const ownedByUrl = new Map(ownedStagingPages.map((p) => [normalizeUrl(p.stagingUrl), p]));
+  const ownedByUrl = new Map(ownedStagingPages.filter((p) => p.stagingUrl.trim().length > 0).map((p) => [normalizeUrl(p.stagingUrl), p]));
   const found = new Set<number>();
 
   for (const text of texts) {
@@ -86,8 +96,7 @@ export function findReferencedStagingPages(texts: string[], ownedStagingPages: O
 
     // URL exacta (el texto completo del campo, no una subcadena suelta):
     // aceptar subcadenas invitaria a falsos positivos por prefijos.
-    const normalized = normalizeUrl(text);
-    const byUrl = ownedByUrl.get(normalized);
+    const byUrl = ownedByUrl.get(normalizeUrl(text));
     if (byUrl) found.add(byUrl.wordpressPageId);
   }
 
@@ -115,30 +124,32 @@ function unsupported(reason: string): DepartmentApplyCapability {
 
 /**
  * Decide si existe executor para esta propuesta. Determinista y
- * conservador: ante la minima duda, `supported: false`.
+ * conservador: ante la minima duda, `supported: false` -- que se traduce
+ * en `requires_manual_staging_implementation`, nunca en un intento "a
+ * ver si cuela".
  */
 export function resolveApplyCapability(input: ResolveApplyCapabilityInput): DepartmentApplyCapability {
   if (!input.hasSpecification) {
     return unsupported(
-      "No hay especificacion tecnica de web-engineer para esta recomendacion en esta pasada. Sin especificacion no existe nada ejecutable: requiere implementacion manual."
+      "No hay especificacion tecnica de web-engineer para esta recomendacion en esta pasada. Sin especificacion no existe nada ejecutable: requiere implementacion manual en staging."
     );
   }
 
   if (input.ownedStagingPages.length === 0) {
     return unsupported(
-      "No hay ninguna pagina de staging registrada como propia de este sistema con la que emparejar la propuesta. Requiere implementacion manual."
+      "No hay ninguna pagina de staging PUBLICADA registrada como propia de este sistema con la que emparejar la propuesta. Requiere implementacion manual en staging."
     );
   }
 
   const referenced = findReferencedStagingPages(input.specificationTexts, input.ownedStagingPages);
   if (referenced.length === 0) {
     return unsupported(
-      "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura."
+      "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura."
     );
   }
   if (referenced.length > 1) {
     return unsupported(
-      `La especificacion cita ${referenced.length} paginas de staging distintas (${referenced.join(", ")}). Fail-closed: un elemento de apply solo puede tener UN destino. Requiere implementacion manual.`
+      `La especificacion cita ${referenced.length} paginas de staging distintas (${referenced.join(", ")}). Fail-closed: un cambio solo puede tener UN destino. Requiere implementacion manual.`
     );
   }
 
@@ -160,9 +171,14 @@ export function resolveApplyCapability(input: ResolveApplyCapabilityInput): Depa
   if (!page) {
     return unsupported(`Incoherencia interna resolviendo la pagina ${referenced[0]}. Fail-closed: requiere implementacion manual.`);
   }
+  if (page.stagingUrl.trim().length === 0) {
+    return unsupported(
+      `La pagina ${page.wordpressPageId} no tiene URL publica de staging registrada, asi que el cambio no seria revisable desde el movil. Fail-closed: requiere implementacion manual.`
+    );
+  }
 
-  const target: StagingDraftMetaUpdateTarget = {
-    capabilityId: "staging_draft_meta_update",
+  const target: StagingPublishedMetaUpdateTarget = {
+    capabilityId: "staging_published_meta_update",
     wordpressPageId: page.wordpressPageId,
     stagingUrl: page.stagingUrl,
     newTitle: title.value,
@@ -170,9 +186,9 @@ export function resolveApplyCapability(input: ResolveApplyCapabilityInput): Depa
   };
 
   return {
-    id: "staging_draft_meta_update",
+    id: "staging_published_meta_update",
     supported: true,
-    reason: `Cambio reversible de title/meta sobre el borrador de staging ${page.wordpressPageId}, que ya pertenece a este sistema. Executor determinista existente (actualizacion de borrador en staging, nunca publicacion, nunca produccion).`,
+    reason: `Cambio reversible de title/meta sobre la pagina de staging PUBLICADA ${page.wordpressPageId}, que ya pertenece a este sistema y es revisable en ${page.stagingUrl}. Executor determinista existente (actualiza contenido de una pagina ya publicada en staging; nunca cambia su status ni su slug, nunca toca produccion).`,
     target,
   };
 }

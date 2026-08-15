@@ -116,7 +116,14 @@ function sanitizeTelegramError(raw: string, botToken: string): string {
   return withoutBotUrl.length > 500 ? withoutBotUrl.slice(0, 500) + "...[truncated]" : withoutBotUrl;
 }
 
-async function callTelegramApi(botToken: string, method: string, payload: Record<string, unknown>): Promise<void> {
+/**
+ * Llama a un metodo del Bot API y devuelve el cuerpo YA parseado. Se
+ * devuelve el JSON (y no `void`, como hasta ahora) para poder registrar
+ * el `message_id` real de las solicitudes de aprobacion: sin el, el
+ * registro persistente tendria que inventarselo o dejarlo vacio, y la
+ * trazabilidad pedida incluye ese dato.
+ */
+async function callTelegramApi(botToken: string, method: string, payload: Record<string, unknown>): Promise<unknown> {
   const url = `${TELEGRAM_API_BASE}/bot${botToken}/${method}`;
   let response: Response;
   try {
@@ -138,6 +145,15 @@ async function callTelegramApi(botToken: string, method: string, payload: Record
       bodyText = "";
     }
     throw new Error(`Telegram API respondio ${response.status}: ${sanitizeTelegramError(bodyText, botToken)}`);
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    // Una respuesta 2xx no parseable no invalida el envio (Telegram ya lo
+    // acepto): se devuelve `null` y quien llama lo trata como "sin
+    // message_id confirmado", nunca como un fallo del envio.
+    return null;
   }
 }
 
@@ -168,8 +184,15 @@ export interface SendTelegramMessageOptions {
   plainText?: boolean;
 }
 
+/** Resultado de un envio: el `message_id` real de Telegram cuando se pudo confirmar. */
+export interface SentTelegramMessage {
+  /** `null` = Telegram acepto el envio pero no se pudo leer el id (nunca se inventa uno). */
+  messageId: number | null;
+  chatId: string;
+}
+
 /** Envia un mensaje de texto simple, con botones inline opcionales. Sanitiza el contenido antes de enviarlo. */
-export async function sendTelegramMessage(text: string, options: SendTelegramMessageOptions = {}): Promise<void> {
+export async function sendTelegramMessage(text: string, options: SendTelegramMessageOptions = {}): Promise<SentTelegramMessage> {
   const config = resolveTelegramConfig();
   const safeText = sanitizeOutgoingText(text);
   const payload: Record<string, unknown> = {
@@ -185,8 +208,10 @@ export async function sendTelegramMessage(text: string, options: SendTelegramMes
     };
   }
   try {
-    await callTelegramApi(config.botToken, "sendMessage", payload);
-    logger.info("Mensaje de Telegram enviado", { textLength: safeText.length, withButtons: Boolean(options.buttons?.length) });
+    const response = (await callTelegramApi(config.botToken, "sendMessage", payload)) as { result?: { message_id?: number } } | null;
+    const messageId = typeof response?.result?.message_id === "number" ? response.result.message_id : null;
+    logger.info("Mensaje de Telegram enviado", { textLength: safeText.length, withButtons: Boolean(options.buttons?.length), messageId });
+    return { messageId, chatId: config.chatId };
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err);
     const safeMessage = sanitizeTelegramError(raw, config.botToken);
@@ -219,6 +244,8 @@ export interface TelegramIncomingMessage {
   updateId: number;
   chatId: string;
   fromUsername?: string;
+  /** id numerico del autor, tal cual lo reporta Telegram. Ausente = Telegram no lo mando. */
+  fromUserId?: string;
   text: string;
   date: number;
 }
@@ -231,6 +258,8 @@ export interface TelegramIncomingCallback {
   updateId: number;
   chatId: string;
   fromUsername?: string;
+  /** id numerico de quien pulso el boton, tal cual lo reporta Telegram. */
+  fromUserId?: string;
   callbackQueryId: string;
   callbackData: string;
   date: number;
@@ -288,12 +317,12 @@ export async function fetchTelegramUpdates(offset?: number, longPollSeconds = 0)
     ok?: boolean;
     result?: Array<{
       update_id: number;
-      message?: { chat?: { id?: number | string }; from?: { username?: string }; text?: string; date?: number };
+      message?: { chat?: { id?: number | string }; from?: { username?: string; id?: number | string }; text?: string; date?: number };
       callback_query?: {
         id: string;
         data?: string;
-        message?: { chat?: { id?: number | string } };
-        from?: { username?: string };
+        message?: { chat?: { id?: number | string }; message_id?: number };
+        from?: { username?: string; id?: number | string };
       };
     }>;
   };
@@ -307,6 +336,7 @@ export async function fetchTelegramUpdates(offset?: number, longPollSeconds = 0)
         updateId: u.update_id,
         chatId: String(u.message.chat?.id ?? ""),
         fromUsername: u.message.from?.username,
+        fromUserId: u.message.from?.id === undefined ? undefined : String(u.message.from.id),
         text: u.message.text,
         date: u.message.date ?? 0,
       });
@@ -316,6 +346,7 @@ export async function fetchTelegramUpdates(offset?: number, longPollSeconds = 0)
         updateId: u.update_id,
         chatId: String(u.callback_query.message?.chat?.id ?? ""),
         fromUsername: u.callback_query.from?.username,
+        fromUserId: u.callback_query.from?.id === undefined ? undefined : String(u.callback_query.from.id),
         callbackQueryId: u.callback_query.id,
         callbackData: u.callback_query.data,
         date: 0,
@@ -329,6 +360,26 @@ export async function fetchTelegramUpdates(offset?: number, longPollSeconds = 0)
 export function isAuthorizedTelegramChat(chatId: string): boolean {
   const config = resolveTelegramConfig();
   return chatId === config.chatId;
+}
+
+/**
+ * Chat autorizado, para pasarselo a las funciones PURAS de decision (que
+ * no leen `process.env` por diseño). Sigue sin exponerse en ningun log ni
+ * mensaje: quien lo recibe solo lo usa para comparar.
+ */
+export function getAuthorizedTelegramChatId(): string {
+  return resolveTelegramConfig().chatId;
+}
+
+/**
+ * Usuario de Telegram autorizado (`TELEGRAM_USER_ID`), OPCIONAL. Si esta
+ * configurado, las decisiones que no vengan de ese user id se rechazan
+ * -- capa adicional sobre el chat autorizado, util si el bot alguna vez
+ * acaba en un chat con mas de una persona. Vacio = no configurado, y la
+ * autorizacion se apoya solo en el chat.
+ */
+export function getAuthorizedTelegramUserId(): string {
+  return (process.env.TELEGRAM_USER_ID ?? "").trim();
 }
 
 // Fase O28.5 -- rediseno completo del mensaje de aprobacion (postmortem

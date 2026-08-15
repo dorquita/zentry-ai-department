@@ -1,8 +1,8 @@
 import { WebEngineerOutput } from "../../employees/web-engineer/types";
 import { DepartmentPromotionResult, DepartmentRecommendation, signalMentionsTitle } from "../promotion";
 import { attributeEvidenceRefToEmployees } from "../specialist-inputs";
-import { ApprovalSnapshotLike, resolveHumanApproval } from "./approval";
 import { OwnedStagingPage, resolveApplyCapability } from "./capability";
+import { DepartmentChangeRequest } from "./change-types";
 import {
   buildApplyItemId,
   buildRecommendationId,
@@ -12,6 +12,7 @@ import {
   DepartmentApplySpecification,
   DepartmentApplyStatus,
   DepartmentApplySummary,
+  emptyTraceability,
 } from "./types";
 
 /**
@@ -19,21 +20,20 @@ import {
  * elementos de apply con contrato explicito.
  *
  * Modulo PURO (sin I/O, sin red): recibe la promocion ya resuelta, la
- * especificacion de web-engineer, el catalogo de paginas de staging
- * propias y las solicitudes de aprobacion ya leidas. Persistir y ejecutar
- * son responsabilidad de otros modulos.
+ * especificacion de web-engineer y el catalogo de paginas de staging
+ * publicadas propias. Persistir, aplicar y aprobar son responsabilidad
+ * de otros modulos.
  *
  * Orden de decision (fail-closed en cada paso):
  *
- *   1. Bloqueada por QA            -> `blocked` (nunca llega a plantearse aplicar)
- *   2. Sin executor determinista   -> `requires_manual_implementation`
- *   3. Aprobacion humana `unknown` -> `blocked`
- *   4. Aprobacion `rejected`       -> `rejected`
- *   5. Aprobacion `approved`       -> `approved` (unico estado que puede entrar al executor)
- *   6. Resto                       -> `awaiting_approval`
+ *   1. Bloqueada por QA          -> `blocked` (nunca llega a plantearse aplicar)
+ *   2. Sin executor determinista -> `requires_manual_staging_implementation`
+ *   3. Resto                     -> `proposed` (candidata a apply automatico en STAGING)
  *
- * QA nunca aparece en los pasos 3-6: un `PASS` de QA no mueve nada hacia
- * `approved`.
+ * Ojo con el paso 3: `proposed` significa "se puede aplicar en STAGING",
+ * que en este flujo NO requiere aprobacion humana previa. La aprobacion
+ * humana gobierna exclusivamente el paso a produccion, y se pide despues,
+ * sobre la version ya aplicada y validada en staging.
  */
 
 export interface BuildApplyPlanInput {
@@ -41,7 +41,6 @@ export interface BuildApplyPlanInput {
   promotion: DepartmentPromotionResult;
   webEngineer: { status: string; output?: WebEngineerOutput };
   ownedStagingPages: OwnedStagingPage[];
-  approvalRequests: ApprovalSnapshotLike[];
   now?: Date;
 }
 
@@ -77,17 +76,10 @@ export function selectChangesForRecommendation(
   return promotedCount === 1 ? [...output.proposedChanges] : [];
 }
 
-function resolveStatus(params: {
-  isBlockedByQa: boolean;
-  capabilitySupported: boolean;
-  approvalStatus: "none" | "pending" | "approved" | "rejected" | "unknown";
-}): DepartmentApplyStatus {
+export function resolvePlannedStatus(params: { isBlockedByQa: boolean; capabilitySupported: boolean }): DepartmentApplyStatus {
   if (params.isBlockedByQa) return "blocked";
-  if (!params.capabilitySupported) return "requires_manual_implementation";
-  if (params.approvalStatus === "unknown") return "blocked";
-  if (params.approvalStatus === "rejected") return "rejected";
-  if (params.approvalStatus === "approved") return "approved";
-  return "awaiting_approval";
+  if (!params.capabilitySupported) return "requires_manual_staging_implementation";
+  return "proposed";
 }
 
 export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySummary {
@@ -128,16 +120,7 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
           hasSpecification: specification !== null,
         });
 
-    // La aprobacion se resuelve SIEMPRE (aunque no haya executor):
-    // saberlo es parte de la trazabilidad, y jamas se usa para relajar
-    // nada -- solo puede restringir.
-    const humanApproval = resolveHumanApproval({ applyItemId, requests: input.approvalRequests, now });
-
-    const applyStatus = resolveStatus({
-      isBlockedByQa: blockedByQa,
-      capabilitySupported: capability.supported,
-      approvalStatus: humanApproval.status,
-    });
+    const applyStatus = resolvePlannedStatus({ isBlockedByQa: blockedByQa, capabilitySupported: capability.supported });
 
     return {
       contractVersion: DEPARTMENT_APPLY_CONTRACT_VERSION,
@@ -151,18 +134,28 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
       proposedChange: recommendation.rationale,
       evidenceRefs: [...recommendation.evidenceRefs],
       qaStatus: blockedByQa ? "BLOCKED" : recommendation.decision === "promoted_with_warnings" ? "PASS_WITH_WARNINGS" : input.promotion.departmentQaStatus,
+      impact: recommendation.impact,
+      confidence: recommendation.confidence,
+      effort: recommendation.effort,
       webEngineerSpecification: specification,
-      humanApproval,
+      humanApproval: {
+        status: "none",
+        approvalRequestId: null,
+        answeredBy: null,
+        answeredAt: null,
+        reason:
+          "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
+      },
       applyCapability: capability,
       applyStatus,
       validationStatus: "not_run",
       rollbackStatus: "not_needed",
-      snapshot: null,
+      traceability: emptyTraceability(),
       auditTrail: [
         {
           at: nowIso,
           event: "planned",
-          detail: `Elemento de apply construido a partir de la recomendacion #${recommendation.rank} de esta pasada. QA=${blockedByQa ? "BLOCKED" : input.promotion.departmentQaStatus}. Capacidad de apply: ${capability.supported ? String(capability.id) : "ninguna"} (${capability.reason}). Aprobacion humana: ${humanApproval.status} (${humanApproval.reason})`,
+          detail: `Elemento de apply construido a partir de la recomendacion #${recommendation.rank} de esta pasada. QA=${blockedByQa ? "BLOCKED" : input.promotion.departmentQaStatus}. Capacidad de apply: ${capability.supported ? String(capability.id) : "ninguna"} (${capability.reason})`,
         },
       ],
       createdAt: nowIso,
@@ -177,6 +170,82 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
     items,
     counts: countApplyItems(items),
     externalWritesPerformed: false,
+    productionWritesPerformed: false,
     applyNotAttemptedReason: "Fase de planificacion: todavia no se ha intentado aplicar nada.",
+  };
+}
+
+/**
+ * Proyecta el estado REAL del registro persistente de cambios sobre los
+ * elementos de la pasada. El artifact del run es efimero; la verdad vive
+ * en el registro. Esta funcion (pura) es la que hace que el Daily Brief
+ * pueda decir "aprobado"/"rechazado"/"publicado en produccion" con datos
+ * que se decidieron horas o dias despues de generarse la pasada.
+ */
+export function projectChangesIntoSummary(summary: DepartmentApplySummary, changes: DepartmentChangeRequest[]): DepartmentApplySummary {
+  const byRecommendation = new Map<string, DepartmentChangeRequest>();
+  for (const change of changes) {
+    const existing = byRecommendation.get(change.recommendationId);
+    // La version MAS NUEVA de cada recomendacion es la que manda: una
+    // aprobacion vieja nunca representa a una version nueva.
+    if (!existing || change.version > existing.version) byRecommendation.set(change.recommendationId, change);
+  }
+
+  const items = summary.items.map((item) => {
+    const change = byRecommendation.get(item.recommendationId);
+    if (!change) return item;
+    return {
+      ...item,
+      applyStatus: change.status,
+      validationStatus: change.production?.validationStatus ?? change.staging?.validationStatus ?? item.validationStatus,
+      rollbackStatus: change.production?.rollbackStatus ?? change.staging?.rollbackStatus ?? item.rollbackStatus,
+      humanApproval: {
+        status:
+          // `approval_stale` NO es "aprobado": la version aprobada ya no
+          // es la que hay en staging, asi que no se puede afirmar que
+          // haya aprobacion valida -> `unknown`, que es el valor
+          // fail-closed de este campo.
+          change.status === "approval_stale"
+            ? ("unknown" as const)
+            : change.humanDecision?.decision === "approved"
+              ? ("approved" as const)
+              : change.humanDecision?.decision === "rejected"
+                ? ("rejected" as const)
+                : change.telegram
+                  ? ("pending" as const)
+                  : ("none" as const),
+        approvalRequestId: change.telegram?.telegramApprovalId ?? null,
+        answeredBy: change.humanDecision?.decidedBy ?? null,
+        answeredAt: change.humanDecision?.decidedAt ?? null,
+        reason:
+          change.status === "approval_stale"
+            ? "La aprobacion ya no se refiere a lo que hay en staging (staging cambio despues de enviarla). Hace falta una aprobacion nueva sobre la version actual."
+            : change.humanDecision?.decision === "rejected" && change.humanDecision.rejectionReason
+              ? `Rechazado por ${change.humanDecision.decidedBy}: ${change.humanDecision.rejectionReason}`
+              : change.humanDecision
+                ? `Decision humana "${change.humanDecision.decision}" registrada (${change.humanDecision.decidedBy}, ${change.humanDecision.decidedAt}).`
+                : change.telegram
+                  ? "Solicitud de aprobacion enviada por Telegram y pendiente de respuesta humana."
+                  : item.humanApproval.reason,
+      },
+      traceability: {
+        changeId: change.changeId,
+        version: change.version,
+        stagingChangeId: change.staging?.applyId ?? null,
+        stagingUrl: change.staging?.url ?? null,
+        telegramApprovalId: change.telegram?.telegramApprovalId ?? null,
+        telegramMessageId: change.telegram?.telegramMessageId ?? null,
+        productionApplyId: change.production?.applyId ?? null,
+        productionUrl: change.production?.url ?? null,
+        stagingVersionHash: change.telegram?.stagingVersionHash ?? change.staging?.resultingVersionHash ?? null,
+      },
+    };
+  });
+
+  return {
+    ...summary,
+    items,
+    counts: countApplyItems(items),
+    productionWritesPerformed: items.some((item) => item.traceability.productionApplyId !== null),
   };
 }
