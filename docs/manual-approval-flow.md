@@ -158,12 +158,20 @@ reportado"), nunca se rellena con 0, y ningún valor de credencial aparece
 jamás en el correo.
 
 > **Pendiente de cableado.** `buildNumberedProposals()` existe y define
-> los campos de arriba, pero **todavía no está importado por el
-> renderizador del email**: hoy la sección "ESTADO DE APPLY" del correo
-> lista los items agrupados por estado, con `#recommendationRank`,
-> capacidad, aprobación humana, validación, rollback y URLs de
-> staging/producción — sin before/after ni riesgo explícito. Conectar
-> `proposal.ts` al render es trabajo pendiente, no algo que ya ocurra.
+> los campos de arriba, pero **el renderizador del email todavía no lo
+> importa** (`brief-email.ts` no depende de `proposal.ts`): hoy la sección
+> "ESTADO DE APPLY" del correo lista los items agrupados por estado, con
+> `#recommendationRank`, capacidad, aprobación humana, validación,
+> rollback y URLs de staging/producción — sin before/after ni riesgo
+> explícito. Conectar `proposal.ts` al render es trabajo pendiente, no
+> algo que ya ocurra.
+>
+> Ojo con un detalle que importa cuando se conecte: el número de
+> `proposal.ts` es el **índice 1-based** sobre las propuestas ordenadas
+> por `recommendationRank`, mientras que el email imprime hoy el
+> `recommendationRank` en crudo. Coinciden solo si los rangos son
+> contiguos desde 1. La numeración buena es la de `proposal.ts`, porque
+> es la que valida `decision.ts`.
 
 ---
 
@@ -345,18 +353,23 @@ aprobaciones.
 
 ## 10. Estado real de la implementación
 
-Para no confundir lo que ya corre con lo que está a medio camino:
+Este documento describe el flujo **decidido**. Algunas de sus piezas ya
+corren y otras se están cableando en esta misma rama; conviene no
+confundirlas. Estado en el momento de escribirlo:
 
 | Pieza | Estado |
 |---|---|
 | Pasada diaria sin dependencias cloud (`--phase plan` + email) | En el workflow, funcionando. |
-| Numeración determinista de propuestas (`proposal.ts`) | Implementada. **No** importada todavía por ningún script ni por el render del email. |
-| Validación de decisiones humanas (`decision.ts`) | Implementada. **No** importada todavía por ningún script. |
+| Numeración determinista de propuestas (`src/approvals/manual/proposal.ts`) | Implementada. |
+| Validación de decisiones humanas (`src/approvals/manual/decision.ts`) | Implementada. |
 | Máquina de estados, guards, executors, versionado, audit trail | Implementados y en uso. |
+| Numeración con before/after y riesgo **dentro del email** | Pendiente: `brief-email.ts` no importa `proposal.ts`. |
 | Render del segundo email | Pendiente. |
-| Persistencia de las decisiones manuales sin el Worker | Pendiente. |
-| Tests de `proposal.ts` / `decision.ts` | No hay ningún fichero en `test/` que los importe. |
+| Persistencia de las decisiones manuales **sin pasar por el Worker** | En curso en esta rama. La fase `stage` del script de apply sigue exigiendo `APPROVALS_API_*` (§9). |
 | Carril serverless (Worker + D1 + webhook) | Implementado y probado, **en standby**: no desplegado, no activo. |
+
+Si al leer esto una fila ya no cuadra con el repositorio, manda el
+repositorio: la tabla se actualiza a mano.
 
 ---
 
