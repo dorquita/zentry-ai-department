@@ -1,0 +1,109 @@
+{
+  "executiveSummary": "Se detectaron 2 oportunidades quick_win de prioridad alta y un hueco de contenido ya identificado en el catalogo de clusters (taquillas metalicas). El enlazado interno entre paginas de material relacionadas es escaso.",
+  "findings": [
+    {
+      "id": "finding-1",
+      "category": "internal_linking",
+      "description": "La pagina de cerraduras inteligentes para taquillas no aparece enlazada desde ninguna otra pagina de material en el contexto suministrado.",
+      "basis": "evidence",
+      "evidenceRefs": ["ev-1"]
+    },
+    {
+      "id": "finding-2",
+      "category": "cannibalization",
+      "description": "El cluster de melamina y el de melamina-fenolico ya documentan una decision explicita de no fusionarse, sin riesgo de canibalizacion abierto.",
+      "basis": "inference",
+      "evidenceRefs": []
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "opp-1",
+      "keyword": "cerraduras electronicas para taquillas",
+      "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "kind": "quick_win",
+      "priority": "medium",
+      "recommendedAction": "Optimizar on-page para la keyword y reforzar enlazado interno desde paginas relacionadas.",
+      "rationale": "Posicion actual cercana a top 10 con volumen de impresiones real.",
+      "basis": "evidence",
+      "evidenceRefs": ["ev-1"]
+    },
+    {
+      "id": "opp-2",
+      "keyword": "taquillas metalicas",
+      "kind": "content_gap",
+      "priority": "high",
+      "recommendedAction": "Crear una pagina de producto dedicada a taquillas metalicas.",
+      "rationale": "Tercer material del catalogo sin pagina de produccion propia todavia, ya detectado en el catalogo de clusters como new_page_candidate.",
+      "basis": "evidence",
+      "evidenceRefs": ["ev-2"]
+    }
+  ],
+  "technicalIssues": [
+    {
+      "id": "tech-1",
+      "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "issue": "El CTR de la keyword principal es muy bajo pese a buen volumen de impresiones -- posible problema de meta title/description poco atractivos.",
+      "severity": "medium",
+      "basis": "evidence",
+      "evidenceRefs": ["ev-1"]
+    }
+  ],
+  "contentGaps": [
+    {
+      "id": "gap-1",
+      "topic": "Taquillas metalicas",
+      "relatedKeyword": "taquillas metalicas",
+      "rationale": "Hueco de contenido ya identificado en el catalogo de clusters (action=new_page_candidate), sin pagina real todavia.",
+      "basis": "evidence",
+      "evidenceRefs": ["ev-2"]
+    }
+  ],
+  "internalLinkRecommendations": [
+    {
+      "id": "link-1",
+      "fromPage": "https://zentrylockers.com/taquillas-melamina/",
+      "toPage": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "anchorTextSuggestion": "cerraduras inteligentes para taquillas",
+      "rationale": "Ambas paginas comparten intencion de compra de taquillas y no hay enlazado cruzado real en el contexto.",
+      "basis": "inference",
+      "evidenceRefs": []
+    }
+  ],
+  "prioritizedActions": [
+    {
+      "rank": 1,
+      "title": "Optimizar on-page y CTR de cerraduras electronicas para taquillas",
+      "relatedIds": ["opp-1", "tech-1"],
+      "priority": "high",
+      "effort": "low",
+      "impact": "medium"
+    },
+    {
+      "rank": 2,
+      "title": "Crear pagina de producto de taquillas metalicas",
+      "relatedIds": ["opp-2", "gap-1"],
+      "priority": "high",
+      "effort": "high",
+      "impact": "high"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-1",
+      "source": "job_data",
+      "keyword": "cerraduras electronicas para taquillas",
+      "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "description": "actionItem del contexto: posicion actual 24.4, prioridad media, impresiones registradas en el ultimo run de jobs."
+    },
+    {
+      "id": "ev-2",
+      "source": "cluster_catalog",
+      "keyword": "taquillas metalicas",
+      "description": "Cluster taquillas_metalicas del catalogo, action=new_page_candidate, sin targetUrl todavia."
+    }
+  ],
+  "unknowns": [
+    "No se dispone de datos de Search Console posteriores al ultimo run analizado."
+  ]
+}

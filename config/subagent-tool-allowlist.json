@@ -90,6 +90,14 @@
       "externalWriteToolsGranted": [],
       "maxRiskCategory": "none",
       "notes": "Fase 1: cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt (snapshot SEM ya persistido, construido por el runner, una funcion TOOL determinista), nunca leido por el propio modelo ni consultado en vivo a Google Ads. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+    },
+    "seo-specialist": {
+      "definitionFile": ".claude/agents/seo-specialist.md",
+      "description": "Subagente Claude especialista SEO senior. Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-seo-specialist.ts (jobs SEO agregados, catalogo de keywords objetivo, catalogo de clusters) -- cero acceso indiscriminado al repositorio, cero llamada a Search Console/otros sistemas externos en vivo, cero escritura externa.",
+      "allowedTools": [],
+      "externalWriteToolsGranted": [],
+      "maxRiskCategory": "none",
+      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista) a partir de datos ya persistidos localmente. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
     }
   }
 }

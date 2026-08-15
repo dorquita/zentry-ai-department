@@ -1,0 +1,194 @@
+name: SEO Specialist (GitHub Actions + Claude)
+
+# Objetivo de este workflow (ver docs/claude-employee-runtime.md): ejecutar
+# el subagente seo-specialist de principio a fin en GitHub Actions, SIN
+# portatil encendido, SIN VPS, SIN Claude Routines y SIN Agent/Task
+# anidado. La sesion principal de claude-code-action ES directamente el
+# empleado (--agent seo-specialist) -- nunca una sesion generica que a su
+# vez invoca un subagente.
+#
+# Este workflow NO implementa el runtime generico el mismo (auth,
+# invocacion de claude-code-action, fallback via execution_file, y
+# validacion contra el JSON Schema versionado): eso lo hace
+# .github/actions/claude-employee-runtime/action.yml, compartido por
+# cualquier empleado Claude. Este fichero solo contiene lo ESPECIFICO del
+# dominio de seo-specialist: agregacion de datos SEO locales (jobs,
+# catalogo de keywords, catalogo de clusters), preparacion de su prompt, y
+# la validacion/auditoria propia de SeoSpecialistOutput -- ver
+# src/employees/seo-specialist/, sin modificar el runtime comun.
+#
+# No hace deploy, no publica nada, no toca WordPress/staging/produccion/
+# Ads/GA4/GTM/Search Console/n8n/VPS. El resultado se sube como artifact
+# de GitHub Actions, nunca se commitea.
+#
+# SOLO workflow_dispatch (sin schedule): este empleado todavia no tiene
+# ninguna validacion end-to-end real -- ver docs/claude-employee-runtime.md,
+# seccion "Como anadir un nuevo empleado", paso 6 (activar schedule solo
+# tras una validacion end-to-end real).
+
+on:
+  workflow_dispatch: {}
+
+# Un solo empleado seo-specialist corriendo a la vez: si ya hay una
+# ejecucion en curso, la nueva ejecucion espera en cola en vez de correr
+# en paralelo y arriesgarse a que dos ejecuciones escriban a la vez sobre
+# el mismo runId.
+concurrency:
+  group: seo-specialist
+  cancel-in-progress: false
+
+# Principio de minimo privilegio: este empleado NUNCA escribe en el repo
+# (no commit, no push, no PR, no comentarios en issues/PRs). Con
+# `contents: read` alcanza -- ver .github/actions/claude-employee-runtime/action.yml
+# para por que hace falta pasar `github-token` explicitamente al runtime
+# comun (para que claude-code-action respete este limite en vez de pedir
+# un token propio con permisos de escritura).
+permissions:
+  contents: read
+
+jobs:
+  run-seo-specialist:
+    name: Ejecutar seo-specialist
+    runs-on: ubuntu-latest
+    # Backstop de tiempo en dos capas (ver docs/claude-employee-runtime.md,
+    # seccion de timeouts): timeout-minutes: 20 aqui es el limite del JOB
+    # completo (incluye los pasos de dominio antes y despues del runtime);
+    # el step "[RUNTIME]" mas abajo lleva su propio timeout-minutes: 10.
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --- [DOMINIO] Paso 1 del runner: agrega datos SEO locales +
+      # construye el SeoSpecialistContext + prompt.md -- ver
+      # src/employees/seo-specialist/context.ts,
+      # scripts/run-seo-specialist.ts, sin modificar. ---
+      - name: "[DOMINIO] Runner (paso 1): preparar contexto SEO"
+        id: prepare
+        run: |
+          set -o pipefail
+          npm run seo-specialist:run -- 2>&1 | tee runner-step1.log
+
+      - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 1)"
+        id: step1
+        run: npm run seo-specialist:parse-runner-result-for-ci -- runner-step1.log
+
+      - name: "[DOMINIO] Validar estado tras el paso 1 (pending_execution + prompt existe)"
+        run: |
+          if [ "$STATUS" != "pending_execution" ]; then
+            echo "::error::status inesperado tras el paso 1 del runner: \"$STATUS\" (se esperaba pending_execution). Abortando antes de invocar a Claude."
+            exit 1
+          fi
+          if [ ! -f "$PROMPT_FILE_PATH" ]; then
+            echo "::error::promptFilePath no existe en disco: $PROMPT_FILE_PATH"
+            exit 1
+          fi
+          echo "OK: status=pending_execution, promptFilePath existe ($PROMPT_FILE_PATH)."
+        env:
+          STATUS: ${{ steps.step1.outputs.status }}
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      - name: "[DOMINIO] Leer contenido completo de prompt.md"
+        id: read_prompt
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      # --- [RUNTIME COMUN] Autenticacion + invocacion de
+      # claude-code-action (--agent seo-specialist) + resolucion
+      # structured_output/fallback via execution_file + validacion contra
+      # config/seo-specialist-output.schema.json. Identico para cualquier
+      # empleado Claude -- ver docs/claude-employee-runtime.md. ---
+      - name: "[RUNTIME] Ejecutar seo-specialist (Claude Employee Runtime)"
+        id: runtime
+        # timeout-minutes SI es valido aqui (step normal del workflow
+        # caller, no un step interno de la composite action) -- limita
+        # TODA la composite action (auth + preflights + claude-code-action
+        # + resolucion de salida) a 10 min. Ver docs/claude-employee-runtime.md,
+        # seccion de timeouts.
+        timeout-minutes: 10
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: seo-specialist
+          prompt: ${{ steps.read_prompt.outputs.content }}
+          output-schema-path: config/seo-specialist-output.schema.json
+          expected-output-path: ${{ steps.step1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ github.token }}
+
+      # --- [DOMINIO] Paso 2 del runner: valida contra SeoSpecialistOutput
+      # + audita afirmaciones sin respaldo -- sin modificar. Sale con
+      # codigo != 0 (sin continue-on-error) si status queda en
+      # "invalid_output". El fichero que lee (expectedOutputPath) ya lo
+      # escribio el runtime comun en el step anterior. ---
+      - name: "[DOMINIO] Runner (paso 2): validar salida de Claude + auditar"
+        run: |
+          set -o pipefail
+          npm run seo-specialist:run -- --runId "$RUN_ID" --seo-specialist-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee runner-step2.log
+        env:
+          RUN_ID: ${{ steps.step1.outputs.runId }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.step1.outputs.expectedOutputPath }}
+
+      - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 2)"
+        id: step2
+        run: npm run seo-specialist:parse-runner-result-for-ci -- runner-step2.log
+
+      - name: "[DOMINIO] Subir artifact (artifact.json, artifact.md, output.json)"
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-specialist-${{ steps.step2.outputs.runId }}
+          path: |
+            ${{ steps.step2.outputs.artifactJsonPath }}
+            ${{ steps.step2.outputs.artifactMdPath }}
+            ${{ steps.step1.outputs.expectedOutputPath }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: "[DOMINIO] Generar GitHub Step Summary"
+        run: |
+          {
+            echo "## SEO Specialist"
+            echo ""
+            echo "- **agent:** seo-specialist"
+            echo "- **runId:** \`$RUN_ID\`"
+            echo "- **Claude execution (outcome del step, sin enmascarar por continue-on-error):** $CLAUDE_OUTCOME"
+            echo "- **Origen de la salida:** $OUTPUT_SOURCE"
+            echo "- **status:** \`$STATUS\`"
+            echo "- **findings:** $FINDING_COUNT"
+            echo "- **opportunities:** $OPPORTUNITY_COUNT"
+            echo "- **avisos de auditoria:** $WARNING_COUNT"
+            echo "- **artifact generado:** \`seo-specialist-$RUN_ID\`"
+            echo "- **Escritura externa realizada:** ninguna (WordPress/staging/produccion/Ads/GA4/GTM/Search Console/n8n/VPS no se han tocado; nada se ha commiteado)."
+            echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo ""
+            if [ "$WARNING_COUNT" != "0" ] && [ "$WARNING_COUNT" != "null" ]; then
+              echo "> ⚠️ Hay avisos de auditoria (afirmaciones sin respaldo real en el contexto suministrado, ver \`artifact.md\` del artifact) -- revisar antes de dar por buena esta propuesta. No se han descartado ni reinterpretado."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          RUN_ID: ${{ steps.step2.outputs.runId }}
+          STATUS: ${{ steps.step2.outputs.status }}
+          FINDING_COUNT: ${{ steps.step2.outputs.findingCount }}
+          OPPORTUNITY_COUNT: ${{ steps.step2.outputs.opportunityCount }}
+          WARNING_COUNT: ${{ steps.step2.outputs.warningCount }}
+          # steps.runtime.outputs.claude-outcome / .output-source: outputs
+          # declarados por la composite action del runtime comun (ver
+          # .github/actions/claude-employee-runtime/action.yml).
+          CLAUDE_OUTCOME: ${{ steps.runtime.outputs.claude-outcome }}
+          OUTPUT_SOURCE: ${{ steps.runtime.outputs.output-source == 'structured_output' && 'structured_output directo (caso A)' || (steps.runtime.outputs.output-source == 'execution_file_fallback' && 'fallback via execution_file (caso B)' || 'ninguno (caso C, el workflow ya deberia haber fallado antes de este step)') }}
