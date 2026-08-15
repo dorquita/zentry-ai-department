@@ -40,20 +40,27 @@ STANDBY**: no está desplegado ni activo. Ver
   │   "aprueba 1, 2 y 4; rechaza 3 porque el copy no me gusta;       │
   │    deja 5 pendiente"                                             │
   │                          ↓                                       │
-  │   1. Claude INTERPRETA  → lista de instrucciones (nº + acción)   │
-  │   2. Claude MUESTRA cómo lo ha entendido, y espera confirmación  │
+  │   1. Claude INTERPRETA  → decisions.json (nº + acción)           │
+  │   2. Claude MUESTRA cómo lo ha entendido (DRY-RUN por defecto)   │
   │   3. VALIDACIÓN determinista  (src/approvals/manual/decision.ts) │
   │        · número inexistente        → no se ejecuta NADA          │
   │        · rechazo sin motivo        → no se ejecuta NADA          │
   │        · nº repetido con 2 acciones→ no se ejecuta NADA          │
   │   4. nº visible → id real (changeId / recommendationId)          │
-  │   5. Se registra la decisión                                     │
-  │   6. Se ejecuta SOLO lo aprobado:                                │
+  │   5. Comprobación de versión (STALE) contra el ancla del brief   │
+  │   6. Se registra la decisión (log append-only en data/)          │
+  │   7. Se ejecuta SOLO lo aprobado, con --execute:                 │
   │        snapshot → escribir → validar releyendo → rollback si     │
   │        falla → verificar el rollback                             │
-  │   7. SEGUNDO EMAIL con los resultados                            │
+  │   8. SEGUNDO EMAIL con los resultados                            │
   └──────────────────────────────────────────────────────────────────┘
 ```
+
+La segunda mitad la ejecuta
+[`scripts/run-approval-session.ts`](../scripts/run-approval-session.ts)
+(`npm run approvals:session -- --departmentRunId <id> --decisions
+decisions.json`). **Es DRY-RUN por defecto**: enseña cómo ha interpretado
+la decisión y no toca nada hasta que se le pasa `--execute`.
 
 La pasada diaria **no escribe en ningún sistema externo** y **no depende
 de Telegram, Cloudflare, D1 ni de `APPROVALS_API_*`**: su fase de apply
@@ -89,9 +96,23 @@ ver §6).
 
 ## 3. Cómo dar el prompt de aprobación
 
-Se escribe en lenguaje natural. Claude traduce esa frase a una lista de
-instrucciones `{ número, acción, motivo?, modificaciones? }`, **enseña
-cómo lo ha entendido** y solo después ejecuta.
+Se escribe en lenguaje natural. Claude traduce esa frase a un fichero de
+instrucciones `{ number, action, reason?, overrides?, target? }`, **enseña
+cómo lo ha entendido** y solo después ejecuta:
+
+```json
+[
+  { "number": 1, "action": "approve" },
+  { "number": 3, "action": "reject", "reason": "el copy suena a folleto" },
+  { "number": 4, "action": "approve", "overrides": { "title": "..." } },
+  { "number": 5, "action": "defer" }
+]
+```
+
+El reparto es deliberado: **Claude interpreta** (eso es razonamiento) y
+**el código valida y ejecuta** (eso es determinismo, y por eso vive en
+`src/approvals/manual/` con sus reglas escritas, no en la memoria del
+modelo).
 
 ### Frases que funcionan
 
@@ -239,6 +260,17 @@ cuando se muestra la propuesta y se recalcula al ir a ejecutar. Si no
 coinciden → **`approval_stale`, no se publica nada** y hace falta una
 aprobación nueva sobre la versión nueva.
 
+El **ancla** se registra en la pasada de la mañana: el step `[APPLY]
+--phase plan` lee (SOLO lectura) la página objetivo de cada propuesta y
+guarda su hash en la trazabilidad del item. Por eso ese step recibe las
+credenciales de staging y ningún interruptor de escritura.
+
+Y si no hay ancla, no se finge que la hay: la sesión de aprobación
+**se niega a ejecutar** salvo que se le pase `--allow-unverified` de forma
+explícita, y en ese caso dice literalmente que la deriva desde el Daily
+Brief no se ha podido verificar. Preferimos no poder verificar y decirlo,
+a fingir que verificamos.
+
 Dos consecuencias prácticas del mismo principio:
 
 - **La aprobación va atada a la versión exacta que se vio en el Daily
@@ -257,10 +289,16 @@ Dos consecuencias prácticas del mismo principio:
 El motivo **es** el producto del rechazo. Por eso sin motivo no hay
 rechazo registrado (§3).
 
-Lo que se hace con él (`src/approvals/human-feedback-context.ts`):
+Lo que se hace con él (`src/approvals/manual/decision-store.ts` +
+`src/approvals/human-feedback-context.ts`):
 
 1. **Se guarda literal**, entre comillas, con su fecha y la versión sobre
    la que se decidió. No se resume, no se parafrasea, no se "traduce".
+   El registro es un log **append-only** en el `data/` del cliente activo
+   (`department-human-decisions.jsonl`), que se versiona con el
+   repositorio: por eso la pasada de mañana, que corre en un runner
+   limpio de GitHub Actions, puede leer los rechazos de hoy. Nunca se
+   borra ni se reescribe una línea.
 2. **Entra en `previousHumanFeedback[]`** como contexto de las siguientes
    pasadas: los empleados lo leen en su prompt como evidencia de una
    decisión humana anterior, no como una orden.
@@ -292,14 +330,17 @@ distinto del Daily Brief de la mañana, con:
   separado y de forma explícita (cero es un dato, y se dice).
 - **Costes** de la pasada y **run IDs** de GitHub Actions implicados.
 
-> **Pendiente de cableado.** Hoy el único script de correo del
-> departamento es
+> **Pendiente.** La sesión de aprobación ya deja todo lo que ese correo
+> necesita en `approval-session.json`, dentro del directorio de la pasada:
+> `outcomes[]` (número, id, título, acción, destino, estado, before/after,
+> validación, rollback, motivo de rechazo), `pending[]` y la
+> `interpretation` con la que se ejecutó. Lo que **no** existe todavía es
+> el render y el envío de ese segundo correo: hoy el único script de
+> correo del departamento es
 > [`scripts/send-department-daily-brief-email.ts`](../scripts/send-department-daily-brief-email.ts)
-> (`npm run department:email`), que renderiza el **Daily Brief** de una
-> pasada. El render específico de este segundo email —con estas cuatro
-> secciones— **no está implementado todavía**: reutilizará el mismo
-> mailer y la misma resolución fail-closed de configuración, pero es
-> trabajo pendiente.
+> (`npm run department:email`), que renderiza el **Daily Brief**.
+> Reutilizará el mismo mailer y la misma resolución fail-closed de
+> configuración, pero es trabajo pendiente.
 
 ---
 
@@ -340,14 +381,15 @@ Si no existen, **la pasada diaria funciona exactamente igual y el email
 se envía igual**: `--phase plan` no construye ningún cliente de la API de
 aprobaciones.
 
-> **Salvedad honesta.** La fase de ejecución del script actual
-> (`npm run department:apply -- --phase stage`, y también `notify` y
-> `sync`) construye hoy el store de aprobaciones con
-> `createHttpApprovalStoreFromEnv()`, que **exige `APPROVALS_API_URL` y
-> `APPROVALS_API_TOKEN`** y falla si faltan. Es decir: mientras no exista
-> una persistencia alternativa para las decisiones manuales, ese camino
-> concreto sigue atado al Worker. La pasada diaria y el email **no** lo
-> están. Resolver esa persistencia es trabajo pendiente.
+El flag vive en
+[`src/approvals/feature-flag.ts`](../src/approvals/feature-flag.ts)
+(`SERVERLESS_APPROVALS_ENABLED`, **`false` por defecto**). Con el flag
+apagado, las fases del carril serverless (`stage`, `notify` de
+`department:apply`) **se niegan a correr y dicen por qué**, en vez de
+fallar en silencio o degradarse a "no hago nada". La ejecución del flujo
+manual no pasa por ellas: va por
+`scripts/run-approval-session.ts`, que persiste en el log local de
+decisiones y no construye ningún cliente de la API de aprobaciones.
 
 ---
 
@@ -360,12 +402,14 @@ confundirlas. Estado en el momento de escribirlo:
 | Pieza | Estado |
 |---|---|
 | Pasada diaria sin dependencias cloud (`--phase plan` + email) | En el workflow, funcionando. |
+| Ancla de versión de cada página objetivo en el `plan` (solo lectura) | Implementada. |
 | Numeración determinista de propuestas (`src/approvals/manual/proposal.ts`) | Implementada. |
 | Validación de decisiones humanas (`src/approvals/manual/decision.ts`) | Implementada. |
+| Sesión de aprobación manual (`scripts/run-approval-session.ts`), dry-run por defecto | Implementada. |
+| Registro append-only de decisiones (`decision-store.ts`) | Implementado. |
+| Flag `SERVERLESS_APPROVALS_ENABLED` (`feature-flag.ts`), `false` por defecto | Implementado. |
 | Máquina de estados, guards, executors, versionado, audit trail | Implementados y en uso. |
-| Numeración con before/after y riesgo **dentro del email** | Pendiente: `brief-email.ts` no importa `proposal.ts`. |
-| Render del segundo email | Pendiente. |
-| Persistencia de las decisiones manuales **sin pasar por el Worker** | En curso en esta rama. La fase `stage` del script de apply sigue exigiendo `APPROVALS_API_*` (§9). |
+| **Segundo email** con los resultados de la sesión | Pendiente: la sesión deja `approval-session.json` en el directorio de la pasada, pero no envía correo. |
 | Carril serverless (Worker + D1 + webhook) | Implementado y probado, **en standby**: no desplegado, no activo. |
 
 Si al leer esto una fila ya no cuadra con el repositorio, manda el
