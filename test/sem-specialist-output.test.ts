@@ -492,12 +492,17 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "REGRESION: 'gasto' cerca de una cifra ajena (other) SIN citarla => sigue siendo violacion (no basta con que exista en el catalogo en algun sitio de una finding)",
+      name: "REGRESION: 'gasto' cerca de una cifra ajena (other), MISMA frase (sin punto), SIN citarla => sigue siendo violacion (no basta con que exista en el catalogo en algun sitio de una finding)",
       fn: () => {
         const context = baseContext();
+        // A proposito SIN punto entre "gasto" y "7" (a diferencia del texto
+        // real del run 31890170949) -- este test verifica la otra mitad de
+        // la regla: cuando la cifra SI esta en la misma frase que la
+        // palabra clave (sin frontera de frase de por medio) pero no se ha
+        // citado ninguna evidencia, sigue siendo un fallo duro.
         const output = baseOutput({
           budgetObservations: [
-            emptyFinding({ description: "Sin gasto real registrado. Si se activaran las 7 campañas...", evidenceRefs: [] }),
+            emptyFinding({ description: "Sin gasto real registrado, si se activaran las 7 campañas.", evidenceRefs: [] }),
           ],
         });
         const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
@@ -524,6 +529,69 @@ export function runSemSpecialistOutputTests(): TestCase[] {
         const context = baseContext();
         const output = baseOutput({ summary: "Campanas pausadas, sin actividad relevante que reportar en este snapshot." });
         assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
+
+    // --- REGRESION (fix diagnostico run 31890170949): la violacion literal
+    // recuperada de ese run fue exactamente:
+    //   Afirmacion cuantitativa (gasto/coste)
+    //   "gasto real registrado. Si se activaran las 7"
+    //   en "budgetObservations: Presupuesto total disponible sin gasto
+    //   real registrado"
+    // El "7" representa campanas, no gasto -- la ventana de proximidad de
+    // "gasto" (GAP) cruzaba el PUNTO que separa "...registrado." de "Si se
+    // activaran las 7...", dos frases distintas. Fix: GAP ya no permite
+    // cruzar puntuacion de fin de frase (. ! ?) -- ver su definicion mas
+    // arriba. Estos tests usan la frase EXACTA del run real. ---
+    {
+      name: "REGRESION run 31890170949 (frase EXACTA 'gasto real registrado. Si se activaran las 7', con evidenceRefs de gasto=0 Y totalCampaigns=7) => 0 violaciones",
+      fn: () => {
+        const context = baseContext();
+        const spendItem = catalogItem(context, "sem-spend-real");
+        const campaignsItem = catalogItem(context, "sem-total-campaigns");
+        assert.equal(spendItem.value, "0");
+        assert.equal(campaignsItem.value, "7");
+        const output = baseOutput({
+          budgetObservations: [
+            emptyFinding({
+              title: "Presupuesto total disponible sin gasto real registrado",
+              description: "Presupuesto total disponible sin gasto real registrado. Si se activaran las 7 campañas, convendria priorizar el reparto del presupuesto.",
+              evidenceRefs: [spendItem.id, campaignsItem.id],
+            }),
+          ],
+          evidence: [evidenceFromCatalog(spendItem), evidenceFromCatalog(campaignsItem)],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.deepEqual(
+          violations,
+          [],
+          `la frase exacta del run 31890170949 (con evidenceRefs de gasto=0 y totalCampaigns=7) no deberia rechazarse: ${JSON.stringify(violations)}`
+        );
+      },
+    },
+    {
+      name: "REGRESION run 31890170949: 'gasto de 7 €' SIN evidencia de gasto=7 => sigue siendo violacion",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: "El gasto de la campana es de 7 €, una cifra sin respaldo real.", evidenceRefs: [] })],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /gasto/i.test(v)), "un gasto de 7 EUR sin ninguna evidencia (real o no) sigue siendo un fallo duro");
+      },
+    },
+    {
+      name: "REGRESION run 31890170949: 'CPC 7 €' citando SOLO evidence de campañas=7 => sigue siendo violacion (excepcion cpc/roas se mantiene)",
+      fn: () => {
+        const context = baseContext();
+        const campaignsItem = catalogItem(context, "sem-total-campaigns");
+        assert.equal(campaignsItem.value, "7");
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El CPC medio de la cuenta es de 7 €.", evidenceRefs: [campaignsItem.id] })],
+          evidence: [evidenceFromCatalog(campaignsItem)],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /CPC/i.test(v)), "CPC exige una entrada REALMENTE de categoria cpc, nunca un value que coincida por casualidad con otra categoria");
       },
     },
   ];

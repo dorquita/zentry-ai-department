@@ -208,7 +208,20 @@ interface QuantClaimCategory {
 // exacta, igual de estricto sobre EXIGIR que la cifra este realmente
 // cerca de la palabra clave (ventana acotada, no "en cualquier parte del
 // texto") para no disparar falsos positivos entre frases distintas.
-const GAP = "[^\\d]{0,40}?";
+//
+// EXCLUYE puntuacion de fin de frase (. ! ?) del hueco permitido -- sin
+// esto, la ventana podia "saltar" una frontera de frase entera y asociar
+// la palabra clave de UNA afirmacion con la cifra de OTRA completamente
+// distinta. Caso real (run 31890170949): "...sin gasto real registrado.
+// Si se activaran las 7 campañas..." capturaba el "7" de "campañas"
+// como si fuera una cifra de gasto, solo porque "gasto" aparecia antes
+// del punto -- la relacion textual real entre "gasto" y "7" no existe,
+// estan en dos frases distintas. Con las 4 categorias reales del
+// catalogo (gasto/presupuesto/conversiones/CPC/ROAS) nunca hace falta
+// cruzar un punto para expresar una afirmacion cuantitativa legitima
+// ("el gasto es de 0 €", "el presupuesto es de 44 € si se activaran"),
+// asi que esta restriccion no genera ningun falso negativo nuevo.
+const GAP = "[^\\d.!?]{0,40}?";
 
 // La cifra capturada NUNCA puede estar pegada a una letra/digito/guion
 // bajo vecino -- sin este guardado, un identificador o etiqueta como
