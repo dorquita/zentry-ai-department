@@ -54,3 +54,11 @@ reports/web-engineer/
 # de Claude) -- no se versionan, se suben como artifact de GitHub Actions
 # en CI (nunca se commitea, ver .github/workflows/qa-reviewer.yml).
 reports/qa-reviewer/
+
+# Salida generada por la pasada COORDINADA del departamento (ver
+# docs/department-coordination.md, scripts/run-department-coordination.ts):
+# manifiesto, contextos/prompts/salidas de cada etapa, promotion.json y el
+# Daily Brief de una ejecucion concreta. Son datos operativos de un run --
+# no se versionan, se suben como artifact de GitHub Actions (nunca se
+# commitean, ver .github/workflows/zentry-ai-department-daily.yml).
+reports/department/

@@ -52,6 +52,10 @@ import { runQaReviewerOutputTests } from "../test/qa-reviewer-output.test";
 import { runQaReviewerOutputSchemaTests } from "../test/qa-reviewer-output-schema.test";
 import { runQaReviewerContextTests } from "../test/qa-reviewer-context.test";
 import { runQaReviewerRunnerTests } from "../test/qa-reviewer-runner.test";
+import { runDepartmentPromotionTests } from "../test/department-promotion.test";
+import { runDepartmentSpecialistInputsTests } from "../test/department-specialist-inputs.test";
+import { runDepartmentDailyBriefTests } from "../test/department-daily-brief.test";
+import { runDepartmentCoordinationSafetyTests } from "../test/department-coordination-safety.test";
 
 interface TestCase {
   name: string;
@@ -105,6 +109,10 @@ function main(): void {
     { suiteName: "qa-reviewer-output-schema", cases: runQaReviewerOutputSchemaTests() },
     { suiteName: "qa-reviewer-context", cases: runQaReviewerContextTests() },
     { suiteName: "qa-reviewer-runner", cases: runQaReviewerRunnerTests() },
+    { suiteName: "department-promotion", cases: runDepartmentPromotionTests() },
+    { suiteName: "department-specialist-inputs", cases: runDepartmentSpecialistInputsTests() },
+    { suiteName: "department-daily-brief", cases: runDepartmentDailyBriefTests() },
+    { suiteName: "department-coordination-safety", cases: runDepartmentCoordinationSafetyTests() },
   ];
 
   let passed = 0;

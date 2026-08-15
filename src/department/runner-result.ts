@@ -1,0 +1,149 @@
+/**
+ * Contrato machine-readable `RUNNER_RESULT_JSON=...` que imprime
+ * `scripts/run-department-coordination.ts` al final de CADA fase --
+ * mismo patron que los runners de cada empleado (ver
+ * src/core/runner-result-parser.ts y los `*RunnerResultSummary` de cada
+ * empleado), con la forma propia de esta capa de orquestacion.
+ *
+ * Estructura FIJA e IDENTICA en todas las fases: el workflow no debe
+ * ramificar su logica de lectura segun la fase para saber donde esta
+ * cada campo. Los campos que no aplican van a cadena vacia o 0, nunca a
+ * `undefined` (todo acaba en `$GITHUB_OUTPUT`, que solo admite strings).
+ *
+ * Esto NO es "pasar informacion entre agentes por el log": la
+ * informacion entre etapas viaja por ficheros JSON en rutas
+ * deterministas (ver run-store.ts). Esta linea solo transporta RUTAS y
+ * ESTADO al workflow que orquesta, exactamente igual que ya hacen todos
+ * los empleados existentes.
+ */
+
+export type DepartmentRunnerPhase =
+  | "init"
+  | "record-stage"
+  | "prepare-growth"
+  | "complete-growth"
+  | "prepare-qa"
+  | "complete-qa"
+  | "prepare-web-engineer"
+  | "complete-web-engineer"
+  | "brief"
+  | "gate";
+
+export const DEPARTMENT_RUNNER_PHASES: DepartmentRunnerPhase[] = [
+  "init",
+  "record-stage",
+  "prepare-growth",
+  "complete-growth",
+  "prepare-qa",
+  "complete-qa",
+  "prepare-web-engineer",
+  "complete-web-engineer",
+  "brief",
+  "gate",
+];
+
+export interface DepartmentRunnerResultSummary {
+  phase: DepartmentRunnerPhase;
+  departmentRunId: string;
+  /** Estado de la etapa afectada (`executed`/`blocked`/...) o un estado propio de la fase (`initialized`, `prepared`, `ok`, `degraded`). */
+  status: string;
+  reason: string;
+  runDir: string;
+  manifestPath: string;
+  promptFilePath: string;
+  expectedOutputPath: string;
+  qaInputPath: string;
+  promotionPath: string;
+  briefJsonPath: string;
+  briefMdPath: string;
+  stepSummaryPath: string;
+  /** `true` si el workflow debe invocar a Claude para esta etapa. `false` = la etapa se resolvio sin gastar inferencia (degradacion explicita). */
+  claudeRequired: boolean;
+  promotedCount: number;
+  blockedCount: number;
+  departmentQaStatus: string;
+  auditWarningCount: number;
+  priorityCount: number;
+}
+
+export const EMPTY_DEPARTMENT_RUNNER_RESULT: Omit<DepartmentRunnerResultSummary, "phase" | "departmentRunId" | "status" | "reason"> = {
+  runDir: "",
+  manifestPath: "",
+  promptFilePath: "",
+  expectedOutputPath: "",
+  qaInputPath: "",
+  promotionPath: "",
+  briefJsonPath: "",
+  briefMdPath: "",
+  stepSummaryPath: "",
+  claudeRequired: false,
+  promotedCount: 0,
+  blockedCount: 0,
+  departmentQaStatus: "",
+  auditWarningCount: 0,
+  priorityCount: 0,
+};
+
+export function extractLastDepartmentRunnerResultJsonLine(log: string): string | undefined {
+  const matches = [...log.matchAll(/^RUNNER_RESULT_JSON=(.*)$/gm)];
+  if (matches.length === 0) return undefined;
+  return matches[matches.length - 1][1];
+}
+
+const STRING_FIELDS = [
+  "phase",
+  "departmentRunId",
+  "status",
+  "reason",
+  "runDir",
+  "manifestPath",
+  "promptFilePath",
+  "expectedOutputPath",
+  "qaInputPath",
+  "promotionPath",
+  "briefJsonPath",
+  "briefMdPath",
+  "stepSummaryPath",
+  "departmentQaStatus",
+] as const;
+
+const NUMBER_FIELDS = ["promotedCount", "blockedCount", "auditWarningCount", "priorityCount"] as const;
+
+/** Valida (fail-closed, sin librerias externas) que el JSON parseado tiene la forma minima esperada antes de confiar en sus campos. */
+export function parseDepartmentRunnerResultJson(jsonText: string): DepartmentRunnerResultSummary {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(jsonText);
+  } catch (err) {
+    throw new Error(`RUNNER_RESULT_JSON no es JSON valido: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  if (typeof raw !== "object" || raw === null) {
+    throw new Error("RUNNER_RESULT_JSON invalido: se esperaba un objeto JSON.");
+  }
+  const o = raw as Record<string, unknown>;
+  for (const field of STRING_FIELDS) {
+    if (typeof o[field] !== "string") {
+      throw new Error(`RUNNER_RESULT_JSON invalido: falta el campo string "${field}".`);
+    }
+  }
+  for (const field of NUMBER_FIELDS) {
+    if (typeof o[field] !== "number") {
+      throw new Error(`RUNNER_RESULT_JSON invalido: falta el campo numerico "${field}".`);
+    }
+  }
+  if (typeof o.claudeRequired !== "boolean") {
+    throw new Error('RUNNER_RESULT_JSON invalido: falta el campo booleano "claudeRequired".');
+  }
+  if (!(DEPARTMENT_RUNNER_PHASES as string[]).includes(o.phase as string)) {
+    throw new Error(`RUNNER_RESULT_JSON invalido: phase "${String(o.phase)}" no es una fase conocida.`);
+  }
+  return o as unknown as DepartmentRunnerResultSummary;
+}
+
+export function extractAndParseDepartmentRunnerResult(log: string): DepartmentRunnerResultSummary {
+  const jsonText = extractLastDepartmentRunnerResultJsonLine(log);
+  if (jsonText === undefined) {
+    throw new Error('No se encontro ninguna linea "RUNNER_RESULT_JSON=" en el log proporcionado.');
+  }
+  return parseDepartmentRunnerResultJson(jsonText);
+}
