@@ -106,6 +106,14 @@
       "externalWriteToolsGranted": [],
       "maxRiskCategory": "none",
       "notes": "Cero herramientas, ni siquiera de lectura. Todo el contexto que necesita (trafico por canal, landing pages, eventos clave vs. catalogo esperado, fuentes/medios, estado de GTM) viene ya resuelto en el prompt, construido por src/employees/analytics-specialist/context.ts a partir de datos ya persistidos localmente (event bus + informe Markdown de analytics-watcher) -- nunca llama a GA4/GTM en vivo."
+    },
+    "content-strategist": {
+      "definitionFile": ".claude/agents/content-strategist.md",
+      "description": "Subagente experimental Claude de estrategia de contenido B2B (briefs, no articulos finales). Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-content-strategist.ts -- cero acceso indiscriminado al repositorio, cero escritura externa.",
+      "allowedTools": [],
+      "externalWriteToolsGranted": [],
+      "maxRiskCategory": "none",
+      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt (change pack de contenido + skill zentry-brand), construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
     }
   }
 }

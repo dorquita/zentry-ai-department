@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zentrylockers.internal/schemas/content-strategist-output.schema.json",
+  "title": "ContentStrategistOutput",
+  "description": "Contrato de salida del subagente Claude content-strategist, pasado a claude-code-action via --json-schema (ver .github/workflows/content-strategist.yml). Debe reflejar EXACTAMENTE la interfaz TypeScript ContentStrategistOutput en src/employees/content-strategist/output.ts -- cualquier cambio en esa interfaz debe reflejarse aqui en el mismo commit (ver test/content-strategist-output-schema.test.ts). Deliberadamente draft-07 (no 2020-12): el SDK de Claude Agent rechaza schemas que declaren un draft mas nuevo. IMPORTANTE (evitar romper el workflow): este fichero se embebe tal cual dentro de un string shell entre comillas simples (--json-schema entrecomillado) en .github/workflows/content-strategist.yml -- ningun valor de texto de este JSON (descripciones incluidas) debe contener el caracter apostrofe. Usa definitions/ref (no defs) y additionalProperties:false en todos los objetos porque son exactamente las features soportadas por src/core/json-schema-lite.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contentOpportunity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" }
+      },
+      "required": ["title", "summary"]
+    },
+    "targetAudience": { "type": "string" },
+    "searchIntent": {
+      "type": "string",
+      "enum": ["informational", "transactional", "comparison", "commercial"]
+    },
+    "commercialIntent": { "type": "string" },
+    "angle": { "type": "string" },
+    "contentType": {
+      "type": "string",
+      "description": "Reutiliza EXACTAMENTE el enum ContentType de src/agents/content-planner.ts -- ya usado por el resto del pipeline determinista de contenido.",
+      "enum": ["article", "faq", "landing_block", "title_meta_improvement", "internal_link", "new_landing"]
+    },
+    "targetBrand": {
+      "type": "string",
+      "enum": ["zentry", "tukandado", "mixed"]
+    },
+    "recommendedStructure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "h1": { "type": "string" },
+        "sections": { "type": "array", "items": { "$ref": "#/definitions/section" } }
+      },
+      "required": ["h1", "sections"]
+    },
+    "ctaStrategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primaryCta": { "type": "string" },
+        "secondaryCta": { "type": "string" },
+        "rationale": { "type": "string" }
+      },
+      "required": ["primaryCta", "rationale"]
+    },
+    "internalLinks": { "type": "array", "items": { "$ref": "#/definitions/internalLink" } },
+    "supportingEvidence": { "type": "array", "items": { "type": "string" } },
+    "priority": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "risksAndUnknowns": { "type": "array", "items": { "type": "string" } },
+    "reasoningNotes": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": [
+    "contentOpportunity",
+    "targetAudience",
+    "searchIntent",
+    "commercialIntent",
+    "angle",
+    "contentType",
+    "targetBrand",
+    "recommendedStructure",
+    "ctaStrategy",
+    "internalLinks",
+    "supportingEvidence",
+    "priority",
+    "risksAndUnknowns",
+    "reasoningNotes"
+  ],
+  "definitions": {
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "heading": { "type": "string" },
+        "level": { "type": "string", "enum": ["H2", "H3"] },
+        "purpose": { "type": "string" }
+      },
+      "required": ["heading", "level", "purpose"]
+    },
+    "internalLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "anchorIdea": { "type": "string" },
+        "targetDescription": { "type": "string" },
+        "isRealLink": { "type": "boolean" }
+      },
+      "required": ["anchorIdea", "targetDescription", "isRealLink"]
+    }
+  }
+}
