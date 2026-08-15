@@ -31,6 +31,21 @@ inputs:
   github-token:
     description: 'Token de GitHub a pasar EXPLICITAMENTE a claude-code-action (normalmente el valor de github.token del caller) -- ver el porque en el step de invocacion mas abajo. AVISO para quien edite este fichero: no escribas aqui, ni en ningun otro description de este fichero, la secuencia de interpolacion de GitHub Actions (llave-llave-porciento, espacio, llave-llave-porciento cerrando) ni siquiera vacia -- el parser de manifest de una composite action evalua esa secuencia en CUALQUIER string del fichero, incluido texto puramente documental, y el contexto "github" no esta disponible en ese momento de evaluacion (bug real detectado en el primer E2E de PR #6, run 31877237097/31877352330: "Unrecognized named-value: github" y luego "An expression was expected").'
     required: true
+  execution-record-path:
+    description: >-
+      OPCIONAL. Ruta donde guardar las METRICAS de ESTA invocacion
+      (empleado, modelo, duracion, coste, turnos, origen de salida,
+      resultado). Vacio (por defecto) = no se guarda nada y el
+      comportamiento es identico al de antes de existir este input.
+      Existe porque el execution_file de claude-code-action NO tiene una
+      ruta unica por invocacion: en un workflow con varias invocaciones
+      dentro del mismo job (la pasada coordinada del departamento, con
+      seis empleados) cada una pisaba a la anterior y el coste por
+      empleado era imposible de reportar. Pasar aqui una ruta distinta
+      por empleado resuelve eso sin tocar el resto del runtime. NO se
+      guarda la conversacion, solo metricas.
+    required: false
+    default: ""
   max-turns:
     description: 'Limite de turnos pasado a --max-turns (fail-closed frente a sesiones que no convergen).'
     required: false
@@ -251,3 +266,26 @@ runs:
         EXPECTED_OUTPUT_PATH: ${{ inputs.expected-output-path }}
         EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
         CLAUDE_STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}
+
+    # --- Metricas de ESTA invocacion, en una ruta propia de ESTA
+    # invocacion (opcional, ver el input `execution-record-path`).
+    #
+    # `always()`: el coste de una invocacion que FALLO es exactamente la
+    # que mas interesa poder reportar, asi que este step corre tambien
+    # cuando el step anterior dejo el job en rojo. El script wrapper es
+    # fail-soft a proposito (sale 0 aunque no pueda medir nada): no medir
+    # el coste nunca puede convertirse en el motivo de que una pasada
+    # falle.
+    - name: "[RUNTIME] Registrar metricas de esta invocacion (empleado/modelo/coste/turnos)"
+      id: execution-record
+      if: always() && inputs.execution-record-path != ''
+      shell: bash
+      run: |
+        npm run claude-employee:record-execution-for-ci -- \
+          "$AGENT_NAME" "$RECORD_PATH" "$EXECUTION_FILE_PATH" "$OUTPUT_SOURCE" "$CLAUDE_OUTCOME"
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+        RECORD_PATH: ${{ inputs.execution-record-path }}
+        EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
+        OUTPUT_SOURCE: ${{ steps.resolve.outputs.source }}
+        CLAUDE_OUTCOME: ${{ steps.claude.outcome }}

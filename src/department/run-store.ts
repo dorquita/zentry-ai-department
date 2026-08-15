@@ -2,9 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { resolveActiveClientPaths } from "../core/client-paths";
 import { extractJsonFromModelResponse } from "../core/claude-employee-runtime";
+import { DepartmentEmployeeRun, parseEmployeeRunRecord } from "./employee-runs";
 import {
   assertSupportedContractVersion,
   DEPARTMENT_RUN_CONTRACT_VERSION,
+  DEPARTMENT_STAGE_NAMES,
   DEPARTMENT_STAGE_PHASE,
   DepartmentRunManifest,
   DepartmentStageName,
@@ -45,6 +47,10 @@ export interface DepartmentRunPaths {
   briefMdPath: string;
   stepSummaryPath: string;
   qaInputPath: string;
+  /** Contrato de APPLY de esta pasada: un elemento por recomendacion, con su estado, aprobacion, validacion y rollback. */
+  applySummaryPath: string;
+  /** Email del Daily Brief realmente construido en esta pasada (texto + HTML), para poder auditarlo despues. */
+  emailPath: string;
 }
 
 /** Convierte una ruta absoluta a repo-relativa (o la deja tal cual si cae fuera del repo, caso que no deberia darse dentro de un run). */
@@ -76,6 +82,8 @@ export function resolveDepartmentRunPaths(departmentRunId: string): DepartmentRu
     // del artifact revisado queda atada a ESTA pasada y no a un nombre
     // generico reutilizado en todas.
     qaInputPath: path.join(runDir, `${departmentRunId}-qa-input.json`),
+    applySummaryPath: path.join(runDir, "apply-summary.json"),
+    emailPath: path.join(runDir, "daily-brief-email.json"),
   };
 }
 
@@ -89,6 +97,15 @@ export interface StageFilePaths {
   promptPath: string;
   outputPath: string;
   artifactPath: string;
+  /**
+   * Metricas de LA invocacion de Claude de esta etapa (empleado, modelo,
+   * duracion, coste, turnos, origen de salida, resultado), escritas por
+   * el runtime comun via su input opcional `execution-record-path`. Una
+   * ruta POR ETAPA a proposito: el `execution_file` de
+   * claude-code-action no es unico por invocacion, asi que con seis
+   * empleados en el mismo job solo sobrevivia el ultimo.
+   */
+  executionRecordPath: string;
 }
 
 export function resolveStageFilePaths(departmentRunId: string, stage: DepartmentStageName): StageFilePaths {
@@ -99,7 +116,30 @@ export function resolveStageFilePaths(departmentRunId: string, stage: Department
     promptPath: path.join(stageDir, "prompt.md"),
     outputPath: path.join(stageDir, "output.json"),
     artifactPath: path.join(stageDir, "artifact.json"),
+    executionRecordPath: path.join(stageDir, "claude-execution.json"),
   };
+}
+
+/**
+ * Lee las metricas de las invocaciones de Claude de ESTA pasada, una por
+ * etapa. Una etapa sin fichero simplemente no aparece: nunca se sustituye
+ * por un coste 0 (ver src/department/employee-runs.ts).
+ */
+export function readDepartmentEmployeeRuns(departmentRunId: string): DepartmentEmployeeRun[] {
+  const runs: DepartmentEmployeeRun[] = [];
+  for (const stage of DEPARTMENT_STAGE_NAMES) {
+    const { executionRecordPath } = resolveStageFilePaths(departmentRunId, stage);
+    if (!fs.existsSync(executionRecordPath)) continue;
+    let rawText: string;
+    try {
+      rawText = fs.readFileSync(executionRecordPath, "utf-8");
+    } catch {
+      continue;
+    }
+    const run = parseEmployeeRunRecord(rawText, stage);
+    if (run) runs.push(run);
+  }
+  return runs;
 }
 
 function writeJson(filePath: string, value: unknown): void {
