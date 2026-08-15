@@ -102,6 +102,13 @@ export interface EnvironmentApplyRecord {
    * la aprobacion (anti-TOCTOU).
    */
   resultingVersionHash: string | null;
+  /**
+   * Id del run de GitHub Actions que ejecuto este apply. Solo lo rellena
+   * el carril de produccion (la funcion serverless nunca publica: encola
+   * y GitHub Actions publica), y cierra la trazabilidad
+   * decision humana -> run de produccion.
+   */
+  githubRunId?: string | null;
 }
 
 /** La solicitud de aprobacion enviada a Telegram para ESTA version del cambio. */

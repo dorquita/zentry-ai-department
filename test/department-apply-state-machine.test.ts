@@ -6,6 +6,7 @@ import {
   DEPARTMENT_CHANGE_STATUSES,
   DepartmentChangeStatus,
   isProductionApplyAllowedFrom,
+  isProductionQueueAllowedFrom,
   isTerminalStatus,
 } from "../src/department/apply/state-machine";
 
@@ -57,13 +58,25 @@ export function runDepartmentApplyStateMachineTests(): TestCase[] {
       },
     },
     {
-      name: "El unico origen de production_applying es approved",
+      name: "El unico origen de production_queued es approved, y el unico de production_applying es production_queued",
       fn: () => {
-        const origins = DEPARTMENT_CHANGE_STATUSES.filter((from) => ALLOWED_TRANSITIONS[from].includes("production_applying"));
-        assert.deepEqual(origins, ["approved"]);
-        assert.equal(isProductionApplyAllowedFrom("approved"), true);
-        for (const status of DEPARTMENT_CHANGE_STATUSES.filter((s) => s !== "approved")) {
+        assert.deepEqual(
+          DEPARTMENT_CHANGE_STATUSES.filter((from) => ALLOWED_TRANSITIONS[from].includes("production_queued")),
+          ["approved"],
+          "solo una decision humana puede encolar produccion"
+        );
+        assert.deepEqual(
+          DEPARTMENT_CHANGE_STATUSES.filter((from) => ALLOWED_TRANSITIONS[from].includes("production_applying")),
+          ["production_queued"],
+          "y el executor solo arranca desde la cola, que es la transicion atomica que evita el doble apply"
+        );
+        assert.equal(isProductionQueueAllowedFrom("approved"), true);
+        assert.equal(isProductionApplyAllowedFrom("production_queued"), true);
+        for (const status of DEPARTMENT_CHANGE_STATUSES.filter((s) => s !== "production_queued")) {
           assert.equal(isProductionApplyAllowedFrom(status), false, `"${status}" no puede autorizar una escritura en produccion`);
+        }
+        for (const status of DEPARTMENT_CHANGE_STATUSES.filter((s) => s !== "approved")) {
+          assert.equal(isProductionQueueAllowedFrom(status), false, `"${status}" no puede encolar produccion`);
         }
       },
     },
@@ -105,6 +118,7 @@ export function runDepartmentApplyStateMachineTests(): TestCase[] {
           "staging_applied",
           "awaiting_approval",
           "approved",
+          "production_queued",
           "production_applying",
           "production_applied",
         ];

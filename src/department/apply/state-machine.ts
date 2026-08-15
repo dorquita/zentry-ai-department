@@ -40,6 +40,7 @@ export type DepartmentChangeStatus =
   | "rejected"
   | "approved"
   | "approval_stale"
+  | "production_queued"
   | "production_applying"
   | "production_applied"
   | "production_validation_failed"
@@ -58,6 +59,7 @@ export const DEPARTMENT_CHANGE_STATUSES: DepartmentChangeStatus[] = [
   "rejected",
   "approved",
   "approval_stale",
+  "production_queued",
   "production_applying",
   "production_applied",
   "production_validation_failed",
@@ -96,7 +98,15 @@ export const ALLOWED_TRANSITIONS: Record<DepartmentChangeStatus, DepartmentChang
   approval_stale: [],
 
   // --- Carril de PRODUCCION (solo desde `approved`) ---
-  approved: ["production_applying", "approval_stale", "blocked"],
+  //
+  // `production_queued` es el paso que hace segura la arquitectura
+  // serverless: la funcion que recibe el boton NO publica nada, solo
+  // encola (y esa transicion, al ser condicional y atomica en el
+  // datastore, es lo que garantiza UN solo dispatch aunque Telegram
+  // reenvie el callback). Quien publica de verdad es el workflow de
+  // GitHub Actions, con los executors deterministas de siempre.
+  approved: ["production_queued", "approval_stale", "blocked"],
+  production_queued: ["production_applying", "approval_stale", "blocked"],
   production_applying: ["production_applied", "production_validation_failed", "blocked"],
   production_validation_failed: ["production_rolled_back", "blocked"],
   production_applied: [],
@@ -156,12 +166,22 @@ export function checkTransition(from: DepartmentChangeStatus, to: DepartmentChan
 }
 
 /**
- * `true` solo para el UNICO estado desde el que se puede escribir en
- * produccion. Existe como funcion propia (en vez de comparar strings por
- * ahi suelto) para que cualquier lectura del codigo de produccion se
- * encuentre con la regla escrita.
+ * `true` solo para el UNICO estado desde el que el executor puede
+ * empezar a escribir en produccion. Existe como funcion propia (en vez
+ * de comparar strings por ahi suelto) para que cualquier lectura del
+ * codigo de produccion se encuentre con la regla escrita.
+ *
+ * Es `production_queued`, no `approved`: entre los dos hay una
+ * transicion CONDICIONAL Y ATOMICA en el datastore que solo puede ganar
+ * un actor. Asi, dos pulsaciones del boton (o dos entregas del mismo
+ * webhook) producen como mucho UN encolado y por tanto UN apply.
  */
 export function isProductionApplyAllowedFrom(status: DepartmentChangeStatus): boolean {
+  return status === "production_queued";
+}
+
+/** El unico estado desde el que una decision humana puede encolar produccion. */
+export function isProductionQueueAllowedFrom(status: DepartmentChangeStatus): boolean {
   return status === "approved";
 }
 

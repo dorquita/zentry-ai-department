@@ -195,17 +195,18 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       },
     },
     {
-      name: "Solo DOS ficheros cablean WordPress para el apply, y unicamente con las 5 funciones permitidas",
+      name: "Solo el runner de GitHub Actions cablea WordPress para el apply, y unicamente con las 5 funciones permitidas",
       fn: () => {
         // El apply del departamento pasa a poder escribir tambien en
         // PRODUCCION -- pero solo tras una aprobacion humana explicita de
         // la version exacta que hay en staging (ver
         // src/department/apply/production-executor.ts y la maquina de
         // estados). Este guard acota que puede tocarse, y desde donde.
-        const wiringFiles = [
-          path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts"),
-          path.join(PROJECT_ROOT, "src", "agents", "department-telegram-ports.ts"),
-        ];
+        // Desde la fase serverless hay UN solo cableado de WordPress para
+        // el apply: el runner de GitHub Actions. La funcion serverless NO
+        // toca WordPress bajo ninguna circunstancia -- eso se comprueba
+        // aparte, en el guard del Worker.
+        const wiringFiles = [path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts")];
 
         // Las UNICAS operaciones permitidas: leer (staging/produccion),
         // buscar el destino de produccion por slug, y actualizar el

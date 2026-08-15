@@ -144,7 +144,7 @@ export async function applyApprovedChangeToProduction(
 
   // --- 1. Solo desde `approved`, y solo con decision humana registrada ---
   if (!isProductionApplyAllowedFrom(change.status)) {
-    const detail = `El cambio esta en "${change.status}". A produccion solo se llega desde "approved" (aprobacion humana explicita de la version exacta que hay en staging). No se escribe nada.`;
+    const detail = `El cambio esta en "${change.status}". A produccion solo se llega desde "production_queued": hace falta una aprobacion humana explicita Y su encolado atomico (la transicion que garantiza un unico apply aunque el webhook se entregue dos veces). No se escribe nada.`;
     return { change: port.note(change, {}, { event: "production_apply_refused", detail }), externalWritePerformed: false, message: detail };
   }
   if (!change.humanDecision || change.humanDecision.decision !== "approved" || !change.humanDecision.decidedBy.trim()) {
