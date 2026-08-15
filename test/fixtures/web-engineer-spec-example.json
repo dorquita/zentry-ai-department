@@ -1,0 +1,66 @@
+{
+  "_readme": "Fixture SANITIZADO para tests del empleado web-engineer. No contiene ningun dato operativo real (ni changePackId, ni keyword, ni URL de produccion) -- todo el contenido es de ejemplo.",
+  "changePackId": "example-change-pack-001",
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "input": {
+    "changePackId": "example-change-pack-001",
+    "keyword": "producto de ejemplo",
+    "page": "/producto-ejemplo/",
+    "changeType": "cro_conversion_update",
+    "priority": "medium",
+    "status": "approved_to_execute",
+    "targetBrand": "zentry",
+    "brandIntent": "zentry_locker_core",
+    "targetWordpressPageId": 9001,
+    "proposedChangesFromChangePack": {
+      "newCta": "Solicitar presupuesto sin compromiso",
+      "ctaPlacement": "Above the fold, junto al H1."
+    },
+    "implementationSteps": ["Actualizar el CTA segun la propuesta.", "Publicar SOLO tras aprobacion humana explicita."],
+    "humanReviewChecklist": ["Confirmar que este paquete NO se ha aplicado en WordPress ni se ha publicado nada."],
+    "risks": ["Bajo: cambios de CTA son reversibles y de bajo riesgo tecnico."],
+    "rollbackNotes": ["Antes de aplicar cualquier cambio: guardar una copia del contenido actual de la pagina de ejemplo."],
+    "currentAssumptions": ["Se asume que la pagina de ejemplo sigue existiendo en esa URL con una estructura similar."],
+    "existingPageAudit": {
+      "matchType": "update_existing_page",
+      "productionPageId": 127,
+      "productionUrl": "https://example-client.test/producto-ejemplo/",
+      "confidence": "exact",
+      "checkedAt": "2025-12-15T09:00:00.000Z"
+    },
+    "stagingQaResult": {
+      "overallPass": true,
+      "hasWarnings": false,
+      "failures": [],
+      "warnings": [],
+      "checkedAt": "2025-12-20T09:00:00.000Z"
+    },
+    "confirmedExistingPageUrls": ["https://example-client.test/producto-ejemplo/"],
+    "noPluginThemeApiInventoryNotice": "Este proyecto NO mantiene ningun inventario real y actualizado de plugins, temas ni rutas de API de WordPress instalados en el sitio del cliente. No existe ningun dato fiable al respecto en este contexto ni en ningun otro sitio al que tengas acceso. Cualquier necesidad tecnica de este tipo (formularios, tablas comparativas interactivas, integraciones) debe ir en unknowns o dependencies, marcada explicitamente como pendiente de confirmar por un humano con acceso real al sitio -- nunca redactada como si ya existiera o estuviera instalada."
+  },
+  "result": {
+    "status": "executed",
+    "output": {
+      "implementationSummary": "Actualizar el CTA principal de la pagina de producto de ejemplo (ya confirmada como existente en produccion) para reubicarlo above the fold, segun la propuesta CRO del ChangePack de origen.",
+      "targetPages": ["https://example-client.test/producto-ejemplo/"],
+      "targetComponents": ["hero", "CTA principal"],
+      "proposedChanges": [
+        {
+          "description": "Cambiar el texto del CTA principal a Solicitar presupuesto sin compromiso y moverlo junto al H1.",
+          "rationale": "El ChangePack de CRO identifico que el CTA actual no es visible sin hacer scroll en movil.",
+          "targetPageOrComponent": "hero"
+        }
+      ],
+      "filesOrSystemsAffected": ["Contenido de la pagina en WordPress (bloques Gutenberg del hero)"],
+      "acceptanceCriteria": ["El CTA principal es visible sin hacer scroll en movil.", "El texto del CTA coincide exactamente con el propuesto en el ChangePack."],
+      "validationPlan": ["Confirmar que Staging QA sigue en PASS tras este cambio, como en la ultima ejecucion registrada.", "Revision visual manual en movil y escritorio antes de proponer aplicar el cambio."],
+      "rollbackPlan": ["Guardar una copia del contenido actual del hero antes de aplicar el cambio.", "Si algo falla, restaurar la copia guardada."],
+      "dependencies": ["Confirmar con un humano si el formulario de presupuesto usa algun plugin instalado antes de tocar su configuracion -- pendiente de confirmar, no hay inventario fiable."],
+      "risks": ["Bajo: cambio de CTA es reversible y de bajo riesgo tecnico segun el ChangePack de origen."],
+      "approvalRequired": true,
+      "unknowns": ["No se sabe si existe algun plugin de formularios instalado en el sitio -- este proyecto no mantiene ese inventario."]
+    },
+    "capabilityAuditWarnings": []
+  },
+  "note": "Artefacto de solo lectura/especificacion. Ningun cambio descrito aqui se ha aplicado a WordPress, staging ni produccion. approvalRequired es siempre true (verificado por validateWebEngineerOutput) -- cualquier decision de ejecutar algo de esta especificacion la toma un humano, fuera de este sistema, nunca este runner ni el propio subagente."
+}

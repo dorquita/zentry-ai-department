@@ -114,6 +114,14 @@
       "externalWriteToolsGranted": [],
       "maxRiskCategory": "none",
       "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt (change pack de contenido + skill zentry-brand), construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+    },
+    "web-engineer": {
+      "definitionFile": ".claude/agents/web-engineer.md",
+      "description": "Subagente experimental Claude que convierte un ChangePack ya aprobable (UX/SEO/Content/Growth) en una especificacion tecnica implementable. Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-web-engineer.ts -- cero acceso indiscriminado al repositorio, cero escritura externa, cero ejecucion de ningun cambio (fase exclusivamente de especificacion, approvalRequired siempre true).",
+      "allowedTools": [],
+      "externalWriteToolsGranted": [],
+      "maxRiskCategory": "none",
+      "notes": "Fase de solo especificacion: cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita (ChangePack + auditoria real de paginas existentes + resultado real de Staging QA, cuando hay datos) se le inyecta ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. No tiene, ni tendra en esta fase, ninguna capacidad de escritura en WordPress/staging/produccion ni en ningun otro sistema externo."
     }
   }
 }
