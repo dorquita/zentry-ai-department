@@ -254,17 +254,50 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       },
     },
     {
-      name: "PRODUCCION solo es alcanzable con aprobacion humana: el executor exige `approved` y recomprueba la version de staging",
+      name: "PRODUCCION solo es alcanzable desde el carril encolado, y la pasada diaria no puede llegar ahi",
       fn: () => {
         const executor = fs.readFileSync(path.join(PROJECT_ROOT, "src", "department", "apply", "production-executor.ts"), "utf-8");
         assert.ok(executor.includes("isProductionApplyAllowedFrom"), "el executor de produccion consulta la maquina de estados");
         assert.ok(executor.includes("matchesApprovedVersion"), "y recomprueba que staging sigue siendo la version aprobada (anti-TOCTOU)");
         assert.ok(executor.includes("checkProductionApplyGuards"), "y comprueba los interruptores de produccion");
 
-        // El runner nunca puede publicar sin que los DOS registros (el
-        // persistente de cambios y el comun de aprobaciones) coincidan.
-        const runner = fs.readFileSync(path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts"), "utf-8");
-        assert.ok(runner.includes("resolveHumanApproval"), "el runner cruza el registro comun de aprobaciones antes de publicar");
+        // Y la pasada diaria no puede publicar en produccion de ninguna
+        // manera: ni tiene la fase, ni importa el executor de produccion,
+        // ni conoce el adaptador de produccion.
+        const daily = fs.readFileSync(path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts"), "utf-8");
+        for (const forbidden of ["applyApprovedChangeToProduction", "wordpress-production", "--phase production"]) {
+          assert.ok(!daily.includes(forbidden), `scripts/run-department-apply.ts no puede mencionar "${forbidden}"`);
+        }
+
+        // Quien SI publica lo hace solo desde el carril encolado y tras
+        // recomprobar que staging sigue siendo la version aprobada.
+        const runner = fs.readFileSync(path.join(PROJECT_ROOT, "scripts", "run-production-apply.ts"), "utf-8");
+        assert.ok(runner.includes("production_queued"), "el runner de produccion solo actua sobre aprobaciones ya encoladas");
+        assert.ok(runner.includes("computeVersionHash"), "y recomprueba la version real de staging antes de escribir");
+      },
+    },
+    {
+      name: "Publicar en produccion ocurre en UN solo workflow, y ese workflow no se dispara solo",
+      fn: () => {
+        const productionWorkflow = path.join(PROJECT_ROOT, ".github", "workflows", "department-production-apply.yml");
+        assert.ok(fs.existsSync(productionWorkflow), "falta el workflow de publicacion en produccion");
+        const content = fs.readFileSync(productionWorkflow, "utf-8");
+        const withoutComments = content
+          .split("\n")
+          .filter((line) => !line.trim().startsWith("#"))
+          .join("\n");
+
+        // Sin schedule: producir en produccion nunca puede ocurrir "porque
+        // toca". Siempre lo dispara una decision humana ya registrada.
+        assert.ok(!/^\s*schedule:/m.test(withoutComments), "el workflow de produccion NO puede tener schedule");
+        assert.ok(/workflow_dispatch:|repository_dispatch:/.test(withoutComments), "debe dispararse por dispatch");
+        assert.ok(/permissions:\s*\n\s*contents:\s*read/.test(withoutComments), "solo contents: read");
+        assert.ok(!withoutComments.includes("contents: write"));
+        assert.ok(!withoutComments.includes("id-token: write"));
+        // Concurrency por aprobacion: dos dispatch del mismo approval no
+        // pueden publicar a la vez.
+        assert.ok(/concurrency:/.test(withoutComments), "debe declarar concurrency por aprobacion");
+        assert.ok(!/cancel-in-progress:\s*true/.test(withoutComments), "nunca se cancela una publicacion a medias");
       },
     },
     {
