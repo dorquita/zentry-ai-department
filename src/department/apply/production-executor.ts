@@ -241,6 +241,16 @@ export async function applyApprovedChangeToProduction(
   }
 
   const approved = resolveApprovedValues(change);
+  if (approved.title === null && approved.metaDescription === null) {
+    // Puede pasar si el apply de staging no llego a modificar ningun
+    // campo (los valores propuestos ya eran los que habia). Publicar
+    // esto seria escribir en produccion sin ningun cambio real: no se
+    // hace, y se dice por que.
+    const detail =
+      "El cambio aprobado no modifica ningun campo (title y meta description quedaron igual en staging). No se escribe en produccion una publicacion vacia.";
+    const blocked = port.transition(change, "blocked", {}, { event: "production_apply_blocked", detail });
+    return { change: blocked.ok ? blocked.change : change, externalWritePerformed: false, message: detail };
+  }
   const at = clock();
   const snapshot = snapshotOf(before, at);
   const changedFields: ChangedField[] = [

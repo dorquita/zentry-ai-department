@@ -302,6 +302,25 @@ export function runDepartmentApplyProductionTests(): TestCase[] {
       },
     },
     {
+      name: "Un cambio aprobado que no modifica nada NO se publica: no se escribe una publicacion vacia",
+      fn: async () => {
+        const h = harness();
+        const noop = approvedChange({
+          staging: {
+            ...stagingRecord(),
+            changedFields: [
+              { field: "title", before: NEW_TITLE, after: NEW_TITLE, changed: false },
+              { field: "meta description", before: NEW_META, after: NEW_META, changed: false },
+            ],
+          },
+        });
+        const result = await applyApprovedChangeToProduction(noop, h.deps, GUARDS_OK, h.port);
+        assert.equal(result.change.status, "blocked");
+        assert.equal(h.writes, 0);
+        assert.match(result.message, /no modifica ningun campo/i);
+      },
+    },
+    {
       name: "Se publica EXACTAMENTE lo aprobado (lo que se enseño en Telegram), no lo que haya en staging ahora",
       fn: async () => {
         const h = harness();
