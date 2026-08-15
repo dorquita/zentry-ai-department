@@ -161,7 +161,7 @@ jobs:
             REASON="seo-specialist devolvio una salida que no cumple su contrato -- descartada (fail-closed)."
           else
             STATUS=failed
-            REASON="seo-specialist no completo su ejecucion (paso1=${STEP1_OUTCOME}, runtime=${RUNTIME_OUTCOME}, paso2=${STEP2_OUTCOME}). No hay datos de SEO en esta pasada."
+            REASON="seo-specialist no completo su ejecucion (paso1=${STEP1_OUTCOME}, runtime=${RUNTIME_OUTCOME}, claude=${CLAUDE_OUTCOME:-n/a}, origen de salida=${OUTPUT_SOURCE:-ninguno}, paso2=${STEP2_OUTCOME}). No hay datos de SEO en esta pasada."
           fi
           ARGS=(--phase record-stage --departmentRunId "$DEPARTMENT_RUN_ID" --stage seo-specialist --status "$STATUS" --reason "$REASON")
           if [ -n "$OUTPUT_PATH" ]; then ARGS+=(--output "$OUTPUT_PATH"); fi
@@ -172,6 +172,11 @@ jobs:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           STEP1_OUTCOME: ${{ steps.seo1_run.outcome }}
           RUNTIME_OUTCOME: ${{ steps.seo_runtime.outcome }}
+          # Outputs de la composite action del runtime comun: permiten
+          # distinguir "Claude fallo" de "la entrega de la salida fallo"
+          # sin leer miles de lineas de log.
+          CLAUDE_OUTCOME: ${{ steps.seo_runtime.outputs.claude-outcome }}
+          OUTPUT_SOURCE: ${{ steps.seo_runtime.outputs.output-source }}
           STEP2_OUTCOME: ${{ steps.seo2_run.outcome }}
           STEP2_STATUS: ${{ steps.seo2.outputs.status }}
           STEP2_WARNINGS: ${{ steps.seo2.outputs.warningCount }}
@@ -253,7 +258,7 @@ jobs:
             REASON="No hay ningun change pack de contenido elegible (ready_for_review/approved_to_execute) en esta pasada. No se ha fabricado ninguna oportunidad."
           else
             STATUS=failed
-            REASON="content-strategist no completo su ejecucion (paso1=${STEP1_OUTCOME}, runtime=${RUNTIME_OUTCOME}, paso2=${STEP2_OUTCOME}). No hay datos de contenido en esta pasada."
+            REASON="content-strategist no completo su ejecucion (paso1=${STEP1_OUTCOME}, runtime=${RUNTIME_OUTCOME}, claude=${CLAUDE_OUTCOME:-n/a}, origen de salida=${OUTPUT_SOURCE:-ninguno}, paso2=${STEP2_OUTCOME}). No hay datos de contenido en esta pasada."
           fi
           ARGS=(--phase record-stage --departmentRunId "$DEPARTMENT_RUN_ID" --stage content-strategist --status "$STATUS" --reason "$REASON")
           if [ -n "$OUTPUT_PATH" ]; then ARGS+=(--output "$OUTPUT_PATH"); fi
@@ -265,6 +270,11 @@ jobs:
           STEP1_OUTCOME: ${{ steps.content1_run.outcome }}
           STEP1_STATUS: ${{ steps.content1.outputs.status }}
           RUNTIME_OUTCOME: ${{ steps.content_runtime.outcome }}
+          # Outputs de la composite action del runtime comun: permiten
+          # distinguir "Claude fallo" de "la entrega de la salida fallo"
+          # sin leer miles de lineas de log.
+          CLAUDE_OUTCOME: ${{ steps.content_runtime.outputs.claude-outcome }}
+          OUTPUT_SOURCE: ${{ steps.content_runtime.outputs.output-source }}
           STEP2_OUTCOME: ${{ steps.content2_run.outcome }}
           STEP2_STATUS: ${{ steps.content2.outputs.status }}
           STEP2_WARNINGS: ${{ steps.content2.outputs.auditWarningCount }}
@@ -346,7 +356,7 @@ jobs:
             REASON="No hay ningun snapshot de analytics-watcher en este repositorio. Sin datos reales de GA4/GTM en esta pasada."
           else
             STATUS=failed
-            REASON="analytics-specialist no completo su ejecucion (paso1=${STEP1_OUTCOME}, runtime=${RUNTIME_OUTCOME}, paso2=${STEP2_OUTCOME}). No hay datos de analitica en esta pasada."
+            REASON="analytics-specialist no completo su ejecucion (paso1=${STEP1_OUTCOME}, runtime=${RUNTIME_OUTCOME}, claude=${CLAUDE_OUTCOME:-n/a}, origen de salida=${OUTPUT_SOURCE:-ninguno}, paso2=${STEP2_OUTCOME}). No hay datos de analitica en esta pasada."
           fi
           ARGS=(--phase record-stage --departmentRunId "$DEPARTMENT_RUN_ID" --stage analytics-specialist --status "$STATUS" --reason "$REASON")
           if [ -n "$OUTPUT_PATH" ]; then ARGS+=(--output "$OUTPUT_PATH"); fi
@@ -359,6 +369,11 @@ jobs:
           STEP1_OUTCOME: ${{ steps.analytics1_run.outcome }}
           STEP1_STATUS: ${{ steps.analytics1.outputs.status }}
           RUNTIME_OUTCOME: ${{ steps.analytics_runtime.outcome }}
+          # Outputs de la composite action del runtime comun: permiten
+          # distinguir "Claude fallo" de "la entrega de la salida fallo"
+          # sin leer miles de lineas de log.
+          CLAUDE_OUTCOME: ${{ steps.analytics_runtime.outputs.claude-outcome }}
+          OUTPUT_SOURCE: ${{ steps.analytics_runtime.outputs.output-source }}
           STEP2_OUTCOME: ${{ steps.analytics2_run.outcome }}
           STEP2_STATUS: ${{ steps.analytics2.outputs.status }}
           STEP2_WARNINGS: ${{ steps.analytics2.outputs.auditWarningCount }}
@@ -432,9 +447,10 @@ jobs:
         if: always() && steps.growth_prep.outputs.claudeRequired == 'true'
         run: |
           set -o pipefail
-          npm run department:run -- --phase complete-growth --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-growth-complete.log
+          npm run department:run -- --phase complete-growth --departmentRunId "$DEPARTMENT_RUN_ID" --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-growth-complete.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.growth_runtime.outcome }}, claude=${{ steps.growth_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.growth_runtime.outputs.output-source }}"
 
       # =====================================================================
       # FASE 3 -- QA REVIEWER: revisa especialistas + sintesis de Growth,
@@ -534,9 +550,11 @@ jobs:
           ARGS=(--phase complete-qa --departmentRunId "$DEPARTMENT_RUN_ID")
           if [ -n "$REVIEW_JSON_PATH" ]; then ARGS+=(--qa-review "$REVIEW_JSON_PATH"); fi
           if [ -n "$EXPECTED_OUTPUT_PATH" ]; then ARGS+=(--qa-output "$EXPECTED_OUTPUT_PATH"); fi
+          ARGS+=(--runtime-note "$RUNTIME_NOTE")
           npm run department:run -- "${ARGS[@]}" 2>&1 | tee coord-qa-complete.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.qa_runtime.outcome }}, claude=${{ steps.qa_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa_runtime.outputs.output-source }}"
           REVIEW_JSON_PATH: ${{ steps.qa2.outputs.reviewJsonPath || steps.qa1.outputs.reviewJsonPath }}
           EXPECTED_OUTPUT_PATH: ${{ steps.qa1.outputs.expectedOutputPath }}
 
@@ -609,9 +627,10 @@ jobs:
         if: always() && steps.web_prep.outputs.claudeRequired == 'true'
         run: |
           set -o pipefail
-          npm run department:run -- --phase complete-web-engineer --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-web-complete.log
+          npm run department:run -- --phase complete-web-engineer --departmentRunId "$DEPARTMENT_RUN_ID" --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-web-complete.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.web_runtime.outcome }}, claude=${{ steps.web_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.web_runtime.outputs.output-source }}"
 
       # =====================================================================
       # FASE 5 -- DAILY BRIEF (ensamblado determinista, sin Claude)

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
 import { extractAndParseDepartmentRunnerResult, parseDepartmentRunnerResultJson } from "../src/department/runner-result";
-import { resolveDepartmentRunPaths, resolveStageFilePaths, toRepoRelative } from "../src/department/run-store";
+import { parseStageOutputText, resolveDepartmentRunPaths, resolveStageFilePaths, toRepoRelative } from "../src/department/run-store";
 import { assertSupportedContractVersion, buildDepartmentCoordinationRunId, DEPARTMENT_RUN_CONTRACT_VERSION, DEPARTMENT_STAGE_NAMES } from "../src/department/types";
 
 export interface TestCase {
@@ -83,6 +83,27 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
         assert.doesNotThrow(() => assertSupportedContractVersion(DEPARTMENT_RUN_CONTRACT_VERSION, "manifest.json"));
         assert.throws(() => assertSupportedContractVersion("department-run/v2", "manifest.json"), /no soportada/);
         assert.throws(() => assertSupportedContractVersion(undefined, "manifest.json"), /no soportada/);
+      },
+    },
+
+    // --- Regresion del primer E2E coordinado (run 31892955242) ---
+    {
+      name: "parseStageOutputText tolera fences de markdown alrededor del JSON (el runtime comun escribe el texto de Claude TAL CUAL)",
+      fn: () => {
+        const expected = { executiveSummary: "resumen", findings: [] };
+        // Caso que rompio el primer E2E coordinado: JSON.parse directo
+        // fallaba con Unexpected token backtick y tumbaba prepare-growth,
+        // prepare-qa y el brief entero.
+        assert.deepEqual(parseStageOutputText('```json\n{"executiveSummary":"resumen","findings":[]}\n```', "seo-specialist"), expected);
+        assert.deepEqual(parseStageOutputText('{"executiveSummary":"resumen","findings":[]}', "seo-specialist"), expected);
+        assert.deepEqual(parseStageOutputText('```\n{"executiveSummary":"resumen","findings":[]}\n```', "seo-specialist"), expected);
+      },
+    },
+    {
+      name: "parseStageOutputText NO lanza ante un fichero irrecuperable: devuelve undefined para que la etapa se degrade a invalid_output",
+      fn: () => {
+        assert.equal(parseStageOutputText("esto no es json de ninguna manera", "seo-specialist"), undefined);
+        assert.equal(parseStageOutputText("", "seo-specialist"), undefined);
       },
     },
 
