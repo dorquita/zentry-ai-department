@@ -65,12 +65,19 @@ jobs:
   run-landing-architect-v2:
     name: Ejecutar ux-ui-landing-architect-v2
     runs-on: ubuntu-latest
-    # Fail-closed frente a sesiones colgadas -- unico backstop de tiempo
-    # ahora que la invocacion de Claude vive dentro de una composite
-    # action (runs.steps de una composite action NO soportan
-    # timeout-minutes propio, verificado contra el JSON Schema oficial de
-    # metadata de Actions -- ver .github/actions/claude-employee-runtime/action.yml
-    # y docs/claude-employee-runtime.md, seccion de limitaciones).
+    # Backstop de tiempo en dos capas (ver docs/claude-employee-runtime.md,
+    # seccion de timeouts): los steps INTERNOS de la composite action
+    # (.github/actions/claude-employee-runtime/action.yml) no soportan
+    # timeout-minutes propio (no es un campo valido en runs.steps para
+    # `using: composite`, verificado contra el JSON Schema oficial de
+    # metadata de Actions). Pero el step del WORKFLOW CALLER que invoca
+    # `uses: ./.github/actions/claude-employee-runtime` SI es un step
+    # normal de `jobs.<job>.steps` y SI admite timeout-minutes -- ver mas
+    # abajo, step "[RUNTIME] Ejecutar ux-ui-landing-architect-v2", que
+    # recupera de forma practica el backstop de 10 min que existia antes
+    # de mover la invocacion de Claude a la composite action. Este
+    # timeout-minutes: 20 de aqui es el limite del JOB completo (incluye
+    # los pasos de dominio antes y despues del runtime).
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -140,6 +147,14 @@ jobs:
       # docs/claude-employee-runtime.md. ---
       - name: "[RUNTIME] Ejecutar ux-ui-landing-architect-v2 (Claude Employee Runtime)"
         id: runtime
+        # timeout-minutes SI es valido aqui (step normal del workflow
+        # caller, no un step interno de la composite action) -- limita
+        # TODA la composite action (auth + preflights + claude-code-action
+        # + resolucion de salida) a 10 min, el mismo backstop practico que
+        # tenia antes el step de Claude en solitario. Futuros empleados
+        # deben copiar este mismo timeout-minutes: 10 salvo necesidad
+        # explicitamente justificada (ver docs/claude-employee-runtime.md).
+        timeout-minutes: 10
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: ux-ui-landing-architect-v2

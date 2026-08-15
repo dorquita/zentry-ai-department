@@ -18,6 +18,7 @@ import { runLandingArchitectV2OutputSchemaTests } from "../test/landing-architec
 import { runRunnerResultParserTests } from "../test/runner-result-parser.test";
 import { runComparisonArtifactReaderTests } from "../test/comparison-artifact-reader.test";
 import { runClaudeEmployeeRuntimeTests } from "../test/claude-employee-runtime.test";
+import { runJsonSchemaLiteTests } from "../test/json-schema-lite.test";
 
 interface TestCase {
   name: string;
@@ -37,6 +38,7 @@ function main(): void {
     { suiteName: "runner-result-parser", cases: runRunnerResultParserTests() },
     { suiteName: "comparison-artifact-reader", cases: runComparisonArtifactReaderTests() },
     { suiteName: "claude-employee-runtime", cases: runClaudeEmployeeRuntimeTests() },
+    { suiteName: "json-schema-lite", cases: runJsonSchemaLiteTests() },
   ];
 
   let passed = 0;

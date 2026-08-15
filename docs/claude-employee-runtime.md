@@ -29,8 +29,13 @@ domain prepare
 │                                                            │
 │   auth            -- CLAUDE_CODE_OAUTH_TOKEN / ANTHROPIC_API_KEY, │
 │                       sin fallback silencioso, BLOCKED_BY_AUTH    │
+│   preflight: tool guard -- assertSubagentIsToolless() ANTES de    │
+│                       invocar a Claude (subagent-tool-guard.ts)   │
+│   preflight: schema guard -- assertJsonSchemaLiteSupported()      │
+│                       ANTES de invocar a Claude (json-schema-lite.ts)│
 │   Claude Action    -- anthropics/claude-code-action, SHA fijado,  │
-│                       --agent <agent-name>, --json-schema         │
+│                       --agent <agent-name>, --json-schema,        │
+│                       timeout-minutes: 10 en el step caller       │
 │   structured output / fallback                                    │
 │                    -- caso A (structured_output) / caso B         │
 │                       (recuperar execution_file.result) / caso C  │
@@ -38,7 +43,8 @@ domain prepare
 │   schema validation -- SIEMPRE contra el JSON Schema versionado   │
 │                        del empleado (json-schema-lite.ts),        │
 │                        en A y en B por igual                      │
-│   safety           -- tools:[], --disallowedTools "mcp__*",       │
+│   safety           -- tools:[] verificado en runtime (no solo en  │
+│                       tests), --disallowedTools "mcp__*",         │
 │                       contents: read, sin id-token: write,        │
 │                       sin bypassPermissions                       │
 └─────────────────────────────────────────────────────────┘
@@ -64,12 +70,15 @@ Solo sabe hablar JSON Schema genérico y el protocolo de
 | Genérico (runtime común) | Específico de cada empleado (dominio) |
 |---|---|
 | Autenticación Claude (`CLAUDE_CODE_OAUTH_TOKEN`/`ANTHROPIC_API_KEY`), `BLOCKED_BY_AUTH` | Selección de trabajo (p.ej. change packs) |
-| `claude-code-action` pinneada a un SHA concreto | Preparación de contexto/prompt |
-| `--agent`, `--disallowedTools`, `--max-turns` | Forma exacta del tipo TypeScript de salida (`validateXOutput`) |
-| `--json-schema` / lectura de `structured_output` | Auditoría de dominio (p.ej. fabrication audit, comparación V1/V2) |
-| Recuperación desde `execution_file` (caso B) | Nombre/rutas de sus artifacts |
-| Validación contra el JSON Schema versionado (`json-schema-lite.ts`) | Contenido del GitHub Step Summary |
-| Decisión caso A/B/C + fail-closed | `schedule`/`workflow_dispatch`/`concurrency` propios |
+| Preflight: tool guard determinista (`assertSubagentIsToolless()`, autoridad única para todos los empleados) | Preparación de contexto/prompt |
+| Preflight: schema guard determinista (`assertJsonSchemaLiteSupported()`, autoridad única para todos los empleados) | Forma exacta del tipo TypeScript de salida (`validateXOutput`) |
+| `claude-code-action` pinneada a un SHA concreto | Auditoría de dominio (p.ej. fabrication audit, comparación V1/V2) |
+| `--agent`, `--disallowedTools`, `--max-turns` | Nombre/rutas de sus artifacts |
+| `--json-schema` / lectura de `structured_output` | Contenido del GitHub Step Summary |
+| Recuperación desde `execution_file` (caso B) | `schedule`/`workflow_dispatch`/`concurrency` propios |
+| Validación contra el JSON Schema versionado (`json-schema-lite.ts`) | — |
+| Decisión caso A/B/C + fail-closed | — |
+| Timeout de 10 min en el step caller (backstop práctico) + 20 min de job | — |
 | `contents: read`, sin MCP, sin `bypassPermissions` | — |
 
 ## Frontera técnica elegida (y por qué)
@@ -108,7 +117,8 @@ Se descartó "un framework grande" porque:
 **Verificado (no asumido) contra el JSON Schema oficial de metadata de
 GitHub Actions:** los steps de una composite action (`using: composite`)
 **no soportan `timeout-minutes` propio** (ese campo solo existe para
-steps de job). Ver "Limitaciones conocidas" más abajo.
+steps de job) -- ver la sección "Timeouts" más abajo para cómo se
+recupera este backstop de forma práctica desde el workflow caller.
 
 **Verificado (no asumido) con `actionlint`:** una composite action local
 referenciada con `uses: ./.github/actions/<nombre>` SÍ se valida
@@ -117,6 +127,39 @@ en CI cualquier workflow de empleado que pase un input inexistente o le
 falte uno requerido. Esto es una defensa real contra que un worktree
 rompa el contrato del runtime por error de tipeo.
 
+## Timeouts
+
+Tres capas, cada una con una limitación o alcance distinto:
+
+1. **Steps internos de la composite action** (`.github/actions/claude-employee-runtime/action.yml`,
+   incluido el step que invoca `claude-code-action`) -- **sin
+   `timeout-minutes` individual.** No es un campo válido en
+   `runs.steps` para `using: composite` (verificado contra el JSON
+   Schema oficial de metadata de GitHub Actions, no asumido). Esto no
+   cambia con este PR y no tiene solución dentro de la composite action
+   misma.
+2. **Step del workflow CALLER que invoca la composite action**
+   (`uses: ./.github/actions/claude-employee-runtime`) -- **SÍ admite
+   `timeout-minutes` porque es un step normal de `jobs.<job>.steps` del
+   workflow del empleado**, no un step interno de la composite action.
+   `ux-ui-landing-architect-v2` declara `timeout-minutes: 10` en ese
+   step (ver `.github/workflows/ux-ui-landing-architect-v2.yml`, step
+   `[RUNTIME] Ejecutar...`). Esto limita TODA la composite action (auth
+   + los dos preflights + `claude-code-action` + resolución de salida) a
+   10 minutos, recuperando de forma práctica el mismo backstop que tenía
+   antes de PR #6 el step de Claude en solitario.
+3. **Timeout del JOB completo** -- `timeout-minutes: 20` a nivel de
+   `jobs.<job>`, sin cambios respecto a antes de PR #6. Cubre también los
+   pasos `[DOMINIO]` (preparación de contexto, validación/auditoría,
+   subida de artifact) que corren fuera de la composite action.
+
+**Todo empleado nuevo debe copiar `timeout-minutes: 10` en el step que
+invoca `./.github/actions/claude-employee-runtime`**, salvo necesidad
+explícitamente justificada en su propio PR (p.ej. un dominio cuyo
+prompt/contexto sea consistentemente más pesado). No hay backstop
+automático si un empleado nuevo olvida este `timeout-minutes` -- solo
+quedaría cubierto por el timeout del job completo (menos granular).
+
 ## El contrato: qué implementa cada empleado
 
 Seis piezas. Las tres primeras (1, 3, 5 en parte) tienen una convención
@@ -124,11 +167,18 @@ de ruta fija; las otras tres (2, 4, 6) son enteramente responsabilidad
 de cada empleado, con la forma que tenga sentido para su dominio.
 
 1. **Agent definition** -- `.claude/agents/<agent-name>.md`. `tools: []`
-   explícito en el frontmatter (verificado además por
-   `config/subagent-tool-allowlist.json` +
-   `src/core/subagent-tool-guard.ts`, sin cambios en este PR). Debe
-   añadir su propia entrada en `config/subagent-tool-allowlist.json`
-   (fichero compartido, ver "Puntos de conflicto" más abajo).
+   explícito en el frontmatter, verificado por
+   `config/subagent-tool-allowlist.json` + `src/core/subagent-tool-guard.ts`.
+   Debe añadir su propia entrada en `config/subagent-tool-allowlist.json`
+   (fichero compartido, ver "Puntos de conflicto" más abajo). **A partir
+   de este PR, este chequeo no vive solo en tests:** el runtime común lo
+   ejecuta como preflight determinista (`assertSubagentIsToolless()`,
+   vía `scripts/assert-claude-employee-safety-for-ci.ts`) justo antes de
+   invocar a Claude, para CUALQUIER empleado -- si el agente no está en
+   el allowlist, tiene `allowedTools`/`externalWriteToolsGranted` no
+   vacíos, o hay drift entre el `.md` y el allowlist, el job falla ANTES
+   de gastar ninguna invocación de Claude. Ningún empleado nuevo debe
+   duplicar este chequeo en su propio workflow.
 2. **Input/context preparation** -- responsabilidad exclusiva del
    empleado: cómo elige su unidad de trabajo, cómo construye su
    `LandingArchitectContext`-equivalente, cómo arma el texto final del
@@ -138,14 +188,24 @@ de cada empleado, con la forma que tenga sentido para su dominio.
    el nombre/formato exacto lo decide el empleado).
 3. **Output schema** -- `config/<agent-name>-output.schema.json`. JSON
    Schema **draft-07** (el Claude Agent SDK rechaza drafts más nuevos),
-   con `additionalProperties: false` en todos los objetos, usando solo
-   las features soportadas documentadas en
-   `https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations`
-   (`type`, `properties`, `required`, `items`, `enum`,
-   `additionalProperties: false`, `$ref`/`definitions` internos). **El
-   fichero no debe contener el carácter apóstrofe en ningún sitio** --
-   se embebe tal cual entre comillas simples de shell en `--json-schema`
-   dentro de la composite action.
+   con `additionalProperties: false` en todos los objetos, usando **solo**
+   las keywords que `src/core/json-schema-lite.ts` implementa (`type`,
+   `properties`, `required`, `items`, `enum`, `additionalProperties: false`,
+   `$ref`/`definitions` internos, más las de anotación pura `$schema`,
+   `$id`, `title`, `description`). **El runtime común lo verifica por ti,
+   como preflight, antes de invocar a Claude** (`assertJsonSchemaLiteSupported()`,
+   vía `scripts/assert-json-schema-lite-compatible-for-ci.ts`): si el
+   schema usa una keyword no soportada (p.ej. `minLength`, `pattern`,
+   `oneOf`, `format`), el job falla explícitamente ANTES de gastar
+   inferencia, en vez de dejar que caso A (`--json-schema`, validado por
+   el SDK) y caso B (fallback) acaben validando con criterios distintos.
+   Si de verdad necesitas una keyword no soportada, hay que implementarla
+   en `json-schema-lite.ts` (y sus tests) en el mismo commit, para todos
+   los empleados que usan el runtime -- no es una decisión que un
+   worktree individual pueda tomar solo para su propio schema. **El
+   fichero tampoco debe contener el carácter apóstrofe en ningún sitio**
+   -- se embebe tal cual entre comillas simples de shell en
+   `--json-schema` dentro de la composite action.
 4. **Domain validator/auditor** -- una función `validate<Agent>Output(raw: unknown): <AgentOutput>`
    (fail-closed, sin librerías externas, mismo patrón que
    `validateV2Output()` en `src/core/landing-architect-comparison.ts`) y,
@@ -165,7 +225,9 @@ de cada empleado, con la forma que tenga sentido para su dominio.
      tal cual (`${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` /
      `${{ secrets.ANTHROPIC_API_KEY }}` -- una composite action NO tiene
      acceso al contexto `secrets` del caller, solo a lo que se le pase
-     explícitamente).
+     explícitamente). **Ese mismo step debe llevar `timeout-minutes: 10`**
+     (ver sección "Timeouts" más arriba) salvo necesidad explícitamente
+     justificada.
 6. **Artifact/summary definition** -- qué ficheros sube
    (`actions/upload-artifact@v4`, nombre propio) y qué campos muestra en
    `$GITHUB_STEP_SUMMARY`. El runtime común expone dos outputs para
@@ -179,7 +241,9 @@ de cada empleado, con la forma que tenga sentido para su dominio.
    Añade su entrada en `config/subagent-tool-allowlist.json`
    (`allowedTools: []`, `externalWriteToolsGranted: []`).
 2. Crea `config/<agent-name>-output.schema.json` (draft-07, sin
-   apóstrofes, `additionalProperties: false`).
+   apóstrofes, `additionalProperties: false`, solo keywords soportadas
+   por `json-schema-lite.ts`). Puedes verificarlo localmente antes de
+   abrir el PR: `npm run claude-employee:assert-schema-supported-for-ci -- config/<agent-name>-output.schema.json`.
 3. Escribe la preparación de dominio: selección de trabajo + contexto +
    prompt. Convención sugerida (no obligatoria salvo para empleado
    nuevos, ver nota sobre `ux-ui-landing-architect-v2` más abajo):
@@ -198,8 +262,8 @@ de cada empleado, con la forma que tenga sentido para su dominio.
    configuration" de arriba). Usa
    `.github/workflows/ux-ui-landing-architect-v2.yml` como plantilla --
    solo cambian los pasos marcados `[DOMINIO]`; el step `[RUNTIME]` se
-   copia casi literal, cambiando `agent-name`, `output-schema-path` y
-   `expected-output-path`.
+   copia casi literal, cambiando `agent-name`, `output-schema-path`,
+   `expected-output-path`, y conservando `timeout-minutes: 10`.
 6. Prueba primero con `workflow_dispatch` únicamente. Activa `schedule`
    solo después de una validación end-to-end real (mismo criterio que
    `ux-ui-landing-architect-v2>`, ver
@@ -297,7 +361,10 @@ que no tuviera ya `ux-ui-landing-architect-v2`:
   que `claude-code-action` pida su propio token OIDC con permisos de
   escritura por defecto).
 - Sin MCP: `--disallowedTools "mcp__*"` por defecto, más `tools: []` en
-  el propio agente (dos capas independientes).
+  el propio agente, más el preflight determinista del runtime
+  (`assertSubagentIsToolless()`) que verifica AMBAS cosas (allowlist +
+  frontmatter) antes de invocar a Claude -- tres capas independientes,
+  la tercera ejecutada por el runtime mismo, no solo por tests.
 - Sin `bypassPermissions` en ningún punto.
 - Sin escritura a WordPress/staging/producción/Ads/GA4/GTM/Search
   Console/n8n/VPS -- el runtime común no tiene ninguna integración con
@@ -313,16 +380,27 @@ ninguna** de antemano.
 
 ## Limitaciones conocidas
 
-- **Sin `timeout-minutes` por step dentro de la composite action.**
-  Verificado contra el JSON Schema oficial de metadata de GitHub Actions
-  (`runs-composite.steps` no incluye ese campo): el step que invoca
-  `claude-code-action` dentro de `claude-employee-runtime` ya no tiene su
-  propio límite de 10 minutos (como sí lo tenía en el workflow original
-  de `ux-ui-landing-architect-v2` antes de este PR). El único backstop
-  de tiempo ahora es el `timeout-minutes` del JOB completo del workflow
-  del empleado (20 minutos para `ux-ui-landing-architect-v2`, sin
-  cambios). Sigue siendo fail-closed (el job se mata igual), solo con
-  menos granularidad que antes.
+- **Sin `timeout-minutes` por step INDIVIDUAL dentro de la composite
+  action** (mitigado, no eliminado). Verificado contra el JSON Schema
+  oficial de metadata de GitHub Actions (`runs-composite.steps` no
+  incluye ese campo): el step que invoca `claude-code-action` dentro de
+  `claude-employee-runtime` no puede tener su propio límite de 10
+  minutos como antes de este PR. Pero el step del workflow CALLER que
+  invoca la composite action entera SÍ lleva `timeout-minutes: 10` (ver
+  sección "Timeouts" más arriba), así que en la práctica el backstop de
+  10 minutos sigue existiendo -- solo que ahora cubre auth + los dos
+  preflights + Claude + resolución de salida como bloque único, en vez
+  de solo el step de Claude en solitario. Si, por ejemplo, los
+  preflights fueran anormalmente lentos, comerían presupuesto del mismo
+  timeout de 10 min en vez de tener uno propio.
+- **`assertJsonSchemaLiteSupported()` no amplía lo que `json-schema-lite.ts`
+  sabe validar** -- solo impide que un schema use una keyword no
+  soportada SIN que nadie se entere. El subconjunto de JSON Schema
+  disponible para cualquier empleado sigue siendo el mismo de antes de
+  este PR (`type`, `properties`, `required`, `items`, `enum`,
+  `additionalProperties: false`, `$ref`/`definitions`, más anotaciones
+  puras). Si un empleado futuro necesita `pattern`/`minLength`/`oneOf`/etc.,
+  sigue siendo trabajo pendiente implementarlas en `json-schema-lite.ts`.
 - **Validación de `structured_output` (caso A) contra el schema no tiene
   todavía evidencia empírica de un run real con contenido.** Las tres
   ejecuciones reales de `ux-ui-landing-architect-v2` hasta ahora (dos en

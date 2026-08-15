@@ -103,6 +103,46 @@ runs:
         echo "::error::BLOCKED_BY_AUTH -- falta CLAUDE_CODE_OAUTH_TOKEN o ANTHROPIC_API_KEY. Ver el Step Summary para la accion manual exacta."
         exit 1
 
+    # --- Preflights DETERMINISTICOS (sin usar Claude para nada), ambos
+    # AUTORIDAD UNICA de su politica para CUALQUIER empleado que use este
+    # runtime -- ningun empleado nuevo debe duplicar esta logica en su
+    # propio workflow. Corren ANTES de gastar ninguna invocacion de
+    # Claude, para fallar rapido y barato si algo esta mal configurado. ---
+
+    # 1) Tool guard: el subagente debe estar declarado "cero herramientas"
+    # tanto en config/subagent-tool-allowlist.json como en el frontmatter
+    # de su propio .claude/agents/<agent>.md (ver
+    # src/core/subagent-tool-guard.ts, assertSubagentIsToolless()). Antes
+    # de PR #6 este chequeo solo vivia en tests
+    # (test/subagent-tool-guard.test.ts) -- correcto para detectar drift
+    # en CI, pero no impedia por si solo que un futuro
+    # .claude/agents/<agent>.md con `tools:` mal declarado llegase a
+    # invocarse en produccion si alguien se saltara los tests. Ahora el
+    # runtime comun lo verifica el mismo, en el momento exacto antes de
+    # invocar a Claude, para TODOS los empleados.
+    - name: "[RUNTIME] Preflight: verificar que el agente es cero-herramientas (Subagent Tool Guard)"
+      id: toolless-guard
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: npm run claude-employee:assert-safety-for-ci -- "$AGENT_NAME"
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+
+    # 2) Schema guard: el JSON Schema de salida del empleado solo puede
+    # usar keywords que src/core/json-schema-lite.ts sabe validar -- si
+    # no, caso A (--json-schema) y caso B (fallback) dejarian de tener el
+    # mismo contrato (ver src/core/json-schema-lite.ts,
+    # assertJsonSchemaLiteSupported()). Corre ANTES de invocar a Claude
+    # para no gastar inferencia con un schema que este runtime no podria
+    # validar con paridad.
+    - name: "[RUNTIME] Preflight: verificar que el schema de salida solo usa keywords soportadas (json-schema-lite)"
+      id: schema-guard
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: npm run claude-employee:assert-schema-supported-for-ci -- "$OUTPUT_SCHEMA_PATH"
+      env:
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+
     - name: Preparar JSON Schema de salida para --json-schema
       id: schema
       if: steps.claude-auth.outputs.method != 'none'
@@ -160,14 +200,21 @@ runs:
     # recuperable, ese step falla explicitamente igual que si
     # continue-on-error no existiera.
     #
-    # LIMITACION CONOCIDA: los steps de una composite action NO soportan
-    # `timeout-minutes` (no es un campo valido en runs.steps para
-    # `using: composite` -- verificado contra el JSON Schema oficial de
-    # metadata de Actions, no asumido). El unico backstop de tiempo para
-    # este step es el `timeout-minutes` del JOB del workflow caller
-    # (antes: 10 min especificos para este step + 20 min de job: ahora
-    # solo el limite de job, tipicamente 20 min). Ver
-    # docs/claude-employee-runtime.md, seccion de limitaciones.
+    # LIMITACION CONOCIDA (parcialmente mitigada): los steps INTERNOS de
+    # una composite action NO soportan `timeout-minutes` propio (no es un
+    # campo valido en runs.steps para `using: composite` -- verificado
+    # contra el JSON Schema oficial de metadata de Actions, no asumido),
+    # asi que este step "Ejecutar empleado Claude" en concreto no puede
+    # llevar su propio timeout de 10 min como antes de PR #6. Pero el
+    # CALLER (el workflow del empleado que hace
+    # `uses: ./.github/actions/claude-employee-runtime`) SI puede poner
+    # `timeout-minutes: 10` en ESE step -- eso limita la composite action
+    # COMPLETA (auth + preflights + este step + resolucion de salida) a
+    # 10 min, recuperando de forma practica el mismo backstop que existia
+    # antes. Ver .github/workflows/ux-ui-landing-architect-v2.yml (step
+    # "[RUNTIME] Ejecutar...") y docs/claude-employee-runtime.md, seccion
+    # de timeouts -- todo empleado nuevo debe copiar ese
+    # timeout-minutes: 10 en su propio caller.
     - name: Ejecutar empleado Claude
       id: claude
       if: steps.claude-auth.outputs.method != 'none'
