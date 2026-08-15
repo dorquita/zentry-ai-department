@@ -1,5 +1,17 @@
 # Telegram Approval System + Staging-First Apply
 
+> **La parte de APROBACIONES de este documento esta SUPERADA por la fase
+> serverless.** El flujo staging-first, la maquina de estados, las
+> capacidades, los executors, el anti-TOCTOU y los guards siguen siendo
+> validos y vigentes tal como se describen aqui.
+>
+> Lo que ha cambiado es DONDE viven las aprobaciones: ya no hay poller de
+> Telegram ni registro en el filesystem del VPS. El webhook lo recibe un
+> Worker de Cloudflare con persistencia en D1, y quien publica en
+> produccion sigue siendo GitHub Actions.
+>
+> Documento vigente para esa parte: **[docs/serverless-approvals.md](serverless-approvals.md)**.
+
 Documento de referencia del flujo operativo por el que un cambio del
 departamento IA llega desde una recomendacion hasta produccion.
 
