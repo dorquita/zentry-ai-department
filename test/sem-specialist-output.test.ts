@@ -5,15 +5,22 @@ import {
   SemSpecialistOutput,
   validateSemSpecialistOutput,
 } from "../src/employees/sem-specialist/sem-specialist-output";
-import { SemSpecialistContext } from "../src/employees/sem-specialist/sem-specialist-context";
+import { buildSemEvidenceCatalog, SemEvidenceCatalogItem, SemSpecialistContext } from "../src/employees/sem-specialist/sem-specialist-context";
 
 export interface TestCase {
   name: string;
   fn: () => void;
 }
 
-function baseContext(overrides: Partial<SemSpecialistContext> = {}): SemSpecialistContext {
-  return {
+/**
+ * Construye un SemSpecialistContext realista + su evidenceCatalog
+ * determinista (buildSemEvidenceCatalog(), la MISMA funcion que usa
+ * buildSemSpecialistContext() en produccion) -- nunca un catalogo
+ * hand-rolled en el test, para que los fixtures no puedan desincronizarse
+ * de lo que el runner realmente genera.
+ */
+function baseContext(overrides: Partial<Omit<SemSpecialistContext, "evidenceCatalog">> = {}): SemSpecialistContext {
+  const base: Omit<SemSpecialistContext, "evidenceCatalog"> = {
     sourceEventId: "evt-1",
     sourceDepartmentRunId: "growth-department-2026-08-14T111247Z",
     sourceGeneratedAt: "2026-08-14T11:13:30.858Z",
@@ -44,6 +51,19 @@ function baseContext(overrides: Partial<SemSpecialistContext> = {}): SemSpeciali
     },
     ...overrides,
   };
+  return { ...base, evidenceCatalog: buildSemEvidenceCatalog(base) };
+}
+
+/** Busca una entrada real del catalogo por id -- lanza si el fixture del test no la generó (nunca cae en silencio a un id inventado). */
+function catalogItem(context: SemSpecialistContext, id: string): SemEvidenceCatalogItem {
+  const item = context.evidenceCatalog.find((c) => c.id === id);
+  if (!item) throw new Error(`catalog item no encontrado en el fixture del test: "${id}" (ids disponibles: ${context.evidenceCatalog.map((c) => c.id).join(", ")})`);
+  return item;
+}
+
+/** Copia una entrada del catalogo tal cual a la forma { id, contextField, value } que espera evidence[] -- exactamente lo que se le pide al subagente que haga. */
+function evidenceFromCatalog(item: SemEvidenceCatalogItem): { id: string; contextField: string; value: string } {
+  return { id: item.id, contextField: item.contextField, value: item.value };
 }
 
 function emptyFinding(overrides: Partial<SemFinding> = {}): SemFinding {
@@ -126,7 +146,7 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
 
-    // --- auditSemSpecialistOutputForUnsupportedClaims: fail-closed, no invented CPC/conversions/ROAS/spend/budget ---
+    // --- auditSemSpecialistOutputForUnsupportedClaims: fail-closed, catalogo determinista ---
     {
       name: "sin afirmaciones cuantitativas ni evidence => 0 violaciones",
       fn: () => {
@@ -136,19 +156,19 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "CPC inventado (numero que no aparece en el contexto) => violacion dura",
+      name: "CPC inventado (numero que no aparece en el evidenceCatalog) => violacion dura",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({
           budgetObservations: [emptyFinding({ description: "El CPC medio es de 2,50 € en esta campana." })],
         });
         const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0, "deberia rechazar un CPC que no aparece en el contexto");
+        assert.ok(violations.length > 0, "deberia rechazar un CPC que no aparece en el evidenceCatalog");
         assert.ok(violations.some((v) => /CPC/i.test(v)));
       },
     },
     {
-      name: "gasto inventado (cifra en euros que no aparece en el contexto) => violacion dura",
+      name: "gasto inventado (cifra en euros que no aparece en el evidenceCatalog) => violacion dura",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({
@@ -159,7 +179,7 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "presupuesto: cifra REAL del contexto (totalDailyBudgetIfActivatedEUR=44) pero SIN evidenceRefs => violacion (falta paper trail)",
+      name: "presupuesto: cifra REAL del catalogo (44) pero SIN evidenceRefs => violacion (falta paper trail)",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({
@@ -170,57 +190,35 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "presupuesto: cifra REAL del contexto (44) CON evidence[] trazable y evidenceRefs => 0 violaciones",
+      name: "presupuesto: cifra REAL del catalogo (44) CON evidence[] EXACTA del catalogo y evidenceRefs => 0 violaciones",
       fn: () => {
         const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
         const output = baseOutput({
           budgetObservations: [
             emptyFinding({
-              description: "El presupuesto es de 44 € al dia si se activaran todas las campanas.",
-              evidenceRefs: ["ev-budget"],
+              description: `El presupuesto es de ${budgetItem.value} € al dia si se activaran todas las campanas.`,
+              evidenceRefs: [budgetItem.id],
             }),
           ],
-          evidence: [{ id: "ev-budget", contextField: "departmentSummary.totalDailyBudgetIfActivatedEUR", value: "44 EUR" }],
+          evidence: [evidenceFromCatalog(budgetItem)],
         });
         assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
       },
     },
     {
-      name: "evidence[] inventada (valor que no aparece en el contexto real) => violacion dura, incluso sin referenciarla desde ningun finding",
+      name: "REGRESION: una evidencia real pero de categoria SIN RELACION (other) no puede respaldar una cifra de CPC (misattribution)",
       fn: () => {
-        const context = baseContext();
+        const context = baseContext({
+          departmentSummary: { ...baseContext().departmentSummary!, totalCampaigns: 3 },
+        });
+        const totalCampaignsItem = catalogItem(context, "sem-total-campaigns"); // categoria "other", value "3"
         const output = baseOutput({
-          evidence: [{ id: "ev-fake", contextField: "departmentSummary.realSpendEUR", value: "999 EUR" }],
+          biddingObservations: [emptyFinding({ description: "El CPC medio es de 3 EUR.", evidenceRefs: [totalCampaignsItem.id] })],
+          evidence: [evidenceFromCatalog(totalCampaignsItem)],
         });
         const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.some((v) => /no trazable/i.test(v)));
-      },
-    },
-    // --- REGRESIONES (code review) ---
-    {
-      name: "REGRESION: un CPC decimal fabricado (0.45) no debe colarse solo porque '45' coincide con un entero real de OTRO campo del contexto",
-      fn: () => {
-        const context = baseContext({ adGroups: 45 }); // 45 es un numero real del contexto, pero de un campo sin relacion con CPC
-        const output = baseOutput({
-          biddingObservations: [emptyFinding({ description: "El CPC medio es de 0.45 EUR en esta campana.", evidenceRefs: ["ev-cpc"] })],
-          evidence: [{ id: "ev-cpc", contextField: "adGroups", value: "45" }],
-        });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0, "0.45 no deberia interpretarse como '045'=45 (separador de miles) y colarse via un entero real no relacionado");
-      },
-    },
-    {
-      name: "REGRESION: una evidencia no puede citar un numero real de un contextField DISTINTO para respaldar una cifra inventada (misattribution)",
-      fn: () => {
-        const context = baseContext({ departmentSummary: { ...baseContext().departmentSummary!, totalCampaigns: 3 } });
-        const output = baseOutput({
-          biddingObservations: [emptyFinding({ description: "El CPC medio es de 3 EUR.", evidenceRefs: ["ev-misattributed"] })],
-          // El campo citado (totalCampaigns) es real y vale 3, pero NO tiene relacion alguna con un CPC -- citar su valor para
-          // respaldar una afirmacion de CPC es una atribucion falsa, no una evidencia real.
-          evidence: [{ id: "ev-misattributed", contextField: "departmentSummary.totalCampaigns", value: "3" }],
-        });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0, "citar un numero real de un campo no relacionado no deberia respaldar una cifra de CPC inventada");
+        assert.ok(violations.length > 0, "una evidencia real de categoria 'other' (totalCampaigns) no deberia respaldar una cifra de CPC solo porque el numero coincide");
       },
     },
     {
@@ -247,7 +245,7 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "evidenceRefs apunta a un id de evidence[] inexistente => la afirmacion se trata como sin respaldo",
+      name: "evidenceRefs apunta a un id INEXISTENTE (ni en evidence[] ni en el catalogo) => la afirmacion se trata como sin respaldo",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({
@@ -259,20 +257,21 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "conversiones: numero real presente en metrics[].conversions con evidence trazable y referenciada => 0 violaciones",
+      name: "conversiones: numero real presente en metrics[].conversions con evidence EXACTA del catalogo y referenciada => 0 violaciones",
       fn: () => {
         const context = baseContext({ metrics: [{ campaignId: "c1", campaignName: "SEM | Marca | Zentry", impressions: 100, clicks: 10, costEUR: 5, conversions: 2, ctr: 0.1 }] });
+        const convItem = catalogItem(context, "sem-metrics-0-conversions");
         const output = baseOutput({
           conversionRiskFindings: [
-            emptyFinding({ title: "Volumen de conversion bajo", description: "Se registraron 2 conversiones en el periodo medido.", evidenceRefs: ["ev-conv"] }),
+            emptyFinding({ title: "Volumen de conversion bajo", description: "Se registraron 2 conversiones en el periodo medido.", evidenceRefs: [convItem.id] }),
           ],
-          evidence: [{ id: "ev-conv", contextField: "metrics[0].conversions", value: "2" }],
+          evidence: [evidenceFromCatalog(convItem)],
         });
         assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
       },
     },
     {
-      name: "ROAS inventado (categoria explicitamente prohibida por la mision) => violacion dura",
+      name: "ROAS inventado (categoria estructuralmente sin campo real en el contexto) => violacion dura",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({ biddingObservations: [emptyFinding({ description: "El ROAS actual es de 3.5, muy por encima del objetivo." })] });
@@ -295,79 +294,134 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "evidence no numerica (nombre de campana real) trazable por substring del contexto serializado => sin violacion propia",
+      name: "evidence no numerica (campaignStatus) EXACTA del catalogo => sin violacion de trazabilidad",
       fn: () => {
         const context = baseContext();
-        const output = baseOutput({
-          evidence: [{ id: "ev-name", contextField: "campaignStatus", value: "PAUSED" }],
-        });
+        const statusItem = catalogItem(context, "sem-campaign-status");
+        const output = baseOutput({ evidence: [evidenceFromCatalog(statusItem)] });
         const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(!violations.some((v) => /no trazable/i.test(v)));
+        assert.ok(!violations.some((v) => /no coincide EXACTAMENTE/i.test(v)));
       },
     },
 
-    // --- REGRESION (run 31885470082: "4 afirmacion(es) cuantitativa(s) sin
-    // respaldo trazable en evidence[]"): fix aplicado unicamente en
-    // .claude/agents/sem-specialist.md (autocheque + lista ampliada de
-    // categorias), sin tocar el auditor ni el runtime -- estos 4 casos
-    // verifican que el auditor YA existente (sin cambios) sigue exigiendo
-    // exactamente lo que el agente ahora tiene instrucciones explicitas de
-    // cumplir. ---
+    // --- REGRESION (fix estructural: evidenceCatalog determinista) --------
+    // 11 casos pedidos explicitamente tras el diagnostico del run
+    // 31886434011 (2 afirmaciones sin respaldo, categorias CPC/ROAS
+    // estructuralmente impasables con la heuristica anterior). ---
     {
-      name: "REGRESION: cifra CPC con evidenceRef valido y evidence[] trazable al contexto real => 0 violaciones (pasa)",
+      name: "evidence item EXACTO del catalogo (mismo id+contextField+value) => valida, no aparece como no-trazable",
       fn: () => {
         const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        const output = baseOutput({ evidence: [evidenceFromCatalog(budgetItem)] });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(!violations.some((v) => /no coincide EXACTAMENTE/i.test(v)));
+      },
+    },
+    {
+      name: "evidence con id INVENTADO (no existe ningun item del evidenceCatalog con ese id) => invalida",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        const output = baseOutput({ evidence: [{ id: "sem-budget-daily-total-inventado", contextField: budgetItem.contextField, value: budgetItem.value }] });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /no coincide EXACTAMENTE/i.test(v)));
+      },
+    },
+    {
+      name: "evidence con contextField MODIFICADO respecto al catalogo (mismo id y value) => invalida",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        const output = baseOutput({ evidence: [{ id: budgetItem.id, contextField: "departmentSummary.presupuestoDiarioInventado", value: budgetItem.value }] });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /no coincide EXACTAMENTE/i.test(v)));
+      },
+    },
+    {
+      name: "evidence con value MODIFICADO respecto al catalogo (mismo id y contextField) => invalida",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        const output = baseOutput({ evidence: [{ id: budgetItem.id, contextField: budgetItem.contextField, value: "45" }] });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /no coincide EXACTAMENTE/i.test(v)));
+      },
+    },
+    {
+      name: "cifra con evidenceRef VALIDO (apunta a evidence[] EXACTA del catalogo, misma categoria) => valida",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-monthly-total");
         const output = baseOutput({
-          biddingObservations: [
-            emptyFinding({
-              title: "Presupuesto diario disponible si se activan todas las campanas",
-              description: "El presupuesto diario si se activaran todas las campanas es de 44 EUR.",
-              evidenceRefs: ["ev-presupuesto"],
-            }),
-          ],
-          evidence: [{ id: "ev-presupuesto", contextField: "departmentSummary.totalDailyBudgetIfActivatedEUR", value: "44 EUR" }],
+          budgetObservations: [emptyFinding({ description: `El presupuesto es de ${budgetItem.value} € al mes si se activaran todas las campanas.`, evidenceRefs: [budgetItem.id] })],
+          evidence: [evidenceFromCatalog(budgetItem)],
         });
         assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
       },
     },
     {
-      name: "REGRESION: cifra cuantitativa SIN ningun evidenceRef (array vacio) => violacion dura, la salida se rechaza",
+      name: "cifra SIN evidenceRef alguno (array vacio) => invalida, aunque el numero sea real",
       fn: () => {
         const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-monthly-total");
         const output = baseOutput({
-          budgetObservations: [emptyFinding({ description: "El presupuesto es de 44 € al dia si se activaran todas las campanas.", evidenceRefs: [] })],
+          budgetObservations: [emptyFinding({ description: `El presupuesto es de ${budgetItem.value} € al mes si se activaran todas las campanas.`, evidenceRefs: [] })],
         });
         const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0, "una cifra sin ningun evidenceRef, aunque el numero exista en el contexto, debe rechazarse por falta de paper trail explicito");
+        assert.ok(violations.length > 0);
       },
     },
     {
-      name: "REGRESION: evidenceRef que apunta a un id de evidence[] INEXISTENTE => la cifra se trata como sin respaldo (violacion dura)",
+      name: "CPC: afirmacion cualitativa (sin cifra) citando sem-cpc-not-available => valida (0 violaciones)",
       fn: () => {
         const context = baseContext();
+        const cpcItem = catalogItem(context, "sem-cpc-not-available");
+        assert.equal(cpcItem.value, "not_available");
         const output = baseOutput({
-          budgetObservations: [emptyFinding({ description: "El presupuesto es de 1320 € al mes si se activaran todas las campanas.", evidenceRefs: ["ev-que-no-existe-en-evidence"] })],
-          evidence: [],
-        });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0, "un evidenceRef que no resuelve a ninguna entrada real de evidence[] no debe contar como respaldo");
-      },
-    },
-    {
-      name: "REGRESION: observacion cualitativa (sin ninguna cifra numerica) sobre CPC/gasto/presupuesto => 0 violaciones (valida)",
-      fn: () => {
-        const context = baseContext();
-        const output = baseOutput({
-          budgetObservations: [
-            emptyFinding({
-              title: "Presupuesto disponible sin activar",
-              description: "Existe presupuesto diario y mensual disponible si se activaran todas las campanas, pero no hay gasto real medido todavia -- las campanas estan pausadas.",
-              evidenceRefs: [],
-            }),
-          ],
-          unknowns: ["Sin CPC real disponible en este snapshot: las campanas estan pausadas y metrics esta vacio."],
+          biddingObservations: [emptyFinding({ description: "El CPC no esta disponible en este snapshot, sin clics registrados.", evidenceRefs: [cpcItem.id] })],
+          evidence: [evidenceFromCatalog(cpcItem)],
         });
         assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
+    {
+      name: "CPC: cifra NUMERICA sin dato real (aunque cite sem-cpc-not-available) => invalida siempre -- no hay ninguna entrada numerica de categoria cpc en el catalogo",
+      fn: () => {
+        const context = baseContext();
+        const cpcItem = catalogItem(context, "sem-cpc-not-available");
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El CPC medio es de 0.50 EUR.", evidenceRefs: [cpcItem.id] })],
+          evidence: [evidenceFromCatalog(cpcItem)],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /CPC/i.test(v)), "una cifra de CPC nunca puede tener respaldo real hoy: el catalogo no expone ningun campo numerico de CPC");
+      },
+    },
+    {
+      name: "ROAS: afirmacion cualitativa (sin cifra) citando sem-roas-not-available => valida (0 violaciones)",
+      fn: () => {
+        const context = baseContext();
+        const roasItem = catalogItem(context, "sem-roas-not-available");
+        assert.equal(roasItem.value, "not_available");
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El ROAS no esta disponible en este snapshot.", evidenceRefs: [roasItem.id] })],
+          evidence: [evidenceFromCatalog(roasItem)],
+        });
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
+    {
+      name: "ROAS: cifra NUMERICA sin dato real (aunque cite sem-roas-not-available) => invalida siempre -- no hay ninguna entrada numerica de categoria roas en el catalogo",
+      fn: () => {
+        const context = baseContext();
+        const roasItem = catalogItem(context, "sem-roas-not-available");
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El ROAS actual es de 3.5.", evidenceRefs: [roasItem.id] })],
+          evidence: [evidenceFromCatalog(roasItem)],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /ROAS/i.test(v)), "una cifra de ROAS nunca puede tener respaldo real hoy: el catalogo no expone ningun campo numerico de ROAS");
       },
     },
   ];

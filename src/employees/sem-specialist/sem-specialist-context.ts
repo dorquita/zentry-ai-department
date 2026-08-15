@@ -64,6 +64,36 @@ export interface SemDepartmentSummarySnapshot {
 }
 
 /**
+ * Categoria DETERMINISTA de una entrada del evidenceCatalog -- asignada
+ * una unica vez, aqui, por codigo TOOL (nunca inferida por Claude ni
+ * adivinada por el auditor via coincidencia de substring en el nombre
+ * del campo). "cpc"/"conversiones"/"roas"/"gasto"/"presupuesto" son las
+ * 5 categorias que auditSemSpecialistOutputForUnsupportedClaims()
+ * exige ver respaldadas por una entrada de la MISMA categoria -- "other"
+ * cubre el resto de datos reales citables (nombres, estados, contadores)
+ * que no participan en esa auditoria de categorias cuantitativas.
+ */
+export type SemEvidenceCategory = "cpc" | "conversiones" | "roas" | "gasto" | "presupuesto" | "other";
+
+/**
+ * Una entrada FIJA del catalogo de evidencia determinista (ver
+ * buildSemEvidenceCatalog() mas abajo). `id`/`contextField`/`value` son
+ * EXACTAMENTE los mismos 3 campos que SemEvidenceItem
+ * (sem-specialist-output.ts) -- el subagente solo puede construir su
+ * propio `evidence[]` copiando entradas de este catalogo tal cual, nunca
+ * inventando ni modificando ninguno de los 3 campos (ver
+ * auditSemSpecialistOutputForUnsupportedClaims(), que rechaza cualquier
+ * entrada de `evidence[]` que no coincida EXACTAMENTE con una entrada de
+ * aqui).
+ */
+export interface SemEvidenceCatalogItem {
+  id: string;
+  contextField: string;
+  value: string;
+  category: SemEvidenceCategory;
+}
+
+/**
  * Paquete de contexto ESTRUCTURADO que el runner
  * (scripts/run-sem-specialist.ts) embebe en el prompt del subagente --
  * ver .claude/agents/sem-specialist.md, seccion "Que se te entrega", para
@@ -85,6 +115,16 @@ export interface SemSpecialistContext {
   metricsWindow: string | null;
   metrics: SemMetricSnapshot[];
   departmentSummary: SemDepartmentSummarySnapshot | null;
+  /**
+   * Catalogo COMPLETO y determinista (TOOL, sin LLM) de toda la
+   * evidencia citable en este snapshot -- unica fuente de verdad de "que
+   * cifras/datos existen realmente". Ver buildSemEvidenceCatalog() para
+   * como se construye y auditSemSpecialistOutputForUnsupportedClaims()
+   * (sem-specialist-output.ts) para como se hace cumplir: cualquier
+   * entrada de `evidence[]` que el subagente devuelva debe coincidir
+   * EXACTAMENTE (id+contextField+value) con una entrada de aqui.
+   */
+  evidenceCatalog: SemEvidenceCatalogItem[];
 }
 
 // --- Parseo defensivo del payload (Record<string, unknown>) del evento ---
@@ -183,6 +223,83 @@ export function findLatestSemWatcherFinishedEvent(events: DepartmentEvent[]): De
 }
 
 /**
+ * Construye, de forma puramente deterministica (TOOL, sin LLM), el
+ * catalogo COMPLETO de evidencia citable para un `SemSpecialistContext`
+ * ya construido (recibe todos sus campos salvo `evidenceCatalog`, para
+ * evitar una dependencia circular con el propio tipo que produce). Cada
+ * numero/dato real del contexto obtiene EXACTAMENTE una entrada, con un
+ * `id` estable (mismo input -> mismos ids, funcion pura) y una
+ * `category` asignada aqui mismo -- nunca adivinada despues por
+ * coincidencia de texto (ver comentario de SemEvidenceCategory).
+ *
+ * Incluye SIEMPRE dos entradas centinela para CPC y ROAS
+ * (`sem-cpc-not-available` / `sem-roas-not-available`, value
+ * "not_available"): hoy `SemSpecialistContext` no expone ningun campo
+ * real de CPC ni de ROAS (sem-watcher no los reporta) -- sin estas dos
+ * entradas, cualquier mencion de CPC/ROAS con una cifra quedaria
+ * indefinida de forma ambigua; con ellas, el subagente tiene una via
+ * VALIDA y explicita para declarar la ausencia de dato sin arriesgarse a
+ * inventar una cifra (ver auditSemSpecialistOutputForUnsupportedClaims:
+ * como ninguna entrada del catalogo tiene un valor NUMERICO de categoria
+ * "cpc"/"roas", CUALQUIER cifra citada en esas categorias es rechazada
+ * por diseno, siempre).
+ */
+export function buildSemEvidenceCatalog(ctx: Omit<SemSpecialistContext, "evidenceCatalog">): SemEvidenceCatalogItem[] {
+  const catalog: SemEvidenceCatalogItem[] = [];
+  const add = (id: string, contextField: string, value: string, category: SemEvidenceCategory): void => {
+    catalog.push({ id, contextField, value, category });
+  };
+
+  add("sem-campaign-name", "campaignName", ctx.campaignName, "other");
+  add("sem-campaign-status", "campaignStatus", ctx.campaignStatus, "other");
+  add("sem-connected-to-google-ads", "connectedToGoogleAdsAtSourceTime", String(ctx.connectedToGoogleAdsAtSourceTime), "other");
+  add("sem-ad-groups", "adGroups", String(ctx.adGroups), "other");
+  add("sem-positive-keywords", "positiveKeywords", String(ctx.positiveKeywords), "other");
+  add("sem-negative-keywords", "negativeKeywords", String(ctx.negativeKeywords), "other");
+  add("sem-responsive-search-ads", "responsiveSearchAds", String(ctx.responsiveSearchAds), "other");
+  add("sem-candidate-count", "semCandidateCount", String(ctx.semCandidateCount), "other");
+
+  ctx.metrics.forEach((m, i) => {
+    add(`sem-metrics-${i}-clicks`, `metrics[${i}].clicks`, String(m.clicks), "other");
+    add(`sem-metrics-${i}-impressions`, `metrics[${i}].impressions`, String(m.impressions), "other");
+    add(`sem-metrics-${i}-ctr`, `metrics[${i}].ctr`, String(m.ctr), "other");
+    add(`sem-metrics-${i}-cost`, `metrics[${i}].costEUR`, String(m.costEUR), "gasto");
+    add(`sem-metrics-${i}-conversions`, `metrics[${i}].conversions`, String(m.conversions), "conversiones");
+  });
+
+  if (ctx.departmentSummary) {
+    const ds = ctx.departmentSummary;
+    add("sem-spend-real", "departmentSummary.realSpendEUR", String(ds.realSpendEUR), "gasto");
+    add("sem-budget-daily-total", "departmentSummary.totalDailyBudgetIfActivatedEUR", String(ds.totalDailyBudgetIfActivatedEUR), "presupuesto");
+    add("sem-budget-monthly-total", "departmentSummary.totalMonthlyBudgetIfActivatedEUR", String(ds.totalMonthlyBudgetIfActivatedEUR), "presupuesto");
+    add("sem-total-campaigns", "departmentSummary.totalCampaigns", String(ds.totalCampaigns), "other");
+    add("sem-active-campaigns", "departmentSummary.activeCampaignCount", String(ds.activeCampaignCount), "other");
+    add("sem-paused-campaigns", "departmentSummary.pausedCampaignCount", String(ds.pausedCampaignCount), "other");
+    add("sem-total-positive-keywords", "departmentSummary.totalPositiveKeywords", String(ds.totalPositiveKeywords), "other");
+    add("sem-total-negative-keywords", "departmentSummary.totalNegativeKeywords", String(ds.totalNegativeKeywords), "other");
+
+    ds.campaigns.forEach((c, i) => {
+      add(`sem-campaign-${i}-name`, `departmentSummary.campaigns[${i}].name`, c.name, "other");
+      add(`sem-campaign-${i}-status`, `departmentSummary.campaigns[${i}].status`, c.status, "other");
+      add(`sem-campaign-${i}-ad-groups`, `departmentSummary.campaigns[${i}].adGroups`, String(c.adGroups), "other");
+      add(`sem-campaign-${i}-positive-keywords`, `departmentSummary.campaigns[${i}].positiveKeywords`, String(c.positiveKeywords), "other");
+      if (c.dailyBudgetEUR !== null) {
+        add(`sem-campaign-${i}-daily-budget`, `departmentSummary.campaigns[${i}].dailyBudgetEUR`, String(c.dailyBudgetEUR), "presupuesto");
+      }
+    });
+
+    ds.primaryConversionActionNames.forEach((name, i) => add(`sem-primary-conversion-${i}`, `departmentSummary.primaryConversionActionNames[${i}]`, name, "other"));
+    ds.unexpectedPrimaryConversionActionNames.forEach((name, i) => add(`sem-unexpected-conversion-${i}`, `departmentSummary.unexpectedPrimaryConversionActionNames[${i}]`, name, "other"));
+    ds.duplicateKeywordWarnings.forEach((w, i) => add(`sem-duplicate-keyword-warning-${i}`, `departmentSummary.duplicateKeywordWarnings[${i}]`, w, "other"));
+  }
+
+  add("sem-cpc-not-available", "cpc", "not_available", "cpc");
+  add("sem-roas-not-available", "roas", "not_available", "roas");
+
+  return catalog;
+}
+
+/**
  * Punto de entrada de este modulo. `null` si no hay ningun snapshot SEM
  * real que leer -- el runner (scripts/run-sem-specialist.ts) trata eso
  * como un estado terminal "no_data" y NUNCA invoca al subagente sin
@@ -192,7 +309,7 @@ export function buildSemSpecialistContext(events: DepartmentEvent[]): SemSpecial
   const event = findLatestSemWatcherFinishedEvent(events);
   if (!event) return null;
   const payload = asRecord(event.payload);
-  return {
+  const baseCtx = {
     sourceEventId: event.eventId,
     sourceDepartmentRunId: event.departmentRunId,
     sourceGeneratedAt: event.createdAt,
@@ -208,4 +325,5 @@ export function buildSemSpecialistContext(events: DepartmentEvent[]): SemSpecial
     metrics: parseMetrics(payload.metrics),
     departmentSummary: parseDepartmentSummary(payload.departmentSummary),
   };
+  return { ...baseCtx, evidenceCatalog: buildSemEvidenceCatalog(baseCtx) };
 }

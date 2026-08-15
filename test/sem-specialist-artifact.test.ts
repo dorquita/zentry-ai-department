@@ -23,6 +23,7 @@ function baseContext(): SemSpecialistContext {
     metricsWindow: "LAST_30_DAYS",
     metrics: [],
     departmentSummary: null,
+    evidenceCatalog: [],
   };
 }
 
