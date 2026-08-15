@@ -1,0 +1,127 @@
+name: Department -- Publicar en PRODUCCION una aprobacion
+
+# EL UNICO SITIO DE TODO EL SISTEMA QUE ESCRIBE EN PRODUCCION.
+#
+# Cadena completa:
+#
+#   Telegram (persona pulsa APROBAR)
+#     -> Worker de Cloudflare: transicion CONDICIONAL Y ATOMICA
+#        `approved` -> `production_queued` (gana un solo actor, aunque
+#        Telegram entregue el callback dos veces) y dispatch de ESTE
+#        workflow con un unico dato: el approvalId.
+#     -> scripts/run-production-apply.ts: relee staging, comprueba el hash
+#        de la version aprobada (anti-TOCTOU), reclama el apply y publica
+#        con snapshot + validacion + rollback verificado.
+#
+# El Worker NUNCA publica: solo encola. Aqui no se decide nada sobre el
+# contenido: si la persona no aprobo EXACTAMENTE lo que hay en staging,
+# este run no escribe una sola linea en el sitio real.
+#
+# QUE GARANTIZA ESTE FICHERO
+#
+# - `workflow_dispatch` Y `repository_dispatch` a la vez: el Worker puede
+#   usar la API que le resulte mas simple sin que haya que tocar este
+#   repositorio, y una persona puede relanzarlo a mano desde la UI con el
+#   mismo approvalId. Los dos caminos ejecutan el MISMO script y pasan por
+#   las MISMAS comprobaciones -- no hay una via "rapida".
+# - `concurrency` por approvalId con `cancel-in-progress: false`: dos
+#   dispatch del mismo cambio no corren a la vez, y el segundo espera en
+#   vez de cancelar a un run que podria estar a mitad de una escritura en
+#   produccion. Cuando arranque, se encontrara la aprobacion fuera de
+#   `production_queued` y se retirara sin publicar (defensa en
+#   profundidad: la garantia dura es la transicion atomica del datastore,
+#   esto solo evita el ruido).
+# - `permissions: contents: read` y nada mas: este workflow no commitea,
+#   no publica releases, no toca el repositorio y no pide `id-token`.
+# - Secretos: SOLO los que el script necesita para hablar con el Worker,
+#   leer staging, escribir en produccion y avisar por Telegram. Se
+#   declaran en el step que los usa, nunca a nivel de workflow.
+# - Los cuatro interruptores de produccion viajan como secretos: si
+#   cualquiera de ellos no vale "true"/"rest", el script no publica nada y
+#   lo dice con el NOMBRE de la variable que falta (nunca su valor).
+#
+# Ver docs/serverless-approvals.md y src/department/apply/production-executor.ts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      approvalId:
+        description: "approvalId (== changeId) de la aprobacion encolada en production_queued"
+        required: true
+        type: string
+  repository_dispatch:
+    types: [department-production-apply]
+
+# Un approvalId, un apply a la vez. `cancel-in-progress: false` a
+# proposito: cancelar un run a mitad de una escritura en produccion es
+# justo lo que no se puede hacer.
+concurrency:
+  group: department-production-apply-${{ github.event.inputs.approvalId || github.event.client_payload.approvalId }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publicar la aprobacion en produccion
+    runs-on: ubuntu-latest
+    # Un apply son cuatro llamadas HTTP a WordPress y unas pocas al
+    # Worker. Si en 15 minutos no ha terminado, algo va mal.
+    timeout-minutes: 15
+    env:
+      # Un solo sitio donde se resuelve el approvalId de los dos tipos de
+      # dispatch. Viaja como variable de entorno (nunca interpolado dentro
+      # de un `run`) para que un valor con caracteres raros no pueda
+      # convertirse en parte del comando.
+      APPROVAL_ID: ${{ github.event.inputs.approvalId || github.event.client_payload.approvalId }}
+    steps:
+      - name: Comprobar que hay approvalId (fail-closed)
+        run: |
+          set -euo pipefail
+          if [ -z "${APPROVAL_ID:-}" ]; then
+            echo "El dispatch no trae approvalId (ni inputs.approvalId ni client_payload.approvalId)."
+            echo "Fail-closed: sin saber QUE aprobacion publicar no se toca produccion."
+            exit 1
+          fi
+          echo "Aprobacion a publicar: $APPROVAL_ID"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Sin `continue-on-error`: si esto falla, el run tiene que quedar en
+      # ROJO. Un fallo publicando en produccion (o un rollback fallido) es
+      # exactamente lo que nadie puede pasar por alto.
+      - name: "[PRODUCCION] Publicar la aprobacion (snapshot, validacion y rollback verificado)"
+        run: npx ts-node scripts/run-production-apply.ts --approvalId "$APPROVAL_ID"
+        env:
+          # --- Worker de aprobaciones (Actions no tiene credenciales de D1) ---
+          APPROVALS_API_URL: ${{ secrets.APPROVALS_API_URL }}
+          APPROVALS_API_TOKEN: ${{ secrets.APPROVALS_API_TOKEN }}
+          # --- Telegram: solo para CONTAR el resultado real ---
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # --- Staging: aqui solo se LEE (comprobacion anti-TOCTOU) ---
+          WORDPRESS_ENV: ${{ secrets.WORDPRESS_ENV }}
+          WORDPRESS_BACKEND: ${{ secrets.WORDPRESS_BACKEND }}
+          WORDPRESS_DRAFTS_ENABLED: ${{ secrets.WORDPRESS_DRAFTS_ENABLED }}
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          # --- Produccion: los CUATRO interruptores + credenciales propias ---
+          DEPARTMENT_PRODUCTION_APPLY_ENABLED: ${{ secrets.DEPARTMENT_PRODUCTION_APPLY_ENABLED }}
+          PRODUCTION_EXECUTION_ENABLED: ${{ secrets.PRODUCTION_EXECUTION_ENABLED }}
+          PRODUCTION_DRAFTS_ENABLED: ${{ secrets.PRODUCTION_DRAFTS_ENABLED }}
+          PRODUCTION_BACKEND: ${{ secrets.PRODUCTION_BACKEND }}
+          WORDPRESS_PRODUCTION_BASE_URL: ${{ secrets.WORDPRESS_PRODUCTION_BASE_URL }}
+          WORDPRESS_PRODUCTION_USERNAME: ${{ secrets.WORDPRESS_PRODUCTION_USERNAME }}
+          WORDPRESS_PRODUCTION_APP_PASSWORD: ${{ secrets.WORDPRESS_PRODUCTION_APP_PASSWORD }}
