@@ -683,6 +683,13 @@ jobs:
           npm run department:apply -- --phase plan --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-plan.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          # SOLO LECTURA. Se lee la pagina objetivo de cada propuesta para
+          # anclar su version: es lo que permite detectar mas tarde que
+          # algo cambio desde el Daily Brief. No se escribe nada aqui --
+          # los interruptores de escritura ni siquiera se pasan.
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
 
       # =====================================================================
       # FASE 5 -- DAILY BRIEF (ensamblado determinista, sin Claude)

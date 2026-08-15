@@ -353,16 +353,23 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       },
     },
     {
-      name: "La pasada diaria puede tocar STAGING, pero NUNCA produccion (ni la fase, ni los interruptores, ni las credenciales)",
+      name: "La pasada diaria solo analiza y propone: no aplica, no depende del serverless, y NUNCA toca produccion",
       fn: () => {
         const configLines = readWorkflowConfigLines();
 
-        // Lo que SI puede hacer desde la fase serverless: planificar,
-        // aplicar en staging y pedir la aprobacion. Nada de esto toca
-        // produccion.
-        for (const phase of ["--phase plan", "--phase stage", "--phase notify"]) {
-          assert.ok(configLines.includes(phase), `la pasada diaria deberia ejecutar "${phase}"`);
+        // La pasada diaria ANALIZA Y PROPONE, y nada mas: planifica el
+        // contrato de apply y manda el email. Aplicar lo decide despues
+        // una persona sobre el Daily Brief numerado.
+        assert.ok(configLines.includes("--phase plan"), "la pasada diaria debe planificar el contrato de apply");
+        for (const phase of ["--phase stage", "--phase notify"]) {
+          assert.ok(!configLines.includes(phase), `la pasada diaria NO debe ejecutar "${phase}": el apply es manual y posterior`);
         }
+        // Y no puede depender del carril serverless, que esta apagado.
+        for (const forbidden of ["APPROVALS_API_URL", "APPROVALS_API_TOKEN", "TELEGRAM_BOT_TOKEN", "TELEGRAM_APPROVALS_ENABLED"]) {
+          assert.ok(!configLines.includes(forbidden), `la pasada diaria no debe necesitar "${forbidden}"`);
+        }
+        // El email diario, en cambio, es obligatorio.
+        assert.ok(configLines.includes("department:email"), "el Daily Brief por email es obligatorio en la pasada diaria");
 
         // Lo que NUNCA puede hacer. Publicar en produccion ocurre en UN
         // solo sitio (department-production-apply.yml) y siempre despues
