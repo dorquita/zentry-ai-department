@@ -155,15 +155,22 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
     {
       name: "Ningun modulo de la capa de departamento importa clientes de sistemas externos (WordPress/Google/email/Telegram/staging/produccion)",
       fn: () => {
+        // La capa `src/department/**` sigue SIN conocer ningun cliente de
+        // ningun sistema externo, incluso ahora que contiene los
+        // executors de staging y produccion: sus dependencias llegan
+        // INYECTADAS desde los puntos de cableado (scripts/
+        // run-department-apply.ts y src/agents/department-telegram-ports.ts).
+        // Por eso este guard NO se relaja al añadir el apply: se hace mas
+        // preciso ("agents/" cubre cualquier agente, incluido el Staging
+        // Executor historico, sin confundirse con el modulo interno
+        // src/department/apply/staging-executor.ts).
         const forbiddenImports = [
           "googleapis",
           "nodemailer",
           "../core/mailer",
-          "../core/telegram-gateway",
+          "core/telegram-gateway",
           "../core/wordpress-drafts",
-          "wordpress-draft-agent",
-          "staging-executor",
-          "production-draft-executor",
+          "agents/",
           "adapters/",
         ];
         for (const { file, content } of readDepartmentSources()) {
@@ -188,25 +195,75 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       },
     },
     {
-      name: "El unico sitio que cablea WordPress para el apply es scripts/run-department-apply.ts, y solo con funciones de STAGING",
+      name: "Solo DOS ficheros cablean WordPress para el apply, y unicamente con las 5 funciones permitidas",
       fn: () => {
-        const applyRunner = fs.readFileSync(path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts"), "utf-8");
-        // Solo dos funciones del adaptador: leer una pagina y actualizar
-        // un BORRADOR. Ninguna que publique, borre o toque produccion.
-        assert.ok(applyRunner.includes("getWordpressPage"), "el apply necesita leer el estado previo (snapshot)");
-        assert.ok(applyRunner.includes("updateWordpressDraftPage"), "el apply solo actualiza borradores existentes");
-        for (const forbidden of [
-          "createWordpressDraftPage",
-          "publishStagingDraftPage",
-          "trashStagingPage",
+        // El apply del departamento pasa a poder escribir tambien en
+        // PRODUCCION -- pero solo tras una aprobacion humana explicita de
+        // la version exacta que hay en staging (ver
+        // src/department/apply/production-executor.ts y la maquina de
+        // estados). Este guard acota que puede tocarse, y desde donde.
+        const wiringFiles = [
+          path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts"),
+          path.join(PROJECT_ROOT, "src", "agents", "department-telegram-ports.ts"),
+        ];
+
+        // Las UNICAS operaciones permitidas: leer (staging/produccion),
+        // buscar el destino de produccion por slug, y actualizar el
+        // contenido de una pagina YA PUBLICADA (que nunca cambia status
+        // ni slug) en cada entorno.
+        const allowed = [
+          "getWordpressPage",
           "updateStagingPublishedPageContent",
-          "wordpress-production",
-          "production-draft-executor",
+          "getProductionPage",
+          "searchProductionPagesBySlug",
+          "updateProductionPublishedPageContent",
+        ];
+        // Nada que cree, publique, despublique, borre o restaure. Y
+        // ninguna funcion de BORRADOR: este flujo no usa drafts.
+        const forbidden = [
+          "createWordpressDraftPage",
+          "updateWordpressDraftPage",
+          "publishStagingDraftPage",
+          "unpublishStagingPage",
+          "trashStagingPage",
+          "createProductionDraftPage",
+          "updateProductionDraftPage",
+          "trashProductionPage",
+          "restoreProductionPageFromTrash",
+          "uploadMediaToWordpress",
+          "uploadMediaToProduction",
           "woocommerce",
           "novamira",
-        ]) {
-          assert.ok(!applyRunner.includes(forbidden), `scripts/run-department-apply.ts menciona "${forbidden}": fuera del alcance permitido del apply del departamento`);
+          "production-draft-executor",
+        ];
+
+        for (const file of wiringFiles) {
+          const content = fs.readFileSync(file, "utf-8");
+          const relative = path.relative(PROJECT_ROOT, file);
+          for (const name of forbidden) {
+            assert.ok(!content.includes(name), `${relative} menciona "${name}": fuera del alcance permitido del apply del departamento`);
+          }
+          const used = allowed.filter((name) => content.includes(name));
+          assert.ok(used.length > 0, `${relative} deberia cablear alguna de las funciones permitidas`);
         }
+
+        const runner = fs.readFileSync(wiringFiles[0], "utf-8");
+        assert.ok(runner.includes("getWordpressPage"), "el apply necesita leer el estado previo (snapshot)");
+        assert.ok(runner.includes("updateStagingPublishedPageContent"), "el apply de staging actualiza paginas ya publicadas, nunca borradores");
+      },
+    },
+    {
+      name: "PRODUCCION solo es alcanzable con aprobacion humana: el executor exige `approved` y recomprueba la version de staging",
+      fn: () => {
+        const executor = fs.readFileSync(path.join(PROJECT_ROOT, "src", "department", "apply", "production-executor.ts"), "utf-8");
+        assert.ok(executor.includes("isProductionApplyAllowedFrom"), "el executor de produccion consulta la maquina de estados");
+        assert.ok(executor.includes("matchesApprovedVersion"), "y recomprueba que staging sigue siendo la version aprobada (anti-TOCTOU)");
+        assert.ok(executor.includes("checkProductionApplyGuards"), "y comprueba los interruptores de produccion");
+
+        // El runner nunca puede publicar sin que los DOS registros (el
+        // persistente de cambios y el comun de aprobaciones) coincidan.
+        const runner = fs.readFileSync(path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts"), "utf-8");
+        assert.ok(runner.includes("resolveHumanApproval"), "el runner cruza el registro comun de aprobaciones antes de publicar");
       },
     },
     {

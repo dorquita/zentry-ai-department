@@ -1,4 +1,3 @@
-import { sendTelegramMessage } from "../../core/telegram-gateway";
 import { DepartmentChangeRequest } from "./change-types";
 import { ChangeTransitionPort } from "./staging-executor";
 import { buildApprovalButtons, buildApprovalRequestMessage, isCallbackDataWithinLimit } from "./telegram-message";
@@ -10,6 +9,13 @@ import { buildApprovalButtons, buildApprovalRequestMessage, isCallbackDataWithin
  * sanitizado, su redaccion de secretos y su manejo de errores) y el
  * registro comun de aprobaciones (`data/approval-requests.jsonl`): NO se
  * crea un segundo canal ni un segundo registro de aprobaciones.
+ *
+ * El envio llega INYECTADO (`ApprovalRequestPort.send`), no importado:
+ * asi la capa `src/department/**` sigue sin conocer ningun cliente de
+ * ningun sistema externo -- una invariante que los tests de seguridad de
+ * la pasada coordinada comprueban fichero a fichero. El cableado real
+ * (gateway de Telegram) lo ponen scripts/run-department-apply.ts y
+ * src/agents/department-telegram-ports.ts.
  *
  * Orden deliberado, para que no exista jamas un mensaje aprobable sin
  * registro persistente detras:
@@ -33,8 +39,8 @@ export interface ApprovalRequestPort {
   };
   /** Marca que la solicitud se envio de verdad por el canal. */
   markSent: (approvalRequestId: string) => void;
-  /** Inyectable para tests; por defecto, el gateway real. */
-  send?: (text: string, buttons: { text: string; callbackData?: string; url?: string }[][]) => Promise<{ messageId: number | null; chatId: string }>;
+  /** Envio real, siempre inyectado (este modulo no conoce el gateway). */
+  send: (text: string, buttons: { text: string; callbackData?: string; url?: string }[][]) => Promise<{ messageId: number | null; chatId: string }>;
   now?: () => Date;
 }
 
@@ -79,13 +85,9 @@ export async function sendChangeApprovalRequest(
     };
   }
 
-  const send =
-    approvals.send ??
-    (async (text, rows) => sendTelegramMessage(text, { plainText: true, buttons: rows }));
-
   let sentMessage: { messageId: number | null; chatId: string };
   try {
-    sentMessage = await send(buildApprovalRequestMessage(change), buttons);
+    sentMessage = await approvals.send(buildApprovalRequestMessage(change), buttons);
   } catch (err) {
     const reason = `Fallo enviando la solicitud por Telegram: ${err instanceof Error ? err.message : String(err)}. El cambio sigue en staging y se reintentara.`;
     return { change: port.note(change, {}, { event: "approval_request_send_failed", detail: reason }), sent: false, reason };

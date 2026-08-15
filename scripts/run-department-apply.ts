@@ -57,7 +57,7 @@ import {
 import { markApprovalRequestSent, readCurrentApprovalRequests, upsertApprovalRequest } from "../src/core/approval-requests";
 import { readCurrentStagingReviewPages } from "../src/core/staging-review-pages";
 import { readCurrentStagingExecutions } from "../src/core/staging-executions";
-import { isTelegramApprovalsEnabled } from "../src/core/telegram-gateway";
+import { isTelegramApprovalsEnabled, sendTelegramMessage } from "../src/core/telegram-gateway";
 import { validateWebEngineerOutput } from "../src/employees/web-engineer/validator";
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
 import { DEPARTMENT_APPLY_RELATED_TYPE, resolveHumanApproval } from "../src/department/apply/approval";
@@ -382,6 +382,9 @@ async function phaseNotify(args: Record<string, string>): Promise<void> {
       markSent: (approvalRequestId) => {
         markApprovalRequestSent(approvalRequestId, "telegram");
       },
+      // Texto plano: los titles/metas reales llevan comillas y `<`/`&`, y
+      // el parser HTML de Telegram ya ha roto envios de este proyecto.
+      send: (text, buttons) => sendTelegramMessage(text, { plainText: true, buttons }),
     });
     console.log(`  - ${change.changeId}: ${result.sent ? `solicitud enviada (${result.reason})` : `NO enviada -- ${result.reason}`}`);
   }
