@@ -9,6 +9,7 @@
  */
 import { runExecutiveReportTests } from "../test/executive-report.test";
 import { runNovamiraGuardTests } from "../test/novamira-guard.test";
+import { runNovamiraProfilesTests } from "../test/novamira-profiles.test";
 import { runClientConfigTests } from "../test/client-config.test";
 import { runSubagentToolGuardTests } from "../test/subagent-tool-guard.test";
 import { runInternalUrlGuardTests } from "../test/internal-url-guard.test";
@@ -86,6 +87,7 @@ async function main(): Promise<void> {
   const suites: Array<{ suiteName: string; cases: TestCase[] }> = [
     { suiteName: "executive-report", cases: runExecutiveReportTests() },
     { suiteName: "novamira-guard", cases: runNovamiraGuardTests() },
+    { suiteName: "novamira-profiles", cases: runNovamiraProfilesTests() },
     { suiteName: "client-config", cases: runClientConfigTests() },
     { suiteName: "subagent-tool-guard", cases: runSubagentToolGuardTests() },
     { suiteName: "internal-url-guard", cases: runInternalUrlGuardTests() },
