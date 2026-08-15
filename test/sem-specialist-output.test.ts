@@ -305,5 +305,70 @@ export function runSemSpecialistOutputTests(): TestCase[] {
         assert.ok(!violations.some((v) => /no trazable/i.test(v)));
       },
     },
+
+    // --- REGRESION (run 31885470082: "4 afirmacion(es) cuantitativa(s) sin
+    // respaldo trazable en evidence[]"): fix aplicado unicamente en
+    // .claude/agents/sem-specialist.md (autocheque + lista ampliada de
+    // categorias), sin tocar el auditor ni el runtime -- estos 4 casos
+    // verifican que el auditor YA existente (sin cambios) sigue exigiendo
+    // exactamente lo que el agente ahora tiene instrucciones explicitas de
+    // cumplir. ---
+    {
+      name: "REGRESION: cifra CPC con evidenceRef valido y evidence[] trazable al contexto real => 0 violaciones (pasa)",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          biddingObservations: [
+            emptyFinding({
+              title: "Presupuesto diario disponible si se activan todas las campanas",
+              description: "El presupuesto diario si se activaran todas las campanas es de 44 EUR.",
+              evidenceRefs: ["ev-presupuesto"],
+            }),
+          ],
+          evidence: [{ id: "ev-presupuesto", contextField: "departmentSummary.totalDailyBudgetIfActivatedEUR", value: "44 EUR" }],
+        });
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
+    {
+      name: "REGRESION: cifra cuantitativa SIN ningun evidenceRef (array vacio) => violacion dura, la salida se rechaza",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: "El presupuesto es de 44 € al dia si se activaran todas las campanas.", evidenceRefs: [] })],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.length > 0, "una cifra sin ningun evidenceRef, aunque el numero exista en el contexto, debe rechazarse por falta de paper trail explicito");
+      },
+    },
+    {
+      name: "REGRESION: evidenceRef que apunta a un id de evidence[] INEXISTENTE => la cifra se trata como sin respaldo (violacion dura)",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: "El presupuesto es de 1320 € al mes si se activaran todas las campanas.", evidenceRefs: ["ev-que-no-existe-en-evidence"] })],
+          evidence: [],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.length > 0, "un evidenceRef que no resuelve a ninguna entrada real de evidence[] no debe contar como respaldo");
+      },
+    },
+    {
+      name: "REGRESION: observacion cualitativa (sin ninguna cifra numerica) sobre CPC/gasto/presupuesto => 0 violaciones (valida)",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [
+            emptyFinding({
+              title: "Presupuesto disponible sin activar",
+              description: "Existe presupuesto diario y mensual disponible si se activaran todas las campanas, pero no hay gasto real medido todavia -- las campanas estan pausadas.",
+              evidenceRefs: [],
+            }),
+          ],
+          unknowns: ["Sin CPC real disponible en este snapshot: las campanas estan pausadas y metrics esta vacio."],
+        });
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
   ];
 }
