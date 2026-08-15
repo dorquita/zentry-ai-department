@@ -27,3 +27,9 @@ reports/ux-ui-landing-comparison/
 # formato usado en tests, ver test/fixtures/seo-specialist-output-example.json
 # (fixture sanitizado, sin datos operativos reales).
 reports/seo-specialist/
+
+# Salida generada por scripts/run-analytics-specialist.ts (prompts +
+# analisis reales sobre datos de un departmentRunId concreto) -- datos
+# operativos de una ejecucion local, no se versionan. Fixture sanitizado
+# para tests/docs: test/fixtures/analytics-specialist-output-example.json.
+reports/analytics-specialist/

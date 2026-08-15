@@ -31,6 +31,12 @@ import { runSemSpecialistArtifactTests } from "../test/sem-specialist-artifact.t
 import { runSeoSpecialistOutputSchemaTests } from "../test/seo-specialist-output-schema.test";
 import { runSeoSpecialistDomainTests } from "../test/seo-specialist-domain.test";
 import { runSeoSpecialistContextTests } from "../test/seo-specialist-context.test";
+import { runAnalyticsSpecialistOutputSchemaTests } from "../test/analytics-specialist-output-schema.test";
+import { runAnalyticsSpecialistReportParserTests } from "../test/analytics-specialist-report-parser.test";
+import { runAnalyticsSpecialistContextTests } from "../test/analytics-specialist-context.test";
+import { runAnalyticsSpecialistAuditTests } from "../test/analytics-specialist-audit.test";
+import { runAnalyticsSpecialistValidatorTests } from "../test/analytics-specialist-validator.test";
+import { runAnalyticsSpecialistRunnerResultTests } from "../test/analytics-specialist-runner-result.test";
 
 interface TestCase {
   name: string;
@@ -63,6 +69,12 @@ function main(): void {
     { suiteName: "seo-specialist-output-schema", cases: runSeoSpecialistOutputSchemaTests() },
     { suiteName: "seo-specialist-domain", cases: runSeoSpecialistDomainTests() },
     { suiteName: "seo-specialist-context", cases: runSeoSpecialistContextTests() },
+    { suiteName: "analytics-specialist-output-schema", cases: runAnalyticsSpecialistOutputSchemaTests() },
+    { suiteName: "analytics-specialist-report-parser", cases: runAnalyticsSpecialistReportParserTests() },
+    { suiteName: "analytics-specialist-context", cases: runAnalyticsSpecialistContextTests() },
+    { suiteName: "analytics-specialist-audit", cases: runAnalyticsSpecialistAuditTests() },
+    { suiteName: "analytics-specialist-validator", cases: runAnalyticsSpecialistValidatorTests() },
+    { suiteName: "analytics-specialist-runner-result", cases: runAnalyticsSpecialistRunnerResultTests() },
   ];
 
   let passed = 0;
