@@ -1,0 +1,90 @@
+# ---------------------------------------------------------------------------
+# Worker de APROBACIONES del departamento IA (Cloudflare Workers + D1).
+#
+# Un solo Worker, un solo `wrangler deploy`. Este fichero es TODA la
+# infraestructura del carril de aprobaciones: no hay IAM, ni VPC, ni
+# roles, ni colas aparte.
+#
+# QUE HAY AQUI Y QUE NO:
+#
+#   - Aqui: nombre del worker, entrypoint, fecha de compatibilidad,
+#     binding de la base de datos y variables NO SECRETAS.
+#   - Aqui NO, NUNCA: ningun secreto. Ni el token del bot, ni el bearer
+#     de servicio, ni el PAT de GitHub, ni el `secret_token` del webhook.
+#     Los secretos se cargan con `wrangler secret put <NOMBRE>` y quedan
+#     fuera del repositorio. Ver infra/cloudflare/README.md.
+#
+# Los `<rellenar>` son literales a sustituir por valores reales de la
+# cuenta. No se commitea ningun id real de base de datos por costumbre
+# del proyecto (no es un secreto criptografico, pero es un identificador
+# de infraestructura y no aporta nada tenerlo en git).
+#
+# Como ejecutar wrangler con este fichero: desde `infra/cloudflare/`,
+#   npx wrangler deploy
+# o desde la raiz del repo,
+#   npx wrangler deploy --config infra/cloudflare/wrangler.toml
+# ---------------------------------------------------------------------------
+
+name = "zentry-approvals"
+
+# Entrypoint del Worker: <raiz-del-repo>/src/worker/index.ts.
+#
+# OJO con la ruta: wrangler resuelve las rutas relativas contra el
+# DIRECTORIO DE ESTE FICHERO (infra/cloudflare/), no contra el
+# directorio desde el que se lanza el comando. Por eso `../../`.
+main = "../../src/worker/index.ts"
+
+# Fecha de compatibilidad del runtime. Se fija a proposito y solo se
+# sube de forma deliberada: subirla cambia el comportamiento del runtime.
+# Si la version instalada de wrangler avisa de que esta fecha es
+# posterior a la que soporta, actualiza wrangler o baja la fecha -- no
+# la ignores.
+compatibility_date = "2026-05-01"
+
+# El Worker se expone en `https://<name>.<subdominio>.workers.dev`. Esa
+# es la URL base que va en el secreto APPROVALS_API_URL de GitHub
+# Actions y la raiz del endpoint que se registra en setWebhook.
+workers_dev = true
+
+# Logs de invocacion en el dashboard (`wrangler tail` funciona igual sin
+# esto, pero esto conserva historico). Util para diagnosticar un webhook
+# que Telegram reintenta.
+[observability]
+enabled = true
+
+# ---------------------------------------------------------------------------
+# Base de datos D1: el UNICO estado del sistema de aprobaciones.
+#
+# `binding = "DB"` es el nombre con el que el codigo del Worker accede a
+# ella (`env.DB`). Cambiarlo rompe src/worker/**.
+#
+# `database_id` sale de `npx wrangler d1 create zentry-approvals`; el
+# schema se aplica con `wrangler d1 execute ... --file=./schema.sql`.
+# ---------------------------------------------------------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "zentry-approvals"
+database_id = "<rellenar: id que devuelve `wrangler d1 create zentry-approvals`>"
+
+# ---------------------------------------------------------------------------
+# Variables NO SECRETAS.
+#
+# Criterio: aqui va solo lo que puede leerse en un repositorio publico
+# sin que pase nada. Todo lo demas es `wrangler secret put`.
+#
+# Las tres describen A DONDE dispara el Worker cuando alguien aprueba.
+# El Worker no publica en WordPress: lo unico que hace es un
+# `workflow_dispatch` contra este workflow. La credencial con la que lo
+# dispara (GITHUB_DISPATCH_TOKEN) SI es secreta y no esta aqui.
+# ---------------------------------------------------------------------------
+[vars]
+# `owner/repo` destino del dispatch (ENV_VAR_NAMES.workerGithubRepo).
+GITHUB_REPOSITORY = "dorquita/zentry-ai-department"
+
+# Fichero del workflow de produccion a disparar
+# (ENV_VAR_NAMES.workerGithubWorkflow). Tiene que existir en la rama de
+# abajo, si no la API de GitHub devuelve 404.
+GITHUB_PRODUCTION_WORKFLOW = "department-production-apply.yml"
+
+# Rama sobre la que se lanza el workflow (ENV_VAR_NAMES.workerGithubRef).
+GITHUB_WORKFLOW_REF = "main"
