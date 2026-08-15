@@ -11,9 +11,22 @@ Content ───────┼──> Growth Director ──> QA Reviewer ─�
 Analytics ─────┘
 ```
 
-**Alcance de esta fase: READ / ANALYZE / PROPOSE.** No hay APPLY, no hay
-email, no hay schedule, no hay escritura en ningun sistema externo, y
-`sem-specialist` queda explicitamente fuera (pendiente).
+**Alcance del analisis: READ / ANALYZE / PROPOSE.** Los seis empleados
+Claude no escriben en ningun sistema externo, y `sem-specialist` queda
+explicitamente fuera (pendiente).
+
+> **Actualizacion — fase EMAIL + SCHEDULE + APPLY.** Sobre esta misma
+> arquitectura (sin reescribirla) se han anadido tres cosas:
+>
+> - **Email**: el Daily Brief se envia por SMTP al terminar la pasada
+>   — ver `docs/department-daily-brief-email.md`.
+> - **Schedule**: una unica ejecucion diaria a las 07:00 UTC, mas el
+>   `workflow_dispatch` de siempre y la misma `concurrency`.
+> - **APPLY**: contrato estructurado por recomendacion, con aprobacion
+>   HUMANA explicita (reutilizando el registro de aprobaciones que ya
+>   existia), executor determinista y reversible, snapshot, validacion y
+>   rollback — ver `docs/department-apply.md`. El workflow diario **solo
+>   planifica**; la fase que escribe no se invoca desde CI.
 
 ## Que NO cambia
 
@@ -185,6 +198,11 @@ npm run department:run -- --phase gate --departmentRunId <id>
 
 - `sem-specialist` (siempre `not_available` en el informe; nunca
   bloquea).
-- `schedule` automatico.
-- Envio de email del Daily Brief.
-- Fase APPLY (implementar lo especificado por `web-engineer`).
+- El puente entre la especificacion de `web-engineer` y el registro de
+  capacidades del APPLY: hoy el agente no recibe el catalogo de paginas
+  de staging ni se le pide el bloque `TITLE:`/`META:`, asi que sus
+  propuestas salen como `requires_manual_implementation` salvo que la
+  especificacion cite la pagina y los valores a mano. Ver
+  `docs/department-apply.md`.
+- Executors para cualquier tipo de cambio que no sea title/meta de un
+  borrador de staging ya existente.

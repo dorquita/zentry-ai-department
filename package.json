@@ -95,7 +95,10 @@
     "content-strategist:run": "ts-node scripts/run-content-strategist.ts",
     "content-strategist:parse-runner-result-for-ci": "ts-node scripts/parse-content-strategist-runner-result-for-ci.ts",
     "department:run": "ts-node scripts/run-department-coordination.ts",
-    "department:parse-runner-result-for-ci": "ts-node scripts/parse-department-runner-result-for-ci.ts"
+    "department:parse-runner-result-for-ci": "ts-node scripts/parse-department-runner-result-for-ci.ts",
+    "department:apply": "ts-node scripts/run-department-apply.ts",
+    "department:email": "ts-node scripts/send-department-daily-brief-email.ts",
+    "claude-employee:record-execution-for-ci": "ts-node scripts/record-claude-employee-execution-for-ci.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

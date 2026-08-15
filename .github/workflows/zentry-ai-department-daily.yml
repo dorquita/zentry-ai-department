@@ -24,19 +24,36 @@ name: Zentry AI Department -- Daily Brief (coordinacion real)
 # validadores y auditorias de dominio ya existentes a traves de la capa
 # de coordinacion (src/department/, scripts/run-department-coordination.ts).
 #
-# SEGURIDAD (fase READ / ANALYZE / PROPOSE):
+# SEGURIDAD:
 # - `contents: read` unicamente. Nada se commitea, nada se publica.
-# - Sin escrituras en WordPress/staging/produccion/Google Ads/GA4/GTM/
-#   Search Console/n8n. Sin envio de email. Sin APPLY.
+# - Los seis empleados Claude siguen siendo READ / ANALYZE / PROPOSE: no
+#   escriben en WordPress, staging, produccion, Google Ads, GA4/GTM,
+#   Search Console ni n8n.
 # - Sin MCP, sin bypassPermissions, sin `id-token: write`.
 # - sem-specialist queda FUERA de esta fase: se registra siempre como
 #   not_available (pendiente) y nunca bloquea la pasada.
+# - APPLY: este workflow solo PLANIFICA el contrato de apply
+#   (`department:apply -- --phase plan`), que no escribe en ningun sistema
+#   externo. La fase que si escribe (`--phase apply`) NO se invoca aqui:
+#   necesita aprobacion humana explicita registrada + los interruptores de
+#   entorno, y se lanza donde vive el proyecto de forma persistente. Ver
+#   docs/department-apply.md.
+# - EMAIL: se envia el Daily Brief a la direccion configurada en los
+#   secretos del repositorio. Si falta configuracion, no se envia nada y
+#   se reporta que NOMBRES de variables faltan (nunca sus valores).
 #
-# SOLO workflow_dispatch (sin schedule): activar un schedule requiere una
-# decision explicita posterior -- ver docs/claude-employee-runtime.md,
-# "Como anadir un nuevo empleado", paso 6.
+# SCHEDULE (fase EMAIL + SCHEDULE + APPLY): una unica ejecucion diaria a
+# las 07:00 UTC -- aproximadamente las 09:00 en Espana en horario de
+# verano (CEST, UTC+2) y las 08:00 en invierno (CET, UTC+1). Un solo cron,
+# a proposito: nunca varias pasadas al dia. Se mantiene tambien
+# `workflow_dispatch` para poder lanzarla a mano.
+#
+# GitHub Actions puede retrasar un `schedule` en momentos de carga: es un
+# comportamiento conocido de la plataforma, no un fallo de esta pasada.
 
 on:
+  schedule:
+    - cron: "0 7 * * *"
   workflow_dispatch: {}
 
 # Una sola pasada coordinada a la vez: dos pasadas simultaneas podrian
@@ -125,6 +142,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: seo-specialist
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/seo-specialist/claude-execution.json
           prompt: ${{ steps.seo_prompt.outputs.content }}
           output-schema-path: config/seo-specialist-output.schema.json
           expected-output-path: ${{ steps.seo1.outputs.expectedOutputPath }}
@@ -219,6 +237,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: content-strategist
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/content-strategist/claude-execution.json
           prompt: ${{ steps.content_prompt.outputs.content }}
           output-schema-path: config/content-strategist-output.schema.json
           expected-output-path: ${{ steps.content1.outputs.expectedOutputPath }}
@@ -318,6 +337,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: analytics-specialist
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/analytics-specialist/claude-execution.json
           prompt: ${{ steps.analytics_prompt.outputs.content }}
           output-schema-path: config/analytics-specialist-output.schema.json
           expected-output-path: ${{ steps.analytics1.outputs.expectedOutputPath }}
@@ -434,6 +454,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: growth-director-v2
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/growth-director-v2/claude-execution.json
           prompt: ${{ steps.growth_prompt.outputs.content }}
           output-schema-path: config/growth-director-v2-output.schema.json
           expected-output-path: ${{ steps.growth_prep.outputs.expectedOutputPath }}
@@ -517,6 +538,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: qa-reviewer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/qa-reviewer/claude-execution.json
           prompt: ${{ steps.qa_prompt.outputs.content }}
           output-schema-path: config/qa-reviewer-output.schema.json
           expected-output-path: ${{ steps.qa1.outputs.expectedOutputPath }}
@@ -614,6 +636,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: web-engineer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/web-engineer/claude-execution.json
           prompt: ${{ steps.web_prompt.outputs.content }}
           output-schema-path: config/web-engineer-output.schema.json
           expected-output-path: ${{ steps.web_prep.outputs.expectedOutputPath }}
@@ -633,6 +656,29 @@ jobs:
           RUNTIME_NOTE: "step=${{ steps.web_runtime.outcome }}, claude=${{ steps.web_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.web_runtime.outputs.output-source }}"
 
       # =====================================================================
+      # FASE 4.5 -- PLANIFICACION DEL APPLY (determinista, sin Claude)
+      #
+      # Construye el contrato de apply de la pasada: por cada recomendacion,
+      # si existe un executor determinista y reversible para ella, y si hay
+      # una aprobacion HUMANA explicita registrada. Aqui NO se escribe en
+      # ningun sistema externo: eso es `--phase apply`, que este workflow no
+      # invoca a proposito (necesita el registro de aprobaciones persistente
+      # y los interruptores de entorno). Ver docs/department-apply.md.
+      #
+      # `continue-on-error`: no poder planificar el apply degrada el informe,
+      # pero nunca debe impedir que el Daily Brief se genere y se envie.
+      # =====================================================================
+      - name: "[APPLY] Planificar el contrato de apply de esta pasada (sin escribir en ningun sistema)"
+        id: apply_plan
+        continue-on-error: true
+        if: always()
+        run: |
+          set -o pipefail
+          npm run department:apply -- --phase plan --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-plan.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+
+      # =====================================================================
       # FASE 5 -- DAILY BRIEF (ensamblado determinista, sin Claude)
       # =====================================================================
       - name: "[COORD] Generar Daily Brief (JSON + Markdown + resumen)"
@@ -648,6 +694,39 @@ jobs:
         id: brief
         if: always() && steps.brief_run.outcome == 'success'
         run: npm run department:parse-runner-result-for-ci -- coord-brief.log
+
+      # =====================================================================
+      # FASE 6 -- EMAIL del Daily Brief
+      #
+      # Construye el correo (texto + HTML) a partir del brief YA generado y
+      # lo envia por SMTP. Fail-closed: si falta cualquier variable de
+      # configuracion, no se envia nada y se reportan los NOMBRES de las
+      # variables que faltan -- nunca sus valores. Los secretos llegan como
+      # env de ESTE step unicamente; el script no los imprime y verifica,
+      # antes de escribir nada, que el correo construido no contiene el
+      # valor de ninguna variable sensible.
+      #
+      # `continue-on-error`: un fallo del servidor de correo no puede
+      # invalidar una pasada del departamento que ya termino bien.
+      # =====================================================================
+      - name: "[EMAIL] Enviar el Daily Brief"
+        id: email
+        continue-on-error: true
+        if: always()
+        run: |
+          set -o pipefail
+          npm run department:email -- --departmentRunId "$DEPARTMENT_RUN_ID" --runUrl "$RUN_URL" 2>&1 | tee coord-email.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DAILY_BRIEF_EMAIL_TO: ${{ secrets.DAILY_BRIEF_EMAIL_TO }}
+          REPORT_EMAIL_TO: ${{ secrets.REPORT_EMAIL_TO }}
+          REPORT_EMAIL_FROM: ${{ secrets.REPORT_EMAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
 
       - name: "[COORD] Subir artifact de la pasada (manifiesto, etapas, promocion y Daily Brief)"
         if: always()
@@ -673,12 +752,14 @@ jobs:
           {
             echo ""
             echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "- **Escritura externa realizada:** ninguna (WordPress/staging/produccion/Ads/GA4/GTM/Search Console/n8n/email no se han tocado; nada se ha commiteado; no hay APPLY en esta fase)."
+            echo "- **Escrituras en sistemas de contenido:** ninguna desde este workflow. Solo se PLANIFICA el contrato de apply; la fase de ejecucion real no se invoca aqui y exige aprobacion humana explicita (ver docs/department-apply.md)."
+            echo "- **Email del Daily Brief:** resultado del step [EMAIL] = \`${EMAIL_OUTCOME}\` (si falta configuracion, no se envia nada y el log dice que NOMBRES de variables faltan)."
             echo "- **SEM:** pendiente / fuera de esta fase por decision explicita."
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           STEP_SUMMARY_PATH: ${{ steps.brief.outputs.stepSummaryPath }}
+          EMAIL_OUTCOME: ${{ steps.email.outcome }}
 
       # Volcado al LOG del propio run: manifiesto + puerta + Daily Brief
       # completo, mas el diagnostico real de cada invocacion de Claude
@@ -697,8 +778,19 @@ jobs:
           echo "===== PROMOTION (puerta de QA) ====="
           cat "$RUN_DIR/promotion.json" 2>/dev/null || echo "(sin promotion.json)"
           echo ""
+          echo "===== APPLY (contrato de esta pasada) ====="
+          cat "$RUN_DIR/apply-summary.json" 2>/dev/null || echo "(sin apply-summary.json)"
+          echo ""
           echo "===== DAILY BRIEF (markdown) ====="
           cat "$RUN_DIR/department-daily-brief.md" 2>/dev/null || echo "(sin Daily Brief)"
+          echo ""
+          echo "===== COSTE POR EMPLEADO (un registro por invocacion, ya no se pisan entre si) ====="
+          for f in "$RUN_DIR"/stages/*/claude-execution.json; do
+            [ -f "$f" ] || continue
+            echo "--- $f"
+            cat "$f"
+            echo ""
+          done
           echo ""
           echo "===== DIAGNOSTICO DE LAS INVOCACIONES DE CLAUDE ====="
           find "$RUNNER_TEMP" -name "*execution*.json" -print 2>/dev/null | sort | while read -r f; do

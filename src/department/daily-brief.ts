@@ -4,6 +4,8 @@ import { WebEngineerOutput } from "../employees/web-engineer/types";
 import { SeoSpecialistOutput } from "../employees/seo-specialist/domain";
 import { ContentStrategistOutput } from "../employees/content-strategist/output";
 import { AnalyticsSpecialistOutput } from "../employees/analytics-specialist/types";
+import { DepartmentApplyStatus, DepartmentApplySummary, emptyApplyCounts } from "./apply/types";
+import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./employee-runs";
 import { DepartmentPromotionResult } from "./promotion";
 import { attributeEvidenceRefToEmployees, LoadedSpecialistInputs } from "./specialist-inputs";
 import { DEPARTMENT_RUN_CONTRACT_VERSION, DepartmentQaStatus, DepartmentRunManifest, DepartmentStageRecord, DepartmentStageStatus } from "./types";
@@ -61,6 +63,29 @@ export interface DailyBriefApproval {
   origin: string;
 }
 
+/**
+ * Bloque de APPLY del brief. ADITIVO respecto al contrato anterior: un
+ * lector antiguo que no lo conozca sigue leyendo el resto del informe sin
+ * problema, y por eso NO se sube la version del contrato de la pasada.
+ */
+export interface DailyBriefApplySection {
+  planned: boolean;
+  counts: Record<DepartmentApplyStatus, number>;
+  externalWritesPerformed: boolean;
+  notAttemptedReason: string;
+  items: {
+    rank: number;
+    title: string;
+    applyStatus: DepartmentApplyStatus;
+    capability: string;
+    capabilityReason: string;
+    humanApproval: string;
+    humanApprovalReason: string;
+    validationStatus: string;
+    rollbackStatus: string;
+  }[];
+}
+
 export interface DepartmentDailyBrief {
   contractVersion: string;
   departmentRunId: string;
@@ -83,7 +108,17 @@ export interface DepartmentDailyBrief {
   approvalsNeeded: DailyBriefApproval[];
   stageStatuses: DepartmentStageRecord[];
   departmentQaStatus: DepartmentQaStatus;
-  externalWrites: "none";
+  /**
+   * `"none"` mientras la pasada no escriba en ningun sistema externo.
+   * Deja de ser un literal fijo desde la fase de APPLY: si el executor
+   * del departamento escribio de verdad en staging, este campo lo dice en
+   * vez de mentir.
+   */
+  externalWrites: string;
+  /** Contrato de APPLY de esta pasada. `null` = no se llego a planificar. */
+  apply: DailyBriefApplySection | null;
+  /** Coste/observabilidad por empleado de esta pasada. `null` = sin registros utilizables. */
+  cost: DepartmentRunCostSummary | null;
   note: string;
 }
 
@@ -103,11 +138,19 @@ export interface DailyBriefInput {
   promotion: DepartmentPromotionResult;
   /** Pasada coordinada anterior encontrada en este checkout, si la hay. `null`/ausente = no hay con que comparar (se dice explicitamente, no se omite). */
   previousRun?: PreviousRunSnapshot | null;
+  /** Contrato de APPLY ya planificado para esta pasada, si existe. */
+  apply?: DepartmentApplySummary | null;
+  /** Registros de coste por empleado de esta pasada, si existen. */
+  cost?: DepartmentRunCostSummary | null;
   now?: Date;
 }
 
-const BRIEF_NOTE =
-  "Informe de solo lectura. Esta pasada del departamento es READ / ANALYZE / PROPOSE: no se ha escrito en WordPress, staging, produccion, Google Ads, GA4/GTM, Search Console, n8n ni email, no se ha enviado ningun correo, no se ha modificado ninguna campana, y nada se ha commiteado. Todas las cifras de este informe son conteos de elementos realmente producidos en esta pasada -- ninguna es una estimacion de negocio.";
+const BRIEF_NOTE_BASE =
+  "Este informe contiene PROPUESTAS. Solo las acciones que hayan pasado la puerta de aprobacion humana correspondiente pueden ejecutarse mediante APPLY. El analisis del departamento (SEO, Content, Analytics, Growth, QA, Web Engineer) es READ / ANALYZE / PROPOSE: ningun empleado escribe en ningun sistema. Nada se ha commiteado, no se ha tocado produccion, Google Ads, GA4/GTM, Search Console ni n8n. Todas las cifras de este informe son conteos de elementos realmente producidos en esta pasada -- ninguna es una estimacion de negocio.";
+
+const BRIEF_NOTE_NO_WRITES = `${BRIEF_NOTE_BASE} En esta pasada NO se ha escrito en ningun sistema externo.`;
+
+const BRIEF_NOTE_WITH_WRITES = `${BRIEF_NOTE_BASE} En esta pasada SI se han aplicado cambios reversibles en STAGING (nunca produccion), cada uno con aprobacion humana explicita, snapshot previo, validacion posterior y rollback automatico si la validacion falla -- ver la seccion de APPLY.`;
 
 function truncate(text: string, max = 220): string {
   const flat = text.replace(/\s+/g, " ").trim();
@@ -357,9 +400,31 @@ function buildExecutiveSummary(input: DailyBriefInput, priorities: DailyBriefPri
   return { discovered, needsAttention, changed };
 }
 
+function buildApplySection(apply: DepartmentApplySummary | null | undefined): DailyBriefApplySection | null {
+  if (!apply) return null;
+  return {
+    planned: true,
+    counts: { ...emptyApplyCounts(), ...apply.counts },
+    externalWritesPerformed: apply.externalWritesPerformed,
+    notAttemptedReason: apply.applyNotAttemptedReason,
+    items: apply.items.map((item) => ({
+      rank: item.recommendationRank,
+      title: item.title,
+      applyStatus: item.applyStatus,
+      capability: item.applyCapability.supported ? String(item.applyCapability.id) : "ninguna",
+      capabilityReason: item.applyCapability.reason,
+      humanApproval: item.humanApproval.status,
+      humanApprovalReason: item.humanApproval.reason,
+      validationStatus: item.validationStatus,
+      rollbackStatus: item.rollbackStatus,
+    })),
+  };
+}
+
 export function buildDepartmentDailyBrief(input: DailyBriefInput): DepartmentDailyBrief {
   const now = input.now ?? new Date();
   const topPriorities = buildTopPriorities(input);
+  const apply = buildApplySection(input.apply);
   return {
     contractVersion: DEPARTMENT_RUN_CONTRACT_VERSION,
     departmentRunId: input.manifest.departmentRunId,
@@ -378,8 +443,12 @@ export function buildDepartmentDailyBrief(input: DailyBriefInput): DepartmentDai
     approvalsNeeded: buildApprovalsNeeded(input, topPriorities),
     stageStatuses: input.manifest.stages,
     departmentQaStatus: input.promotion.departmentQaStatus,
-    externalWrites: "none",
-    note: BRIEF_NOTE,
+    externalWrites: apply?.externalWritesPerformed
+      ? "staging (title/meta de borradores ya existentes, con snapshot y rollback) -- ver la seccion de APPLY"
+      : "none",
+    apply,
+    cost: input.cost ?? null,
+    note: apply?.externalWritesPerformed ? BRIEF_NOTE_WITH_WRITES : BRIEF_NOTE_NO_WRITES,
   };
 }
 
@@ -478,6 +547,53 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
   });
   lines.push("");
 
+  lines.push("## 11. APPLY (que puede ejecutarse de verdad)");
+  lines.push("");
+  if (!brief.apply) {
+    lines.push("_Esta pasada no llego a construir el contrato de APPLY. Nada se ha aplicado._");
+    lines.push("");
+  } else {
+    lines.push(
+      `Escrituras externas realizadas en esta pasada: **${brief.apply.externalWritesPerformed ? "SI (staging, reversibles)" : "ninguna"}**.`
+    );
+    if (brief.apply.notAttemptedReason) lines.push(`Motivo: ${brief.apply.notAttemptedReason}`);
+    lines.push("");
+    lines.push("| # | Accion | Estado APPLY | Capacidad | Aprobacion humana | Validacion | Rollback |");
+    lines.push("| --- | --- | --- | --- | --- | --- | --- |");
+    for (const item of brief.apply.items) {
+      lines.push(
+        `| ${item.rank} | ${truncate(item.title, 90).replace(/\|/g, "\\|")} | \`${item.applyStatus}\` | ${item.capability} | \`${item.humanApproval}\` | ${item.validationStatus} | ${item.rollbackStatus} |`
+      );
+    }
+    lines.push("");
+    for (const item of brief.apply.items) {
+      lines.push(`- **#${item.rank}** ${truncate(item.title, 120)}: ${truncate(item.capabilityReason, 260)} Aprobacion: ${truncate(item.humanApprovalReason, 220)}`);
+    }
+    lines.push("");
+  }
+
+  lines.push("## 12. COSTE DE LA PASADA");
+  lines.push("");
+  if (!brief.cost || brief.cost.runs.length === 0) {
+    lines.push("_No hay registros de ejecucion de Claude utilizables en esta pasada: el coste no se reporta y no se estima ninguna cifra._");
+    lines.push("");
+  } else {
+    lines.push(
+      `- **Coste total:** ${formatCostUsd(brief.cost.totalCostUsd)}${brief.cost.partial ? " (PARCIAL -- falta el coste de algun empleado)" : ""}`
+    );
+    lines.push(`- **Duracion sumada de las invocaciones:** ${formatDurationMs(brief.cost.totalDurationMs)}`);
+    lines.push(`- **Turnos totales:** ${brief.cost.totalTurns ?? "no reportados"}`);
+    lines.push("");
+    lines.push("| Empleado | Modelo | Coste | Duracion | Turnos | Origen de salida | Resultado |");
+    lines.push("| --- | --- | --- | --- | --- | --- | --- |");
+    for (const run of brief.cost.runs) {
+      lines.push(
+        `| ${run.employee} | ${run.model ?? "no reportado"} | ${formatCostUsd(run.costUsd)} | ${formatDurationMs(run.durationMs)} | ${run.numTurns ?? "?"} | ${run.outputSource} | ${run.outcome} |`
+      );
+    }
+    lines.push("");
+  }
+
   lines.push("---");
   lines.push("");
   lines.push("## Estado de cada etapa de esta pasada");
@@ -500,7 +616,15 @@ export function renderDepartmentStepSummary(brief: DepartmentDailyBrief): string
   lines.push(`- **QA del departamento:** \`${brief.departmentQaStatus}\``);
   lines.push(`- **Prioridades:** ${brief.topPriorities.length} (bloqueadas por QA: ${brief.topPriorities.filter((p) => p.qaStatus === "BLOCKED").length})`);
   lines.push(`- **Decisiones pendientes de Pau:** ${brief.approvalsNeeded.length}`);
-  lines.push(`- **Escrituras externas:** ninguna (WordPress/staging/produccion/Ads/GA4/GTM/Search Console/n8n/email no se han tocado; nada se ha commiteado).`);
+  lines.push(`- **Escrituras externas:** ${brief.externalWrites === "none" ? "ninguna (nada se ha aplicado, nada se ha commiteado)" : brief.externalWrites}`);
+  if (brief.apply) {
+    lines.push(
+      `- **APPLY:** ${brief.apply.counts.awaiting_approval} esperando aprobacion, ${brief.apply.counts.approved} aprobada(s), ${brief.apply.counts.applied} aplicada(s), ${brief.apply.counts.requires_manual_implementation} requieren implementacion manual, ${brief.apply.counts.blocked} bloqueada(s), ${brief.apply.counts.rolled_back} revertida(s)`
+    );
+  }
+  if (brief.cost) {
+    lines.push(`- **Coste de Claude en esta pasada:** ${formatCostUsd(brief.cost.totalCostUsd)}${brief.cost.partial ? " (parcial)" : ""}`);
+  }
   lines.push("");
   lines.push("| Etapa | Status |");
   lines.push("| --- | --- |");

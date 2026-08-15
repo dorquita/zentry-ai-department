@@ -384,6 +384,15 @@ export type ApprovalRelatedType =
   // real desde la solicitud (Number(uuid) = NaN). Este tipo lo deja
   // directo y sin ambiguedad.
   | "staging_review_page"
+  // Fase EMAIL + SCHEDULE + APPLY: un elemento de apply de la pasada
+  // COORDINADA del departamento (`relatedId = <departmentRunId>#apply-<rank>`,
+  // ver src/department/apply/types.ts). Reutiliza este mismo registro de
+  // aprobaciones -- deliberadamente NO se crea un segundo sistema de
+  // aprobaciones en paralelo. Sin cascada, igual que "change_pack" y
+  // "staging_execution": responder solo desbloquea que el executor del
+  // departamento pueda intentar su cambio (reversible, en staging) en la
+  // siguiente ejecucion; nunca ejecuta nada por si mismo.
+  | "department_apply_item"
   // Fase O14: reservado para el dia que una ability de Novamira MCP
   // clasificada "safe_write_staging_only" con requiresApproval:true
   // (ver config/novamira-allowlist.json + src/core/novamira-guard.ts)

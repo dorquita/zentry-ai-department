@@ -43,8 +43,15 @@ function requireEnv(name: string): string {
  * Valida TODA la configuracion SMTP/email antes de intentar nada. Si falta
  * o es invalida cualquier variable, falla aqui con un error claro y NUNCA
  * llega a intentar conectar/enviar el email.
+ *
+ * `overrideTo` (fase EMAIL + SCHEDULE + APPLY): permite que un emisor
+ * concreto decida su propio destinatario -- hoy solo el Daily Brief del
+ * departamento, que usa su propia variable (`DAILY_BRIEF_EMAIL_TO`) para
+ * poder ir a un buzon distinto del informe SEO diario. Sin ese argumento
+ * el comportamiento es EXACTAMENTE el de antes (destinatario del
+ * ClientConfig activo), asi que ningun emisor existente cambia.
  */
-export function resolveSmtpConfig(): SmtpConfig {
+export function resolveSmtpConfig(overrideTo?: string): SmtpConfig {
   const activeClientId = resolveActiveClientId();
   const host = resolveClientSecret(activeClientId, "SMTP_HOST");
 
@@ -64,7 +71,7 @@ export function resolveSmtpConfig(): SmtpConfig {
   const pass = resolveClientSecret(activeClientId, "SMTP_PASS");
   const from = resolveClientSecret(activeClientId, "REPORT_EMAIL_FROM");
   const toEnvVar = resolveActiveClientConfig().notificationSettings.reportEmailToEnvVar;
-  const to = requireEnv(toEnvVar);
+  const to = overrideTo && overrideTo.trim().length > 0 ? overrideTo.trim() : requireEnv(toEnvVar);
 
   return { host, port, secure, user, pass, from, to };
 }
@@ -93,8 +100,16 @@ export interface EmailContent {
   html?: string;
 }
 
-export async function sendReportEmail(content: EmailContent): Promise<void> {
-  const config = resolveSmtpConfig();
+export interface SendReportEmailOptions {
+  /** Destinatario explicito (fase EMAIL + SCHEDULE + APPLY). Si se omite, se usa el del ClientConfig activo, como siempre. */
+  to?: string;
+  /** Etiqueta del emisor para los logs (nunca incluye credenciales). */
+  label?: string;
+}
+
+export async function sendReportEmail(content: EmailContent, options: SendReportEmailOptions = {}): Promise<void> {
+  const config = resolveSmtpConfig(options.to);
+  const label = options.label ?? "informe SEO";
 
   const transporter = nodemailer.createTransport({
     host: config.host,
@@ -111,14 +126,14 @@ export async function sendReportEmail(content: EmailContent): Promise<void> {
       text: content.text,
       html: content.html,
     });
-    logger.info("Email de informe SEO enviado", {
+    logger.info(`Email de ${label} enviado`, {
       to: config.to,
       from: config.from,
       subject: content.subject,
     });
   } catch (err) {
     const safeMessage = sanitizeSmtpError(err, config.pass);
-    logger.error("Fallo el envio del email de informe SEO", { error: safeMessage });
+    logger.error(`Fallo el envio del email de ${label}`, { error: safeMessage });
     throw new Error(`Envio de email fallo: ${safeMessage}`);
   }
 }

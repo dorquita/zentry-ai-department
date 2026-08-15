@@ -56,13 +56,23 @@ import { runDepartmentPromotionTests } from "../test/department-promotion.test";
 import { runDepartmentSpecialistInputsTests } from "../test/department-specialist-inputs.test";
 import { runDepartmentDailyBriefTests } from "../test/department-daily-brief.test";
 import { runDepartmentCoordinationSafetyTests } from "../test/department-coordination-safety.test";
+import { runDepartmentApplyApprovalTests } from "../test/department-apply-approval.test";
+import { runDepartmentApplyExecutorTests } from "../test/department-apply-executor.test";
+import { runDepartmentApplyTraceabilityTests } from "../test/department-apply-traceability.test";
+import { runDepartmentBriefEmailTests } from "../test/department-brief-email.test";
+import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
 
 interface TestCase {
   name: string;
-  fn: () => void;
+  /**
+   * Puede ser sincrona (la mayoria) o asincrona: el executor del apply
+   * del departamento es `async`, y sin `await` aqui un test que fallara
+   * pasaria en silencio (la promesa rechazada no tumbaba el runner).
+   */
+  fn: () => void | Promise<void>;
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const suites: Array<{ suiteName: string; cases: TestCase[] }> = [
     { suiteName: "executive-report", cases: runExecutiveReportTests() },
     { suiteName: "novamira-guard", cases: runNovamiraGuardTests() },
@@ -113,6 +123,11 @@ function main(): void {
     { suiteName: "department-specialist-inputs", cases: runDepartmentSpecialistInputsTests() },
     { suiteName: "department-daily-brief", cases: runDepartmentDailyBriefTests() },
     { suiteName: "department-coordination-safety", cases: runDepartmentCoordinationSafetyTests() },
+    { suiteName: "department-employee-runs", cases: runDepartmentEmployeeRunsTests() },
+    { suiteName: "department-apply-approval", cases: runDepartmentApplyApprovalTests() },
+    { suiteName: "department-apply-executor", cases: runDepartmentApplyExecutorTests() },
+    { suiteName: "department-apply-traceability", cases: runDepartmentApplyTraceabilityTests() },
+    { suiteName: "department-brief-email", cases: runDepartmentBriefEmailTests() },
   ];
 
   let passed = 0;
@@ -122,7 +137,7 @@ function main(): void {
     console.log(`\n${suite.suiteName}`);
     for (const testCase of suite.cases) {
       try {
-        testCase.fn();
+        await testCase.fn();
         passed += 1;
         console.log(`  ok - ${testCase.name}`);
       } catch (err) {
@@ -137,4 +152,7 @@ function main(): void {
   process.exit(failed > 0 ? 1 : 0);
 }
 
-main();
+main().catch((err) => {
+  console.error(err instanceof Error ? err.stack ?? err.message : String(err));
+  process.exit(1);
+});
