@@ -168,8 +168,19 @@ jobs:
       # --- [DOMINIO] Subir artifact -- artifactJsonPath/artifactMdPath son
       # rutas FIJAS (mismo fichero, sobrescrito por el paso 2 si corrio),
       # ya existen tras el paso 1 en TODOS los estados (incluido no_data),
-      # asi que esta subida no depende de si el paso 2 corrio. ---
+      # asi que esta subida no depende de si el paso 2 corrio.
+      #
+      # if: always() es imprescindible aqui: el paso 2 termina con
+      # process.exitCode = 1 en cuanto hay >=1 violacion (status =
+      # invalid_output), lo que marca el job como fallido -- sin esta
+      # condicion, este step (que no tiene ningun `if:`) se saltaria por el
+      # `if: success()` implicito de GitHub Actions, aunque el fichero ya
+      # este escrito en disco (scripts/run-sem-specialist.ts escribe el
+      # artefacto ANTES de fijar el exit code). Sin `always()` aqui, una
+      # salida invalida nunca deja rastro descargable del texto exacto de
+      # las violaciones -- solo el recuento, via RUNNER_RESULT_JSON. ---
       - name: "[DOMINIO] Subir artifact (sem-specialist-result.json, sem-specialist-result.md)"
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sem-specialist-${{ github.run_id }}
