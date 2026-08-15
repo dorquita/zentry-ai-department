@@ -178,21 +178,13 @@ además nunca inventa una métrica: un dato ausente se dice ("no
 reportado"), nunca se rellena con 0, y ningún valor de credencial aparece
 jamás en el correo.
 
-> **Pendiente de cableado.** `buildNumberedProposals()` existe y define
-> los campos de arriba, pero **el renderizador del email todavía no lo
-> importa** (`brief-email.ts` no depende de `proposal.ts`): hoy la sección
-> "ESTADO DE APPLY" del correo lista los items agrupados por estado, con
-> `#recommendationRank`, capacidad, aprobación humana, validación,
-> rollback y URLs de staging/producción — sin before/after ni riesgo
-> explícito. Conectar `proposal.ts` al render es trabajo pendiente, no
-> algo que ya ocurra.
->
-> Ojo con un detalle que importa cuando se conecte: el número de
-> `proposal.ts` es el **índice 1-based** sobre las propuestas ordenadas
-> por `recommendationRank`, mientras que el email imprime hoy el
-> `recommendationRank` en crudo. Coinciden solo si los rangos son
-> contiguos desde 1. La numeración buena es la de `proposal.ts`, porque
-> es la que valida `decision.ts`.
+> **Ojo al número que se mira.** El bloque de propuestas numeradas se
+> construye con `buildNumberedProposals()`, cuyo número es el **índice
+> 1-based** sobre las propuestas ordenadas por `recommendationRank`. La
+> sección "ESTADO DE APPLY" del mismo correo, en cambio, imprime el
+> `recommendationRank` en crudo: coinciden solo si los rangos son
+> contiguos desde 1. **La numeración válida para aprobar es la del bloque
+> de propuestas numeradas**, porque es la que valida `decision.ts`.
 
 ---
 
@@ -409,6 +401,7 @@ confundirlas. Estado en el momento de escribirlo:
 | Registro append-only de decisiones (`decision-store.ts`) | Implementado. |
 | Flag `SERVERLESS_APPROVALS_ENABLED` (`feature-flag.ts`), `false` por defecto | Implementado. |
 | Máquina de estados, guards, executors, versionado, audit trail | Implementados y en uso. |
+| Bloque de propuestas numeradas dentro del email (`brief-email.ts` usando `proposal.ts`) | Se cablea en esta misma rama; comprobar el fichero antes de dar por hecho el formato exacto del correo. |
 | **Segundo email** con los resultados de la sesión | Pendiente: la sesión deja `approval-session.json` en el directorio de la pasada, pero no envía correo. |
 | Carril serverless (Worker + D1 + webhook) | Implementado y probado, **en standby**: no desplegado, no activo. |
 
