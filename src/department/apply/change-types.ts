@@ -2,10 +2,10 @@
  * CONTRATO PERSISTENTE de un cambio del departamento.
  *
  * Un `DepartmentChangeRequest` es el registro que sobrevive a TODO: al
- * final del runner de GitHub Actions, al reinicio del VPS, al reinicio
- * del bot de Telegram y al paso de dias. Vive en un log append-only en
- * el `data/` del cliente activo (ver change-registry.ts), igual que el
- * resto de registros del proyecto.
+ * final del runner de GitHub Actions, al reinicio del bot de Telegram y
+ * al paso de dias. Vive en el datastore SERVERLESS (Cloudflare D1, ver
+ * src/worker/d1-store.ts), fuera de cualquier filesystem efimero y sin
+ * depender de ningun VPS.
  *
  * Mantiene la cadena de trazabilidad COMPLETA que se pidio, en un unico
  * objeto y sin cruzar ficheros:
@@ -102,6 +102,13 @@ export interface EnvironmentApplyRecord {
    * la aprobacion (anti-TOCTOU).
    */
   resultingVersionHash: string | null;
+  /**
+   * Id del run de GitHub Actions que ejecuto este apply. Solo lo rellena
+   * el carril de produccion (la funcion serverless nunca publica: encola
+   * y GitHub Actions publica), y cierra la trazabilidad
+   * decision humana -> run de produccion.
+   */
+  githubRunId?: string | null;
 }
 
 /** La solicitud de aprobacion enviada a Telegram para ESTA version del cambio. */

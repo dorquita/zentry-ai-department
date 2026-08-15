@@ -1,6 +1,8 @@
 import { DepartmentChangeRequest } from "./change-types";
 import { DepartmentChangeStatus } from "./state-machine";
-import { matchesApprovedVersion } from "./version";
+// Igual que en telegram-message.ts: este modulo corre TAMBIEN dentro del
+// Worker, y `./version` arrastra `node:crypto`.
+import { matchesApprovedVersion } from "../../approvals/version-compare";
 
 /**
  * DECISIONES del flujo de aprobacion por Telegram, en un modulo PURO.

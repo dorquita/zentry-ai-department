@@ -71,9 +71,10 @@ function humanDecision(): HumanDecisionRecord {
   return { decision: "approved", decidedBy: "telegram:123", decidedAt: NOW.toISOString(), rejectionReason: "", channel: "telegram" };
 }
 
+/** Un cambio ya APROBADO y ENCOLADO: el estado desde el que arranca el executor. */
 function approvedChange(overrides = {}) {
   return change({
-    status: "approved",
+    status: "production_queued",
     staging: stagingRecord(),
     telegram: telegramRecord(),
     humanDecision: humanDecision(),
@@ -143,13 +144,22 @@ export function runDepartmentApplyProductionTests(): TestCase[] {
   return [
     // --- La regla central ---
     {
-      name: "SIN aprobacion humana no hay produccion: un cambio en staging_applied no escribe nada",
+      name: "SIN aprobacion humana no hay produccion: ni staging_applied ni approved a secas escriben nada",
       fn: async () => {
-        const h = harness();
-        const result = await applyApprovedChangeToProduction(change({ status: "staging_applied", staging: stagingRecord() }), h.deps, GUARDS_OK, h.port);
-        assert.equal(h.writes, 0);
-        assert.equal(result.externalWritePerformed, false);
-        assert.match(result.message, /solo se llega desde "approved"/i);
+        // staging validado no basta...
+        const h1 = harness();
+        const r1 = await applyApprovedChangeToProduction(change({ status: "staging_applied", staging: stagingRecord() }), h1.deps, GUARDS_OK, h1.port);
+        assert.equal(h1.writes, 0);
+        assert.equal(r1.externalWritePerformed, false);
+
+        // ...y "approved" tampoco: hace falta la transicion ATOMICA de
+        // encolado, que es la que garantiza un unico apply aunque el
+        // webhook se entregue dos veces.
+        const h2 = harness();
+        const r2 = await applyApprovedChangeToProduction(change({ status: "approved", staging: stagingRecord(), humanDecision: humanDecision() }), h2.deps, GUARDS_OK, h2.port);
+        assert.equal(h2.writes, 0);
+        assert.equal(r2.externalWritePerformed, false);
+        assert.match(r2.message, /production_queued/i);
       },
     },
     {
@@ -214,7 +224,7 @@ export function runDepartmentApplyProductionTests(): TestCase[] {
           const h = harness();
           const result = await applyApprovedChangeToProduction(approvedChange(), h.deps, guards, h.port);
           assert.equal(h.writes, 0);
-          assert.equal(result.change.status, "approved", "la aprobacion no se pierde por un interruptor apagado");
+          assert.equal(result.change.status, "production_queued", "el encolado no se pierde por un interruptor apagado: se reintentara");
           assert.equal(checkProductionApplyGuards(guards).allowed, false);
         }
       },

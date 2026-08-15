@@ -10,11 +10,6 @@ import {
   validateRejectionReason,
 } from "../src/department/apply/telegram-decisions";
 import {
-  DepartmentTelegramPorts,
-  handleDepartmentCallback,
-  handleDepartmentRejectionReason,
-} from "../src/department/apply/telegram-handler";
-import {
   buildApprovalButtons,
   buildApprovalRequestMessage,
   buildCallbackData,
@@ -73,84 +68,6 @@ function awaitingChange(overrides: Partial<DepartmentChangeRequest> = {}): Depar
     telegram: { telegramApprovalId: APPROVAL_ID, telegramMessageId: 77, chatId: "555", sentAt: NOW.toISOString(), stagingVersionHash: HASH },
     ...overrides,
   });
-}
-
-interface PortHarness {
-  ports: DepartmentTelegramPorts;
-  replies: string[];
-  port: MemoryPort;
-  sharedStatus: { approvalRequestId: string; status: string; reason: string }[];
-  prompts: { promptId: string; approvalRequestId: string; chatId: string; closed: boolean }[];
-  feedback: { changeId: string; feedback: string }[];
-  productionCalls: number;
-  state: { change: DepartmentChangeRequest | undefined };
-}
-
-function ports(
-  initial: DepartmentChangeRequest | undefined,
-  options: { currentHash?: string | null; authorizedUserId?: string; productionMessage?: string; activePrompt?: boolean } = {}
-): PortHarness {
-  const replies: string[] = [];
-  const port = memoryPort();
-  const sharedStatus: PortHarness["sharedStatus"] = [];
-  const prompts: PortHarness["prompts"] = options.activePrompt
-    ? [{ promptId: "p-1", approvalRequestId: APPROVAL_ID, chatId: "555", closed: false }]
-    : [];
-  const feedback: PortHarness["feedback"] = [];
-  const state = { change: initial };
-  const counters = { production: 0 };
-
-  const harness: PortHarness = {
-    replies,
-    port,
-    sharedStatus,
-    prompts,
-    feedback,
-    get productionCalls() {
-      return counters.production;
-    },
-    state,
-    ports: {
-      authorizedChatId: "555",
-      authorizedUserId: options.authorizedUserId ?? "",
-      findChangeByApprovalId: (id) => (state.change && state.change.telegram?.telegramApprovalId === id ? state.change : undefined),
-      changes: {
-        transition: (current, next, updates, audit) => {
-          const result = port.transition(current, next, updates, audit);
-          if (result.ok) state.change = result.change;
-          return result;
-        },
-        note: (current, updates, audit) => {
-          const updated = port.note(current, updates, audit);
-          state.change = updated;
-          return updated;
-        },
-      },
-      setSharedApprovalStatus: (approvalRequestId, status, detail) => sharedStatus.push({ approvalRequestId, status, reason: detail.reason }),
-      readStagingVersionHash: async () => (options.currentHash === undefined ? HASH : options.currentHash),
-      runProductionApply: async (c) => {
-        counters.production += 1;
-        return { change: c, message: options.productionMessage ?? "✅ CAMBIO PUBLICADO" };
-      },
-      reply: async (text) => {
-        replies.push(text);
-      },
-      openRejectionPrompt: (approvalRequestId, chatId) => prompts.push({ promptId: `p-${prompts.length + 1}`, approvalRequestId, chatId, closed: false }),
-      findActiveRejectionPrompt: (chatId) => prompts.find((p) => p.chatId === chatId && !p.closed),
-      closeRejectionPrompt: (promptId) => {
-        const found = prompts.find((p) => p.promptId === promptId);
-        if (found) found.closed = true;
-      },
-      recordFeedback: (input) => feedback.push({ changeId: input.changeId, feedback: input.feedback }),
-      actorLabel: (u) => (u.fromUserId ? `telegram:${u.fromUserId}` : `telegram:chat:${u.chatId}`),
-      now: () => NOW,
-    },
-  };
-  return harness;
-}
-
-function update(overrides: { data?: string; chatId?: string; fromUserId?: string } = {}) {
-  return { updateId: 1, chatId: overrides.chatId ?? "555", fromUserId: overrides.fromUserId, data: overrides.data ?? buildCallbackData("approve", APPROVAL_ID) };
 }
 
 export function runDepartmentApplyTelegramTests(): TestCase[] {
@@ -221,26 +138,6 @@ export function runDepartmentApplyTelegramTests(): TestCase[] {
 
     // --- Autorizacion ---
     {
-      name: "Chat no autorizado: se ignora y NO se responde nada",
-      fn: async () => {
-        const h = ports(awaitingChange());
-        const result = await handleDepartmentCallback(update({ chatId: "999" }), h.ports);
-        assert.equal(result?.outcome, "department_ignored_unauthorized");
-        assert.equal(h.replies.length, 0, "no se contesta a un chat no autorizado");
-        assert.equal(h.productionCalls, 0);
-        assert.equal(h.state.change?.status, "awaiting_approval", "el cambio no se mueve");
-      },
-    },
-    {
-      name: "Usuario de Telegram distinto del autorizado: bloqueado aunque el chat sea el correcto",
-      fn: async () => {
-        const h = ports(awaitingChange(), { authorizedUserId: "111" });
-        const result = await handleDepartmentCallback(update({ fromUserId: "222" }), h.ports);
-        assert.equal(result?.outcome, "department_ignored_unauthorized");
-        assert.equal(h.productionCalls, 0);
-      },
-    },
-    {
       name: "Si hay usuario autorizado configurado y Telegram no reporta autor -> fail-closed",
       fn: () => {
         const auth = authorizeTelegramActor({ chatId: "555", authorizedChatId: "555", authorizedUserId: "111" });
@@ -256,80 +153,6 @@ export function runDepartmentApplyTelegramTests(): TestCase[] {
     },
 
     // --- Aprobar ---
-    {
-      name: "APROBAR de usuario autorizado -> decision humana registrada y produccion lanzada",
-      fn: async () => {
-        const h = ports(awaitingChange(), { authorizedUserId: "111" });
-        const result = await handleDepartmentCallback(update({ fromUserId: "111" }), h.ports);
-
-        assert.equal(result?.outcome, "department_production_reported");
-        assert.equal(h.state.change?.status, "approved");
-        assert.equal(h.state.change?.humanDecision?.decision, "approved");
-        assert.equal(h.state.change?.humanDecision?.decidedBy, "telegram:111");
-        assert.equal(h.state.change?.humanDecision?.decidedAt, NOW.toISOString());
-        assert.equal(h.productionCalls, 1);
-        // El registro comun del proyecto se sincroniza: los dos deben decir lo mismo.
-        assert.equal(h.sharedStatus[0]?.status, "approved");
-        assert.ok(h.replies.some((r) => r.includes("CAMBIO PUBLICADO")));
-      },
-    },
-    {
-      name: "Doble APROBAR: la segunda pulsacion es idempotente y NO vuelve a publicar",
-      fn: async () => {
-        const h = ports(awaitingChange());
-        await handleDepartmentCallback(update(), h.ports);
-        const second = await handleDepartmentCallback(update(), h.ports);
-
-        assert.equal(second?.outcome, "department_ignored");
-        assert.equal(h.productionCalls, 1, "produccion se ejecuta UNA sola vez");
-        assert.ok(h.replies[h.replies.length - 1].includes("ya estaba aprobado"));
-      },
-    },
-    {
-      name: "Callback de un mensaje viejo cuya solicitud ya caduco -> approval_stale, sin publicar",
-      fn: async () => {
-        const old = awaitingChange({
-          telegram: { telegramApprovalId: APPROVAL_ID, telegramMessageId: 1, chatId: "555", sentAt: "2026-08-01T00:00:00.000Z", stagingVersionHash: HASH },
-        });
-        const h = ports(old);
-        const result = await handleDepartmentCallback(update(), h.ports);
-
-        assert.equal(result?.outcome, "department_approval_stale");
-        assert.equal(h.state.change?.status, "approval_stale");
-        assert.equal(h.productionCalls, 0);
-      },
-    },
-    {
-      name: "Callback de un cambio que ya no existe -> se ignora sin tocar nada",
-      fn: async () => {
-        const h = ports(undefined);
-        const result = await handleDepartmentCallback(update(), h.ports);
-        assert.equal(result?.outcome, "department_ignored");
-        assert.equal(h.productionCalls, 0);
-      },
-    },
-    {
-      name: "TOCTOU: si staging cambio desde el mensaje, la aprobacion NO publica y queda approval_stale",
-      fn: async () => {
-        const h = ports(awaitingChange(), { currentHash: "b".repeat(64) });
-        const result = await handleDepartmentCallback(update(), h.ports);
-
-        assert.equal(result?.outcome, "department_approval_stale");
-        assert.equal(h.state.change?.status, "approval_stale");
-        assert.equal(h.productionCalls, 0);
-        assert.equal(h.sharedStatus.length, 0, "no se marca como aprobada una version que ya no existe");
-        assert.match(h.replies[0], /No publico nada/i);
-      },
-    },
-    {
-      name: "Si no se puede releer staging, tampoco se publica (fail-closed)",
-      fn: async () => {
-        const h = ports(awaitingChange(), { currentHash: null });
-        const result = await handleDepartmentCallback(update(), h.ports);
-        assert.equal(result?.outcome, "department_approval_stale");
-        assert.equal(h.productionCalls, 0);
-      },
-    },
     {
       name: "Una version NUEVA necesita su propia aprobacion: la aprobacion vieja no le sirve",
       fn: () => {
@@ -347,64 +170,6 @@ export function runDepartmentApplyTelegramTests(): TestCase[] {
 
     // --- Rechazar ---
     {
-      name: "RECHAZAR abre awaiting_rejection_reason y pide el motivo: no basta con status=rejected",
-      fn: async () => {
-        const h = ports(awaitingChange());
-        const result = await handleDepartmentCallback(update({ data: buildCallbackData("reject", APPROVAL_ID) }), h.ports);
-
-        assert.equal(result?.outcome, "department_rejected_awaiting_reason");
-        assert.equal(h.state.change?.status, "awaiting_rejection_reason");
-        assert.notEqual(h.state.change?.status, "rejected", "el rechazo no se cierra sin motivo");
-        assert.equal(h.prompts.filter((p) => !p.closed).length, 1, "queda una pregunta abierta persistente");
-        assert.match(h.replies[0], /Indicame el motivo del rechazo/i);
-        assert.equal(h.productionCalls, 0);
-      },
-    },
-    {
-      name: "El siguiente mensaje se guarda como rejectionReason y cierra el rechazo",
-      fn: async () => {
-        const h = ports(change({ status: "awaiting_rejection_reason", staging: stagingRecord(), telegram: awaitingChange().telegram }), { activePrompt: true });
-        const reason = "No me gusta el H1. Quiero mantener el enfoque en cerraduras electronicas, no en control de acceso.";
-        const result = await handleDepartmentRejectionReason(update({ data: reason }), h.ports);
-
-        assert.equal(result?.outcome, "department_rejection_reason_recorded");
-        assert.equal(h.state.change?.status, "rejected");
-        assert.equal(h.state.change?.humanDecision?.rejectionReason, reason);
-        assert.equal(h.state.change?.humanDecision?.decision, "rejected");
-        assert.ok(h.state.change?.humanDecision?.decidedBy);
-        assert.ok(h.state.change?.humanDecision?.decidedAt);
-        // Feedback disponible para futuras ejecuciones de los agentes.
-        assert.equal(h.feedback[0]?.feedback, reason);
-        assert.equal(h.prompts[0].closed, true);
-        assert.equal(h.sharedStatus[0]?.status, "rejected");
-        assert.equal(h.productionCalls, 0, "un rechazo NUNCA ejecuta produccion");
-      },
-    },
-    {
-      name: "Un motivo vacio no cierra el rechazo: se sigue esperando",
-      fn: async () => {
-        const h = ports(change({ status: "awaiting_rejection_reason", staging: stagingRecord(), telegram: awaitingChange().telegram }), { activePrompt: true });
-        const result = await handleDepartmentRejectionReason(update({ data: "   " }), h.ports);
-
-        assert.equal(result?.outcome, "department_rejected_awaiting_reason");
-        assert.equal(h.state.change?.status, "awaiting_rejection_reason");
-        assert.equal(h.prompts[0].closed, false);
-        assert.equal(validateRejectionReason("").accepted, false);
-        assert.equal(validateRejectionReason("no").accepted, false);
-        assert.equal(validateRejectionReason("H1 demasiado generico").accepted, true);
-      },
-    },
-    {
-      name: "Aprobar un cambio ya rechazado no hace nada",
-      fn: async () => {
-        const h = ports(change({ status: "rejected", staging: stagingRecord(), telegram: awaitingChange().telegram }));
-        const result = await handleDepartmentCallback(update(), h.ports);
-        assert.equal(result?.outcome, "department_ignored");
-        assert.equal(h.productionCalls, 0);
-        assert.equal(checkRejectionAllowed(change({ status: "rejected" })).allowed, false);
-      },
-    },
-    {
       name: "El flujo historico NO puede resolver un cambio del departamento (ni por texto libre ni por el callback viejo)",
       fn: () => {
         // El receiver rechaza `relatedType: "department_apply_item"` en su
@@ -418,14 +183,6 @@ export function runDepartmentApplyTelegramTests(): TestCase[] {
           "el receiver debe rechazar explicitamente los cambios del departamento en su ruta historica"
         );
         assert.ok(/se decide con los botones/.test(receiver), "y debe decir por que, remitiendo a los botones");
-      },
-    },
-    {
-      name: "Un callback que no es del departamento devuelve null y no interfiere con el flujo existente",
-      fn: async () => {
-        const h = ports(awaitingChange());
-        assert.equal(await handleDepartmentCallback(update({ data: `appr:approve:${APPROVAL_ID}` }), h.ports), null);
-        assert.equal(h.replies.length, 0);
       },
     },
 

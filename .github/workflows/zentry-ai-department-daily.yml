@@ -32,19 +32,17 @@ name: Zentry AI Department -- Daily Brief (coordinacion real)
 # - Sin MCP, sin bypassPermissions, sin `id-token: write`.
 # - sem-specialist queda FUERA de esta fase: se registra siempre como
 #   not_available (pendiente) y nunca bloquea la pasada.
-# - APPLY: este workflow solo PLANIFICA el contrato de apply
-#   (`department:apply -- --phase plan`), que no escribe en ningun sistema
-#   externo.
+# - APPLY: desde la fase SERVERLESS, este workflow SI ejecuta el apply
+#   real en staging y SI envia la solicitud de aprobacion por Telegram.
+#   Lo que antes lo impedia era que el estado de una aprobacion no puede
+#   vivir en el filesystem EFIMERO del runner -- y eso ya no pasa: las
+#   aprobaciones se persisten en el datastore serverless (Cloudflare D1)
+#   a traves del Worker, que sobrevive al final de este workflow.
 #
-#   Las fases que SI escriben o deciden (`--phase stage`, `--phase notify`,
-#   `--phase production`) NO se invocan aqui, y no es una omision: el
-#   estado de una aprobacion no puede depender del filesystem EFIMERO de
-#   un runner de GitHub Actions. El registro persistente de cambios
-#   (`data/department-changes.jsonl`) y el registro comun de aprobaciones
-#   viven donde el proyecto es persistente -- el VPS, junto al servicio
-#   permanente de Telegram (deploy/zentry-telegram-approvals.service).
-#   Una aprobacion tiene que sobrevivir al final de este workflow.
-#   Ver docs/telegram-approval-system.md.
+#   El runner NO espera ninguna respuesta humana: crea la aprobacion,
+#   manda el Telegram y termina. Cuando Pau decida, el Worker disparara
+#   department-production-apply.yml, que es el unico sitio donde se
+#   escribe en produccion. Ver docs/serverless-approvals.md.
 # - EMAIL: se envia el Daily Brief a la direccion configurada en los
 #   secretos del repositorio. Si falta configuracion, no se envia nada y
 #   se reporta que NOMBRES de variables faltan (nunca sus valores).
@@ -666,12 +664,9 @@ jobs:
       # FASE 4.5 -- PLANIFICACION DEL APPLY (determinista, sin Claude)
       #
       # Construye el contrato de apply de la pasada: por cada recomendacion,
-      # si existe un executor determinista y reversible para ella. Aqui NO
-      # se escribe en ningun sistema externo, no se crea ningun registro de
-      # cambio y no se envia ninguna solicitud de aprobacion: eso son las
-      # fases `stage` / `notify` / `production`, que este workflow no invoca
-      # a proposito (necesitan el registro persistente y los interruptores
-      # de entorno). Ver docs/telegram-approval-system.md.
+      # si existe un executor determinista y reversible para ella. Esta fase
+      # sigue sin escribir en ningun sistema externo. Ver
+      # docs/serverless-approvals.md.
       #
       # `continue-on-error`: no poder planificar el apply degrada el informe,
       # pero nunca debe impedir que el Daily Brief se genere y se envie.
@@ -685,6 +680,64 @@ jobs:
           npm run department:apply -- --phase plan --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-plan.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+
+      # =====================================================================
+      # FASE 4.6 -- APPLY REAL EN STAGING
+      #
+      # Aplica en STAGING los elementos con capacidad soportada: snapshot
+      # del estado previo, escritura, validacion releyendo, y rollback
+      # verificado si la validacion falla. Staging es el entorno de
+      # trabajo/revision y NO requiere aprobacion humana previa; produccion
+      # sigue intacta y no se toca desde aqui bajo ninguna circunstancia.
+      #
+      # Con los interruptores apagados este step no escribe nada y lo dice:
+      # es seguro que exista aunque el entorno no este configurado todavia.
+      #
+      # `continue-on-error`: un fallo aplicando en staging no puede impedir
+      # que el Daily Brief se genere y se envie.
+      # =====================================================================
+      - name: "[APPLY] Aplicar en STAGING (snapshot, validacion y rollback verificado)"
+        id: apply_stage
+        continue-on-error: true
+        if: always()
+        run: |
+          set -o pipefail
+          npm run department:apply -- --phase stage --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-stage.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          DEPARTMENT_STAGING_APPLY_ENABLED: ${{ secrets.DEPARTMENT_STAGING_APPLY_ENABLED }}
+          WORDPRESS_DRAFTS_ENABLED: ${{ secrets.WORDPRESS_DRAFTS_ENABLED }}
+          WORDPRESS_BACKEND: ${{ secrets.WORDPRESS_BACKEND }}
+          WORDPRESS_ENV: ${{ secrets.WORDPRESS_ENV }}
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          APPROVALS_API_URL: ${{ secrets.APPROVALS_API_URL }}
+          APPROVALS_API_TOKEN: ${{ secrets.APPROVALS_API_TOKEN }}
+
+      # =====================================================================
+      # FASE 4.7 -- SOLICITUD DE APROBACION POR TELEGRAM
+      #
+      # Para cada cambio ya aplicado y VALIDADO en staging: crea la
+      # aprobacion en el datastore serverless (persistente, sobrevive a
+      # este runner) y envia el mensaje con los tres botones. El runner NO
+      # espera respuesta: termina aqui. La decision llegara por webhook al
+      # Worker, que disparara department-production-apply.yml.
+      # =====================================================================
+      - name: "[APPLY] Crear aprobacion persistente y enviar Telegram"
+        id: apply_notify
+        continue-on-error: true
+        if: always()
+        run: |
+          set -o pipefail
+          npm run department:apply -- --phase notify --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-notify.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          APPROVALS_API_URL: ${{ secrets.APPROVALS_API_URL }}
+          APPROVALS_API_TOKEN: ${{ secrets.APPROVALS_API_TOKEN }}
+          TELEGRAM_APPROVALS_ENABLED: ${{ secrets.TELEGRAM_APPROVALS_ENABLED }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
       # =====================================================================
       # FASE 5 -- DAILY BRIEF (ensamblado determinista, sin Claude)
@@ -760,7 +813,7 @@ jobs:
           {
             echo ""
             echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "- **Escrituras en sistemas de contenido:** ninguna desde este workflow. Solo se PLANIFICA el contrato de apply; el apply real en staging, el envio a Telegram y la publicacion en produccion corren donde el proyecto es persistente (ver docs/telegram-approval-system.md)."
+            echo "- **Escrituras en sistemas de contenido:** STAGING unicamente (reversible, con snapshot y validacion). PRODUCCION no se toca desde este workflow: eso solo ocurre en department-production-apply.yml, tras una aprobacion humana explicita (ver docs/serverless-approvals.md)."
             echo "- **Email del Daily Brief:** resultado del step [EMAIL] = \`${EMAIL_OUTCOME}\` (si falta configuracion, no se envia nada y el log dice que NOMBRES de variables faltan)."
             echo "- **SEM:** pendiente / fuera de esta fase por decision explicita."
           } >> "$GITHUB_STEP_SUMMARY"

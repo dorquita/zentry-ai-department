@@ -4,8 +4,6 @@ import { buildApplyPlan, projectChangesIntoSummary } from "../src/department/app
 import { applyChangeToStaging } from "../src/department/apply/staging-executor";
 import { applyApprovedChangeToProduction } from "../src/department/apply/production-executor";
 import { sendChangeApprovalRequest } from "../src/department/apply/telegram-notifier";
-import { handleDepartmentCallback } from "../src/department/apply/telegram-handler";
-import { buildCallbackData } from "../src/department/apply/telegram-message";
 import { buildApplyItemId, buildRecommendationId } from "../src/department/apply/types";
 import { DepartmentChangeRequest } from "../src/department/apply/change-types";
 import { LoadedSpecialistInputs } from "../src/department/specialist-inputs";
@@ -137,45 +135,26 @@ export function runDepartmentApplyTraceabilityTests(): TestCase[] {
         assert.equal(notified.change.telegram?.telegramMessageId, 4242);
         assert.equal(notified.change.telegram?.stagingVersionHash, stagingVersion);
 
-        // 4. -> humanDecision (aprobar desde Telegram)
-        const store = { current: notified.change as DepartmentChangeRequest };
-        const productionCalls: DepartmentChangeRequest[] = [];
-        const handled = await handleDepartmentCallback(
-          { updateId: 1, chatId: "555", fromUserId: "111", data: buildCallbackData("approve", APPROVAL_ID) },
-          {
-            authorizedChatId: "555",
-            authorizedUserId: "111",
-            findChangeByApprovalId: () => store.current,
-            changes: {
-              transition: (current, next, updates, audit) => {
-                const result = port.transition(current, next, updates, audit);
-                if (result.ok) store.current = result.change;
-                return result;
-              },
-              note: (current, updates, audit) => {
-                store.current = port.note(current, updates, audit);
-                return store.current;
-              },
-            },
-            setSharedApprovalStatus: () => undefined,
-            readStagingVersionHash: async () => stagingVersion ?? null,
-            runProductionApply: async (c) => {
-              productionCalls.push(c);
-              return { change: c, message: "✅ CAMBIO PUBLICADO" };
-            },
-            reply: async () => undefined,
-            openRejectionPrompt: () => undefined,
-            findActiveRejectionPrompt: () => undefined,
-            closeRejectionPrompt: () => undefined,
-            recordFeedback: () => undefined,
-            actorLabel: () => "telegram:111",
-            now: () => NOW,
-          }
+        // 4. -> humanDecision (la decision humana llega por el webhook
+        // serverless; aqui se reproduce su efecto sobre el registro, que
+        // es lo unico que este test tiene que demostrar: que la cadena
+        // de trazabilidad no se rompe entre pieza y pieza).
+        const approved = port.transition(
+          notified.change,
+          "approved",
+          { humanDecision: { decision: "approved", decidedBy: "telegram:111", decidedAt: NOW.toISOString(), rejectionReason: "", channel: "telegram" } },
+          { event: "approved_by_human", detail: "Aprobado desde Telegram." }
         );
-        assert.equal(handled?.outcome, "department_production_reported");
-        assert.equal(store.current.humanDecision?.decision, "approved");
-        assert.equal(store.current.humanDecision?.decidedBy, "telegram:111");
-        assert.equal(productionCalls.length, 1);
+        assert.equal(approved.ok, true);
+        assert.equal(approved.change.humanDecision?.decision, "approved");
+        assert.equal(approved.change.humanDecision?.decidedBy, "telegram:111");
+
+        // 4b. -> production_queued: la transicion ATOMICA que encola. El
+        // serverless llega hasta aqui y ni un paso mas: publicar es
+        // trabajo de GitHub Actions.
+        const queued = port.transition(approved.change, "production_queued", {}, { event: "production_queued", detail: "Dispatch enviado a GitHub Actions." });
+        assert.equal(queued.ok, true);
+        const store = { current: queued.change };
 
         // 5. -> productionApplyId (apply real de produccion, con fakes)
         const prod = { page: { id: 900, status: "publish", title: "T prod", contentHtml: "<p>p</p>", excerpt: "M prod", slug: "taquillas-melamina", link: "https://zentrylockers.com/taquillas-melamina/" } };

@@ -45,39 +45,22 @@ import {
   updateStagingPublishedPageContent,
 } from "../src/adapters/wordpress";
 import { resolveWordpressBackend, resolveWordpressEnv } from "../src/adapters/wordpress-backend";
-import {
-  canAttemptProductionWrites,
-  getProductionPage,
-  isProductionDraftsEnabled,
-  isProductionExecutionEnabled,
-  resolveProductionBackend,
-  searchProductionPagesBySlug,
-  updateProductionPublishedPageContent,
-} from "../src/adapters/wordpress-production";
-import { markApprovalRequestSent, readCurrentApprovalRequests, upsertApprovalRequest } from "../src/core/approval-requests";
 import { readCurrentStagingReviewPages } from "../src/core/staging-review-pages";
 import { readCurrentStagingExecutions } from "../src/core/staging-executions";
 import { isTelegramApprovalsEnabled, sendTelegramMessage } from "../src/core/telegram-gateway";
 import { validateWebEngineerOutput } from "../src/employees/web-engineer/validator";
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
-import { DEPARTMENT_APPLY_RELATED_TYPE, resolveHumanApproval } from "../src/department/apply/approval";
 import { OwnedStagingPage } from "../src/department/apply/capability";
 import {
   buildChangeId,
   DEPARTMENT_CHANGE_CONTRACT_VERSION,
   DepartmentChangeRequest,
 } from "../src/department/apply/change-types";
-import {
-  collectFeedbackForRecommendation,
-  findChangeById,
-  findChangesByRunId,
-  nextVersionForRecommendation,
-  readCurrentChanges,
-} from "../src/department/apply/change-registry";
-import { checkProductionApplyGuards, checkStagingApplyGuards, ProductionApplyGuards, StagingApplyGuards } from "../src/department/apply/guards";
+import { createHttpApprovalStoreFromEnv } from "../src/approvals/http-store";
+import { Approval, ApprovalStore } from "../src/approvals/store";
+import { flushRecordedTransitions, recordingTransitionPort } from "../src/approvals/executor-bridge";
+import { checkStagingApplyGuards, StagingApplyGuards } from "../src/department/apply/guards";
 import { buildApplyPlan, projectChangesIntoSummary } from "../src/department/apply/plan";
-import { applyApprovedChangeToProduction } from "../src/department/apply/production-executor";
-import { registryTransitionPort } from "../src/department/apply/registry-port";
 import { sendChangeApprovalRequest } from "../src/department/apply/telegram-notifier";
 import { applyChangeToStaging } from "../src/department/apply/staging-executor";
 import { readApplySummary, updateApplySummaryItems, writeApplySummary } from "../src/department/apply/store";
@@ -85,7 +68,7 @@ import { DepartmentApplyItem, DepartmentApplySummary } from "../src/department/a
 import { DepartmentPromotionResult } from "../src/department/promotion";
 import { findStageRecord, readManifest, readStageOutput, resolveDepartmentRunPaths, toRepoRelative } from "../src/department/run-store";
 
-type Phase = "plan" | "stage" | "notify" | "production" | "sync";
+type Phase = "plan" | "stage" | "notify" | "sync";
 
 function parseArgs(argv: string[]): Record<string, string> {
   const args: Record<string, string> = {};
@@ -115,21 +98,6 @@ function resolveStagingGuards(): StagingApplyGuards {
     wordpressWritesEnabled: isWordpressDraftsEnabled(),
     wordpressBackend: resolveWordpressBackend(),
     wordpressEnv: resolveWordpressEnv(),
-  };
-}
-
-function resolveProductionGuards(): ProductionApplyGuards {
-  let backend = "desconocido";
-  try {
-    backend = resolveProductionBackend();
-  } catch {
-    backend = "desconocido";
-  }
-  return {
-    departmentProductionApplyEnabled: isEnabled("DEPARTMENT_PRODUCTION_APPLY_ENABLED"),
-    productionExecutionEnabled: isProductionExecutionEnabled(),
-    productionWritesEnabled: isProductionDraftsEnabled(),
-    productionBackend: backend,
   };
 }
 
@@ -201,10 +169,18 @@ function requireSummary(departmentRunId: string): DepartmentApplySummary {
   return summary;
 }
 
-/** Reescribe el contrato de la pasada con el estado REAL del registro persistente. */
-function syncSummary(departmentRunId: string, updates: { externalWritesPerformed?: boolean; applyNotAttemptedReason?: string }): DepartmentApplySummary {
+/**
+ * Reescribe el contrato de la pasada con el estado REAL de las
+ * aprobaciones. Recibe los cambios YA leidos: el store es asincrono y
+ * esta funcion se llama desde sitios que ya los tienen en la mano.
+ */
+function syncSummaryWith(
+  departmentRunId: string,
+  changes: Approval[],
+  updates: { externalWritesPerformed?: boolean; applyNotAttemptedReason?: string }
+): DepartmentApplySummary {
   const summary = requireSummary(departmentRunId);
-  const projected = projectChangesIntoSummary(summary, findChangesByRunId(departmentRunId));
+  const projected = projectChangesIntoSummary(summary, changes);
   const updated = updateApplySummaryItems(projected, projected.items, {
     externalWritesPerformed: updates.externalWritesPerformed ?? projected.externalWritesPerformed,
     productionWritesPerformed: projected.productionWritesPerformed,
@@ -240,11 +216,7 @@ function phasePlan(args: Record<string, string>): void {
 
 // --- FASE stage ------------------------------------------------------------
 
-function buildChangeFromItem(item: DepartmentApplyItem, now: Date): DepartmentChangeRequest {
-  const version = nextVersionForRecommendation(item.recommendationId);
-  const previous = collectFeedbackForRecommendation(item.recommendationId);
-  const priorVersions = readCurrentChanges().filter((c) => c.recommendationId === item.recommendationId);
-  const supersedes = priorVersions.length > 0 ? priorVersions.sort((a, b) => b.version - a.version)[0].changeId : null;
+function buildChangeFromItem(item: DepartmentApplyItem, version: number, previous: string[], supersedes: string | null, now: Date): DepartmentChangeRequest {
   return {
     contractVersion: DEPARTMENT_CHANGE_CONTRACT_VERSION,
     changeId: buildChangeId(item.departmentRunId, item.recommendationRank, version),
@@ -292,29 +264,57 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
   // efimero (un runner de CI) crear registros generaria cambios que
   // nadie podria continuar, porque desaparecen con el runner.
   if (!guardCheck.allowed) {
-    syncSummary(departmentRunId, { externalWritesPerformed: false, applyNotAttemptedReason: guardCheck.reason });
-    console.log("No se ha creado ningun registro de cambio ni se ha escrito nada.");
+    syncSummaryWith(departmentRunId, [], { externalWritesPerformed: false, applyNotAttemptedReason: guardCheck.reason });
+    console.log("No se ha creado ninguna aprobacion ni se ha escrito nada.");
     return;
   }
 
-  const port = registryTransitionPort();
-  const existing = findChangesByRunId(departmentRunId);
+  // El estado de las aprobaciones vive en el datastore SERVERLESS, no en
+  // el filesystem de este runner: por eso esta fase puede ejecutarse aqui
+  // sin que la aprobacion muera cuando el runner termine.
+  const store = createHttpApprovalStoreFromEnv();
+  const existing = await store.listByRun(departmentRunId);
   let externalWrites = false;
   let applied = 0;
+  let criticalRollbacks = 0;
 
   for (const item of summary.items) {
     if (item.applyStatus !== "proposed" || !item.applyCapability.supported || !item.applyCapability.target) continue;
-    // Idempotencia: si esta pasada ya creo un cambio para esta
-    // recomendacion, no se crea otro (una segunda ejecucion de la fase no
-    // puede duplicar aplicaciones ni aprobaciones).
+
+    // Idempotencia: si esta pasada ya creo una aprobacion para esta
+    // recomendacion, no se crea otra. Una segunda ejecucion de la fase no
+    // puede duplicar aplicaciones ni aprobaciones.
     const already = existing.find((c) => c.recommendationId === item.recommendationId);
     if (already && already.status !== "proposed") {
-      console.log(`  - ${item.recommendationId}: ya existe el cambio ${already.changeId} en estado "${already.status}". No se vuelve a aplicar.`);
+      console.log(`  - ${item.recommendationId}: ya existe la aprobacion ${already.changeId} en estado "${already.status}". No se vuelve a aplicar.`);
       continue;
     }
 
-    const change = already ?? port.create(buildChangeFromItem(item, new Date()));
+    let change: Approval;
+    if (already) {
+      change = already;
+    } else {
+      // La version y el feedback heredado los decide el datastore, que es
+      // quien conoce TODAS las versiones anteriores de esta recomendacion
+      // (incluidas las de pasadas de otros dias).
+      const previousVersions = await store.listByRecommendation(item.recommendationId);
+      const feedback = await store.listHumanFeedback(item.recommendationId);
+      const version = previousVersions.length === 0 ? 1 : Math.max(...previousVersions.map((c) => c.version)) + 1;
+      const supersedes = previousVersions.length > 0 ? previousVersions[previousVersions.length - 1].changeId : null;
+      const created = await store.create(
+        buildChangeFromItem(
+          item,
+          version,
+          feedback.map((f) => `v${f.version} (${f.rejectedAt}): ${f.rejectionReason}`),
+          supersedes,
+          new Date()
+        )
+      );
+      change = created.approval;
+    }
+
     const target = item.applyCapability.target;
+    const { port, recorded } = recordingTransitionPort(() => new Date());
     const result = await applyChangeToStaging(
       change,
       { wordpressPageId: target.wordpressPageId, newTitle: target.newTitle, newMetaDescription: target.newMetaDescription },
@@ -335,20 +335,28 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
       guards,
       port
     );
+
+    // Persistir lo que hizo el executor. Se hace SIEMPRE, tambien cuando
+    // fallo: un apply que se revirtio tiene que quedar registrado como
+    // tal, nunca en silencio.
+    const flushed = await flushRecordedTransitions(store, change.changeId, recorded, change.status, null, new Date().toISOString());
+    for (const problem of flushed.problems) console.error(`    ! ${problem}`);
+
     if (result.externalWritePerformed) externalWrites = true;
     if (result.change.status === "staging_applied") applied += 1;
+    if (result.change.staging?.rollbackStatus === "rollback_failed") criticalRollbacks += 1;
     console.log(`  - ${result.change.changeId}: ${result.change.status} (${result.change.staging?.url ?? "sin URL"})`);
   }
 
-  const updated = syncSummary(departmentRunId, {
+  const updated = syncSummaryWith(departmentRunId, await store.listByRun(departmentRunId), {
     externalWritesPerformed: externalWrites,
     applyNotAttemptedReason: guardCheck.allowed ? "" : guardCheck.reason,
   });
   console.log(`Apply en staging terminado: ${summarize(updated)}. Cambios listos para revision: ${applied}.`);
 
-  const critical = findChangesByRunId(departmentRunId).filter((c) => c.staging?.rollbackStatus === "rollback_failed");
-  if (critical.length > 0) {
-    console.error(`CRITICO: ${critical.length} cambio(s) con rollback fallido en staging. Requiere intervencion humana inmediata.`);
+  const critical = criticalRollbacks;
+  if (critical > 0) {
+    console.error(`CRITICO: ${critical} cambio(s) con rollback fallido en staging. Requiere intervencion humana inmediata.`);
     process.exitCode = 1;
   }
 }
@@ -357,8 +365,8 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
 
 async function phaseNotify(args: Record<string, string>): Promise<void> {
   const departmentRunId = requireDepartmentRunId(args);
-  const port = registryTransitionPort();
-  const pending = findChangesByRunId(departmentRunId).filter((c) => c.status === "staging_applied");
+  const store = createHttpApprovalStoreFromEnv();
+  const pending = (await store.listByRun(departmentRunId)).filter((c) => c.status === "staging_applied");
 
   if (pending.length === 0) {
     console.log("No hay ningun cambio aplicado y validado en staging pendiente de solicitar aprobacion.");
@@ -372,128 +380,25 @@ async function phaseNotify(args: Record<string, string>): Promise<void> {
   }
 
   for (const change of pending) {
+    const { port, recorded } = recordingTransitionPort(() => new Date());
     const result = await sendChangeApprovalRequest(change, port, {
-      upsertApprovalRequest: (input) => {
-        const { request, isNew } = upsertApprovalRequest(
-          {
-            relatedType: DEPARTMENT_APPLY_RELATED_TYPE as "department_apply_item",
-            relatedId: input.relatedId,
-            title: input.title,
-            summary: input.summary,
-            riskLevel: "high",
-            requestedAction: input.requestedAction,
-            options: ["approved", "rejected"],
-            channel: "telegram",
-          },
-          readCurrentApprovalRequests()
-        );
-        return { approvalRequestId: request.approvalRequestId, isNew };
-      },
-      markSent: (approvalRequestId) => {
-        markApprovalRequestSent(approvalRequestId, "telegram");
-      },
-      // Texto plano: los titles/metas reales llevan comillas y `<`/`&`, y
-      // el parser HTML de Telegram ya ha roto envios de este proyecto.
+      // El approvalId ES el changeId: una sola identidad para la version
+      // concreta que se aprueba. No hay un segundo registro que mantener
+      // en sincronia -- el datastore serverless es la fuente de verdad.
+      upsertApprovalRequest: () => ({ approvalRequestId: change.changeId, isNew: true }),
+      markSent: () => undefined,
       send: (text, buttons) => sendTelegramMessage(text, { plainText: true, buttons }),
     });
+
+    if (result.sent) {
+      const flushed = await flushRecordedTransitions(store, change.changeId, recorded, change.status, null, new Date().toISOString());
+      for (const problem of flushed.problems) console.error(`    ! ${problem}`);
+    }
     console.log(`  - ${change.changeId}: ${result.sent ? `solicitud enviada (${result.reason})` : `NO enviada -- ${result.reason}`}`);
   }
 
-  const updated = syncSummary(departmentRunId, {});
+  const updated = syncSummaryWith(departmentRunId, await store.listByRun(departmentRunId), {});
   console.log(`Solicitudes de aprobacion procesadas: ${summarize(updated)}.`);
-}
-
-// --- FASE production -------------------------------------------------------
-
-async function phaseProduction(args: Record<string, string>): Promise<void> {
-  const departmentRunId = args.departmentRunId && args.departmentRunId !== "true" ? args.departmentRunId : null;
-  const changeId = args.changeId && args.changeId !== "true" ? args.changeId : null;
-
-  const candidates = changeId
-    ? [findChangeById(changeId)].filter((c): c is DepartmentChangeRequest => Boolean(c))
-    : departmentRunId
-      ? findChangesByRunId(departmentRunId).filter((c) => c.status === "approved")
-      : readCurrentChanges().filter((c) => c.status === "approved");
-
-  if (candidates.length === 0) {
-    console.log("No hay ningun cambio con aprobacion humana explicita pendiente de publicar en produccion. No se escribe nada.");
-    return;
-  }
-
-  const guards = resolveProductionGuards();
-  const guardCheck = checkProductionApplyGuards(guards);
-  console.log(`Interruptores de produccion: ${guardCheck.reason}`);
-
-  const port = registryTransitionPort();
-  const approvalRequests = readCurrentApprovalRequests();
-
-  for (const change of candidates) {
-    // Defensa en profundidad: el registro persistente de cambios Y el
-    // registro comun de aprobaciones tienen que decir lo mismo. Si
-    // discrepan, no se publica nada.
-    const shared = resolveHumanApproval({ relatedId: change.changeId, requests: approvalRequests });
-    if (shared.status !== "approved") {
-      console.error(
-        `  - ${change.changeId}: BLOQUEADO. El registro comun de aprobaciones dice "${shared.status}" (${shared.reason}). No se publica nada.`
-      );
-      port.transition(
-        change,
-        "blocked",
-        {},
-        {
-          event: "production_apply_blocked",
-          detail: `Discrepancia entre el registro de cambios (approved) y el registro comun de aprobaciones ("${shared.status}"): ${shared.reason} Fail-closed.`,
-        }
-      );
-      process.exitCode = 1;
-      continue;
-    }
-
-    const result = await applyApprovedChangeToProduction(
-      change,
-      {
-        getStagingPage: async (pageId) => {
-          const page = await getWordpressPage(pageId);
-          return { id: page.id, status: page.status, title: page.title, contentHtml: page.contentHtml, excerpt: page.excerpt, link: page.link, slug: page.slug };
-        },
-        findProductionPagesBySlug: async (slug) => {
-          const results = await searchProductionPagesBySlug(slug);
-          return results.map((r) => ({ id: r.id, slug: r.slug, status: r.status }));
-        },
-        getProductionPage: async (pageId) => {
-          const page = await getProductionPage(pageId);
-          return {
-            id: page.id,
-            status: page.status,
-            title: page.title,
-            contentHtml: page.contentHtml,
-            excerpt: page.excerpt,
-            slug: page.slug,
-            link: page.link,
-          };
-        },
-        updateProductionPublishedPage: async (input) => {
-          await updateProductionPublishedPageContent({
-            pageId: input.pageId,
-            title: input.title,
-            contentHtml: input.contentHtml,
-            excerpt: input.excerpt,
-          });
-        },
-      },
-      guards,
-      port
-    );
-    console.log(`  - ${result.change.changeId}: ${result.change.status} -- ${result.message.split("\n")[0]}`);
-    if (result.change.production?.rollbackStatus === "rollback_failed" || result.change.status === "blocked") {
-      process.exitCode = 1;
-    }
-  }
-
-  if (departmentRunId) {
-    const updated = syncSummary(departmentRunId, {});
-    console.log(`Produccion terminada: ${summarize(updated)}.`);
-  }
 }
 
 async function main(): Promise<void> {
@@ -502,13 +407,14 @@ async function main(): Promise<void> {
   if (phase === "plan") return phasePlan(args);
   if (phase === "stage") return phaseStage(args);
   if (phase === "notify") return phaseNotify(args);
-  if (phase === "production") return phaseProduction(args);
   if (phase === "sync") {
-    const updated = syncSummary(requireDepartmentRunId(args), {});
+    const store = createHttpApprovalStoreFromEnv();
+    const departmentRunId = requireDepartmentRunId(args);
+    const updated = syncSummaryWith(departmentRunId, await store.listByRun(departmentRunId), {});
     console.log(`Contrato de apply sincronizado con el registro persistente: ${summarize(updated) || "sin elementos"}.`);
     return;
   }
-  throw new Error('--phase invalido o ausente. Fases validas: "plan", "stage", "notify", "production", "sync".');
+  throw new Error('--phase invalido o ausente. Fases validas: "plan", "stage", "notify", "sync". La publicacion en produccion la ejecuta scripts/run-production-apply.ts, disparado por la aprobacion humana.');
 }
 
 if (require.main === module) {
@@ -517,6 +423,3 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-
-/** Solo para diagnostico manual: nunca se usa en el flujo automatico. */
-export { canAttemptProductionWrites };

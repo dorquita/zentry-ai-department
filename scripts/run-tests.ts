@@ -60,10 +60,15 @@ import { runDepartmentApplyApprovalTests } from "../test/department-apply-approv
 import { runDepartmentApplyStateMachineTests } from "../test/department-apply-state-machine.test";
 import { runDepartmentApplyStagingTests } from "../test/department-apply-staging.test";
 import { runDepartmentApplyProductionTests } from "../test/department-apply-production.test";
-import { runDepartmentApplyRegistryTests } from "../test/department-apply-registry.test";
 import { runDepartmentApplyTelegramTests } from "../test/department-apply-telegram.test";
 import { runDepartmentApplyTraceabilityTests } from "../test/department-apply-traceability.test";
 import { runDepartmentBriefEmailTests } from "../test/department-brief-email.test";
+import { runApprovalsHumanFeedbackTests } from "../test/approvals-human-feedback.test";
+import { runApprovalsHttpStoreTests } from "../test/approvals-http-store.test";
+import { runProductionApplyRunnerTests } from "../test/production-apply-runner.test";
+import { runWorkerWebhookTests } from "../test/worker-webhook.test";
+import { runWorkerD1StoreTests } from "../test/worker-d1-store.test";
+import { runWorkerRuntimeCompatTests } from "../test/worker-runtime-compat.test";
 import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
 
 interface TestCase {
@@ -132,10 +137,15 @@ async function main(): Promise<void> {
     { suiteName: "department-apply-state-machine", cases: runDepartmentApplyStateMachineTests() },
     { suiteName: "department-apply-staging", cases: runDepartmentApplyStagingTests() },
     { suiteName: "department-apply-production", cases: runDepartmentApplyProductionTests() },
-    { suiteName: "department-apply-registry", cases: runDepartmentApplyRegistryTests() },
     { suiteName: "department-apply-telegram", cases: runDepartmentApplyTelegramTests() },
     { suiteName: "department-apply-traceability", cases: runDepartmentApplyTraceabilityTests() },
     { suiteName: "department-brief-email", cases: runDepartmentBriefEmailTests() },
+    { suiteName: "approvals-human-feedback", cases: runApprovalsHumanFeedbackTests() },
+    { suiteName: "approvals-http-store", cases: runApprovalsHttpStoreTests() },
+    { suiteName: "production-apply-runner", cases: runProductionApplyRunnerTests() },
+    { suiteName: "worker-webhook", cases: runWorkerWebhookTests() },
+    { suiteName: "worker-d1-store", cases: runWorkerD1StoreTests() },
+    { suiteName: "worker-runtime-compat", cases: runWorkerRuntimeCompatTests() },
   ];
 
   let passed = 0;

@@ -26,8 +26,6 @@ import { findStagingReviewPage, readCurrentStagingReviewPages } from "../core/st
 import { trashStagingPage } from "../adapters/wordpress";
 import { logger } from "../core/logger";
 import { ApprovalRequest, TelegramProcessedUpdate } from "../core/types";
-import { handleDepartmentCallback, handleDepartmentRejectionReason } from "../department/apply/telegram-handler";
-import { buildDepartmentTelegramPorts } from "./department-telegram-ports";
 
 /**
  * Telegram Approval Receiver (Fase O13.2b, rediseñado en O28.5) —
@@ -45,16 +43,14 @@ import { buildDepartmentTelegramPorts } from "./department-telegram-ports";
  * solo -- solo desbloquea que un agente intente algo en su proxima
  * pasada, y solo si ademas los flags de entorno estan activos.
  *
- * Fase TELEGRAM APPROVAL SYSTEM + STAGING-FIRST APPLY: ademas de lo
- * anterior, este receiver atiende los botones del flujo del
- * DEPARTAMENTO (callback_data `dept:approve|reject|view:<id>`), que
- * tienen su propia maquina de estados y su propio registro persistente
- * (`data/department-changes.jsonl`). Se atienden ANTES que la logica
- * historica y, si el callback no es de ese flujo, todo sigue igual que
- * hasta ahora. Ese flujo SI puede publicar en produccion -- pero solo
- * tras una aprobacion humana explicita de la version exacta que hay en
- * staging, con sus interruptores propios y con rollback verificado (ver
- * src/department/apply/production-executor.ts).
+ * Fase SERVERLESS APPROVALS: los cambios del DEPARTAMENTO YA NO se
+ * deciden aqui. Su flujo vive entero en el Worker de Cloudflare
+ * (src/worker/**), que recibe el webhook de Telegram, persiste en D1 y
+ * dispara el workflow de produccion de GitHub Actions. Este receiver
+ * queda EXCLUSIVAMENTE para los tipos de aprobacion historicos del
+ * proyecto (change_pack, staging_execution, staging_review_page,
+ * production_*), y rechaza explicitamente cualquier
+ * `department_apply_item` que le llegue.
  *
  * Limitacion conocida: las solicitudes `relatedType: "action"`/
  * "work_order"` necesitan cascada al Action Backlog / Work Order
@@ -194,16 +190,14 @@ async function handleApproveOrReject(command: { type: "approve" | "reject"; id: 
     await reply(`No encontre ninguna solicitud pendiente con id "${command.id}".`);
     return { ...base, outcome: "ignored_not_found" };
   }
-  // Los cambios del DEPARTAMENTO tienen su propia maquina de estados y su
-  // propio registro persistente: aprobarlos por esta via (texto libre
-  // "ok", o el callback historico `appr:`) marcaria la solicitud comun
-  // como aprobada sin pasar por la comprobacion anti-TOCTOU ni registrar
-  // la decision en el registro de cambios -- es decir, dejaria los dos
-  // registros diciendo cosas distintas. Fail-closed: se rechaza y se
-  // remite a los botones del propio mensaje.
+  // Los cambios del DEPARTAMENTO viven en el datastore serverless, no en
+  // los registros locales que maneja este receiver. Resolverlos por esta
+  // via (texto libre "ok", o el callback historico `appr:`) marcaria la
+  // solicitud comun como aprobada sin que el datastore -- la unica fuente
+  // de verdad de esas aprobaciones -- se entere de nada. Fail-closed.
   if (request.relatedType === "department_apply_item") {
     await reply(
-      "Ese cambio es del departamento y se decide con los botones de su mensaje (APROBAR / RECHAZAR / VER CAMBIOS). No lo resuelvo por texto: la aprobacion tiene que ir atada a la version exacta que hay en staging."
+      "Ese cambio es del departamento y ya no se decide por este canal: se decide con los botones de su propio mensaje, que atiende el servicio de aprobaciones. No lo resuelvo desde aqui."
     );
     return { ...base, outcome: "department_ignored", approvalRequestId: request.approvalRequestId, relatedType: request.relatedType };
   }
@@ -548,29 +542,6 @@ export async function runTelegramApprovalReceiver(options: RunTelegramApprovalRe
         // sin ambiguedad en el callback_data -- nunca hace falta que Pau
         // escriba nada.
         await answerCallbackQuery(update.callbackQueryId, "Procesando...");
-        // Flujo del DEPARTAMENTO primero: si el callback es suyo, lo
-        // resuelve entero (con su maquina de estados, su comprobacion
-        // anti-TOCTOU y su registro persistente) y no toca nada del
-        // flujo historico.
-        const department = await handleDepartmentCallback(
-          { updateId: update.updateId, chatId: update.chatId, fromUserId: update.fromUserId, data: update.callbackData },
-          buildDepartmentTelegramPorts()
-        );
-        if (department) {
-          processed = {
-            updateId: update.updateId,
-            chatId: update.chatId,
-            text: update.callbackData,
-            outcome: department.outcome,
-            approvalRequestId: department.approvalRequestId ?? undefined,
-            relatedType: "department_apply_item",
-            processedAt: new Date().toISOString(),
-          };
-          recordProcessedUpdate(processed);
-          result.updatesProcessed += 1;
-          countOutcome(result, processed.outcome);
-          continue;
-        }
         const command = parseCallbackData(update.callbackData);
         const base: UpdateBase = { updateId: update.updateId, chatId: update.chatId, text: update.callbackData };
         if (!command) {
@@ -581,27 +552,6 @@ export async function runTelegramApprovalReceiver(options: RunTelegramApprovalRe
       } else {
         // update.kind === "message"
         const base: UpdateBase = { updateId: update.updateId, chatId: update.chatId, text: update.text };
-        // Un rechazo ABIERTO del departamento tiene prioridad: el
-        // siguiente mensaje de texto es su motivo, no un comando nuevo.
-        const departmentReason = await handleDepartmentRejectionReason(
-          { updateId: update.updateId, chatId: update.chatId, fromUserId: update.fromUserId, data: update.text },
-          buildDepartmentTelegramPorts()
-        );
-        if (departmentReason) {
-          processed = {
-            updateId: update.updateId,
-            chatId: update.chatId,
-            text: update.text,
-            outcome: departmentReason.outcome,
-            approvalRequestId: departmentReason.approvalRequestId ?? undefined,
-            relatedType: "department_apply_item",
-            processedAt: new Date().toISOString(),
-          };
-          recordProcessedUpdate(processed);
-          result.updatesProcessed += 1;
-          countOutcome(result, processed.outcome);
-          continue;
-        }
         const feedbackHandled = await tryHandleRejectReasonAnswer(base);
         if (feedbackHandled) {
           processed = feedbackHandled;

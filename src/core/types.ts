@@ -862,7 +862,7 @@ export interface TelegramProcessedUpdate {
     // aprobacion de los cambios del DEPARTAMENTO (callback `dept:*`).
     // Se distinguen de los outcomes historicos a proposito: son otro
     // flujo, con otra maquina de estados y otro registro persistente
-    // (data/department-changes.jsonl).
+    // (datastore serverless, no el filesystem de este proyecto).
     | "department_view_changes"
     | "department_approved"
     | "department_production_reported"
