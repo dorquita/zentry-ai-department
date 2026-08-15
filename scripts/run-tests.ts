@@ -66,6 +66,9 @@ import { runDepartmentBriefEmailTests } from "../test/department-brief-email.tes
 import { runApprovalsHumanFeedbackTests } from "../test/approvals-human-feedback.test";
 import { runApprovalsHttpStoreTests } from "../test/approvals-http-store.test";
 import { runProductionApplyRunnerTests } from "../test/production-apply-runner.test";
+import { runWorkerWebhookTests } from "../test/worker-webhook.test";
+import { runWorkerD1StoreTests } from "../test/worker-d1-store.test";
+import { runWorkerRuntimeCompatTests } from "../test/worker-runtime-compat.test";
 import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
 
 interface TestCase {
@@ -140,6 +143,9 @@ async function main(): Promise<void> {
     { suiteName: "approvals-human-feedback", cases: runApprovalsHumanFeedbackTests() },
     { suiteName: "approvals-http-store", cases: runApprovalsHttpStoreTests() },
     { suiteName: "production-apply-runner", cases: runProductionApplyRunnerTests() },
+    { suiteName: "worker-webhook", cases: runWorkerWebhookTests() },
+    { suiteName: "worker-d1-store", cases: runWorkerD1StoreTests() },
+    { suiteName: "worker-runtime-compat", cases: runWorkerRuntimeCompatTests() },
   ];
 
   let passed = 0;

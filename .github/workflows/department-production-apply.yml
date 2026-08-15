@@ -102,7 +102,7 @@ jobs:
       # ROJO. Un fallo publicando en produccion (o un rollback fallido) es
       # exactamente lo que nadie puede pasar por alto.
       - name: "[PRODUCCION] Publicar la aprobacion (snapshot, validacion y rollback verificado)"
-        run: npx ts-node scripts/run-production-apply.ts --approvalId "$APPROVAL_ID"
+        run: npm run department:apply:production -- --approvalId "$APPROVAL_ID"
         env:
           # --- Worker de aprobaciones (Actions no tiene credenciales de D1) ---
           APPROVALS_API_URL: ${{ secrets.APPROVALS_API_URL }}

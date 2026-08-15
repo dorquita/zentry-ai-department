@@ -1,5 +1,9 @@
 import { DepartmentChangeRequest } from "./change-types";
-import { shortHash } from "./version";
+// Se importa de `version-compare` y NO de `./version`: este modulo lo
+// usa el Worker de Cloudflare, y `./version` arrastra `node:crypto`, que
+// alli no existe. `version.ts` reexporta esta misma funcion, asi que no
+// hay dos implementaciones.
+import { shortHash } from "../../approvals/version-compare";
 
 /**
  * MENSAJES DE TELEGRAM del flujo de aprobacion del departamento.
@@ -42,7 +46,9 @@ export function parseDepartmentCallbackData(data: string): ParsedDepartmentCallb
 
 /** `true` si el callback_data cabe en el limite de Telegram. Se comprueba ANTES de enviar, nunca despues. */
 export function isCallbackDataWithinLimit(data: string): boolean {
-  return Buffer.byteLength(data, "utf8") <= TELEGRAM_CALLBACK_DATA_MAX_BYTES;
+  // TextEncoder y no Buffer: `Buffer` no existe en el runtime de
+  // Cloudflare Workers, que es donde tambien corre este modulo.
+  return new TextEncoder().encode(data).length <= TELEGRAM_CALLBACK_DATA_MAX_BYTES;
 }
 
 export interface TelegramButtonSpec {
