@@ -47,7 +47,13 @@ import { applyChangeToStaging } from "../src/department/apply/staging-executor";
 import { readApplySummary } from "../src/department/apply/store";
 import { DepartmentApplyItem, DepartmentApplySummary } from "../src/department/apply/types";
 import { computeVersionHash, matchesApprovedVersion } from "../src/department/apply/version";
-import { resolveDepartmentRunPaths, toRepoRelative } from "../src/department/run-store";
+import { readDepartmentEmployeeRuns, resolveDepartmentRunPaths, toRepoRelative } from "../src/department/run-store";
+import { summarizeDepartmentRunCost } from "../src/department/employee-runs";
+import { buildExecutionReportEmail, ExecutedWork, ExecutionReportInput } from "../src/department/execution-report";
+import { containsSecretValue, REQUIRED_SMTP_VARS, resolveDailyBriefEmailConfig } from "../src/department/email-config";
+import { resolveActiveClientConfig } from "../src/core/client-config";
+import { sendReportEmail } from "../src/core/mailer";
+import { ResolveDecisionsResult } from "../src/approvals/manual/decision";
 
 function parseArgs(argv: string[]): Record<string, string> {
   const args: Record<string, string> = {};
@@ -311,6 +317,9 @@ async function main(): Promise<void> {
     console.log(`  #${base.number} ${base.title} -> ${base.status}${base.detail ? ` (${base.detail.slice(0, 160)})` : ""}`);
   }
 
+  // --- Segundo email: el acta de lo que REALMENTE paso ---
+  await sendExecutionReport(departmentRunId, resolved, outcomes, now, args);
+
   const reportPath = path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "approval-session.json");
   fs.mkdirSync(path.dirname(reportPath), { recursive: true });
   fs.writeFileSync(
@@ -334,6 +343,102 @@ async function main(): Promise<void> {
   const critical = outcomes.filter((o) => o.rollbackStatus === "rollback_failed");
   if (critical.length > 0) {
     console.error(`CRITICO: ${critical.length} cambio(s) con rollback fallido. Requiere intervencion humana inmediata.`);
+    process.exitCode = 1;
+  }
+}
+
+/** Traduce el estado real del executor al vocabulario del informe. Fail-closed: lo desconocido es `failed`, nunca `applied`. */
+function mapOutcome(status: string): ExecutedWork["outcome"] {
+  if (status === "staging_applied" || status === "production_applied") return "applied";
+  if (status === "staging_rolled_back" || status === "production_rolled_back") return "rolled_back";
+  if (status === "staging_validation_failed" || status === "production_validation_failed") return "validation_failed";
+  if (status === "not_executed" || status === "approval_stale" || status === "deferred" || status === "rejected") return "not_executed";
+  return "failed";
+}
+
+/**
+ * Envia el informe de ejecucion. Nunca puede tapar lo que paso: si el
+ * correo falla, se dice y el run acaba en rojo, pero el resultado real
+ * de la ejecucion no cambia.
+ */
+async function sendExecutionReport(
+  departmentRunId: string,
+  resolved: ResolveDecisionsResult,
+  outcomes: ExecutionOutcome[],
+  now: Date,
+  args: Record<string, string>
+): Promise<void> {
+  const executed: ExecutedWork[] = outcomes
+    .filter((o) => o.action === "approve")
+    .map((o) => {
+      const decision = resolved.decisions.find((d) => d.proposal.number === o.number);
+      return {
+        decision: decision as ExecutedWork["decision"],
+        action: o.detail || `Aplicar en ${o.target}`,
+        environment: o.target === "production" ? ("production" as const) : ("staging" as const),
+        changes: o.before.map((b, i) => ({ field: b.field, before: b.value, after: o.after[i]?.value ?? "" })),
+        validation: o.validationStatus,
+        // El informe tiene su propio vocabulario; se traduce aqui en vez
+        // de dejar pasar un estado que el renderer no sabria etiquetar.
+        // `approval_stale` no llego a escribir nada -> `not_executed`,
+        // y el motivo real viaja en `outcomeDetail`.
+        outcome: mapOutcome(o.status),
+        outcomeDetail: o.detail,
+        url: o.stagingUrl,
+        rollback:
+          o.rollbackStatus === "not_needed"
+            ? null
+            : {
+                performed: o.rollbackStatus === "rolled_back",
+                reason: `La validacion posterior no paso (${o.validationStatus}).`,
+                status: o.rollbackStatus === "rolled_back" ? ("rolled_back" as const) : ("rollback_failed" as const),
+                detail: o.detail,
+              },
+      };
+    });
+
+  const runs = readDepartmentEmployeeRuns(departmentRunId);
+  const input: ExecutionReportInput = {
+    generatedAt: now.toISOString(),
+    runIds: {
+      departmentRunId,
+      executionRunId: `approval-session-${now.toISOString()}`,
+      briefRunUrl: args.briefRunUrl && args.briefRunUrl !== "true" ? args.briefRunUrl : "",
+      executionRunUrl: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${process.env.GITHUB_REPOSITORY ?? ""}/actions/runs/${process.env.GITHUB_RUN_ID}` : "",
+    },
+    executed,
+    pending: resolved.untouched,
+    rejected: resolved.decisions.filter((d) => d.action === "reject"),
+    newRecommendations: [],
+    writes: {
+      staging: outcomes.filter((o) => o.target === "staging" && (o.status === "staging_applied" || o.rollbackStatus !== "not_needed")).length,
+      production: outcomes.filter((o) => o.target === "production" && o.status === "production_applied").length,
+    },
+    cost: runs.length > 0 ? summarizeDepartmentRunCost(runs) : null,
+  };
+
+  const email = buildExecutionReportEmail(input);
+  const config = resolveDailyBriefEmailConfig({
+    env: process.env,
+    fallbackRecipientVar: resolveActiveClientConfig().notificationSettings.reportEmailToEnvVar,
+  });
+  if (!config.configured) {
+    console.log(`\nInforme de ejecucion NO enviado: falta configuracion de correo (${config.missing.join(", ")}). El resultado real esta arriba y en el JSON de la sesion.`);
+    return;
+  }
+
+  const leak = containsSecretValue(`${email.subject}\n${email.text}\n${email.html}`, process.env, [...REQUIRED_SMTP_VARS]);
+  if (leak) {
+    console.error(`\nInforme de ejecucion NO enviado: el correo contendria el valor de ${leak}. Fail-closed.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  try {
+    await sendReportEmail({ subject: email.subject, text: email.text, html: email.html }, { to: config.to, label: "Informe de ejecucion del departamento" });
+    console.log(`\nInforme de ejecucion enviado a ${config.to}.`);
+  } catch (err) {
+    console.error(`\nInforme de ejecucion NO enviado (${err instanceof Error ? err.message : String(err)}). Lo que paso de verdad esta arriba y en el JSON de la sesion.`);
     process.exitCode = 1;
   }
 }
