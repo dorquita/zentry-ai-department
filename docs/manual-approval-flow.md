@@ -172,7 +172,13 @@ Cada propuesta numerada lleva, según `NumberedProposal`
 | `status` / `statusLabel` | Estado en la máquina de estados. |
 | `actionable` / `notActionableReason` | Si se puede ejecutar hoy, y si no, por qué. |
 
-El email en sí lo construye
+Todo eso va en un bloque propio del correo —**"PROPUESTAS NUMERADAS — ESTO
+ES LO QUE PUEDES APROBAR HOY"**, con el total entre paréntesis— que
+aparece justo después del resumen ejecutivo, en texto plano y en HTML, y
+que además dice cómo responder: *"Responde en Claude Code, en lenguaje
+natural, citando los números de esta lista"*.
+
+Lo construye
 [`src/department/brief-email.ts`](../src/department/brief-email.ts), que
 además nunca inventa una métrica: un dato ausente se dice ("no
 reportado"), nunca se rellena con 0, y ningún valor de credencial aparece
@@ -401,7 +407,7 @@ confundirlas. Estado en el momento de escribirlo:
 | Registro append-only de decisiones (`decision-store.ts`) | Implementado. |
 | Flag `SERVERLESS_APPROVALS_ENABLED` (`feature-flag.ts`), `false` por defecto | Implementado. |
 | Máquina de estados, guards, executors, versionado, audit trail | Implementados y en uso. |
-| Bloque de propuestas numeradas dentro del email (`brief-email.ts` usando `proposal.ts`) | Se cablea en esta misma rama; comprobar el fichero antes de dar por hecho el formato exacto del correo. |
+| Bloque de propuestas numeradas dentro del email (`brief-email.ts` usando `proposal.ts`) | Implementado, en texto plano y en HTML. |
 | **Segundo email** con los resultados de la sesión | Pendiente: la sesión deja `approval-session.json` en el directorio de la pasada, pero no envía correo. |
 | Carril serverless (Worker + D1 + webhook) | Implementado y probado, **en standby**: no desplegado, no activo. |
 
