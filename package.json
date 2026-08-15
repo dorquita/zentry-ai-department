@@ -80,7 +80,9 @@
     "auth:google-ads": "ts-node scripts/get-google-ads-refresh-token.ts",
     "auth:analytics": "ts-node scripts/get-google-analytics-refresh-token.ts",
     "growth-director-v2:run": "ts-node scripts/run-growth-director-v2.ts",
-    "growth-director-v2:parse-runner-result-for-ci": "ts-node scripts/parse-growth-director-v2-runner-result-for-ci.ts"
+    "growth-director-v2:parse-runner-result-for-ci": "ts-node scripts/parse-growth-director-v2-runner-result-for-ci.ts",
+    "sem-specialist:run": "ts-node scripts/run-sem-specialist.ts",
+    "sem-specialist:parse-runner-result-for-ci": "ts-node scripts/parse-sem-specialist-runner-result-for-ci.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

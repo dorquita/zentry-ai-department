@@ -1,0 +1,599 @@
+import { SemSpecialistContext } from "./sem-specialist-context";
+
+/**
+ * Validador/auditor de dominio del empleado `sem-specialist` -- mismo
+ * patron que `src/core/landing-architect-comparison.ts`
+ * (`validateV2Output()` / `auditV2OutputForFabrication()`): sin librerias
+ * externas, fail-closed, TOOL puro (no invoca a Claude ni decide nada,
+ * solo valida/audita/formatea lo que ya devolvio el subagente).
+ *
+ * Recibe SIEMPRE `raw: unknown` ya validado contra
+ * config/sem-specialist-output.schema.json por el runtime comun
+ * (src/core/claude-employee-runtime.ts) -- nunca al reves.
+ */
+
+export type SemFindingSeverity = "info" | "low" | "medium" | "high";
+export type SemExperimentPriority = "low" | "medium" | "high";
+
+export interface SemFinding {
+  title: string;
+  description: string;
+  evidenceRefs: string[];
+  severity: SemFindingSeverity;
+}
+
+export interface SemExperiment {
+  title: string;
+  hypothesis: string;
+  expectedImpact: string;
+  evidenceRefs: string[];
+  priority: SemExperimentPriority;
+}
+
+export interface SemEvidenceItem {
+  id: string;
+  contextField: string;
+  value: string;
+}
+
+export interface SemSpecialistOutput {
+  summary: string;
+  campaignFindings: SemFinding[];
+  searchTermOpportunities: SemFinding[];
+  negativeKeywordRecommendations: SemFinding[];
+  budgetObservations: SemFinding[];
+  biddingObservations: SemFinding[];
+  adLandingAlignment: SemFinding[];
+  conversionRiskFindings: SemFinding[];
+  prioritizedExperiments: SemExperiment[];
+  evidence: SemEvidenceItem[];
+  unknowns: string[];
+}
+
+const SEVERITIES: SemFindingSeverity[] = ["info", "low", "medium", "high"];
+const PRIORITIES: SemExperimentPriority[] = ["low", "medium", "high"];
+
+const FINDING_FIELDS = [
+  "campaignFindings",
+  "searchTermOpportunities",
+  "negativeKeywordRecommendations",
+  "budgetObservations",
+  "biddingObservations",
+  "adLandingAlignment",
+  "conversionRiskFindings",
+] as const;
+
+function isString(v: unknown): v is string {
+  return typeof v === "string";
+}
+function isStringArray(v: unknown): v is string[] {
+  return Array.isArray(v) && v.every(isString);
+}
+
+function isFinding(v: unknown): v is SemFinding {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return isString(o.title) && isString(o.description) && isStringArray(o.evidenceRefs) && isString(o.severity) && SEVERITIES.includes(o.severity as SemFindingSeverity);
+}
+
+function isExperiment(v: unknown): v is SemExperiment {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return (
+    isString(o.title) &&
+    isString(o.hypothesis) &&
+    isString(o.expectedImpact) &&
+    isStringArray(o.evidenceRefs) &&
+    isString(o.priority) &&
+    PRIORITIES.includes(o.priority as SemExperimentPriority)
+  );
+}
+
+function isEvidenceItem(v: unknown): v is SemEvidenceItem {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return isString(o.id) && isString(o.contextField) && isString(o.value);
+}
+
+/**
+ * Valida (sin librerias externas) que un objeto crudo tiene la forma
+ * minima de un `SemSpecialistOutput`. Fail-closed: cualquier campo
+ * obligatorio ausente o del tipo equivocado lanza -- nunca se "rellena"
+ * con un valor por defecto que disfrazaria una salida rota del subagente
+ * como si fuera valida.
+ */
+export function validateSemSpecialistOutput(raw: unknown): SemSpecialistOutput {
+  if (typeof raw !== "object" || raw === null) {
+    throw new Error("Salida sem-specialist invalida: se esperaba un objeto JSON.");
+  }
+  const o = raw as Record<string, unknown>;
+
+  if (!isString(o.summary)) {
+    throw new Error('Salida sem-specialist invalida: falta "summary" (string).');
+  }
+
+  for (const field of FINDING_FIELDS) {
+    if (!Array.isArray(o[field]) || !(o[field] as unknown[]).every(isFinding)) {
+      throw new Error(`Salida sem-specialist invalida: "${field}" debe ser un array de { title, description, evidenceRefs, severity }.`);
+    }
+  }
+
+  if (!Array.isArray(o.prioritizedExperiments) || !o.prioritizedExperiments.every(isExperiment)) {
+    throw new Error('Salida sem-specialist invalida: "prioritizedExperiments" debe ser un array de { title, hypothesis, expectedImpact, evidenceRefs, priority }.');
+  }
+  if (!Array.isArray(o.evidence) || !o.evidence.every(isEvidenceItem)) {
+    throw new Error('Salida sem-specialist invalida: "evidence" debe ser un array de { id, contextField, value }.');
+  }
+  if (!isStringArray(o.unknowns)) {
+    throw new Error('Salida sem-specialist invalida: "unknowns" debe ser string[].');
+  }
+
+  return o as unknown as SemSpecialistOutput;
+}
+
+// --- Auditoria de afirmaciones cuantitativas sin respaldo -----------------
+//
+// La mision de sem-specialist es explicita: "NO inventa CPC, conversiones,
+// ROAS ni gasto". A diferencia de `auditV2OutputForFabrication()` (que
+// SIEMPRE devuelve warnings para revision humana, nunca bloquea), aqui
+// una afirmacion cuantitativa sin respaldo es un FALLO DURO: el runner
+// (scripts/run-sem-specialist.ts) trata cualquier violacion devuelta por
+// `auditSemSpecialistOutputForUnsupportedClaims()` como `status:
+// "invalid_output"`, exactamente igual que un error de forma.
+//
+// Dos capas de verificacion, ambas necesarias:
+//   1. Cada `evidence[]` declarado debe ser trazable al
+//      `SemSpecialistContext` real -- una "evidencia" inventada rompe la
+//      cadena de confianza aunque luego se referencie desde un finding.
+//   2. Cualquier cifra de CPC/conversiones/ROAS/gasto/presupuesto en el
+//      texto de salida debe (a) aparecer literalmente en el contexto Y
+//      (b) tener al menos una entrada de evidenceRefs verificada que
+//      contenga ese mismo numero.
+
+interface QuantClaimCategory {
+  id: string;
+  label: string;
+  pattern: RegExp;
+}
+
+// Patron "gap": el nombre de la categoria (p.ej. "cpc", "presupuesto")
+// seguido, dentro de una ventana corta de caracteres NO numericos, por la
+// cifra que se esta afirmando -- deliberadamente laxo sobre la prosa
+// intermedia ("el CPC medio es de", "el presupuesto total si se
+// activaran todas las campanas es de") para no depender de una redaccion
+// exacta, igual de estricto sobre EXIGIR que la cifra este realmente
+// cerca de la palabra clave (ventana acotada, no "en cualquier parte del
+// texto") para no disparar falsos positivos entre frases distintas.
+const GAP = "[^\\d]{0,40}?";
+
+// La cifra capturada NUNCA puede estar pegada a una letra/digito/guion
+// bajo vecino -- sin este guardado, un identificador o etiqueta como
+// "LAST_30_DAYS" (metricsWindow real de sem-watcher) cerca de la palabra
+// "gasto" haria que "30" se leyera como una cifra de gasto inventada
+// (falso positivo real, detectado durante la verificacion manual de este
+// runner contra datos locales reales).
+const NUM = "(?<![\\w])(\\d+(?:[.,]\\d+)?)(?![\\w])";
+
+const QUANT_CLAIM_CATEGORIES: QuantClaimCategory[] = [
+  { id: "cpc", label: "CPC", pattern: new RegExp(`cpc${GAP}${NUM}`, "gi") },
+  // Dos ordenes de frase: "12 conversiones" (numero primero, habitual en
+  // metricas tabulares) Y "conversiones: 12" / "el numero de conversiones
+  // fue de 12" (palabra clave primero) -- solo cubrir el primer orden
+  // dejaba sin auditar cualquier afirmacion fabricada con el orden
+  // inverso (detectado en code review).
+  { id: "conversiones", label: "conversiones", pattern: new RegExp(`${NUM}\\s*conversion(?:es)?\\b|conversion(?:es)?${GAP}${NUM}`, "gi") },
+  { id: "roas", label: "ROAS", pattern: new RegExp(`roas${GAP}${NUM}`, "gi") },
+  { id: "gasto", label: "gasto/coste", pattern: new RegExp(`(?:gasto|coste)${GAP}${NUM}\\s*€?`, "gi") },
+  { id: "presupuesto", label: "presupuesto", pattern: new RegExp(`presupuesto${GAP}${NUM}\\s*€?`, "gi") },
+];
+
+/**
+ * Para cada categoria, subcadenas (en minusculas) que un `contextField`
+ * de evidence[] debe contener para considerarse tematicamente relevante
+ * -- una evidencia real pero de un campo NO relacionado (p.ej. citar
+ * `departmentSummary.totalCampaigns` para respaldar un CPC) no cuenta,
+ * aunque el numero coincida por casualidad. `SemSpecialistContext` HOY
+ * no expone ningun campo de CPC ni de ROAS (ver
+ * src/employees/sem-specialist/sem-specialist-context.ts) -- por diseno,
+ * eso significa que NINGUNA afirmacion de CPC/ROAS puede pasar esta
+ * auditoria todavia, coherente con la mision ("NO inventa CPC... ni
+ * ROAS", y el propio agente no recibe ese dato para citarlo).
+ */
+const CATEGORY_CONTEXT_FIELD_KEYWORDS: Record<string, string[]> = {
+  cpc: ["cpc", "costperclick", "cost_per_click"],
+  conversiones: ["conversion"],
+  roas: ["roas"],
+  gasto: ["spend", "cost", "gasto", "coste"],
+  presupuesto: ["budget", "presupuesto"],
+};
+
+/** Recorre el contexto recursivamente y devuelve todos los numeros (leaves) que contiene -- la unica fuente de verdad de "cifras reales disponibles". */
+function collectNumbersFromContext(context: SemSpecialistContext): number[] {
+  const numbers: number[] = [];
+  const walk = (v: unknown): void => {
+    if (typeof v === "number" && Number.isFinite(v)) {
+      numbers.push(v);
+      return;
+    }
+    if (Array.isArray(v)) {
+      v.forEach(walk);
+      return;
+    }
+    if (typeof v === "object" && v !== null) {
+      Object.values(v).forEach(walk);
+    }
+  };
+  walk(context);
+  return numbers;
+}
+
+/** Varias representaciones textuales de cada numero real (coma/punto decimal, con/sin decimales) -- para no fallar por un simple formato distinto entre el JSON del contexto y la prosa de salida. */
+function buildKnownNumberTokens(context: SemSpecialistContext): Set<string> {
+  const tokens = new Set<string>();
+  for (const n of collectNumbersFromContext(context)) {
+    tokens.add(String(n));
+    tokens.add(n.toFixed(2));
+    tokens.add(n.toFixed(0));
+    tokens.add(n.toFixed(2).replace(".", ","));
+  }
+  return tokens;
+}
+
+/**
+ * Interpretaciones numericas candidatas de un texto que "parece un
+ * numero" en prosa espanola/europea. SIEMPRE incluye la interpretacion
+ * directa (coma como separador decimal, punto como separador decimal si
+ * no hay coma) -- la interpretacion "punto como separador de miles"
+ * (p.ej. "1.320" -> 1320) SOLO se anade si el texto tiene la forma EXACTA
+ * de agrupacion de miles (grupos de 3 digitos tras cada punto). Sin esta
+ * restriccion, un decimal genuino con punto como "0.45" se leeria como
+ * 45 (bug real detectado en code review: corrompia decimales legitimos y
+ * podia hacer pasar una cifra fabricada que casualmente coincidiera con
+ * un entero real no relacionado en cualquier otra parte del contexto).
+ */
+function numericCandidates(rawMatch: string): number[] {
+  const trimmed = rawMatch.trim();
+  const candidates: number[] = [];
+  const direct = parseFloat(trimmed.replace(",", "."));
+  if (Number.isFinite(direct)) candidates.push(direct);
+  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(trimmed)) {
+    const thousands = parseFloat(trimmed.replace(/\./g, "").replace(",", "."));
+    if (Number.isFinite(thousands)) candidates.push(thousands);
+  }
+  return candidates;
+}
+
+function numberIsKnown(rawMatch: string, knownTokens: Set<string>): boolean {
+  const normalized = rawMatch.trim();
+  if (knownTokens.has(normalized)) return true;
+  for (const n of numericCandidates(normalized)) {
+    if (knownTokens.has(String(n)) || knownTokens.has(n.toFixed(2)) || knownTokens.has(n.toFixed(0)) || knownTokens.has(n.toFixed(2).replace(".", ","))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Resuelve una ruta "legible" (p.ej. "departmentSummary.realSpendEUR",
+ * "metrics[0].conversions") contra el SemSpecialistContext real.
+ * Devuelve `undefined` si la ruta no resuelve a nada (campo inexistente,
+ * indice fuera de rango) -- nunca lanza, para que una evidencia con una
+ * ruta ligeramente distinta a la exacta caiga al chequeo generico de
+ * isEvidenceItemTraceable() en vez de romper la auditoria entera.
+ */
+function resolveContextPath(context: SemSpecialistContext, contextPath: string): unknown {
+  const tokens = contextPath.match(/[^.[\]]+/g) ?? [];
+  let current: unknown = context;
+  for (const token of tokens) {
+    if (current === null || current === undefined) return undefined;
+    if (Array.isArray(current)) {
+      const idx = Number(token);
+      current = Number.isInteger(idx) ? current[idx] : undefined;
+    } else if (typeof current === "object") {
+      current = (current as Record<string, unknown>)[token];
+    } else {
+      return undefined;
+    }
+  }
+  return current;
+}
+
+function stringifyResolvedValue(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "number" || typeof v === "boolean" || typeof v === "string") return String(v);
+  return JSON.stringify(v);
+}
+
+/**
+ * Una entrada de evidence[] es trazable en DOS niveles, del mas al menos
+ * estricto:
+ *   1. Si `contextField` resuelve a un valor REAL del contexto (via
+ *      resolveContextPath), `value` debe corresponder ESPECIFICAMENTE a
+ *      ESE valor -- no basta con que el numero declarado coincida con
+ *      CUALQUIER OTRO numero real en cualquier otra parte del contexto
+ *      (bug real detectado en code review: permitia citar, p.ej.,
+ *      totalCampaigns=3 como si respaldara un CPC de "3 EUR" totalmente
+ *      inventado, solo porque 3 aparecia en algun sitio del contexto).
+ *   2. Si `contextField` no resuelve literalmente (ruta aproximada), cae
+ *      a un chequeo mas debil pero igual de fail-closed: el numero/texto
+ *      declarado debe aparecer en ALGUN sitio real del contexto completo.
+ */
+function isEvidenceItemTraceable(item: SemEvidenceItem, context: SemSpecialistContext, knownTokens: Set<string>): boolean {
+  const value = item.value.trim();
+  if (value.length === 0) return false;
+
+  const resolved = resolveContextPath(context, item.contextField);
+  if (resolved !== undefined) {
+    if (typeof resolved === "number") {
+      const numberMatch = value.match(/\d+(?:[.,]\d+)?/);
+      if (!numberMatch) return false;
+      return numericCandidates(numberMatch[0]).some((n) => n === resolved) || numberMatch[0].trim() === String(resolved);
+    }
+    const resolvedText = stringifyResolvedValue(resolved).toLowerCase();
+    if (resolvedText.length > 0 && (value.toLowerCase().includes(resolvedText) || resolvedText.includes(value.toLowerCase()))) {
+      return true;
+    }
+  }
+
+  const numberMatch = value.match(/\d+(?:[.,]\d+)?/);
+  if (numberMatch) {
+    return numberIsKnown(numberMatch[0], knownTokens);
+  }
+  const blob = JSON.stringify(context).toLowerCase();
+  return blob.includes(value.toLowerCase());
+}
+
+interface ClaimText {
+  field: string;
+  text: string;
+  evidenceRefs: string[];
+}
+
+function collectClaimTexts(output: SemSpecialistOutput): ClaimText[] {
+  const items: ClaimText[] = [{ field: "summary", text: output.summary, evidenceRefs: [] }];
+
+  for (const field of FINDING_FIELDS) {
+    for (const f of output[field]) {
+      items.push({ field: `${field}: ${f.title}`, text: `${f.title}. ${f.description}`, evidenceRefs: f.evidenceRefs });
+    }
+  }
+  for (const e of output.prioritizedExperiments) {
+    items.push({ field: `prioritizedExperiments: ${e.title}`, text: `${e.title}. ${e.hypothesis} ${e.expectedImpact}`, evidenceRefs: e.evidenceRefs });
+  }
+  return items;
+}
+
+/**
+ * Auditoria FAIL-CLOSED de afirmaciones cuantitativas sin respaldo. Un
+ * array vacio significa "sin violaciones" -- cualquier entrada devuelta
+ * aqui debe tratarse como un fallo DURO por quien la llama (nunca un
+ * simple aviso), ver cabecera de esta seccion.
+ */
+export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecialistContext, output: SemSpecialistOutput): string[] {
+  const knownTokens = buildKnownNumberTokens(context);
+  const violations: string[] = [];
+
+  const evidenceById = new Map<string, SemEvidenceItem>();
+  const seenIds = new Set<string>();
+  for (const item of output.evidence) {
+    if (seenIds.has(item.id)) {
+      violations.push(`evidence duplicada: el id "${item.id}" aparece mas de una vez en evidence[].`);
+    }
+    seenIds.add(item.id);
+    evidenceById.set(item.id, item);
+    if (!isEvidenceItemTraceable(item, context, knownTokens)) {
+      violations.push(`evidence no trazable al contexto real: id="${item.id}" contextField="${item.contextField}" value="${item.value}" no aparece en el SemSpecialistContext suministrado.`);
+    }
+  }
+
+  for (const claim of collectClaimTexts(output)) {
+    for (const category of QUANT_CLAIM_CATEGORIES) {
+      const matches = [...claim.text.matchAll(category.pattern)];
+      for (const match of matches) {
+        // match[1] o match[2] segun la rama de la alternativa que haya
+        // capturado (algunas categorias, p.ej. "conversiones", admiten
+        // dos ordenes de frase -- ver QUANT_CLAIM_CATEGORIES).
+        const numberRaw = match[1] ?? match[2];
+        if (!numberRaw) continue;
+
+        if (!numberIsKnown(numberRaw, knownTokens)) {
+          violations.push(
+            `Afirmacion cuantitativa sin respaldo (${category.label}): "${match[0].trim()}" en "${claim.field}" -- ese numero no aparece en el SemSpecialistContext suministrado. Prohibido inventar CPC/conversiones/ROAS/gasto/presupuesto.`
+          );
+          continue;
+        }
+
+        const requiredFieldKeywords = CATEGORY_CONTEXT_FIELD_KEYWORDS[category.id] ?? [];
+        const hasVerifiedEvidenceRef = claim.evidenceRefs.some((refId) => {
+          const evidence = evidenceById.get(refId);
+          if (!evidence) return false;
+          if (!isEvidenceItemTraceable(evidence, context, knownTokens)) return false;
+          if (!evidence.value.includes(numberRaw)) return false;
+          // La evidencia debe estar TEMATICAMENTE relacionada con la
+          // categoria de la afirmacion, no solo contener el mismo numero
+          // por coincidencia -- sin esto, una evidencia real pero de un
+          // campo sin relacion (p.ej. totalCampaigns=3) podia "respaldar"
+          // una cifra de CPC totalmente inventada solo porque el numero
+          // coincidia (misattribution real, detectado en code review).
+          if (requiredFieldKeywords.length > 0) {
+            const fieldLower = evidence.contextField.toLowerCase();
+            if (!requiredFieldKeywords.some((kw) => fieldLower.includes(kw))) return false;
+          }
+          return true;
+        });
+        if (!hasVerifiedEvidenceRef) {
+          violations.push(
+            `Afirmacion cuantitativa (${category.label}) "${match[0].trim()}" en "${claim.field}" no tiene ninguna evidenceRefs verificada que respalde ese numero -- toda cifra de CPC/conversiones/ROAS/gasto/presupuesto necesita una entrada en evidence[] referenciada explicitamente.`
+          );
+        }
+      }
+    }
+  }
+
+  return violations;
+}
+
+// --- Resultado del runner + artefacto -------------------------------------
+
+export type SemRunnerStatus = "no_data" | "pending_execution" | "executed" | "invalid_output";
+
+export type SemResult =
+  | { status: "no_data" }
+  | { status: "pending_execution"; promptFilePath: string }
+  | { status: "invalid_output"; error: string; rawOutputPath: string; violations: string[] }
+  | { status: "executed"; output: SemSpecialistOutput };
+
+/**
+ * Contrato machine-readable que imprime el runner al final de cada
+ * ejecucion (linea `RUNNER_RESULT_JSON=...`, ver
+ * scripts/run-sem-specialist.ts). Estructura FIJA e IDENTICA en los 4
+ * estados posibles de `status` -- mismo principio que
+ * `RunnerResultSummary` de landing-architect-comparison.ts.
+ */
+export interface SemRunnerResultSummary {
+  status: SemRunnerStatus;
+  sourceEventId: string;
+  sourceDepartmentRunId: string;
+  promptFilePath: string;
+  expectedOutputPath: string;
+  artifactJsonPath: string;
+  artifactMdPath: string;
+  /** null salvo que status sea "executed" (siempre 0 en ese caso -- una violacion fuerza invalid_output) o "invalid_output" (numero real de violaciones). */
+  unsupportedClaimCount: number | null;
+}
+
+export function buildSemRunnerResultSummary(
+  context: SemSpecialistContext | null,
+  paths: { promptFilePath: string; expectedOutputPath: string; artifactJsonPath: string; artifactMdPath: string },
+  result: SemResult
+): SemRunnerResultSummary {
+  const noData = result.status === "no_data";
+  return {
+    status: result.status,
+    sourceEventId: context?.sourceEventId ?? "",
+    sourceDepartmentRunId: context?.sourceDepartmentRunId ?? "",
+    promptFilePath: noData ? "" : paths.promptFilePath,
+    expectedOutputPath: noData ? "" : paths.expectedOutputPath,
+    artifactJsonPath: paths.artifactJsonPath,
+    artifactMdPath: paths.artifactMdPath,
+    unsupportedClaimCount: result.status === "invalid_output" ? result.violations.length : result.status === "executed" ? 0 : null,
+  };
+}
+
+export interface SemSpecialistArtifact {
+  generatedAt: string;
+  context: SemSpecialistContext | null;
+  result: SemResult;
+  note: string;
+}
+
+const ARTIFACT_NOTE =
+  "Artefacto de solo lectura/propuesta. sem-specialist NUNCA modifica campanas, presupuestos, keywords ni anuncios de Google Ads -- este artefacto es una propuesta para revision humana, no una accion ejecutada.";
+
+export function buildSemSpecialistArtifact(context: SemSpecialistContext | null, result: SemResult): SemSpecialistArtifact {
+  return {
+    generatedAt: new Date().toISOString(),
+    context,
+    result,
+    note: ARTIFACT_NOTE,
+  };
+}
+
+function fmtFindings(heading: string, findings: SemFinding[]): string[] {
+  const lines: string[] = [`## ${heading} (${findings.length})`, ""];
+  if (findings.length === 0) {
+    lines.push("(ninguno)");
+  } else {
+    for (const f of findings) {
+      lines.push(`- **[${f.severity}] ${f.title}** -- ${f.description} (evidencia: ${f.evidenceRefs.join(", ") || "ninguna"})`);
+    }
+  }
+  lines.push("");
+  return lines;
+}
+
+export function renderSemSpecialistMarkdown(artifact: SemSpecialistArtifact): string {
+  const lines: string[] = [];
+  lines.push(`# SEM Specialist — ${artifact.generatedAt}`);
+  lines.push("");
+
+  if (!artifact.context) {
+    lines.push(
+      "**Estado: sin datos SEM disponibles (no_data).** No existe ningun evento `sem-watcher` de tipo `agent_finished` en `data/department-events.jsonl` todavia. Este empleado NUNCA razona sin una lectura previa real (o documentada como fallback) de sem-watcher -- no se ha generado ninguna propuesta, y no se ha invocado a Claude."
+    );
+    lines.push("");
+    lines.push(`_${artifact.note}_`);
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  const c = artifact.context;
+  lines.push(`- **Fuente:** evento sem-watcher \`${c.sourceEventId}\` (departmentRunId \`${c.sourceDepartmentRunId}\`, generado ${c.sourceGeneratedAt})`);
+  lines.push(`- **Conectado a Google Ads real en ese momento:** ${c.connectedToGoogleAdsAtSourceTime ? "si" : "no"}`);
+  lines.push(`- **Campana principal:** ${c.campaignName || "(desconocida)"} (${c.campaignStatus || "?"})`);
+  lines.push("");
+  lines.push("**No se ha aplicado ninguna propuesta a Google Ads. sem-specialist es solo lectura/propuesta.**");
+  lines.push("");
+
+  if (artifact.result.status === "pending_execution") {
+    lines.push(`**Estado: pendiente de ejecucion.** Prompt preparado en \`${artifact.result.promptFilePath}\`.`);
+    lines.push("- Para completar el analisis: invocar el subagente `sem-specialist` con ese prompt y volver a ejecutar este runner con `--sem-specialist-output <fichero-json-de-respuesta>`.");
+    lines.push("");
+  } else if (artifact.result.status === "invalid_output") {
+    lines.push(`**Estado: salida invalida.** ${artifact.result.error}`);
+    lines.push(`- Salida cruda guardada en \`${artifact.result.rawOutputPath}\` para inspeccion.`);
+    if (artifact.result.violations.length > 0) {
+      lines.push("");
+      lines.push(`**Violaciones de afirmaciones cuantitativas sin respaldo (${artifact.result.violations.length}):**`);
+      for (const v of artifact.result.violations) lines.push(`- ${v}`);
+    }
+    lines.push("");
+  } else if (artifact.result.status === "executed") {
+    const o = artifact.result.output;
+    lines.push("## Resumen");
+    lines.push("");
+    lines.push(o.summary);
+    lines.push("");
+    lines.push(...fmtFindings("Campaign findings", o.campaignFindings));
+    lines.push(...fmtFindings("Search-term / keyword opportunities", o.searchTermOpportunities));
+    lines.push(...fmtFindings("Negative keyword recommendations", o.negativeKeywordRecommendations));
+    lines.push(...fmtFindings("Budget observations", o.budgetObservations));
+    lines.push(...fmtFindings("Bidding observations", o.biddingObservations));
+    lines.push(...fmtFindings("Ad / landing alignment", o.adLandingAlignment));
+    lines.push(...fmtFindings("Conversion-risk findings", o.conversionRiskFindings));
+
+    lines.push(`## Prioritized experiments (${o.prioritizedExperiments.length})`);
+    lines.push("");
+    if (o.prioritizedExperiments.length === 0) {
+      lines.push("(ninguno)");
+    } else {
+      for (const e of o.prioritizedExperiments) {
+        lines.push(`- **[${e.priority}] ${e.title}** -- hipotesis: ${e.hypothesis}. Impacto esperado: ${e.expectedImpact}. (evidencia: ${e.evidenceRefs.join(", ") || "ninguna"})`);
+      }
+    }
+    lines.push("");
+
+    lines.push(`## Evidence (${o.evidence.length})`);
+    lines.push("");
+    if (o.evidence.length === 0) {
+      lines.push("(ninguna)");
+    } else {
+      for (const ev of o.evidence) lines.push(`- \`${ev.id}\`: ${ev.contextField} = ${ev.value}`);
+    }
+    lines.push("");
+
+    lines.push(`## Unknowns (${o.unknowns.length})`);
+    lines.push("");
+    if (o.unknowns.length === 0) {
+      lines.push("(ninguno declarado)");
+    } else {
+      for (const u of o.unknowns) lines.push(`- ${u}`);
+    }
+    lines.push("");
+  }
+
+  lines.push(`_${artifact.note}_`);
+  lines.push("");
+  return lines.join("\n");
+}

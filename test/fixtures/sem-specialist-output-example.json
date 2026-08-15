@@ -1,0 +1,58 @@
+{
+  "summary": "Cuenta con 7 campanas SEM registradas, todas en PAUSED (allPaused=true). Sin gasto real medido en la ventana LAST_30_DAYS. La principal senal de riesgo detectada es un solapamiento de keywords entre la campana legacy y campanas nuevas dedicadas.",
+  "campaignFindings": [
+    {
+      "title": "Las 7 campanas activas/pausadas siguen en PAUSED",
+      "description": "activeCampaignCount=0, pausedCampaignCount=7 -- ninguna campana esta activa actualmente, coherente con el checklist de revision final antes de activar.",
+      "evidenceRefs": ["ev-active-count"],
+      "severity": "info"
+    }
+  ],
+  "searchTermOpportunities": [],
+  "negativeKeywordRecommendations": [
+    {
+      "title": "Revisar solapamiento de 'lockers para empresas' entre campanas",
+      "description": "La keyword se dirige desde 2 campanas distintas -- valorar anadirla como negativa cruzada en una de las dos para evitar canibalizacion interna.",
+      "evidenceRefs": ["ev-duplicate-kw"],
+      "severity": "medium"
+    }
+  ],
+  "budgetObservations": [
+    {
+      "title": "Presupuesto diario total si se activaran todas las campanas",
+      "description": "El presupuesto es de 44 € al dia si se activaran las 7 campanas a la vez, unos 1320 € al mes.",
+      "evidenceRefs": ["ev-daily-budget", "ev-monthly-budget"],
+      "severity": "info"
+    }
+  ],
+  "biddingObservations": [],
+  "adLandingAlignment": [],
+  "conversionRiskFindings": [
+    {
+      "title": "Sin conversiones primarias inesperadas detectadas",
+      "description": "unexpectedPrimaryConversionActionNames esta vacio en este snapshot -- las conversiones primarias activas coinciden con los patrones esperados.",
+      "evidenceRefs": ["ev-no-unexpected-conversions"],
+      "severity": "info"
+    }
+  ],
+  "prioritizedExperiments": [
+    {
+      "title": "Anadir negativas cruzadas antes de activar ninguna campana",
+      "hypothesis": "Sin negativas cruzadas, activar mas de una campana solapada haria competir a Zentry contra si mismo por la misma puja.",
+      "expectedImpact": "Reduccion cualitativa del riesgo de canibalizacion interna -- sin cifra concreta, no hay dato de CPC/CTR previo con el que estimar un numero.",
+      "evidenceRefs": ["ev-duplicate-kw"],
+      "priority": "medium"
+    }
+  ],
+  "evidence": [
+    { "id": "ev-active-count", "contextField": "departmentSummary.activeCampaignCount", "value": "0" },
+    { "id": "ev-duplicate-kw", "contextField": "departmentSummary.duplicateKeywordWarnings[0]", "value": "lockers para empresas se dirige desde 2 campanas distintas" },
+    { "id": "ev-daily-budget", "contextField": "departmentSummary.totalDailyBudgetIfActivatedEUR", "value": "44 EUR" },
+    { "id": "ev-monthly-budget", "contextField": "departmentSummary.totalMonthlyBudgetIfActivatedEUR", "value": "1320 EUR" },
+    { "id": "ev-no-unexpected-conversions", "contextField": "departmentSummary.unexpectedPrimaryConversionActionNames.length", "value": "0" }
+  ],
+  "unknowns": [
+    "Sin CPC real: metrics no trae actividad medida distinta de cero para la mayoria de campanas -- no se puede evaluar eficiencia de puja todavia.",
+    "No hay lista de search terms reales en el contexto -- solo el contador semCandidateCount, asi que no se proponen keywords nuevas concretas."
+  ]
+}

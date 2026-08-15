@@ -23,6 +23,11 @@ import { runGrowthDirectorV2ContextTests } from "../test/growth-director-v2-cont
 import { runGrowthDirectorV2DomainTests } from "../test/growth-director-v2-domain.test";
 import { runGrowthDirectorV2OutputSchemaTests } from "../test/growth-director-v2-output-schema.test";
 import { runGrowthDirectorV2RunnerResultParserTests } from "../test/growth-director-v2-runner-result-parser.test";
+import { runSemSpecialistContextTests } from "../test/sem-specialist-context.test";
+import { runSemSpecialistOutputTests } from "../test/sem-specialist-output.test";
+import { runSemSpecialistOutputSchemaTests } from "../test/sem-specialist-output-schema.test";
+import { runSemSpecialistRunnerResultParserTests } from "../test/sem-specialist-runner-result-parser.test";
+import { runSemSpecialistArtifactTests } from "../test/sem-specialist-artifact.test";
 
 interface TestCase {
   name: string;
@@ -47,6 +52,11 @@ function main(): void {
     { suiteName: "growth-director-v2-domain", cases: runGrowthDirectorV2DomainTests() },
     { suiteName: "growth-director-v2-output-schema", cases: runGrowthDirectorV2OutputSchemaTests() },
     { suiteName: "growth-director-v2-runner-result-parser", cases: runGrowthDirectorV2RunnerResultParserTests() },
+    { suiteName: "sem-specialist-context", cases: runSemSpecialistContextTests() },
+    { suiteName: "sem-specialist-output", cases: runSemSpecialistOutputTests() },
+    { suiteName: "sem-specialist-output-schema", cases: runSemSpecialistOutputSchemaTests() },
+    { suiteName: "sem-specialist-runner-result-parser", cases: runSemSpecialistRunnerResultParserTests() },
+    { suiteName: "sem-specialist-artifact", cases: runSemSpecialistArtifactTests() },
   ];
 
   let passed = 0;
