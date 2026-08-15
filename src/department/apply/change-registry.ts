@@ -136,6 +136,11 @@ export function transitionChange(
   const updated: DepartmentChangeRequest = {
     ...change,
     ...updates,
+    // La identidad y la version del contrato NUNCA se pueden cambiar de
+    // paso: se reafirman despues del spread para que ninguna
+    // actualizacion pueda reescribirlas, ni por error ni a proposito.
+    changeId: change.changeId,
+    contractVersion: change.contractVersion,
     status: nextStatus,
     auditTrail: [...change.auditTrail, { at: now.toISOString(), event: audit.event, detail: audit.detail }],
     updatedAt: now.toISOString(),
@@ -160,6 +165,8 @@ export function updateChangeWithoutTransition(
   const updated: DepartmentChangeRequest = {
     ...change,
     ...updates,
+    changeId: change.changeId,
+    contractVersion: change.contractVersion,
     status: change.status,
     auditTrail: [...change.auditTrail, { at: now.toISOString(), event: audit.event, detail: audit.detail }],
     updatedAt: now.toISOString(),

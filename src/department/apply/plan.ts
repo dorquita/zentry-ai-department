@@ -201,24 +201,32 @@ export function projectChangesIntoSummary(summary: DepartmentApplySummary, chang
       rollbackStatus: change.production?.rollbackStatus ?? change.staging?.rollbackStatus ?? item.rollbackStatus,
       humanApproval: {
         status:
-          change.humanDecision?.decision === "approved"
-            ? ("approved" as const)
-            : change.humanDecision?.decision === "rejected"
-              ? ("rejected" as const)
-              : change.telegram
-                ? ("pending" as const)
-                : ("none" as const),
+          // `approval_stale` NO es "aprobado": la version aprobada ya no
+          // es la que hay en staging, asi que no se puede afirmar que
+          // haya aprobacion valida -> `unknown`, que es el valor
+          // fail-closed de este campo.
+          change.status === "approval_stale"
+            ? ("unknown" as const)
+            : change.humanDecision?.decision === "approved"
+              ? ("approved" as const)
+              : change.humanDecision?.decision === "rejected"
+                ? ("rejected" as const)
+                : change.telegram
+                  ? ("pending" as const)
+                  : ("none" as const),
         approvalRequestId: change.telegram?.telegramApprovalId ?? null,
         answeredBy: change.humanDecision?.decidedBy ?? null,
         answeredAt: change.humanDecision?.decidedAt ?? null,
         reason:
-          change.humanDecision?.decision === "rejected" && change.humanDecision.rejectionReason
-            ? `Rechazado por ${change.humanDecision.decidedBy}: ${change.humanDecision.rejectionReason}`
-            : change.humanDecision
-              ? `Decision humana "${change.humanDecision.decision}" registrada (${change.humanDecision.decidedBy}, ${change.humanDecision.decidedAt}).`
-              : change.telegram
-                ? "Solicitud de aprobacion enviada por Telegram y pendiente de respuesta humana."
-                : item.humanApproval.reason,
+          change.status === "approval_stale"
+            ? "La aprobacion ya no se refiere a lo que hay en staging (staging cambio despues de enviarla). Hace falta una aprobacion nueva sobre la version actual."
+            : change.humanDecision?.decision === "rejected" && change.humanDecision.rejectionReason
+              ? `Rechazado por ${change.humanDecision.decidedBy}: ${change.humanDecision.rejectionReason}`
+              : change.humanDecision
+                ? `Decision humana "${change.humanDecision.decision}" registrada (${change.humanDecision.decidedBy}, ${change.humanDecision.decidedAt}).`
+                : change.telegram
+                  ? "Solicitud de aprobacion enviada por Telegram y pendiente de respuesta humana."
+                  : item.humanApproval.reason,
       },
       traceability: {
         changeId: change.changeId,
