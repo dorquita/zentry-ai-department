@@ -29,7 +29,7 @@ inputs:
     description: 'Valor de secrets.ANTHROPIC_API_KEY del caller (puede ser cadena vacia). Alternativa si no hay claude-code-oauth-token.'
     required: true
   github-token:
-    description: 'Token de GitHub a pasar EXPLICITAMENTE a claude-code-action (normalmente ${{ github.token }} del caller) -- ver el porque en el step de invocacion mas abajo.'
+    description: 'Token de GitHub a pasar EXPLICITAMENTE a claude-code-action (normalmente el valor de github.token del caller) -- ver el porque en el step de invocacion mas abajo. NUNCA escribas aqui una expresion literal ${{ }} en este campo description: el parser de manifest de una composite action evalua CUALQUIER ${{ }} que aparezca en el fichero, incluido texto puramente documental, y el contexto "github" no esta disponible en ese momento de evaluacion (bug real detectado en el primer E2E de PR #6 -- "Unrecognized named-value: github").'
     required: true
   max-turns:
     description: 'Limite de turnos pasado a --max-turns (fail-closed frente a sesiones que no convergen).'
