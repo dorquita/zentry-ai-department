@@ -424,5 +424,107 @@ export function runSemSpecialistOutputTests(): TestCase[] {
         assert.ok(violations.some((v) => /ROAS/i.test(v)), "una cifra de ROAS nunca puede tener respaldo real hoy: el catalogo no expone ningun campo numerico de ROAS");
       },
     },
+
+    // --- REGRESION (fix diagnostico run 31888764722): "summary" no puede
+    // citar evidenceRefs propio, y la categoria proximidad-textual no
+    // debe imponerse sobre la categoria REAL del evidenceCatalog. Las 4
+    // violaciones de ese run (3 en summary con cifras reales gasto=0 /
+    // presupuesto=44, 1 falso positivo "7 campañas" capturado por la
+    // ventana de proximidad de "gasto") se reconstruyen aqui a partir del
+    // diagnostico exacto -- el texto literal de Claude no fue recuperable
+    // (ver diagnostico previo), pero las cifras/categorias/evidencias
+    // reales si lo son. ---
+    {
+      name: "REGRESION run 31888764722 (summary, cifra real gasto=0 sin evidenceRefs posible) => 0 violaciones",
+      fn: () => {
+        const context = baseContext();
+        const spendItem = catalogItem(context, "sem-spend-real");
+        assert.equal(spendItem.value, "0");
+        const output = baseOutput({
+          summary: "Snapshot con todas las campanas en PAUSED. Sin gasto real registrado (0 €) en el periodo medido.",
+        });
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
+    {
+      name: "REGRESION run 31888764722 (summary, cifra real presupuesto=44 sin evidenceRefs posible) => 0 violaciones",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        assert.equal(budgetItem.value, "44");
+        const output = baseOutput({
+          summary: "Si se activaran todas las campanas, el presupuesto diario total seria de 44 € segun el snapshot mas reciente.",
+        });
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
+    {
+      name: "REGRESION run 31888764722 (summary, cifra INVENTADA) => sigue siendo violacion -- 'summary' no puede citar, pero la cifra debe seguir siendo real",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({ summary: "El gasto acumulado en el periodo fue de 999 €, una cifra inventada." });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /gasto/i.test(v)), "una cifra que no existe en el evidenceCatalog sigue siendo un fallo duro, incluso en summary");
+      },
+    },
+    {
+      name: "REGRESION run 31888764722 (falso positivo: '7 campañas' cerca de 'gasto', citando sem-total-campaigns) => 0 violaciones",
+      fn: () => {
+        const context = baseContext();
+        const campaignsItem = catalogItem(context, "sem-total-campaigns");
+        assert.equal(campaignsItem.value, "7");
+        assert.equal(campaignsItem.category, "other");
+        const output = baseOutput({
+          budgetObservations: [
+            emptyFinding({
+              description: "Sin gasto real registrado. Si se activaran las 7 campañas, convendria revisar el reparto de presupuesto entre ellas.",
+              evidenceRefs: [campaignsItem.id],
+            }),
+          ],
+          evidence: [evidenceFromCatalog(campaignsItem)],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.deepEqual(
+          violations,
+          [],
+          `una cifra real y correctamente citada (7 campañas, via sem-total-campaigns) no deberia rechazarse solo porque la palabra "gasto" aparece cerca en la prosa: ${JSON.stringify(violations)}`
+        );
+      },
+    },
+    {
+      name: "REGRESION: 'gasto' cerca de una cifra ajena (other) SIN citarla => sigue siendo violacion (no basta con que exista en el catalogo en algun sitio de una finding)",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [
+            emptyFinding({ description: "Sin gasto real registrado. Si se activaran las 7 campañas...", evidenceRefs: [] }),
+          ],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.length > 0, "un finding SIN evidenceRefs sigue exigiendo cita explicita, aunque la cifra sea real en el catalogo");
+      },
+    },
+    {
+      name: "REGRESION: CPC citando una entrada real pero de categoria ajena (sem-total-campaigns) => sigue siendo violacion (excepcion cpc/roas se mantiene)",
+      fn: () => {
+        const context = baseContext();
+        const campaignsItem = catalogItem(context, "sem-total-campaigns");
+        assert.equal(campaignsItem.value, "7");
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El CPC medio es de 7 EUR.", evidenceRefs: [campaignsItem.id] })],
+          evidence: [evidenceFromCatalog(campaignsItem)],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /CPC/i.test(v)), "cpc/roas exigen una entrada REALMENTE de esa categoria, no solo un value que coincida por casualidad");
+      },
+    },
+    {
+      name: "REGRESION: texto cualitativo sin cifras en summary => 0 violaciones",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({ summary: "Campanas pausadas, sin actividad relevante que reportar en este snapshot." });
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
   ];
 }

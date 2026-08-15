@@ -1,4 +1,4 @@
-import { SemEvidenceCatalogItem, SemSpecialistContext } from "./sem-specialist-context";
+import { SemEvidenceCatalogItem, SemEvidenceCategory, SemSpecialistContext } from "./sem-specialist-context";
 
 /**
  * Validador/auditor de dominio del empleado `sem-specialist` -- mismo
@@ -147,9 +147,7 @@ export function validateSemSpecialistOutput(raw: unknown): SemSpecialistOutput {
 // por COINCIDENCIA EXACTA contra un catalogo pre-computado por codigo
 // TOOL antes de invocar a Claude -- el subagente solo puede copiar
 // entradas del catalogo tal cual (mismo id+contextField+value), nunca
-// inventar ni modificar una. Esto hace estructuralmente imposible que
-// una evidencia "casi real" (numero real de un campo no relacionado,
-// formato ligeramente distinto) pase la auditoria por coincidencia.
+// inventar ni modificar una.
 //
 // Dos capas de verificacion, ambas necesarias:
 //   1. Cada `evidence[]` declarado debe coincidir EXACTAMENTE con una
@@ -157,9 +155,44 @@ export function validateSemSpecialistOutput(raw: unknown): SemSpecialistOutput {
 //      inventada o modificada rompe la cadena de confianza aunque luego
 //      se referencie desde un finding.
 //   2. Cualquier cifra de CPC/conversiones/ROAS/gasto/presupuesto en el
-//      texto de salida debe (a) ser un numero conocido del catalogo Y
-//      (b) tener al menos una entrada de evidenceRefs verificada, de la
-//      MISMA categoria determinista, que contenga ese mismo numero.
+//      texto de salida debe coincidir con el value de una entrada real
+//      del catalogo -- ver resolveClaimCandidateEntries()/
+//      findMatchingCatalogEntry() para las dos reglas exactas (una para
+//      "summary", otra para findings/experimentos con evidenceRefs
+//      propio), diagnosticadas y corregidas a partir del run
+//      31888764722 (2026-08-15):
+//
+//      a) "summary" (SemSpecialistOutput.summary) es un string plano sin
+//         evidenceRefs propio -- estructuralmente no puede citar una
+//         entrada concreta del catalogo. Exigirle una cita puntual
+//         (imposible de cumplir por contrato) generaba un falso positivo
+//         garantizado en cualquier resumen que mencionara una cifra real
+//         (3 de las 4 violaciones de ese run: gasto=0, presupuesto=44,
+//         ambas cifras reales del snapshot, ninguna inventada). Para este
+//         campo unicamente, basta con que la cifra exista en algun punto
+//         del evidenceCatalog -- una cifra que no exista en absoluto
+//         (inventada) sigue siendo un fallo duro.
+//      b) findings/experimentos (que si tienen evidenceRefs propio):
+//         la cifra debe coincidir con el value de una entrada CITADA
+//         explicitamente en evidenceRefs. La categoria REAL de esa
+//         entrada (evidenceCatalog) es la que cuenta, NUNCA la categoria
+//         que la heuristica de proximidad textual (QUANT_CLAIM_CATEGORIES)
+//         haya adivinado: la 4a violacion de ese run era un falso
+//         positivo exactamente por esto -- "...sin gasto real
+//         registrado. Si se activaran las 7 campañas..." hacia que la
+//         ventana de proximidad de "gasto" capturara el "7" de
+//         "campañas" (categoria real "other", via sem-total-campaigns),
+//         una cifra real y correctamente citada, solo que sobre un tema
+//         distinto al que la palabra vecina sugeria.
+//         EXCEPCION deliberada: para "cpc" y "roas" se exige ademas que
+//         la entrada citada sea REALMENTE de esa categoria (ver
+//         CATEGORIES_WITHOUT_REAL_NUMERIC_DATA) -- el catalogo nunca
+//         tiene una entrada numerica de esas 2 categorias (solo el
+//         centinela "not_available"), asi que sin esta excepcion una
+//         cifra de CPC fabricada podria "colarse" citando una entrada
+//         real pero completamente ajena (p.ej. un recuento de campanas)
+//         solo porque el numero coincide por casualidad (misattribution
+//         real, cubierta por un test de regresion propio).
 
 interface QuantClaimCategory {
   id: string;
@@ -199,29 +232,6 @@ const QUANT_CLAIM_CATEGORIES: QuantClaimCategory[] = [
 ];
 
 /**
- * Numeros "conocidos" = los valores REALES presentes en el
- * evidenceCatalog determinista (nunca cualquier numero de cualquier
- * parte del contexto -- eso era el bug de la version anterior, que
- * permitia coincidencias por casualidad con campos sin relacion). Salta
- * las entradas centinela no numericas ("not_available" de CPC/ROAS).
- * Varias representaciones textuales de cada numero (coma/punto decimal,
- * con/sin decimales) para no fallar por un simple formato distinto entre
- * el catalogo y la prosa de salida.
- */
-function buildKnownNumberTokensFromCatalog(catalog: SemEvidenceCatalogItem[]): Set<string> {
-  const tokens = new Set<string>();
-  for (const item of catalog) {
-    const n = Number(item.value);
-    if (!Number.isFinite(n)) continue;
-    tokens.add(String(n));
-    tokens.add(n.toFixed(2));
-    tokens.add(n.toFixed(0));
-    tokens.add(n.toFixed(2).replace(".", ","));
-  }
-  return tokens;
-}
-
-/**
  * Interpretaciones numericas candidatas de un texto que "parece un
  * numero" en prosa espanola/europea. SIEMPRE incluye la interpretacion
  * directa (coma como separador decimal, punto como separador decimal si
@@ -245,17 +255,6 @@ function numericCandidates(rawMatch: string): number[] {
   return candidates;
 }
 
-function numberIsKnown(rawMatch: string, knownTokens: Set<string>): boolean {
-  const normalized = rawMatch.trim();
-  if (knownTokens.has(normalized)) return true;
-  for (const n of numericCandidates(normalized)) {
-    if (knownTokens.has(String(n)) || knownTokens.has(n.toFixed(2)) || knownTokens.has(n.toFixed(0)) || knownTokens.has(n.toFixed(2).replace(".", ","))) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /**
  * Busca, en el evidenceCatalog determinista, una entrada que coincida
  * EXACTAMENTE (id + contextField + value, los 3 campos) con una entrada
@@ -268,22 +267,77 @@ function findCatalogMatch(item: SemEvidenceItem, catalog: SemEvidenceCatalogItem
   return catalog.find((c) => c.id === item.id && c.contextField === item.contextField && c.value === item.value);
 }
 
+/**
+ * Busca, dentro de un conjunto de candidatas ya resuelto (ver
+ * resolveClaimCandidateEntries()), una entrada cuyo value coincida con la
+ * cifra capturada en el texto -- misma logica de comparacion que antes
+ * (substring directo + comparacion numerica via numericCandidates(), para
+ * tolerar formato coma/punto y con/sin decimales entre el catalogo y la
+ * prosa de salida).
+ */
+function findMatchingCatalogEntry(numberRaw: string, candidates: SemEvidenceCatalogItem[]): SemEvidenceCatalogItem | undefined {
+  return candidates.find((c) => c.value.includes(numberRaw) || numericCandidates(numberRaw).some((n) => String(n) === c.value));
+}
+
+// El catalogo NUNCA tiene una entrada NUMERICA de estas 2 categorias --
+// solo el centinela "not_available" (ver buildSemEvidenceCatalog()) --
+// asi que, a diferencia de gasto/presupuesto/conversiones, aqui NO se
+// puede confiar en "cualquier entrada citada cuyo value coincida":
+// siempre se exige ademas que esa entrada sea REALMENTE de categoria
+// "cpc"/"roas". Sin esta excepcion, una cifra de CPC fabricada podria
+// "colarse" citando una entrada real pero completamente ajena (p.ej. un
+// recuento de campanas) solo porque el numero coincide por casualidad
+// (misattribution real, cubierta por un test de regresion propio).
+const CATEGORIES_WITHOUT_REAL_NUMERIC_DATA = new Set<SemEvidenceCategory>(["cpc", "roas"]);
+
+/**
+ * Resuelve el conjunto de entradas del catalogo contra las que se puede
+ * verificar una cifra de una categoria dada, a partir del pool de
+ * partida (ver auditSemSpecialistOutputForUnsupportedClaims()):
+ *  - "cpc"/"roas": se restringe SIEMPRE a entradas de esa misma categoria
+ *    exacta (nunca hay ninguna numerica -- ver
+ *    CATEGORIES_WITHOUT_REAL_NUMERIC_DATA).
+ *  - resto de categorias (conversiones/gasto/presupuesto): se acepta
+ *    cualquier entrada del pool, sea cual sea su categoria real. La
+ *    categoria que QUANT_CLAIM_CATEGORIES detecto por proximidad textual
+ *    es solo una senal de "aqui podria haber una afirmacion cuantitativa
+ *    que auditar", nunca una exigencia sobre que campo real la respalda
+ *    -- exigir la MISMA categoria fue justo lo que causo el falso
+ *    positivo del run 31888764722 ("...sin gasto real registrado. Si se
+ *    activaran las 7 campañas..." capturaba el "7" de "campañas" -- una
+ *    cifra real y correctamente citada, solo que sobre un tema distinto
+ *    al que la palabra "gasto" vecina sugeria).
+ */
+function resolveClaimCandidateEntries(categoryId: string, pool: SemEvidenceCatalogItem[]): SemEvidenceCatalogItem[] {
+  if (CATEGORIES_WITHOUT_REAL_NUMERIC_DATA.has(categoryId as SemEvidenceCategory)) {
+    return pool.filter((c) => c.category === categoryId);
+  }
+  return pool;
+}
+
 interface ClaimText {
   field: string;
   text: string;
   evidenceRefs: string[];
+  /**
+   * false para "summary" (string plano de SemSpecialistOutput, sin
+   * evidenceRefs propio) -- estructuralmente no puede citar una entrada
+   * concreta del catalogo. true para findings/experimentos, que si
+   * tienen su propio evidenceRefs[].
+   */
+  canCiteEvidence: boolean;
 }
 
 function collectClaimTexts(output: SemSpecialistOutput): ClaimText[] {
-  const items: ClaimText[] = [{ field: "summary", text: output.summary, evidenceRefs: [] }];
+  const items: ClaimText[] = [{ field: "summary", text: output.summary, evidenceRefs: [], canCiteEvidence: false }];
 
   for (const field of FINDING_FIELDS) {
     for (const f of output[field]) {
-      items.push({ field: `${field}: ${f.title}`, text: `${f.title}. ${f.description}`, evidenceRefs: f.evidenceRefs });
+      items.push({ field: `${field}: ${f.title}`, text: `${f.title}. ${f.description}`, evidenceRefs: f.evidenceRefs, canCiteEvidence: true });
     }
   }
   for (const e of output.prioritizedExperiments) {
-    items.push({ field: `prioritizedExperiments: ${e.title}`, text: `${e.title}. ${e.hypothesis} ${e.expectedImpact}`, evidenceRefs: e.evidenceRefs });
+    items.push({ field: `prioritizedExperiments: ${e.title}`, text: `${e.title}. ${e.hypothesis} ${e.expectedImpact}`, evidenceRefs: e.evidenceRefs, canCiteEvidence: true });
   }
   return items;
 }
@@ -296,7 +350,6 @@ function collectClaimTexts(output: SemSpecialistOutput): ClaimText[] {
  */
 export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecialistContext, output: SemSpecialistOutput): string[] {
   const catalog = context.evidenceCatalog;
-  const knownTokens = buildKnownNumberTokensFromCatalog(catalog);
   const violations: string[] = [];
 
   // Cada entrada de evidence[] debe coincidir EXACTAMENTE (id+contextField+value)
@@ -322,6 +375,16 @@ export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecial
   }
 
   for (const claim of collectClaimTexts(output)) {
+    // Pool de partida antes de aplicar resolveClaimCandidateEntries():
+    // para findings/experimentos, SOLO las entradas CITADAS
+    // explicitamente por este claim (claim.evidenceRefs) y verificadas
+    // exactamente contra el catalogo; para "summary" (que no puede
+    // citar), el catalogo COMPLETO -- ver cabecera de esta seccion.
+    const citedEntries = claim.canCiteEvidence
+      ? claim.evidenceRefs.map((refId) => evidenceCatalogMatchById.get(refId)).filter((entry): entry is SemEvidenceCatalogItem => entry !== undefined)
+      : [];
+    const pool = claim.canCiteEvidence ? citedEntries : catalog;
+
     for (const category of QUANT_CLAIM_CATEGORIES) {
       const matches = [...claim.text.matchAll(category.pattern)];
       for (const match of matches) {
@@ -331,32 +394,14 @@ export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecial
         const numberRaw = match[1] ?? match[2];
         if (!numberRaw) continue;
 
-        if (!numberIsKnown(numberRaw, knownTokens)) {
-          violations.push(
-            `Afirmacion cuantitativa sin respaldo (${category.label}): "${match[0].trim()}" en "${claim.field}" -- ese numero no aparece en el evidenceCatalog del snapshot suministrado. Prohibido inventar CPC/conversiones/ROAS/gasto/presupuesto (para CPC/ROAS, hoy el catalogo solo tiene la entrada "not_available" -- ninguna cifra numerica de esas 2 categorias puede tener respaldo real todavia).`
-          );
-          continue;
-        }
+        const candidates = resolveClaimCandidateEntries(category.id, pool);
+        if (findMatchingCatalogEntry(numberRaw, candidates)) continue;
 
-        const hasVerifiedEvidenceRef = claim.evidenceRefs.some((refId) => {
-          const catalogItem = evidenceCatalogMatchById.get(refId);
-          if (!catalogItem) return false; // no citado en evidence[], o evidence[] no coincidia con el catalogo (ya reportado arriba)
-          // La evidencia debe ser de la MISMA categoria deterministica que
-          // la afirmacion (asignada una unica vez al construir el
-          // catalogo, nunca adivinada aqui por substring) -- sin esto, una
-          // evidencia real pero de una categoria sin relacion (p.ej.
-          // totalCampaigns, categoria "other") podia "respaldar" una cifra
-          // de CPC totalmente inventada solo porque el numero coincidia
-          // (misattribution real, detectado en code review de la version
-          // anterior de este auditor).
-          if (catalogItem.category !== category.id) return false;
-          return catalogItem.value.includes(numberRaw) || numericCandidates(numberRaw).some((n) => String(n) === catalogItem.value);
-        });
-        if (!hasVerifiedEvidenceRef) {
-          violations.push(
-            `Afirmacion cuantitativa (${category.label}) "${match[0].trim()}" en "${claim.field}" no tiene ninguna evidenceRefs que apunte a una entrada del evidenceCatalog de esa MISMA categoria -- toda cifra de CPC/conversiones/ROAS/gasto/presupuesto necesita una entrada exacta del catalogo, referenciada explicitamente.`
-          );
-        }
+        violations.push(
+          claim.canCiteEvidence
+            ? `Afirmacion cuantitativa (${category.label}) "${match[0].trim()}" en "${claim.field}" no tiene ninguna evidenceRefs citada cuyo value coincida con esa cifra -- toda cifra de CPC/conversiones/ROAS/gasto/presupuesto necesita una entrada exacta del evidenceCatalog, referenciada explicitamente en evidenceRefs (para CPC/ROAS, ademas, esa entrada debe ser realmente de esa categoria -- hoy el catalogo solo tiene la entrada "not_available" para cada una).`
+            : `Afirmacion cuantitativa sin respaldo (${category.label}): "${match[0].trim()}" en "${claim.field}" -- ese numero no aparece en el evidenceCatalog del snapshot suministrado. Prohibido inventar CPC/conversiones/ROAS/gasto/presupuesto (para CPC/ROAS, hoy el catalogo solo tiene la entrada "not_available" -- ninguna cifra numerica de esas 2 categorias puede tener respaldo real todavia).`
+        );
       }
     }
   }
