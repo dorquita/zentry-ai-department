@@ -6,6 +6,14 @@ import { ContentStrategistOutput } from "../employees/content-strategist/output"
 import { AnalyticsSpecialistOutput } from "../employees/analytics-specialist/types";
 import { APPLY_STATUS_LABEL, DepartmentApplyStatus, DepartmentApplySummary, emptyApplyCounts } from "./apply/types";
 import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./employee-runs";
+import {
+  DepartmentHumanDecisionItem,
+  DepartmentHumanDecisionRecord,
+  HUMAN_DECISION_OUTCOME_LABEL,
+  selectApprovedWork,
+  selectNotApprovedWork,
+  summarizeHumanDecision,
+} from "./human-decisions";
 import { DepartmentPromotionResult } from "./promotion";
 import { attributeEvidenceRefToEmployees, LoadedSpecialistInputs } from "./specialist-inputs";
 import { DEPARTMENT_RUN_CONTRACT_VERSION, DepartmentQaStatus, DepartmentRunManifest, DepartmentStageRecord, DepartmentStageStatus } from "./types";
@@ -127,6 +135,12 @@ export interface DepartmentDailyBrief {
   externalWrites: string;
   /** Contrato de APPLY de esta pasada. `null` = no se llego a planificar. */
   apply: DailyBriefApplySection | null;
+  /**
+   * Decision humana registrada sobre una pasada ANTERIOR y lo que
+   * realmente paso con cada propuesta. `null` = no hay ninguna registrada,
+   * y el informe lo dice explicitamente en vez de omitir la seccion.
+   */
+  humanDecisions: DepartmentHumanDecisionRecord | null;
   /** Coste/observabilidad por empleado de esta pasada. `null` = sin registros utilizables. */
   cost: DepartmentRunCostSummary | null;
   note: string;
@@ -150,6 +164,8 @@ export interface DailyBriefInput {
   previousRun?: PreviousRunSnapshot | null;
   /** Contrato de APPLY ya planificado para esta pasada, si existe. */
   apply?: DepartmentApplySummary | null;
+  /** Decision humana sobre una pasada anterior, si hay alguna registrada. */
+  humanDecisions?: DepartmentHumanDecisionRecord | null;
   /** Registros de coste por empleado de esta pasada, si existen. */
   cost?: DepartmentRunCostSummary | null;
   now?: Date;
@@ -464,6 +480,7 @@ export function buildDepartmentDailyBrief(input: DailyBriefInput): DepartmentDai
         ? "staging (title/meta de paginas ya publicadas en staging, con snapshot y rollback) -- ver la seccion de APPLY"
         : "none",
     apply,
+    humanDecisions: input.humanDecisions ?? null,
     cost: input.cost ?? null,
     note: apply?.externalWritesPerformed ? BRIEF_NOTE_WITH_WRITES : BRIEF_NOTE_NO_WRITES,
   };
@@ -481,6 +498,101 @@ function renderSection(title: string, section: DailyBriefSection): string[] {
   lines.push("");
   for (const bullet of section.bullets) lines.push(`- ${bullet}`);
   lines.push("");
+  return lines;
+}
+
+/** Ficha completa de una propuesta ya decidida: propuesta original -> accion -> before/after -> validacion -> resultado. */
+function renderDecisionItem(item: DepartmentHumanDecisionItem): string[] {
+  const lines: string[] = [];
+  lines.push(`### Propuesta ${item.rank}. ${item.proposal}`);
+  lines.push("");
+  lines.push(`- **recommendationId:** \`${item.recommendationId}\` | **applyItemId:** \`${item.applyItemId}\``);
+  lines.push(`- **Propuesta original:** ${item.proposal}`);
+  lines.push(`- **Accion realizada:** ${item.actionTaken}`);
+  lines.push(
+    `- **Paginas/recursos afectados:** ${item.affectedResources.length === 0 ? "ninguno (no se toco ningun recurso)" : item.affectedResources.join(", ")}`
+  );
+  lines.push(`- **Before:** ${item.before}`);
+  lines.push(`- **After:** ${item.after}`);
+  lines.push(`- **Validation:** ${item.validation}`);
+  lines.push(`- **Rollback:** ${item.rollback}`);
+  lines.push(`- **Snapshot:** ${item.snapshotId ?? "ninguno (no hubo escritura que respaldar)"}`);
+  lines.push(`- **Escrituras:** staging ${item.stagingWrites} | produccion ${item.productionWrites}`);
+  lines.push(`- **Resultado final:** \`${item.outcome}\` -- **${HUMAN_DECISION_OUTCOME_LABEL[item.outcome]}**`);
+  lines.push(`- **Detalle:** ${item.outcomeDetail}`);
+  lines.push("");
+  return lines;
+}
+
+function renderCompletedWork(record: DepartmentHumanDecisionRecord | null): string[] {
+  const lines: string[] = [];
+  lines.push("## 2. TRABAJOS COMPLETADOS DESDE EL ULTIMO INFORME");
+  lines.push("");
+  if (!record) {
+    lines.push(
+      "_No hay ninguna decision humana registrada sobre una pasada anterior, asi que no se puede afirmar que se haya completado ningun trabajo desde el ultimo informe. No se ha inventado ningun avance._"
+    );
+    lines.push("");
+    return lines;
+  }
+
+  const totals = summarizeHumanDecision(record);
+  const approved = selectApprovedWork(record);
+  lines.push(
+    `Decision humana de **${record.decidedBy}** (${record.decidedAt}) sobre el Daily Brief de la pasada \`${record.sourceDepartmentRunId}\` (generado ${record.sourceBriefGeneratedAt}).`
+  );
+  lines.push("");
+  lines.push(`> **Alcance de la aprobacion:** ${record.scopeNote}`);
+  lines.push("");
+  lines.push(
+    `- **Aprobadas:** ${totals.approved} | **No aprobadas:** ${totals.notApproved}`
+  );
+  lines.push(
+    `- **Resultado de las aprobadas:** ${totals.applied} aplicada(s) y validada(s), ${totals.failed} fallida(s), ${totals.rolledBack} revertida(s) por rollback, ${totals.requiresManualImplementation} que requieren implementacion manual, ${totals.approvalStale} con aprobacion caducada.`
+  );
+  lines.push(`- **Escrituras reales derivadas de esta decision:** staging ${totals.stagingWrites} | produccion ${totals.productionWrites}.`);
+  lines.push("");
+
+  if (approved.length === 0) {
+    lines.push("_La decision registrada no aprobo ninguna propuesta._");
+    lines.push("");
+    return lines;
+  }
+
+  lines.push("| # | Propuesta | Resultado final | Staging | Produccion |");
+  lines.push("| --- | --- | --- | --- | --- |");
+  for (const item of approved) {
+    lines.push(
+      `| ${item.rank} | ${truncate(item.proposal, 90).replace(/\|/g, "\\|")} | **${HUMAN_DECISION_OUTCOME_LABEL[item.outcome]}** | ${item.stagingWrites} | ${item.productionWrites} |`
+    );
+  }
+  lines.push("");
+  for (const item of approved) lines.push(...renderDecisionItem(item));
+  return lines;
+}
+
+function renderNotExecutedByHumanDecision(record: DepartmentHumanDecisionRecord | null): string[] {
+  const lines: string[] = [];
+  lines.push("## 3. NO EJECUTADO POR DECISION HUMANA");
+  lines.push("");
+  if (!record) {
+    lines.push("_No hay ninguna decision humana registrada sobre una pasada anterior._");
+    lines.push("");
+    return lines;
+  }
+
+  const notApproved = selectNotApprovedWork(record);
+  if (notApproved.length === 0) {
+    lines.push("_La decision registrada no excluyo ninguna propuesta: todas las de esa pasada quedaron aprobadas._");
+    lines.push("");
+    return lines;
+  }
+
+  lines.push(
+    `${notApproved.length} propuesta(s) de la pasada \`${record.sourceDepartmentRunId}\` quedaron EXPRESAMENTE fuera por decision humana. No se aprobaron, no se ejecutaron y su estado original no se modifico.`
+  );
+  lines.push("");
+  for (const item of notApproved) lines.push(...renderDecisionItem(item));
   return lines;
 }
 
@@ -511,10 +623,13 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
   for (const item of brief.executiveSummary.changed) lines.push(`- ${item}`);
   lines.push("");
 
-  lines.push("## 2. TOP PRIORITIES");
+  lines.push(...renderCompletedWork(brief.humanDecisions));
+  lines.push(...renderNotExecutedByHumanDecision(brief.humanDecisions));
+
+  lines.push("## 4. TOP PRIORITIES");
   lines.push("");
   if (brief.topPriorities.length === 0) {
-    lines.push("_Ninguna prioridad del departamento en esta pasada. Ver la seccion 9 (BLOCKED / UNKNOWN) para el motivo exacto -- no se ha rellenado este hueco con recomendaciones genericas._");
+    lines.push("_Ninguna prioridad del departamento en esta pasada. Ver la seccion 11 (BLOCKED / UNKNOWN) para el motivo exacto -- no se ha rellenado este hueco con recomendaciones genericas._");
     lines.push("");
   }
   for (const priority of brief.topPriorities) {
@@ -530,7 +645,7 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
     }
     if (priority.dependsOn.length > 0) lines.push(`- **Depende de:** ${priority.dependsOn.join("; ")}`);
     lines.push(`- **Necesita aprobacion:** ${priority.approvalRequired ? "SI" : "no"}`);
-    lines.push(`- **Especificacion tecnica disponible:** ${priority.hasEngineeringSpec ? "si (ver seccion 8)" : "no"}`);
+    lines.push(`- **Especificacion tecnica disponible:** ${priority.hasEngineeringSpec ? "si (ver seccion 10)" : "no"}`);
     if (priority.evidence.length > 0) {
       lines.push(`- **Evidencia:**`);
       for (const evidence of priority.evidence) lines.push(`  - \`${evidence.ref}\` (${evidence.originEmployees.join(", ")}): ${evidence.description}`);
@@ -540,19 +655,19 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
     lines.push("");
   }
 
-  lines.push(...renderSection("3. SEO", brief.sections.seo));
-  lines.push(...renderSection("4. CONTENT", brief.sections.content));
-  lines.push(...renderSection("5. ANALYTICS", brief.sections.analytics));
-  lines.push(...renderSection("6. GROWTH DIRECTOR", brief.sections.growth));
-  lines.push(...renderSection("7. QA", brief.sections.qa));
-  lines.push(...renderSection("8. WEB ENGINEERING", brief.sections.webEngineering));
+  lines.push(...renderSection("5. SEO", brief.sections.seo));
+  lines.push(...renderSection("6. CONTENT", brief.sections.content));
+  lines.push(...renderSection("7. ANALYTICS", brief.sections.analytics));
+  lines.push(...renderSection("8. GROWTH DIRECTOR", brief.sections.growth));
+  lines.push(...renderSection("9. QA", brief.sections.qa));
+  lines.push(...renderSection("10. WEB ENGINEERING", brief.sections.webEngineering));
 
-  lines.push("## 9. BLOCKED / UNKNOWN");
+  lines.push("## 11. BLOCKED / UNKNOWN");
   lines.push("");
   for (const item of brief.blockedOrUnknown) lines.push(`- ${item}`);
   lines.push("");
 
-  lines.push("## 10. APPROVALS NEEDED");
+  lines.push("## 12. APPROVALS NEEDED");
   lines.push("");
   if (brief.approvalsNeeded.length === 0) {
     lines.push("_Ninguna decision pendiente en esta pasada._");
@@ -564,7 +679,7 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
   });
   lines.push("");
 
-  lines.push("## 11. APPLY (que puede ejecutarse de verdad)");
+  lines.push("## 13. APPLY (que puede ejecutarse de verdad)");
   lines.push("");
   if (!brief.apply) {
     lines.push("_Esta pasada no llego a construir el contrato de APPLY. Nada se ha aplicado._");
@@ -600,7 +715,7 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
     }
   }
 
-  lines.push("## 12. COSTE DE LA PASADA");
+  lines.push("## 14. COSTE DE LA PASADA");
   lines.push("");
   if (!brief.cost || brief.cost.runs.length === 0) {
     lines.push("_No hay registros de ejecucion de Claude utilizables en esta pasada: el coste no se reporta y no se estima ninguna cifra._");
@@ -649,6 +764,12 @@ export function renderDepartmentStepSummary(brief: DepartmentDailyBrief): string
     const c = brief.apply.counts;
     lines.push(
       `- **APPLY:** ${c.staging_applied} STAGING READY, ${c.awaiting_approval} AWAITING APPROVAL, ${c.approved} APPROVED, ${c.rejected} REJECTED, ${c.production_applied} PRODUCTION APPLIED, ${c.requires_manual_staging_implementation} REQUIRES MANUAL STAGING IMPLEMENTATION, ${c.blocked} BLOCKED`
+    );
+  }
+  if (brief.humanDecisions) {
+    const totals = summarizeHumanDecision(brief.humanDecisions);
+    lines.push(
+      `- **Decision humana previa (\`${brief.humanDecisions.sourceDepartmentRunId}\`):** ${totals.approved} aprobada(s) / ${totals.notApproved} NO aprobada(s); ${totals.applied} aplicada(s), ${totals.requiresManualImplementation} requieren implementacion manual; escrituras staging ${totals.stagingWrites}, produccion ${totals.productionWrites}`
     );
   }
   if (brief.cost) {

@@ -55,6 +55,7 @@ import { runQaReviewerRunnerTests } from "../test/qa-reviewer-runner.test";
 import { runDepartmentPromotionTests } from "../test/department-promotion.test";
 import { runDepartmentSpecialistInputsTests } from "../test/department-specialist-inputs.test";
 import { runDepartmentDailyBriefTests } from "../test/department-daily-brief.test";
+import { runDepartmentHumanDecisionsTests } from "../test/department-human-decisions.test";
 import { runDepartmentCoordinationSafetyTests } from "../test/department-coordination-safety.test";
 import { runDepartmentApplyApprovalTests } from "../test/department-apply-approval.test";
 import { runDepartmentApplyStateMachineTests } from "../test/department-apply-state-machine.test";
@@ -131,6 +132,7 @@ async function main(): Promise<void> {
     { suiteName: "department-promotion", cases: runDepartmentPromotionTests() },
     { suiteName: "department-specialist-inputs", cases: runDepartmentSpecialistInputsTests() },
     { suiteName: "department-daily-brief", cases: runDepartmentDailyBriefTests() },
+    { suiteName: "department-human-decisions", cases: runDepartmentHumanDecisionsTests() },
     { suiteName: "department-coordination-safety", cases: runDepartmentCoordinationSafetyTests() },
     { suiteName: "department-employee-runs", cases: runDepartmentEmployeeRunsTests() },
     { suiteName: "department-apply-approval", cases: runDepartmentApplyApprovalTests() },

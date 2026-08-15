@@ -53,6 +53,7 @@ function brief(overrides: Partial<DepartmentDailyBrief> = {}): DepartmentDailyBr
     departmentQaStatus: "PASS",
     externalWrites: "none",
     apply: null,
+    humanDecisions: null,
     cost: null,
     note: "nota de seguridad",
     ...overrides,
@@ -135,14 +136,16 @@ export function runDepartmentBriefEmailTests(): TestCase[] {
         const { text } = buildDailyBriefEmail({ brief: brief(), apply: applySummary(), cost: COST, runUrl: "https://github.com/x/y/actions/runs/1" });
         for (const section of [
           "1. RESUMEN EJECUTIVO",
-          "2. TOP PRIORITIES",
-          "3. APPROVALS NEEDED",
-          "4. ESTADO DE APPLY",
-          "5. BLOCKED / UNKNOWN",
-          "6. ESTADO DEL DEPARTAMENTO",
-          "7. COSTE DE LA PASADA",
-          "8. RUN DE GITHUB",
-          "9. SEGURIDAD",
+          "2. TRABAJOS COMPLETADOS DESDE EL ULTIMO INFORME",
+          "3. NO EJECUTADO POR DECISION HUMANA",
+          "4. TOP PRIORITIES",
+          "5. APPROVALS NEEDED",
+          "6. ESTADO DE APPLY",
+          "7. BLOCKED / UNKNOWN",
+          "8. ESTADO DEL DEPARTAMENTO",
+          "9. COSTE DE LA PASADA",
+          "10. RUN DE GITHUB",
+          "11. SEGURIDAD",
         ]) {
           assert.ok(text.includes(section), `falta la seccion "${section}"`);
         }

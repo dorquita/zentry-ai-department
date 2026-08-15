@@ -250,7 +250,7 @@ export function runDepartmentDailyBriefTests(): TestCase[] {
       },
     },
     {
-      name: "El markdown contiene las 10 secciones pedidas, en orden, y el resumen de Step Summary es coherente",
+      name: "El markdown contiene las 12 secciones pedidas, en orden, y el resumen de Step Summary es coherente",
       fn: () => {
         const brief = buildDepartmentDailyBrief(briefInput());
         const markdown = renderDepartmentDailyBriefMarkdown(brief);
@@ -258,15 +258,17 @@ export function runDepartmentDailyBriefTests(): TestCase[] {
         const expectedSections = [
           "# ZENTRY AI DEPARTMENT -- DAILY BRIEF",
           "## 1. RESUMEN EJECUTIVO",
-          "## 2. TOP PRIORITIES",
-          "## 3. SEO",
-          "## 4. CONTENT",
-          "## 5. ANALYTICS",
-          "## 6. GROWTH DIRECTOR",
-          "## 7. QA",
-          "## 8. WEB ENGINEERING",
-          "## 9. BLOCKED / UNKNOWN",
-          "## 10. APPROVALS NEEDED",
+          "## 2. TRABAJOS COMPLETADOS DESDE EL ULTIMO INFORME",
+          "## 3. NO EJECUTADO POR DECISION HUMANA",
+          "## 4. TOP PRIORITIES",
+          "## 5. SEO",
+          "## 6. CONTENT",
+          "## 7. ANALYTICS",
+          "## 8. GROWTH DIRECTOR",
+          "## 9. QA",
+          "## 10. WEB ENGINEERING",
+          "## 11. BLOCKED / UNKNOWN",
+          "## 12. APPROVALS NEEDED",
         ];
         let cursor = -1;
         for (const section of expectedSections) {

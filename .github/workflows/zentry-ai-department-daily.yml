@@ -59,7 +59,23 @@ name: Zentry AI Department -- Daily Brief (coordinacion real)
 on:
   schedule:
     - cron: "0 7 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      # Pasada SUPERVISADA: analiza, planifica el contrato de apply,
+      # genera el Daily Brief y lo envia, pero NO ejecuta nada de lo que
+      # descubra en esta misma pasada. Existe para el caso real de "quiero
+      # el informe del estado de HOY sin que el departamento aproveche
+      # para aplicar recomendaciones nuevas que nadie ha mirado todavia".
+      # El valor por defecto es el comportamiento normal, asi que la
+      # pasada programada no cambia.
+      applyMode:
+        description: "full = analizar + aplicar en staging + pedir aprobacion. plan-only = solo analizar y planificar (no escribe en ningun sistema)."
+        required: false
+        default: full
+        type: choice
+        options:
+          - full
+          - plan-only
 
 # Una sola pasada coordinada a la vez: dos pasadas simultaneas podrian
 # leer/escribir a la vez sobre los mismos registros del departamento.
@@ -699,7 +715,7 @@ jobs:
       - name: "[APPLY] Aplicar en STAGING (snapshot, validacion y rollback verificado)"
         id: apply_stage
         continue-on-error: true
-        if: always()
+        if: always() && inputs.applyMode != 'plan-only'
         run: |
           set -o pipefail
           npm run department:apply -- --phase stage --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-stage.log
@@ -727,7 +743,7 @@ jobs:
       - name: "[APPLY] Crear aprobacion persistente y enviar Telegram"
         id: apply_notify
         continue-on-error: true
-        if: always()
+        if: always() && inputs.applyMode != 'plan-only'
         run: |
           set -o pipefail
           npm run department:apply -- --phase notify --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-notify.log
@@ -815,12 +831,14 @@ jobs:
             echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             echo "- **Escrituras en sistemas de contenido:** STAGING unicamente (reversible, con snapshot y validacion). PRODUCCION no se toca desde este workflow: eso solo ocurre en department-production-apply.yml, tras una aprobacion humana explicita (ver docs/serverless-approvals.md)."
             echo "- **Email del Daily Brief:** resultado del step [EMAIL] = \`${EMAIL_OUTCOME}\` (si falta configuracion, no se envia nada y el log dice que NOMBRES de variables faltan)."
+            echo "- **Modo de APPLY de esta pasada:** \`${APPLY_MODE:-full}\`$([ "$APPLY_MODE" = "plan-only" ] && echo " -- pasada SUPERVISADA: se ha analizado y planificado, pero NO se ha aplicado nada ni se ha pedido ninguna aprobacion" || true)."
             echo "- **SEM:** pendiente / fuera de esta fase por decision explicita."
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           STEP_SUMMARY_PATH: ${{ steps.brief.outputs.stepSummaryPath }}
           EMAIL_OUTCOME: ${{ steps.email.outcome }}
+          APPLY_MODE: ${{ inputs.applyMode }}
 
       # Volcado al LOG del propio run: manifiesto + puerta + Daily Brief
       # completo, mas el diagnostico real de cada invocacion de Claude

@@ -1,6 +1,14 @@
 import { APPLY_STATUS_LABEL, APPLY_STATUS_REPORT_ORDER, DepartmentApplyItem, DepartmentApplyStatus, DepartmentApplySummary } from "./apply/types";
 import { DepartmentDailyBrief } from "./daily-brief";
 import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./employee-runs";
+import {
+  DepartmentHumanDecisionItem,
+  DepartmentHumanDecisionRecord,
+  HUMAN_DECISION_OUTCOME_LABEL,
+  selectApprovedWork,
+  selectNotApprovedWork,
+  summarizeHumanDecision,
+} from "./human-decisions";
 
 /**
  * EMAIL del Daily Brief -- version para un DIRECTOR, no un volcado
@@ -140,6 +148,60 @@ function departmentStatusRows(brief: DepartmentDailyBrief): { employee: string; 
   ];
 }
 
+/**
+ * Ficha de una propuesta ya decidida, en el orden que pidio el director:
+ * propuesta original -> accion realizada -> recursos -> before -> after ->
+ * validation -> resultado final. Se usa igual para las aprobadas y para
+ * las excluidas, para que no haya dos formatos que comparar.
+ */
+function decisionItemLines(item: DepartmentHumanDecisionItem): string[] {
+  return [
+    `Propuesta ${item.rank}: ${item.proposal}`,
+    `   recommendationId: ${item.recommendationId} | applyItemId: ${item.applyItemId}`,
+    `   Accion realizada: ${item.actionTaken}`,
+    `   Paginas/recursos afectados: ${item.affectedResources.length === 0 ? "ninguno (no se toco ningun recurso)" : item.affectedResources.join(", ")}`,
+    `   Before: ${item.before}`,
+    `   After: ${item.after}`,
+    `   Validation: ${item.validation}`,
+    `   Rollback: ${item.rollback} | Snapshot: ${item.snapshotId ?? "ninguno"}`,
+    `   Escrituras: staging ${item.stagingWrites} | produccion ${item.productionWrites}`,
+    `   RESULTADO FINAL: ${HUMAN_DECISION_OUTCOME_LABEL[item.outcome]} (${item.outcome})`,
+    `   Detalle: ${item.outcomeDetail}`,
+    "",
+  ];
+}
+
+function decisionHeaderLines(record: DepartmentHumanDecisionRecord): string[] {
+  const totals = summarizeHumanDecision(record);
+  return [
+    `Decision humana de ${record.decidedBy} (${record.decidedAt}) sobre el Daily Brief de la pasada ${record.sourceDepartmentRunId}, generado ${record.sourceBriefGeneratedAt}.`,
+    `Alcance: ${record.scopeNote}`,
+    `Aprobadas: ${totals.approved} | No aprobadas: ${totals.notApproved}.`,
+    `Resultado de las aprobadas: ${totals.applied} aplicada(s) y validada(s), ${totals.failed} fallida(s), ${totals.rolledBack} revertida(s), ${totals.requiresManualImplementation} que requieren implementacion manual, ${totals.approvalStale} con aprobacion caducada.`,
+    `Escrituras reales derivadas de esta decision: staging ${totals.stagingWrites} | produccion ${totals.productionWrites}.`,
+    "",
+  ];
+}
+
+function htmlDecisionItem(item: DepartmentHumanDecisionItem, accent: string): string {
+  const row = (label: string, value: string): string =>
+    `<p style="margin:6px 0;color:#33415c;"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`;
+  return `
+    <div style="border:1px solid #d8dce3;border-left:4px solid ${accent};border-radius:6px;padding:14px 16px;margin:0 0 14px;">
+      <div style="font-weight:600;font-size:15px;color:#0b1b33;">Propuesta ${item.rank}. ${escapeHtml(item.proposal)}</div>
+      <p style="margin:6px 0;color:#54617a;font-size:13px;"><code>${escapeHtml(item.recommendationId)}</code> &nbsp;|&nbsp; <code>${escapeHtml(item.applyItemId)}</code></p>
+      ${row("Accion realizada", item.actionTaken)}
+      ${row("Paginas/recursos afectados", item.affectedResources.length === 0 ? "ninguno (no se toco ningun recurso)" : item.affectedResources.join(", "))}
+      ${row("Before", item.before)}
+      ${row("After", item.after)}
+      ${row("Validation", item.validation)}
+      ${row("Rollback", `${item.rollback} | Snapshot: ${item.snapshotId ?? "ninguno"}`)}
+      ${row("Escrituras", `staging ${item.stagingWrites} | produccion ${item.productionWrites}`)}
+      <p style="margin:8px 0 0;"><strong>Resultado final:</strong> <span style="color:${accent};font-weight:700;">${escapeHtml(HUMAN_DECISION_OUTCOME_LABEL[item.outcome])}</span></p>
+      <p style="margin:6px 0 0;color:#33415c;">${escapeHtml(item.outcomeDetail)}</p>
+    </div>`;
+}
+
 function costLines(cost: DepartmentRunCostSummary | null): string[] {
   if (!cost || cost.runs.length === 0) {
     return ["Coste de Claude en esta pasada: no reportado (no hay registros de ejecucion utilizables). No se ha estimado ninguna cifra."];
@@ -172,7 +234,45 @@ export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
   for (const line of buildExecutiveLines(input)) lines.push(`- ${line}`);
   lines.push("");
 
-  lines.push("2. TOP PRIORITIES");
+  const decisions = brief.humanDecisions;
+
+  lines.push("2. TRABAJOS COMPLETADOS DESDE EL ULTIMO INFORME");
+  lines.push("");
+  if (!decisions) {
+    lines.push(
+      "No hay ninguna decision humana registrada sobre una pasada anterior: no se puede afirmar que se haya completado ningun trabajo desde el ultimo informe, y no se ha inventado ninguno."
+    );
+    lines.push("");
+  } else {
+    for (const line of decisionHeaderLines(decisions)) lines.push(line);
+    const approved = selectApprovedWork(decisions);
+    if (approved.length === 0) {
+      lines.push("La decision registrada no aprobo ninguna propuesta.");
+      lines.push("");
+    }
+    for (const item of approved) for (const line of decisionItemLines(item)) lines.push(line);
+  }
+
+  lines.push("3. NO EJECUTADO POR DECISION HUMANA");
+  lines.push("");
+  if (!decisions) {
+    lines.push("No hay ninguna decision humana registrada sobre una pasada anterior.");
+    lines.push("");
+  } else {
+    const notApproved = selectNotApprovedWork(decisions);
+    if (notApproved.length === 0) {
+      lines.push("La decision registrada no excluyo ninguna propuesta.");
+      lines.push("");
+    } else {
+      lines.push(
+        `${notApproved.length} propuesta(s) de la pasada ${decisions.sourceDepartmentRunId} quedaron EXPRESAMENTE fuera por decision humana: no se aprobaron, no se ejecutaron y su estado original no se modifico.`
+      );
+      lines.push("");
+      for (const item of notApproved) for (const line of decisionItemLines(item)) lines.push(line);
+    }
+  }
+
+  lines.push("4. TOP PRIORITIES");
   lines.push("");
   if (priorities.length === 0) {
     lines.push("Ninguna prioridad del departamento en esta pasada. Ver la seccion BLOCKED / UNKNOWN para el motivo exacto.");
@@ -196,7 +296,7 @@ export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
     lines.push("");
   }
 
-  lines.push("3. APPROVALS NEEDED");
+  lines.push("5. APPROVALS NEEDED");
   lines.push("");
   if (brief.approvalsNeeded.length === 0) {
     lines.push("Ninguna decision pendiente en esta pasada.");
@@ -211,7 +311,7 @@ export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
   }
 
   if (apply) {
-    lines.push("4. ESTADO DE APPLY");
+    lines.push("6. ESTADO DE APPLY");
     lines.push("");
     for (const { status, label } of APPLY_SECTION_LABELS) {
       const items = apply.items.filter((item) => item.applyStatus === status);
@@ -235,28 +335,28 @@ export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
     }
   }
 
-  lines.push("5. BLOCKED / UNKNOWN");
+  lines.push("7. BLOCKED / UNKNOWN");
   lines.push("");
   for (const item of brief.blockedOrUnknown.slice(0, 12)) lines.push(`- ${shorten(item, 300)}`);
   if (brief.blockedOrUnknown.length > 12) lines.push(`- (${brief.blockedOrUnknown.length - 12} entrada(s) mas en el informe completo del run.)`);
   lines.push("");
 
-  lines.push("6. ESTADO DEL DEPARTAMENTO");
+  lines.push("8. ESTADO DEL DEPARTAMENTO");
   lines.push("");
   for (const row of departmentStatusRows(brief)) lines.push(`- ${row.employee}: ${row.status}`);
   lines.push("");
 
-  lines.push("7. COSTE DE LA PASADA");
+  lines.push("9. COSTE DE LA PASADA");
   lines.push("");
   for (const line of costLines(input.cost)) lines.push(line);
   lines.push("");
 
-  lines.push("8. RUN DE GITHUB");
+  lines.push("10. RUN DE GITHUB");
   lines.push("");
   lines.push(input.runUrl ? input.runUrl : "(esta pasada no se ejecuto desde GitHub Actions: no hay URL de run)");
   lines.push("");
 
-  lines.push("9. SEGURIDAD");
+  lines.push("11. SEGURIDAD");
   lines.push("");
   lines.push(SAFETY_MESSAGE);
   lines.push("");
@@ -340,32 +440,56 @@ export function renderDailyBriefEmailHtml(input: DailyBriefEmailInput): string {
     )
     .join("");
 
+  const decisions = brief.humanDecisions;
+  const completedWorkHtml = !decisions
+    ? '<p style="margin:0;color:#54617a;">No hay ninguna decision humana registrada sobre una pasada anterior: no se puede afirmar que se haya completado ningun trabajo desde el ultimo informe, y no se ha inventado ninguno.</p>'
+    : htmlList(decisionHeaderLines(decisions).filter((line) => line.length > 0)) +
+      (selectApprovedWork(decisions).length === 0
+        ? '<p style="margin:0;color:#54617a;">La decision registrada no aprobo ninguna propuesta.</p>'
+        : selectApprovedWork(decisions)
+            .map((item) => htmlDecisionItem(item, item.outcome === "applied" ? "#1b6b3a" : item.outcome === "failed" ? "#b3261e" : "#8a6100"))
+            .join(""));
+
+  const notExecutedHtml = !decisions
+    ? '<p style="margin:0;color:#54617a;">No hay ninguna decision humana registrada sobre una pasada anterior.</p>'
+    : selectNotApprovedWork(decisions).length === 0
+      ? '<p style="margin:0;color:#54617a;">La decision registrada no excluyo ninguna propuesta.</p>'
+      : `<p style="margin:0 0 12px;color:#33415c;">${escapeHtml(
+          `${selectNotApprovedWork(decisions).length} propuesta(s) de la pasada ${decisions.sourceDepartmentRunId} quedaron EXPRESAMENTE fuera por decision humana: no se aprobaron, no se ejecutaron y su estado original no se modifico.`
+        )}</p>${selectNotApprovedWork(decisions)
+          .map((item) => htmlDecisionItem(item, "#54617a"))
+          .join("")}`;
+
   return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;color:#33415c;max-width:760px;margin:0 auto;padding:24px;">
   <h1 style="font-size:20px;margin:0 0 4px;color:#0b1b33;">Zentry AI Department &mdash; Daily Brief</h1>
   <p style="margin:0 0 20px;color:#54617a;font-size:13px;">Pasada <code>${escapeHtml(brief.departmentRunId)}</code> &nbsp;|&nbsp; generado ${escapeHtml(brief.generatedAt)} &nbsp;|&nbsp; QA del departamento: <strong>${escapeHtml(brief.departmentQaStatus)}</strong></p>
 
   ${htmlSection("1. Resumen ejecutivo", htmlList(buildExecutiveLines(input)))}
 
+  ${htmlSection("2. Trabajos completados desde el ultimo informe", completedWorkHtml)}
+
+  ${htmlSection("3. No ejecutado por decision humana", notExecutedHtml)}
+
   ${htmlSection(
-    "2. Top priorities",
+    "4. Top priorities",
     priorities.length === 0
       ? '<p style="margin:0;color:#54617a;">Ninguna prioridad del departamento en esta pasada. Ver BLOCKED / UNKNOWN para el motivo exacto.</p>'
       : priorities.map((priority) => htmlPriority(priority, priorityApplyItem(apply, priority.rank))).join("") +
           (omitted > 0 ? `<p style="margin:0;color:#54617a;">${omitted} prioridad(es) adicional(es) quedan fuera de este email para mantenerlo accionable; estan completas en el informe del run.</p>` : "")
   )}
 
-  ${htmlSection("3. Approvals needed", approvals)}
+  ${htmlSection("5. Approvals needed", approvals)}
 
-  ${htmlSection("4. Estado de APPLY", applyHtml)}
+  ${htmlSection("6. Estado de APPLY", applyHtml)}
 
-  ${htmlSection("5. Blocked / unknown", htmlList(brief.blockedOrUnknown.slice(0, 12).map((i) => shorten(i, 300))))}
+  ${htmlSection("7. Blocked / unknown", htmlList(brief.blockedOrUnknown.slice(0, 12).map((i) => shorten(i, 300))))}
 
-  ${htmlSection("6. Estado del departamento", `<table style="border-collapse:collapse;width:100%;">${statusRows}</table>`)}
+  ${htmlSection("8. Estado del departamento", `<table style="border-collapse:collapse;width:100%;">${statusRows}</table>`)}
 
-  ${htmlSection("7. Coste de la pasada", htmlList(costLines(input.cost)))}
+  ${htmlSection("9. Coste de la pasada", htmlList(costLines(input.cost)))}
 
   ${htmlSection(
-    "8. Run de GitHub",
+    "10. Run de GitHub",
     input.runUrl
       ? `<p style="margin:0;"><a href="${escapeHtml(input.runUrl)}" style="color:#1a4fbf;">${escapeHtml(input.runUrl)}</a></p>`
       : '<p style="margin:0;color:#54617a;">Esta pasada no se ejecuto desde GitHub Actions: no hay URL de run.</p>'

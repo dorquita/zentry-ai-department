@@ -154,16 +154,18 @@ UNKNOWN del brief para lectura humana.
 
 Ensamblado **determinista**, sin ninguna llamada extra a un modelo y sin
 ninguna metrica inventada (todo numero del informe es un conteo de
-elementos realmente producidos en la pasada). Diez secciones:
+elementos realmente producidos en la pasada). Doce secciones:
 
 1. Resumen ejecutivo (que hemos descubierto / que merece atencion / que
    ha cambiado)
-2. Top priorities -- con accion, motivo, impacto, confianza, esfuerzo,
+2. Trabajos completados desde el ultimo informe
+3. No ejecutado por decision humana
+4. Top priorities -- con accion, motivo, impacto, confianza, esfuerzo,
    evidencia, agente de origen, QA status y "necesita aprobacion"
-3. SEO - 4. Content - 5. Analytics - 6. Growth Director - 7. QA -
-   8. Web Engineering
-9. BLOCKED / UNKNOWN (incluye siempre `SEM: pendiente`)
-10. Approvals needed
+5. SEO - 6. Content - 7. Analytics - 8. Growth Director - 9. QA -
+   10. Web Engineering
+11. BLOCKED / UNKNOWN (incluye siempre `SEM: pendiente`)
+12. Approvals needed
 
 **Trazabilidad:** cada prioridad lleva sus `evidenceRefs` ya resueltas a
 la descripcion real y al empleado del que salen
@@ -175,6 +177,28 @@ ocultarla.
 checkout si existe; si no existe, lo dice explicitamente en vez de
 inventar una comparativa.
 
+### Trabajos completados / no ejecutado por decision humana
+
+El directorio de una pasada es EFIMERO (no se commitea, el artifact
+caduca), asi que la decision de Pau sobre unas propuestas concretas no
+puede vivir ahi: vive en el repositorio, en
+`data/department-human-decisions/<departmentRunId>.json`, con el contrato
+`department-human-decision/v1` (`src/department/human-decisions.ts`).
+
+Cada elemento registra, por propuesta: identificadores reales
+(`recommendationId` / `applyItemId`), la propuesta original, si se
+aprobo, la accion realizada, los recursos afectados, before, after,
+validation, rollback, snapshot, los conteos REALES de escrituras en
+staging y produccion, y el resultado final. El brief del dia siguiente
+lee el registro mas reciente que no sea el suyo y publica las aprobadas
+en la seccion 2 y las excluidas en la seccion 3.
+
+Guardas del contrato, fail-closed: cualquier campo ausente invalida el
+registro entero (nada se rellena por defecto), y una propuesta con
+`decision: "not_approved"` que declare escrituras en produccion se
+rechaza por contradictoria. Si no hay ningun registro, el informe lo dice
+explicitamente en vez de omitir las secciones o insinuar avances.
+
 ## Ejecutar
 
 Solo `workflow_dispatch`:
@@ -182,6 +206,16 @@ Solo `workflow_dispatch`:
 ```
 Actions -> "Zentry AI Department -- Daily Brief (coordinacion real)" -> Run workflow
 ```
+
+El dispatch acepta `applyMode`:
+
+- `full` (por defecto, y lo que usa la pasada programada): analiza,
+  aplica en staging lo que tenga executor y pide la aprobacion.
+- `plan-only`: pasada SUPERVISADA. Analiza, planifica el contrato de
+  apply, genera el Daily Brief y lo envia, pero no escribe en ningun
+  sistema ni crea ninguna solicitud de aprobacion. Es el modo para
+  "quiero el informe del estado de hoy sin que el departamento aproveche
+  para ejecutar recomendaciones nuevas que nadie ha revisado".
 
 En local (sin Claude, util para inspeccionar contextos y prompts):
 

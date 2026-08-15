@@ -40,6 +40,7 @@ import { auditWebEngineerOutputForUnconfirmedCapabilities, validateWebEngineerOu
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
 import { readApplySummary } from "../src/department/apply/store";
 import { buildDepartmentDailyBrief, DepartmentDailyBrief, PreviousRunSnapshot, renderDepartmentDailyBriefMarkdown, renderDepartmentStepSummary } from "../src/department/daily-brief";
+import { DepartmentHumanDecisionRecord, readLatestDepartmentHumanDecisionRecord } from "../src/department/human-decisions";
 import { summarizeDepartmentRunCost } from "../src/department/employee-runs";
 import { buildDepartmentGrowthContext, buildDepartmentGrowthPrompt, DepartmentGrowthContext } from "../src/department/growth-input";
 import { buildDepartmentQaInputBundle } from "../src/department/qa-input";
@@ -536,6 +537,26 @@ function loadPreviousRunSnapshot(departmentRunId: string): PreviousRunSnapshot |
   }
 }
 
+/**
+ * La decision humana sobre una pasada anterior vive en el REPOSITORIO
+ * (`data/department-human-decisions/`), no en el directorio efimero del
+ * run: por eso sobrevive al runner que la produjo y el informe de hoy
+ * puede reportar honestamente que se hizo con lo aprobado ayer.
+ *
+ * Igual que APPLY y COSTE, es ADITIVA: si no se puede leer, el brief se
+ * genera igual y lo dice, en vez de fallar o inventarse un avance.
+ */
+function loadHumanDecisionRecord(departmentRunId: string): DepartmentHumanDecisionRecord | null {
+  try {
+    return readLatestDepartmentHumanDecisionRecord({ currentDepartmentRunId: departmentRunId });
+  } catch (err) {
+    console.error(
+      `[department] No se pudo leer el registro de decision humana (${err instanceof Error ? err.message : String(err)}). El brief se genera SIN la seccion de trabajos completados -- no se asume que no haya ninguna.`
+    );
+    return null;
+  }
+}
+
 function phaseBrief(args: Record<string, string>): DepartmentRunnerResultSummary {
   const departmentRunId = requireDepartmentRunId(args);
   const manifest = readManifest(departmentRunId);
@@ -586,6 +607,7 @@ function phaseBrief(args: Record<string, string>): DepartmentRunnerResultSummary
     promotion,
     previousRun: loadPreviousRunSnapshot(departmentRunId),
     apply: applySummary,
+    humanDecisions: loadHumanDecisionRecord(departmentRunId),
     cost: cost.runs.length > 0 ? cost : null,
   });
 
