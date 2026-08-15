@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zentrylockers.internal/schemas/seo-specialist-output.schema.json",
+  "title": "SeoSpecialistOutput",
+  "description": "Contrato de salida del subagente Claude seo-specialist, pasado a claude-code-action via --json-schema (ver .github/workflows/seo-specialist.yml). Debe reflejar EXACTAMENTE la interfaz TypeScript SeoSpecialistOutput en src/employees/seo-specialist/domain.ts -- cualquier cambio en esa interfaz debe reflejarse aqui en el mismo commit (ver test/seo-specialist-output-schema.test.ts). Deliberadamente draft-07 (no 2020-12): el SDK de Claude Agent rechaza schemas que declaren un draft mas nuevo. IMPORTANTE (evitar romper el workflow): este fichero se embebe tal cual dentro de un string shell entre comillas simples (--json-schema entrecomillado) en .github/workflows/seo-specialist.yml -- ningun valor de texto de este JSON (descripciones incluidas) debe contener el caracter apostrofe. Usa definitions/dollar-ref (no dollar-defs) y additionalProperties:false en todos los objetos porque son exactamente las features soportadas por src/core/json-schema-lite.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "executiveSummary": { "type": "string" },
+    "findings": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "opportunities": { "type": "array", "items": { "$ref": "#/definitions/opportunity" } },
+    "technicalIssues": { "type": "array", "items": { "$ref": "#/definitions/technicalIssue" } },
+    "contentGaps": { "type": "array", "items": { "$ref": "#/definitions/contentGap" } },
+    "internalLinkRecommendations": { "type": "array", "items": { "$ref": "#/definitions/internalLinkRecommendation" } },
+    "prioritizedActions": { "type": "array", "items": { "$ref": "#/definitions/prioritizedAction" } },
+    "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidenceItem" } },
+    "unknowns": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": [
+    "executiveSummary",
+    "findings",
+    "opportunities",
+    "technicalIssues",
+    "contentGaps",
+    "internalLinkRecommendations",
+    "prioritizedActions",
+    "evidence",
+    "unknowns"
+  ],
+  "definitions": {
+    "basis": {
+      "type": "string",
+      "enum": ["evidence", "inference"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "effortOrImpact": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "category": {
+          "type": "string",
+          "enum": ["technical", "content", "keyword_strategy", "structure", "search_intent", "internal_linking", "cannibalization", "other"]
+        },
+        "description": { "type": "string" },
+        "basis": { "$ref": "#/definitions/basis" },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "category", "description", "basis", "evidenceRefs"]
+    },
+    "opportunity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "keyword": { "type": "string" },
+        "page": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "enum": ["quick_win", "low_ctr", "position_drop", "content_gap", "internal_linking", "technical", "cannibalization", "future_opportunity"]
+        },
+        "priority": { "$ref": "#/definitions/priority" },
+        "recommendedAction": { "type": "string" },
+        "rationale": { "type": "string" },
+        "basis": { "$ref": "#/definitions/basis" },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "keyword", "kind", "priority", "recommendedAction", "rationale", "basis", "evidenceRefs"]
+    },
+    "technicalIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "page": { "type": "string" },
+        "issue": { "type": "string" },
+        "severity": { "$ref": "#/definitions/priority" },
+        "basis": { "$ref": "#/definitions/basis" },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "page", "issue", "severity", "basis", "evidenceRefs"]
+    },
+    "contentGap": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "topic": { "type": "string" },
+        "relatedKeyword": { "type": "string" },
+        "page": { "type": "string" },
+        "rationale": { "type": "string" },
+        "basis": { "$ref": "#/definitions/basis" },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "topic", "rationale", "basis", "evidenceRefs"]
+    },
+    "internalLinkRecommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "fromPage": { "type": "string" },
+        "toPage": { "type": "string" },
+        "anchorTextSuggestion": { "type": "string" },
+        "rationale": { "type": "string" },
+        "basis": { "$ref": "#/definitions/basis" },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "fromPage", "toPage", "anchorTextSuggestion", "rationale", "basis", "evidenceRefs"]
+    },
+    "prioritizedAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rank": { "type": "number" },
+        "title": { "type": "string" },
+        "relatedIds": { "type": "array", "items": { "type": "string" } },
+        "priority": { "$ref": "#/definitions/priority" },
+        "effort": { "$ref": "#/definitions/effortOrImpact" },
+        "impact": { "$ref": "#/definitions/effortOrImpact" }
+      },
+      "required": ["rank", "title", "relatedIds", "priority", "effort", "impact"]
+    },
+    "evidenceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "source": {
+          "type": "string",
+          "enum": ["job_data", "target_keyword_catalog", "cluster_catalog", "prior_report", "other"]
+        },
+        "keyword": { "type": "string" },
+        "page": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "source", "description"]
+    }
+  }
+}

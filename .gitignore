@@ -19,3 +19,11 @@ reports/ux-ui-landing-comparison/
 # background (isolation: "worktree") -- son checkouts de git reales, cada
 # uno con su propia rama, no contenido a versionar dentro de este repo.
 .claude/worktrees/
+
+# Salida generada por el runner del empleado seo-specialist (ver
+# docs/claude-employee-runtime.md, scripts/run-seo-specialist.ts). Datos
+# operativos de una ejecucion local (prompt + contexto SEO agregado +
+# respuesta del subagente) -- no se versionan. Para un ejemplo del
+# formato usado en tests, ver test/fixtures/seo-specialist-output-example.json
+# (fixture sanitizado, sin datos operativos reales).
+reports/seo-specialist/
