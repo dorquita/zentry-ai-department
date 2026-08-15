@@ -32,17 +32,20 @@ name: Zentry AI Department -- Daily Brief (coordinacion real)
 # - Sin MCP, sin bypassPermissions, sin `id-token: write`.
 # - sem-specialist queda FUERA de esta fase: se registra siempre como
 #   not_available (pendiente) y nunca bloquea la pasada.
-# - APPLY: desde la fase SERVERLESS, este workflow SI ejecuta el apply
-#   real en staging y SI envia la solicitud de aprobacion por Telegram.
-#   Lo que antes lo impedia era que el estado de una aprobacion no puede
-#   vivir en el filesystem EFIMERO del runner -- y eso ya no pasa: las
-#   aprobaciones se persisten en el datastore serverless (Cloudflare D1)
-#   a traves del Worker, que sobrevive al final de este workflow.
+# - APPLY: esta pasada NO escribe en ningun sistema externo. Solo
+#   PLANIFICA el contrato de apply (que recomendaciones tienen un executor
+#   determinista detras) y lo publica numerado en el Daily Brief.
 #
-#   El runner NO espera ninguna respuesta humana: crea la aprobacion,
-#   manda el Telegram y termina. Cuando Pau decida, el Worker disparara
-#   department-production-apply.yml, que es el unico sitio donde se
-#   escribe en produccion. Ver docs/serverless-approvals.md.
+#   La ejecucion es MANUAL y posterior: Pau lee el email, responde en
+#   Claude Code ("aprueba 1, 2 y 4; rechaza 3 porque..."), y solo entonces
+#   se aplica lo aprobado, con snapshot, validacion y rollback. Ver
+#   docs/manual-approval-flow.md.
+#
+#   Por tanto este workflow NO depende de Telegram, ni de Cloudflare, ni
+#   de D1, ni de APPROVALS_API_*. Si esos secretos no existen, la pasada
+#   diaria funciona exactamente igual y el email se envia igual. El carril
+#   serverless queda como opcion desactivada
+#   (SERVERLESS_APPROVALS_ENABLED=false, ver docs/serverless-approvals.md).
 # - EMAIL: se envia el Daily Brief a la direccion configurada en los
 #   secretos del repositorio. Si falta configuracion, no se envia nada y
 #   se reporta que NOMBRES de variables faltan (nunca sus valores).
@@ -682,64 +685,6 @@ jobs:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
 
       # =====================================================================
-      # FASE 4.6 -- APPLY REAL EN STAGING
-      #
-      # Aplica en STAGING los elementos con capacidad soportada: snapshot
-      # del estado previo, escritura, validacion releyendo, y rollback
-      # verificado si la validacion falla. Staging es el entorno de
-      # trabajo/revision y NO requiere aprobacion humana previa; produccion
-      # sigue intacta y no se toca desde aqui bajo ninguna circunstancia.
-      #
-      # Con los interruptores apagados este step no escribe nada y lo dice:
-      # es seguro que exista aunque el entorno no este configurado todavia.
-      #
-      # `continue-on-error`: un fallo aplicando en staging no puede impedir
-      # que el Daily Brief se genere y se envie.
-      # =====================================================================
-      - name: "[APPLY] Aplicar en STAGING (snapshot, validacion y rollback verificado)"
-        id: apply_stage
-        continue-on-error: true
-        if: always()
-        run: |
-          set -o pipefail
-          npm run department:apply -- --phase stage --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-stage.log
-        env:
-          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          DEPARTMENT_STAGING_APPLY_ENABLED: ${{ secrets.DEPARTMENT_STAGING_APPLY_ENABLED }}
-          WORDPRESS_DRAFTS_ENABLED: ${{ secrets.WORDPRESS_DRAFTS_ENABLED }}
-          WORDPRESS_BACKEND: ${{ secrets.WORDPRESS_BACKEND }}
-          WORDPRESS_ENV: ${{ secrets.WORDPRESS_ENV }}
-          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
-          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
-          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
-          APPROVALS_API_URL: ${{ secrets.APPROVALS_API_URL }}
-          APPROVALS_API_TOKEN: ${{ secrets.APPROVALS_API_TOKEN }}
-
-      # =====================================================================
-      # FASE 4.7 -- SOLICITUD DE APROBACION POR TELEGRAM
-      #
-      # Para cada cambio ya aplicado y VALIDADO en staging: crea la
-      # aprobacion en el datastore serverless (persistente, sobrevive a
-      # este runner) y envia el mensaje con los tres botones. El runner NO
-      # espera respuesta: termina aqui. La decision llegara por webhook al
-      # Worker, que disparara department-production-apply.yml.
-      # =====================================================================
-      - name: "[APPLY] Crear aprobacion persistente y enviar Telegram"
-        id: apply_notify
-        continue-on-error: true
-        if: always()
-        run: |
-          set -o pipefail
-          npm run department:apply -- --phase notify --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-notify.log
-        env:
-          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          APPROVALS_API_URL: ${{ secrets.APPROVALS_API_URL }}
-          APPROVALS_API_TOKEN: ${{ secrets.APPROVALS_API_TOKEN }}
-          TELEGRAM_APPROVALS_ENABLED: ${{ secrets.TELEGRAM_APPROVALS_ENABLED }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-
-      # =====================================================================
       # FASE 5 -- DAILY BRIEF (ensamblado determinista, sin Claude)
       # =====================================================================
       - name: "[COORD] Generar Daily Brief (JSON + Markdown + resumen)"
@@ -813,7 +758,7 @@ jobs:
           {
             echo ""
             echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "- **Escrituras en sistemas de contenido:** STAGING unicamente (reversible, con snapshot y validacion). PRODUCCION no se toca desde este workflow: eso solo ocurre en department-production-apply.yml, tras una aprobacion humana explicita (ver docs/serverless-approvals.md)."
+            echo "- **Escrituras en sistemas de contenido:** NINGUNA. Esta pasada solo analiza y propone. Lo que se aplique se decide despues, a mano, sobre el Daily Brief numerado (ver docs/manual-approval-flow.md)."
             echo "- **Email del Daily Brief:** resultado del step [EMAIL] = \`${EMAIL_OUTCOME}\` (si falta configuracion, no se envia nada y el log dice que NOMBRES de variables faltan)."
             echo "- **SEM:** pendiente / fuera de esta fase por decision explicita."
           } >> "$GITHUB_STEP_SUMMARY"
