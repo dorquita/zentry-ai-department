@@ -287,6 +287,16 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
   const guardCheck = checkStagingApplyGuards(guards);
   console.log(`Interruptores de staging: ${guardCheck.reason}`);
 
+  // Se comprueba ANTES del bucle a proposito: con los interruptores
+  // apagados no se crea ningun registro de cambio. En un checkout
+  // efimero (un runner de CI) crear registros generaria cambios que
+  // nadie podria continuar, porque desaparecen con el runner.
+  if (!guardCheck.allowed) {
+    syncSummary(departmentRunId, { externalWritesPerformed: false, applyNotAttemptedReason: guardCheck.reason });
+    console.log("No se ha creado ningun registro de cambio ni se ha escrito nada.");
+    return;
+  }
+
   const port = registryTransitionPort();
   const existing = findChangesByRunId(departmentRunId);
   let externalWrites = false;

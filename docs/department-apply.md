@@ -1,5 +1,22 @@
 # APPLY del departamento (EMAIL + SCHEDULE + APPLY)
 
+> **SUPERADO por la fase TELEGRAM APPROVAL SYSTEM + STAGING-FIRST APPLY.**
+> Este documento describe el contrato `department-apply/v1`, en el que un
+> elemento esperaba aprobacion humana ANTES de tocar nada y el unico
+> executor actuaba sobre BORRADORES de staging.
+>
+> Desde el contrato `department-apply/v2`, el flujo es staging-first:
+> staging se aplica automaticamente sobre paginas **ya publicadas**
+> (nunca borradores, para que el cambio se pueda revisar abriendo una URL
+> normal desde el movil) y la aprobacion humana gobierna exclusivamente
+> el paso a **produccion**. La regla dura no se relaja, cambia de sitio:
+>
+>     QA PASS != aprobado por Pau
+>     staging validado != aprobado por Pau
+>
+> Documento vigente: **[docs/telegram-approval-system.md](telegram-approval-system.md)**.
+> Lo que sigue se conserva como historico de la fase anterior.
+
 Fase en la que la pasada coordinada deja de ser solo READ / ANALYZE /
 PROPOSE y **puede** llegar a ejecutar un cambio real — con una cadena de
 condiciones que no se relaja en ningun punto.

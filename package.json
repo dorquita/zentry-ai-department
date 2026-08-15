@@ -97,6 +97,11 @@
     "department:run": "ts-node scripts/run-department-coordination.ts",
     "department:parse-runner-result-for-ci": "ts-node scripts/parse-department-runner-result-for-ci.ts",
     "department:apply": "ts-node scripts/run-department-apply.ts",
+    "department:apply:stage": "ts-node scripts/run-department-apply.ts --phase stage",
+    "department:apply:notify": "ts-node scripts/run-department-apply.ts --phase notify",
+    "department:apply:production": "ts-node scripts/run-department-apply.ts --phase production",
+    "department:apply:sync": "ts-node scripts/run-department-apply.ts --phase sync",
+    "department:changes:list": "ts-node scripts/list-department-changes.ts",
     "department:email": "ts-node scripts/send-department-daily-brief-email.ts",
     "claude-employee:record-execution-for-ci": "ts-node scripts/record-claude-employee-execution-for-ci.ts"
   },
