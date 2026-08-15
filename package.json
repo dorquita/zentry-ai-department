@@ -58,6 +58,8 @@
     "web-engineer:run": "ts-node scripts/run-web-engineer.ts",
     "web-engineer:parse-runner-result-for-ci": "ts-node scripts/parse-web-engineer-runner-result-for-ci.ts",
     "web-engineer:print-capability-warnings-for-ci": "ts-node scripts/print-web-engineer-capability-warnings-for-ci.ts",
+    "qa-reviewer:run": "ts-node scripts/run-qa-reviewer.ts",
+    "qa-reviewer:parse-runner-result-for-ci": "ts-node scripts/parse-qa-reviewer-runner-result-for-ci.ts",
     "assets:send-test": "ts-node scripts/send-test-asset-request.ts",
     "assets:upload-to-wordpress": "ts-node scripts/upload-asset-to-wordpress.ts",
     "assets:associate-product": "ts-node scripts/associate-product-image.ts",

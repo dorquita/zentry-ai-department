@@ -48,6 +48,10 @@ import { runWebEngineerValidatorTests } from "../test/web-engineer-validator.tes
 import { runWebEngineerContextTests } from "../test/web-engineer-context.test";
 import { runWebEngineerChangePackSelectionTests } from "../test/web-engineer-change-pack-selection.test";
 import { runWebEngineerRunnerResultTests } from "../test/web-engineer-runner-result.test";
+import { runQaReviewerOutputTests } from "../test/qa-reviewer-output.test";
+import { runQaReviewerOutputSchemaTests } from "../test/qa-reviewer-output-schema.test";
+import { runQaReviewerContextTests } from "../test/qa-reviewer-context.test";
+import { runQaReviewerRunnerTests } from "../test/qa-reviewer-runner.test";
 
 interface TestCase {
   name: string;
@@ -97,6 +101,10 @@ function main(): void {
     { suiteName: "web-engineer-context", cases: runWebEngineerContextTests() },
     { suiteName: "web-engineer-change-pack-selection", cases: runWebEngineerChangePackSelectionTests() },
     { suiteName: "web-engineer-runner-result", cases: runWebEngineerRunnerResultTests() },
+    { suiteName: "qa-reviewer-output", cases: runQaReviewerOutputTests() },
+    { suiteName: "qa-reviewer-output-schema", cases: runQaReviewerOutputSchemaTests() },
+    { suiteName: "qa-reviewer-context", cases: runQaReviewerContextTests() },
+    { suiteName: "qa-reviewer-runner", cases: runQaReviewerRunnerTests() },
   ];
 
   let passed = 0;

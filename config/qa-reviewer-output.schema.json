@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zentrylockers.internal/schemas/qa-reviewer-output.schema.json",
+  "title": "QaReviewerOutput",
+  "description": "Contrato de salida del subagente Claude qa-reviewer, pasado a claude-code-action via --json-schema (ver .github/workflows/qa-reviewer.yml). Debe reflejar EXACTAMENTE la interfaz TypeScript QaReviewerOutput en src/employees/qa-reviewer/output.ts -- cualquier cambio en esa interfaz debe reflejarse aqui en el mismo commit (ver test/qa-reviewer-output-schema.test.ts). Draft-07 (no 2020-12): el SDK de Claude Agent rechaza schemas que declaren un draft mas nuevo. IMPORTANTE (evitar romper el workflow): este fichero se embebe tal cual dentro de un string shell entre comillas simples (--json-schema entrecomillado) en .github/workflows/qa-reviewer.yml -- ningun valor de texto de este JSON no debe contener el caracter apostrofe. Usa definitions/$ref (no $defs) y additionalProperties:false en todos los objetos.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "reviewStatus": {
+      "type": "string",
+      "description": "Veredicto global de la revision. fail solo si hay al menos un finding critical o un safetyConcern real.",
+      "enum": ["pass", "pass_with_warnings", "fail"]
+    },
+    "reviewedArtifact": { "$ref": "#/definitions/reviewedArtifactRef" },
+    "findings": {
+      "type": "array",
+      "description": "Lista de observaciones concretas de calidad sobre el artifact revisado, cada una con categoria y severidad.",
+      "items": { "$ref": "#/definitions/finding" }
+    },
+    "unsupportedClaims": {
+      "type": "array",
+      "description": "Afirmaciones del artifact revisado que no vienen respaldadas por evidencia dentro del propio artifact.",
+      "items": { "type": "string" }
+    },
+    "contradictions": {
+      "type": "array",
+      "description": "Contradicciones internas detectadas dentro del propio artifact revisado.",
+      "items": { "type": "string" }
+    },
+    "safetyConcerns": {
+      "type": "array",
+      "description": "Acciones propuestas en el artifact revisado que serian inseguras de aplicar tal cual (p.ej. escritura externa sin aprobacion, dato sensible sin confirmar).",
+      "items": { "type": "string" }
+    },
+    "requiredCorrections": {
+      "type": "array",
+      "description": "Correcciones concretas que un humano (o el empleado original) deberia aplicar antes de dar por bueno el artifact.",
+      "items": { "type": "string" }
+    },
+    "approvalRecommendation": { "$ref": "#/definitions/approvalRecommendation" },
+    "evidence": {
+      "type": "array",
+      "description": "Citas o referencias concretas de campos del artifact revisado que respaldan las conclusiones anteriores -- nunca una afirmacion generica sin anclar a un campo/valor real del artifact.",
+      "items": { "type": "string" }
+    },
+    "summary": {
+      "type": "string",
+      "description": "Resumen breve (2-4 frases) del resultado de la revision, para lectura humana rapida."
+    }
+  },
+  "required": [
+    "reviewStatus",
+    "reviewedArtifact",
+    "findings",
+    "unsupportedClaims",
+    "contradictions",
+    "safetyConcerns",
+    "requiredCorrections",
+    "approvalRecommendation",
+    "evidence",
+    "summary"
+  ],
+  "definitions": {
+    "reviewedArtifactRef": {
+      "type": "object",
+      "description": "Identidad del artifact revisado -- debe coincidir EXACTAMENTE con la identidad suministrada en el contexto del prompt (ver src/employees/qa-reviewer/context.ts). Un valor distinto se trata como fallo fail-closed (el subagente no puede reclamar haber revisado otra cosa).",
+      "additionalProperties": false,
+      "properties": {
+        "sourceEmployee": { "type": "string" },
+        "artifactType": { "type": "string" },
+        "artifactId": { "type": "string" },
+        "artifactPath": { "type": "string" }
+      },
+      "required": ["sourceEmployee", "artifactType", "artifactId", "artifactPath"]
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": [
+            "schema_compliance",
+            "evidence_coverage",
+            "unsupported_claims",
+            "fabrication_risk",
+            "contradictions",
+            "actionability",
+            "priority_consistency",
+            "missing_assumptions",
+            "unsafe_actions",
+            "approval_requirements",
+            "other"
+          ]
+        },
+        "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+        "description": { "type": "string" }
+      },
+      "required": ["category", "severity", "description"]
+    },
+    "approvalRecommendation": {
+      "type": "object",
+      "description": "Recomendacion de aprobacion -- reusa el mismo vocabulario que ApprovalRequestStatus/AutonomyRiskLevel de src/core/types.ts / src/core/autonomy-policy.ts, en vez de inventar uno nuevo. recommendedStatus es un subconjunto de ApprovalRequestStatus (pending/approved/rejected -- nunca snoozed/expired/cancelled, que son solo estados de ciclo de vida de una solicitud ya creada).",
+      "additionalProperties": false,
+      "properties": {
+        "recommendedStatus": { "type": "string", "enum": ["approved", "rejected", "pending"] },
+        "riskLevel": { "type": "string", "enum": ["none", "low_medium", "medium", "high", "critical"] },
+        "rationale": { "type": "string" }
+      },
+      "required": ["recommendedStatus", "riskLevel", "rationale"]
+    }
+  }
+}
