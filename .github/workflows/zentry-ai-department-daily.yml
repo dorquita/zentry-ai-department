@@ -680,6 +680,37 @@ jobs:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           STEP_SUMMARY_PATH: ${{ steps.brief.outputs.stepSummaryPath }}
 
+      # Volcado al LOG del propio run: manifiesto + puerta + Daily Brief
+      # completo, mas el diagnostico real de cada invocacion de Claude
+      # (coste, turnos, y que devolvio cuando el runtime no pudo resolver
+      # su salida). Todo son lecturas locales del runner -- ninguna llamada
+      # externa. Existe porque el artifact no siempre es descargable desde
+      # donde se opera el departamento, y sin esto un fallo dentro del
+      # runtime solo era diagnosticable a ciegas.
+      - name: "[COORD] Volcar manifiesto, Daily Brief y diagnostico de Claude al log"
+        if: always()
+        run: |
+          set +e
+          echo "===== MANIFEST ====="
+          cat "$RUN_DIR/manifest.json" 2>/dev/null || echo "(sin manifest.json)"
+          echo ""
+          echo "===== PROMOTION (puerta de QA) ====="
+          cat "$RUN_DIR/promotion.json" 2>/dev/null || echo "(sin promotion.json)"
+          echo ""
+          echo "===== DAILY BRIEF (markdown) ====="
+          cat "$RUN_DIR/department-daily-brief.md" 2>/dev/null || echo "(sin Daily Brief)"
+          echo ""
+          echo "===== DIAGNOSTICO DE LAS INVOCACIONES DE CLAUDE ====="
+          find "$RUNNER_TEMP" -name "*execution*.json" -print 2>/dev/null | sort | while read -r f; do
+            echo "--- $f ($(wc -c <"$f" 2>/dev/null) bytes)"
+            jq -c 'if type=="array" then (.[-1] // {}) else . end | {type, subtype, is_error, num_turns, duration_ms, total_cost_usd}' "$f" 2>/dev/null || echo "(no parseable como JSON)"
+            echo "    resultado (primeros 800 caracteres):"
+            jq -r 'if type=="array" then ((.[-1] // {}).result // "") else (.result // "") end' "$f" 2>/dev/null | head -c 800
+            echo ""
+          done
+        env:
+          RUN_DIR: ${{ steps.run.outputs.runDir }}
+
       # Veredicto final: degradacion explicita (not_available/blocked) NO
       # tumba la pasada; una salida invalida o un fallo tecnico SI la
       # marcan en rojo, con el Daily Brief ya generado y subido.
