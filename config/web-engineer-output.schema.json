@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zentrylockers.internal/schemas/web-engineer-output.schema.json",
+  "title": "WebEngineerOutput",
+  "description": "Contrato de salida del subagente Claude web-engineer, pasado a claude-code-action via --json-schema (ver .github/workflows/web-engineer.yml). Debe reflejar EXACTAMENTE la interfaz TypeScript WebEngineerOutput en src/employees/web-engineer/types.ts -- cualquier cambio en esa interfaz debe reflejarse aqui en el mismo commit (ver test/web-engineer-output-schema.test.ts). Deliberadamente draft-07 (no 2020-12): el SDK de Claude Agent rechaza schemas que declaren un draft mas nuevo. Este fichero se embebe tal cual dentro de un string shell entre comillas simples (--json-schema entrecomillado) en .github/workflows/web-engineer.yml -- ningun valor de texto de este JSON (descripciones incluidas) debe contener el caracter apostrofe. approvalRequired es boolean aqui (no un enum fijo a true): la regla de negocio de que SIEMPRE debe ser true la aplica el validador de dominio (validateWebEngineerOutput en src/employees/web-engineer/validator.ts), no este schema generico.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "implementationSummary": { "type": "string" },
+    "targetPages": { "type": "array", "items": { "type": "string" } },
+    "targetComponents": { "type": "array", "items": { "type": "string" } },
+    "proposedChanges": { "type": "array", "items": { "$ref": "#/definitions/proposedChange" } },
+    "filesOrSystemsAffected": { "type": "array", "items": { "type": "string" } },
+    "acceptanceCriteria": { "type": "array", "items": { "type": "string" } },
+    "validationPlan": { "type": "array", "items": { "type": "string" } },
+    "rollbackPlan": { "type": "array", "items": { "type": "string" } },
+    "dependencies": { "type": "array", "items": { "type": "string" } },
+    "risks": { "type": "array", "items": { "type": "string" } },
+    "approvalRequired": { "type": "boolean" },
+    "unknowns": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": [
+    "implementationSummary",
+    "targetPages",
+    "targetComponents",
+    "proposedChanges",
+    "filesOrSystemsAffected",
+    "acceptanceCriteria",
+    "validationPlan",
+    "rollbackPlan",
+    "dependencies",
+    "risks",
+    "approvalRequired",
+    "unknowns"
+  ],
+  "definitions": {
+    "proposedChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": { "type": "string" },
+        "rationale": { "type": "string" },
+        "targetPageOrComponent": { "type": "string" }
+      },
+      "required": ["description", "rationale", "targetPageOrComponent"]
+    }
+  }
+}

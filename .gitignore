@@ -41,3 +41,9 @@ reports/analytics-specialist/
 # tests/docs, ver test/fixtures/content-strategist-brief-example.json
 # (fixture sanitizado, sin datos operativos reales).
 reports/content-strategist/
+
+# Mismo criterio que arriba, para el runner del empleado web-engineer
+# (scripts/run-web-engineer.ts): prompts + especificaciones tecnicas de
+# ejecuciones locales sobre change packs reales -- no se versionan. Ver
+# test/fixtures/web-engineer-spec-example.json para un fixture sanitizado.
+reports/web-engineer/

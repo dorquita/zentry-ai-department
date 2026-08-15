@@ -43,6 +43,11 @@ import { runContentStrategistOutputTests } from "../test/content-strategist-outp
 import { runContentStrategistOutputSchemaTests } from "../test/content-strategist-output-schema.test";
 import { runContentStrategistAuditTests } from "../test/content-strategist-audit.test";
 import { runContentStrategistBriefTests } from "../test/content-strategist-brief.test";
+import { runWebEngineerOutputSchemaTests } from "../test/web-engineer-output-schema.test";
+import { runWebEngineerValidatorTests } from "../test/web-engineer-validator.test";
+import { runWebEngineerContextTests } from "../test/web-engineer-context.test";
+import { runWebEngineerChangePackSelectionTests } from "../test/web-engineer-change-pack-selection.test";
+import { runWebEngineerRunnerResultTests } from "../test/web-engineer-runner-result.test";
 
 interface TestCase {
   name: string;
@@ -87,6 +92,11 @@ function main(): void {
     { suiteName: "content-strategist-output-schema", cases: runContentStrategistOutputSchemaTests() },
     { suiteName: "content-strategist-audit", cases: runContentStrategistAuditTests() },
     { suiteName: "content-strategist-brief", cases: runContentStrategistBriefTests() },
+    { suiteName: "web-engineer-output-schema", cases: runWebEngineerOutputSchemaTests() },
+    { suiteName: "web-engineer-validator", cases: runWebEngineerValidatorTests() },
+    { suiteName: "web-engineer-context", cases: runWebEngineerContextTests() },
+    { suiteName: "web-engineer-change-pack-selection", cases: runWebEngineerChangePackSelectionTests() },
+    { suiteName: "web-engineer-runner-result", cases: runWebEngineerRunnerResultTests() },
   ];
 
   let passed = 0;
