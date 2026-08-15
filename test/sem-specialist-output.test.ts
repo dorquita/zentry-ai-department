@@ -581,6 +581,47 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
+      name: "REGRESION run 31890663140 (frase EXACTA 'presupuesto diario total de 44') SIN evidenceRefs de sem-budget-daily-total => sigue siendo violacion",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        assert.equal(budgetItem.value, "44");
+        const output = baseOutput({
+          budgetObservations: [
+            emptyFinding({
+              title: "Distribucion desigual de presupuesto diario por campana",
+              description: "presupuesto diario total de 44 repartido de forma desigual entre las campanas activas.",
+              evidenceRefs: [],
+            }),
+          ],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(
+          violations.some((v) => /presupuesto/i.test(v)),
+          "una cifra real (44) sin su evidenceRef especifico (sem-budget-daily-total) sigue siendo un fallo duro"
+        );
+      },
+    },
+    {
+      name: "REGRESION run 31890663140 (frase EXACTA 'presupuesto diario total de 44') CON evidenceRefs de sem-budget-daily-total => 0 violaciones",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        const output = baseOutput({
+          budgetObservations: [
+            emptyFinding({
+              title: "Distribucion desigual de presupuesto diario por campana",
+              description: "presupuesto diario total de 44 repartido de forma desigual entre las campanas activas.",
+              evidenceRefs: [budgetItem.id],
+            }),
+          ],
+          evidence: [evidenceFromCatalog(budgetItem)],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.deepEqual(violations, [], `citando sem-budget-daily-total no deberia rechazarse: ${JSON.stringify(violations)}`);
+      },
+    },
+    {
       name: "REGRESION run 31890170949: 'CPC 7 €' citando SOLO evidence de campañas=7 => sigue siendo violacion (excepcion cpc/roas se mantiene)",
       fn: () => {
         const context = baseContext();

@@ -168,6 +168,24 @@ Notas de forma:
   estricta (fail-closed): una sola cifra sin ese respaldo rechaza la
   salida ENTERA, no es solo un aviso. Ver "Autocheque obligatorio" mas
   abajo para el procedimiento exacto antes de responder.
+- **CADA cifra necesita SU PROPIO `id` en `evidenceRefs`, sin excepcion.**
+  Si una misma frase menciona VARIAS cifras (p.ej. "el presupuesto diario
+  es de 44 € y el mensual de 1320 €"), no basta con citar UNA de ellas --
+  cada numero individual necesita su propia entrada de `evidenceCatalog`
+  Y su propio `id` anadido a `evidenceRefs` de esa afirmacion. Un
+  `evidenceRefs` que solo cubre una parte de las cifras que aparecen en
+  el texto es EXACTAMENTE tan invalido como no citar ninguna -- la
+  auditoria comprueba cada cifra por separado, no "si la frase tiene
+  alguna evidencia en general". Caso real detectado (rechazado por la
+  auditoria): escribir "presupuesto diario total de 44" en
+  `budgetObservations` sin incluir el `id` `sem-budget-daily-total` en
+  `evidenceRefs` de esa misma entrada -- el 44 era una cifra real y
+  correcta, pero al faltar su cita especifica la salida ENTERA fue
+  rechazada. Regla practica: por cada numero que escribas, pregúntate
+  "¿esta el `id` de la entrada del catalogo que respalda ESTE numero
+  concreto en el `evidenceRefs` de ESTA misma afirmacion?" -- si la
+  respuesta es no, o citas ese `id` o borras el numero, nunca lo dejes
+  "a medias".
 - `severity`/`priority` son siempre uno de los valores del enum indicado
   -- nunca inventes un valor nuevo.
 - `unknowns` es donde declaras EXPLICITAMENTE que no tienes dato
@@ -231,8 +249,10 @@ razonable" o "casi seguro" venga del contexto.
 
 Antes de devolver tu respuesta, repasa CADA numero que hayas escrito en
 `summary`, en cualquier `title`/`description` de los 7 arrays de
-findings, y en `hypothesis`/`expectedImpact` de `prioritizedExperiments`,
-y para cada uno, en este orden:
+findings, y en `hypothesis`/`expectedImpact` de `prioritizedExperiments`
+-- si una misma frase u objeto tiene VARIOS numeros, repite este
+procedimiento para CADA UNO de ellos por separado (nunca asumas que citar
+uno solo ya cubre a los demas) -- y para cada uno, en este orden:
 
 1. **Busca la entrada EXACTA en `evidenceCatalog`**: busca una entrada
    cuyo `value` sea EXACTAMENTE ese numero (no un numero parecido, no una
@@ -295,6 +315,14 @@ auditoria automatica la rechace por ti.
   catalogo, quitala (conviertelo en observacion cualitativa o hipotesis
   sin cifra) o dilo en `unknowns` -- nunca la completes con una
   estimacion generica del sector ni la dejes sin `evidenceRefs`.
+- No escribas una cifra "a medias": si tu frase menciona dos o mas
+  numeros, no cites solo uno de ellos y omitas el resto -- CADA numero
+  necesita su propio `id` en `evidenceRefs` de esa misma afirmacion (ver
+  "Notas de forma" arriba). Ejemplo real detectado por la auditoria:
+  escribir "presupuesto diario total de 44" en `budgetObservations` sin
+  incluir `sem-budget-daily-total` en el `evidenceRefs` de esa entrada --
+  el 44 era correcto, pero al faltar su cita la salida ENTERA fue
+  rechazada.
 - No construyas ninguna entrada de `evidence[]` a mano, no inventes un
   `id` nuevo, y no modifiques ni un espacio del `contextField` o del
   `value` de una entrada real de `evidenceCatalog` -- solo se acepta una
