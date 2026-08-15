@@ -1,0 +1,55 @@
+{
+  "_readme": "Fixture SANITIZADO para tests del empleado content-strategist. No contiene ningun dato operativo real (ni changePackId, ni keyword, ni copy de produccion) -- todo el contenido es de ejemplo.",
+  "changePackId": "example-content-change-pack-001",
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "input": {
+    "changePackId": "example-content-change-pack-001",
+    "workOrderId": "example-work-order-001",
+    "keyword": "producto de ejemplo",
+    "page": "/producto-ejemplo/",
+    "changeType": "content_update",
+    "priority": "medium",
+    "status": "approved_to_execute",
+    "targetBrand": "zentry",
+    "brandIntent": "zentry_locker_core",
+    "contentTypeHint": "Mejora de title/meta",
+    "recommendedTitleHint": "Producto De Ejemplo",
+    "primaryKeyword": "producto de ejemplo",
+    "secondaryKeywords": ["producto de ejemplo colegios", "producto de ejemplo precio"],
+    "proposedStructureHint": ["H2: Que es producto de ejemplo", "H2: Precios y presupuesto"],
+    "intentHint": "Zentry principal — mobiliario/taquillas/lockers",
+    "brandRationale": "Menciona mobiliario sin mencionar cerraduras: intencion principal de compra de mueble.",
+    "recommendedCtaHint": "CTA: \"Solicitar presupuesto sin compromiso\"",
+    "internalLinkHints": ["Enlazar hacia la landing/categoria principal relacionada"],
+    "clusterNote": "Posible cluster SEO con: producto de ejemplo colegios, producto de ejemplo precio.",
+    "currentAssumptions": ["Indicar la garantia real del producto (pendiente de confirmar con el equipo)."],
+    "risks": ["Publicar contenido nuevo sin revisar el cluster SEO puede generar canibalizacion."]
+  },
+  "result": {
+    "status": "executed",
+    "output": {
+      "contentOpportunity": { "title": "Producto de ejemplo para colegios", "summary": "Keyword con volumen sin pagina dedicada todavia." },
+      "targetAudience": "Responsable de compras de un colegio que renueva mobiliario.",
+      "searchIntent": "commercial",
+      "commercialIntent": "Compara opciones antes de pedir presupuesto.",
+      "angle": "Comparativa de materiales orientada a centros educativos.",
+      "contentType": "title_meta_improvement",
+      "targetBrand": "zentry",
+      "recommendedStructure": {
+        "h1": "Producto de ejemplo: guia para colegios",
+        "sections": [
+          { "heading": "Que es producto de ejemplo", "level": "H2", "purpose": "Definir el producto para quien no lo conoce todavia." },
+          { "heading": "Precios y presupuesto", "level": "H2", "purpose": "Remitir a solicitar presupuesto sin inventar cifras." }
+        ]
+      },
+      "ctaStrategy": { "primaryCta": "Solicitar presupuesto sin compromiso", "rationale": "Coherente con la intencion comercial detectada y con recommendedCtaHint." },
+      "internalLinks": [{ "anchorIdea": "producto de ejemplo colegios", "targetDescription": "pagina de categoria relacionada (sin URL confirmada todavia)", "isRealLink": false }],
+      "supportingEvidence": ["El brief de entrada asume que la garantia esta pendiente de confirmar -- no se afirma en el brief."],
+      "priority": "medium",
+      "risksAndUnknowns": ["Posible canibalizacion con paginas ya existentes del mismo cluster (ver clusterNote).", "Todas nuestras unidades cuentan con garantia de fabricante."],
+      "reasoningNotes": ["Se prioriza la comparativa de materiales porque es la duda mas repetida en el cluster.", "No se afirma garantia como hecho: el input la marca pendiente de confirmar."]
+    },
+    "auditWarnings": ["Afirmacion sensible no respaldada (garantia): \"cuentan con garantia\" en \"Todas nuestras unidades cuentan con garantia de fabricante.\" -- el brief de entrada no lo confirma (o lo marca como pendiente de confirmar)."]
+  },
+  "note": "Artefacto de solo lectura/propuesta. Ningun brief de este empleado se ha publicado en WordPress, Google Ads, GA4, GTM, n8n ni qdrant. La redaccion del contenido final (nunca generada por defecto por este empleado) y la decision de publicar las hace un humano por fuera de este sistema."
+}

@@ -37,6 +37,12 @@ import { runAnalyticsSpecialistContextTests } from "../test/analytics-specialist
 import { runAnalyticsSpecialistAuditTests } from "../test/analytics-specialist-audit.test";
 import { runAnalyticsSpecialistValidatorTests } from "../test/analytics-specialist-validator.test";
 import { runAnalyticsSpecialistRunnerResultTests } from "../test/analytics-specialist-runner-result.test";
+import { runContentStrategistSelectionTests } from "../test/content-strategist-selection.test";
+import { runContentStrategistContextTests } from "../test/content-strategist-context.test";
+import { runContentStrategistOutputTests } from "../test/content-strategist-output.test";
+import { runContentStrategistOutputSchemaTests } from "../test/content-strategist-output-schema.test";
+import { runContentStrategistAuditTests } from "../test/content-strategist-audit.test";
+import { runContentStrategistBriefTests } from "../test/content-strategist-brief.test";
 
 interface TestCase {
   name: string;
@@ -75,6 +81,12 @@ function main(): void {
     { suiteName: "analytics-specialist-audit", cases: runAnalyticsSpecialistAuditTests() },
     { suiteName: "analytics-specialist-validator", cases: runAnalyticsSpecialistValidatorTests() },
     { suiteName: "analytics-specialist-runner-result", cases: runAnalyticsSpecialistRunnerResultTests() },
+    { suiteName: "content-strategist-selection", cases: runContentStrategistSelectionTests() },
+    { suiteName: "content-strategist-context", cases: runContentStrategistContextTests() },
+    { suiteName: "content-strategist-output", cases: runContentStrategistOutputTests() },
+    { suiteName: "content-strategist-output-schema", cases: runContentStrategistOutputSchemaTests() },
+    { suiteName: "content-strategist-audit", cases: runContentStrategistAuditTests() },
+    { suiteName: "content-strategist-brief", cases: runContentStrategistBriefTests() },
   ];
 
   let passed = 0;
