@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zentrylockers.internal/schemas/growth-director-v2-output.schema.json",
+  "title": "GrowthDirectorV2Output",
+  "description": "Contrato de salida del subagente Claude growth-director-v2, pasado a claude-code-action via --json-schema (ver .github/workflows/growth-director-v2.yml). Debe reflejar EXACTAMENTE la interfaz TypeScript GrowthDirectorV2Output en src/employees/growth-director-v2/types.ts -- cualquier cambio en esa interfaz debe reflejarse aqui en el mismo commit (ver test/growth-director-v2-output-schema.test.ts). Deliberadamente draft-07 (no 2020-12): el SDK de Claude Agent rechaza schemas que declaren un draft mas nuevo. IMPORTANTE (evitar romper el workflow): este fichero se embebe tal cual dentro de un string shell entre comillas simples (--json-schema entrecomillado) en .github/workflows/growth-director-v2.yml -- ningun valor de texto de este JSON (descripciones incluidas) debe contener el caracter apostrofe. Usa definitions/dollar-ref (no dollar-defs) y additionalProperties:false en todos los objetos, y solo las 12 keywords que src/core/json-schema-lite.ts soporta.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "growthSummary": {
+      "type": "string",
+      "description": "Resumen ejecutivo en 2-4 frases: donde debe concentrarse el esfuerzo del departamento AHORA y por que, en lenguaje claro."
+    },
+    "currentSignals": {
+      "type": "array",
+      "description": "Senales reales observadas en el contexto entregado, nunca inventadas.",
+      "items": { "$ref": "#/definitions/channelItem" }
+    },
+    "bottlenecks": {
+      "type": "array",
+      "description": "Cuellos de botella detectados a partir del contexto entregado.",
+      "items": { "$ref": "#/definitions/channelItem" }
+    },
+    "opportunities": {
+      "type": "array",
+      "description": "Oportunidades detectadas a partir del contexto entregado.",
+      "items": { "$ref": "#/definitions/channelItem" }
+    },
+    "experiments": {
+      "type": "array",
+      "description": "Experimentos propuestos, cada uno con hipotesis y metrica de exito.",
+      "items": { "$ref": "#/definitions/experimentItem" }
+    },
+    "recommendedPriorities": {
+      "type": "array",
+      "description": "Priorizacion explicita con impacto, confianza, esfuerzo y dependencia -- nunca sin rationale ni evidenceRefs.",
+      "items": { "$ref": "#/definitions/priorityItem" }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "Estado conocido de las piezas de las que depende esta sintesis (otros empleados Claude hermanos, SEM/Analytics V1, etc).",
+      "items": { "$ref": "#/definitions/dependencyItem" }
+    },
+    "risks": {
+      "type": "array",
+      "description": "Riesgos identificados para las prioridades recomendadas.",
+      "items": { "$ref": "#/definitions/riskItem" }
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Evidencia adicional declarada por el propio subagente (mas alla del evidenceCatalog del contexto), citable por su ref desde cualquier otro campo.",
+      "items": { "$ref": "#/definitions/evidenceItem" }
+    },
+    "unknowns": {
+      "type": "array",
+      "description": "Huecos de informacion declarados explicitamente, nunca rellenados con datos inventados.",
+      "items": { "type": "string" }
+    }
+  },
+  "required": [
+    "growthSummary",
+    "currentSignals",
+    "bottlenecks",
+    "opportunities",
+    "experiments",
+    "recommendedPriorities",
+    "dependencies",
+    "risks",
+    "evidence",
+    "unknowns"
+  ],
+  "definitions": {
+    "channel": {
+      "type": "string",
+      "enum": ["seo", "sem", "content", "cro", "analytics", "product", "brand", "ops", "other"]
+    },
+    "level": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "channelItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "channel": { "$ref": "#/definitions/channel" },
+        "description": { "type": "string" },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["channel", "description", "evidenceRefs"]
+    },
+    "experimentItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "hypothesis": { "type": "string" },
+        "channel": { "$ref": "#/definitions/channel" },
+        "successMetric": { "type": "string" },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "hypothesis", "channel", "successMetric", "evidenceRefs"]
+    },
+    "priorityItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "rationale": { "type": "string" },
+        "impact": { "$ref": "#/definitions/level" },
+        "confidence": { "$ref": "#/definitions/level" },
+        "effort": { "$ref": "#/definitions/level" },
+        "dependsOn": { "type": "array", "items": { "type": "string" } },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "rationale", "impact", "confidence", "effort", "dependsOn", "evidenceRefs"]
+    },
+    "dependencyItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "partial", "missing"] },
+        "note": { "type": "string" }
+      },
+      "required": ["name", "status", "note"]
+    },
+    "riskItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": { "type": "string" },
+        "severity": { "$ref": "#/definitions/level" },
+        "evidenceRefs": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["description", "severity", "evidenceRefs"]
+    },
+    "evidenceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ref": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["ref", "description"]
+    }
+  }
+}

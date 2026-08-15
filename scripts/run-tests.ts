@@ -19,6 +19,10 @@ import { runRunnerResultParserTests } from "../test/runner-result-parser.test";
 import { runComparisonArtifactReaderTests } from "../test/comparison-artifact-reader.test";
 import { runClaudeEmployeeRuntimeTests } from "../test/claude-employee-runtime.test";
 import { runJsonSchemaLiteTests } from "../test/json-schema-lite.test";
+import { runGrowthDirectorV2ContextTests } from "../test/growth-director-v2-context.test";
+import { runGrowthDirectorV2DomainTests } from "../test/growth-director-v2-domain.test";
+import { runGrowthDirectorV2OutputSchemaTests } from "../test/growth-director-v2-output-schema.test";
+import { runGrowthDirectorV2RunnerResultParserTests } from "../test/growth-director-v2-runner-result-parser.test";
 
 interface TestCase {
   name: string;
@@ -39,6 +43,10 @@ function main(): void {
     { suiteName: "comparison-artifact-reader", cases: runComparisonArtifactReaderTests() },
     { suiteName: "claude-employee-runtime", cases: runClaudeEmployeeRuntimeTests() },
     { suiteName: "json-schema-lite", cases: runJsonSchemaLiteTests() },
+    { suiteName: "growth-director-v2-context", cases: runGrowthDirectorV2ContextTests() },
+    { suiteName: "growth-director-v2-domain", cases: runGrowthDirectorV2DomainTests() },
+    { suiteName: "growth-director-v2-output-schema", cases: runGrowthDirectorV2OutputSchemaTests() },
+    { suiteName: "growth-director-v2-runner-result-parser", cases: runGrowthDirectorV2RunnerResultParserTests() },
   ];
 
   let passed = 0;

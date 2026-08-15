@@ -1,0 +1,138 @@
+{
+  "generatedAt": "2026-08-15T09:00:00.000Z",
+  "departmentRunId": "growth-department-example-run",
+  "input": {
+    "departmentRunId": "growth-department-example-run",
+    "hasDepartmentRunData": true,
+    "generatedAt": "2026-08-15T09:00:00.000Z",
+    "agentActivity": [
+      { "agent": "seo-watcher", "status": "completado", "warningCount": 0, "lastSummary": "3 oportunidades detectadas." },
+      { "agent": "sem-watcher", "status": "completado", "warningCount": 1, "lastSummary": "Sin credenciales de Google Ads, modo documentacion." }
+    ],
+    "warnings": ["[sem-watcher] Sin credenciales de Google Ads en este proyecto."],
+    "actionsSummary": {
+      "totalActions": 12,
+      "liveActionCount": 5,
+      "byStatus": { "new": 1, "open": 2, "waiting_approval": 1, "approved": 1, "done": 7 },
+      "byPriority": { "high": 2, "medium": 2, "low": 1 },
+      "topOpenActions": [
+        { "actionId": "act-1", "title": "Ejemplo de accion de alta prioridad", "priority": "high", "status": "open", "keyword": "ejemplo generico", "page": "/pagina-ejemplo/", "targetBrand": "zentry", "brandIntent": "zentry_locker_core" }
+      ]
+    },
+    "workOrdersSummary": {
+      "total": 4,
+      "readyForReviewCount": 2,
+      "byCategory": { "seo": 3, "content": 1 },
+      "byBrand": { "zentry": 3, "tukandado": 1 }
+    },
+    "changePacksSummary": {
+      "total": 3,
+      "readyForReviewCount": 1,
+      "byType": { "seo_on_page_update": 2, "content_new_page": 1 }
+    },
+    "approvalRequestsSummary": {
+      "pendingCount": 1,
+      "byRiskLevel": { "medium": 1 },
+      "topPending": [{ "title": "Ejemplo de solicitud pendiente", "riskLevel": "medium", "relatedType": "work_order" }]
+    },
+    "jobsSummary": {
+      "totalJobSnapshots": 20,
+      "latestRunId": "run-example-1",
+      "latestRunJobCount": 3
+    },
+    "knownDependencies": [
+      { "name": "seo-specialist", "status": "missing", "note": ".claude/agents/seo-specialist.md todavia no existe en este checkout." },
+      { "name": "content-strategist", "status": "missing", "note": ".claude/agents/content-strategist.md todavia no existe en este checkout." },
+      { "name": "sem-specialist", "status": "missing", "note": ".claude/agents/sem-specialist.md todavia no existe en este checkout." },
+      { "name": "analytics-specialist", "status": "missing", "note": ".claude/agents/analytics-specialist.md todavia no existe en este checkout." },
+      { "name": "qa-reviewer", "status": "missing", "note": ".claude/agents/qa-reviewer.md todavia no existe en este checkout." },
+      { "name": "web-engineer", "status": "missing", "note": ".claude/agents/web-engineer.md todavia no existe en este checkout." },
+      { "name": "sem-watcher (V1 deterministico)", "status": "missing", "note": "Sin evento agent_finished de sem-watcher en este departmentRunId." },
+      { "name": "analytics-watcher (V1 deterministico)", "status": "missing", "note": "Sin evento agent_finished de analytics-watcher en este departmentRunId." }
+    ],
+    "evidenceCatalog": [
+      { "ref": "department-run", "description": "departmentRunId mas reciente: \"growth-department-example-run\" (2 evento(s))." },
+      { "ref": "agent-activity", "description": "Actividad de agentes en esta pasada: 2 agente(s) con eventos (2 completados)." },
+      { "ref": "department-warnings", "description": "1 warning(s) emitidos por agentes del departamento en esta pasada." },
+      { "ref": "actions-live", "description": "5 accion(es) vivas en el backlog (por prioridad: high=2, medium=2, low=1). Total historico: 12." },
+      { "ref": "actions-top", "description": "Top 1 acciones vivas por prioridad: \"Ejemplo de accion de alta prioridad\" (high, open)." },
+      { "ref": "workorders-ready", "description": "2 work order(s) listas para revisar de 4 totales. Por categoria: seo=3, content=1." },
+      { "ref": "changepacks-ready", "description": "1 change pack(s) listos para revisar de 3 totales. Por tipo: seo_on_page_update=2, content_new_page=1." },
+      { "ref": "approvals-pending", "description": "1 solicitud(es) de aprobacion pendientes. Por riesgo: medium=1." },
+      { "ref": "jobs-latest-run", "description": "Ultima ejecucion de SEO Watcher (runId \"run-example-1\"): 3 job(s) propuestos. Total historico: 20." },
+      { "ref": "dependency-seo-specialist", "description": "seo-specialist: missing." },
+      { "ref": "dependency-content-strategist", "description": "content-strategist: missing." },
+      { "ref": "dependency-sem-specialist", "description": "sem-specialist: missing." },
+      { "ref": "dependency-analytics-specialist", "description": "analytics-specialist: missing." },
+      { "ref": "dependency-qa-reviewer", "description": "qa-reviewer: missing." },
+      { "ref": "dependency-web-engineer", "description": "web-engineer: missing." },
+      { "ref": "dependency-sem-watcher-v1-deterministico", "description": "sem-watcher (V1 deterministico): missing." },
+      { "ref": "dependency-analytics-watcher-v1-deterministico", "description": "analytics-watcher (V1 deterministico): missing." }
+    ]
+  },
+  "result": {
+    "status": "executed",
+    "output": {
+      "growthSummary": "Concentrar esfuerzo en cerrar las acciones SEO on-page ya priorizadas (alto impacto, bajo esfuerzo) mientras SEM y Analytics siguen sin conexion reciente -- no hay senales propias de los especialistas SEO/SEM/Analytics/contenido/QA/tecnico todavia, asi que la sintesis se apoya solo en action backlog, work orders y change packs.",
+      "currentSignals": [
+        { "channel": "seo", "description": "5 acciones vivas en el backlog, 2 de prioridad alta.", "evidenceRefs": ["actions-live"] },
+        { "channel": "ops", "description": "2 work orders listas para revisar de 4 totales.", "evidenceRefs": ["workorders-ready"] }
+      ],
+      "bottlenecks": [
+        { "channel": "sem", "description": "Sin evento agent_finished de sem-watcher en esta pasada -- no hay estado SEM reciente.", "evidenceRefs": ["dependency-sem-watcher-v1-deterministico"] }
+      ],
+      "opportunities": [
+        { "channel": "seo", "description": "1 change pack listo para revisar de tipo seo_on_page_update -- listo para avanzar sin bloqueos.", "evidenceRefs": ["changepacks-ready"] }
+      ],
+      "experiments": [
+        {
+          "title": "Cerrar el change pack SEO listo para revisar",
+          "hypothesis": "Avanzar el unico change pack ready_for_review reduce el backlog abierto sin esperar a los especialistas todavia ausentes.",
+          "channel": "seo",
+          "successMetric": "El change pack pasa a approved_to_execute o applied_manually en la siguiente revision humana.",
+          "evidenceRefs": ["changepacks-ready"]
+        }
+      ],
+      "recommendedPriorities": [
+        {
+          "title": "Revisar y aprobar el change pack SEO listo",
+          "rationale": "Es la unica pieza de trabajo ya lista para avanzar sin depender de ningun empleado ausente -- impacto directo en el backlog abierto con esfuerzo minimo (una revision humana).",
+          "impact": "medium",
+          "confidence": "high",
+          "effort": "low",
+          "dependsOn": ["Revision humana del change pack"],
+          "evidenceRefs": ["changepacks-ready"]
+        },
+        {
+          "title": "No iniciar ninguna sintesis SEM propia todavia",
+          "rationale": "sem-specialist y sem-watcher estan ambos missing en este contexto -- cualquier senal SEM seria inventada, mejor declarar el hueco.",
+          "impact": "low",
+          "confidence": "high",
+          "effort": "low",
+          "dependsOn": ["sem-specialist", "sem-watcher (V1 deterministico)"],
+          "evidenceRefs": ["dependency-sem-specialist", "dependency-sem-watcher-v1-deterministico"]
+        }
+      ],
+      "dependencies": [
+        { "name": "seo-specialist", "status": "missing", "note": "Todavia no existe en este checkout -- ninguna senal SEO propia de este empleado disponible." },
+        { "name": "content-strategist", "status": "missing", "note": "Todavia no existe en este checkout." },
+        { "name": "sem-specialist", "status": "missing", "note": "Todavia no existe en este checkout." },
+        { "name": "analytics-specialist", "status": "missing", "note": "Todavia no existe en este checkout." },
+        { "name": "qa-reviewer", "status": "missing", "note": "Todavia no existe en este checkout." },
+        { "name": "web-engineer", "status": "missing", "note": "Todavia no existe en este checkout." },
+        { "name": "sem-watcher (V1)", "status": "missing", "note": "Sin evento agent_finished reciente." },
+        { "name": "analytics-watcher (V1)", "status": "missing", "note": "Sin evento agent_finished reciente." }
+      ],
+      "risks": [
+        { "description": "Priorizar solo con datos SEO/backlog puede infravalorar oportunidades SEM/Analytics que todavia no son visibles.", "severity": "medium", "evidenceRefs": ["department-warnings"] }
+      ],
+      "evidence": [],
+      "unknowns": [
+        "Estado real de SEM (mas alla de la ultima conexion conocida) hasta que sem-specialist o sem-watcher aporten una senal reciente.",
+        "Estado real de Analytics (GA4/GTM) hasta que analytics-specialist o analytics-watcher aporten una senal reciente."
+      ]
+    },
+    "auditWarnings": []
+  },
+  "note": "Artefacto de solo lectura/propuesta. growth-director-v2 no ejecuta ni aplica nada."
+}

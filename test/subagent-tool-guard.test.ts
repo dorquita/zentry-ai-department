@@ -207,10 +207,23 @@ export function runSubagentToolGuardTests(): TestCase[] {
     },
 
     {
-      name: "hoy solo existe un agente real en el allowlist: el experimento v2",
+      // NOTA (ver docs/claude-employee-runtime.md, "Desarrollo paralelo
+      // mediante worktrees"): este fichero es deliberadamente
+      // append-only -- cada uno de los 7 empleados Claude nuevos anade
+      // su propia entrada bajo su propia clave. La version anterior de
+      // este test fijaba `Object.keys(allowlist.agents).length === 1`,
+      // una asuncion que era cierta solo hasta que el primer worktree
+      // mergeara su propia entrada -- se sustituye por el invariante
+      // real que este test pretendia proteger: TODO agente listado debe
+      // seguir cumpliendo el requisito de cero herramientas.
+      name: "todo agente presente en el allowlist cumple el requisito de cero herramientas (checkSubagentIsToolless)",
       fn: () => {
         const allowlist = loadSubagentToolAllowlist();
-        assert.equal(Object.keys(allowlist.agents).length, 1);
+        assert.ok(Object.keys(allowlist.agents).length >= 1, "el allowlist deberia tener al menos un agente registrado");
+        for (const agentName of Object.keys(allowlist.agents)) {
+          const result = checkSubagentIsToolless(agentName, allowlist);
+          assert.ok(result.ok, `"${agentName}" deberia cumplir el requisito de cero herramientas: ${JSON.stringify(result.reasons)}`);
+        }
       },
     },
   ];
