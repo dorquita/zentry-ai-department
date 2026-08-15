@@ -98,6 +98,32 @@ export function runApprovalsManualDecisionTests(): TestCase[] {
       },
     },
     {
+      name: "INVARIANTE: el numero visible coincide con el recommendationRank que imprime el resto del informe",
+      fn: () => {
+        // Todo el flujo manual se apoya en que "aprueba 3" y el "3" del
+        // email sean la MISMA propuesta. Hoy coinciden porque
+        // promotion.ts asigna `rank: index + 1` sobre la lista completa
+        // (promovidas + bloqueadas), pero nada lo obligaba: si esa
+        // numeracion dejara de ser contigua, el email y la persona
+        // estarian hablando de propuestas distintas sin que nadie lo
+        // note. Este test lo convierte en un fallo de CI.
+        for (const count of [1, 3, 6]) {
+          for (const proposal of buildNumberedProposals(summaryWith(count))) {
+            assert.equal(
+              proposal.number,
+              proposal.recommendationRank,
+              `El numero visible (${proposal.number}) y el rank (${proposal.recommendationRank}) han dejado de coincidir. Si esto cambia a proposito, hay que revisar TODOS los sitios del email que imprimen el rank en crudo.`
+            );
+          }
+        }
+        // Y tambien con propuestas bloqueadas por medio, que es cuando
+        // seria mas facil que se descolgaran.
+        for (const proposal of buildNumberedProposals(summaryWith(5, [2, 4]))) {
+          assert.equal(proposal.number, proposal.recommendationRank);
+        }
+      },
+    },
+    {
       name: "El numero SIEMPRE viaja con el id real: el numero es para la persona, el id para el sistema",
       fn: () => {
         for (const proposal of buildNumberedProposals(summaryWith(3))) {
