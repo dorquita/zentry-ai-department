@@ -78,7 +78,9 @@
     "test:search-console": "ts-node scripts/test-search-console-read.ts",
     "auth:gsc": "ts-node scripts/get-gsc-refresh-token.ts",
     "auth:google-ads": "ts-node scripts/get-google-ads-refresh-token.ts",
-    "auth:analytics": "ts-node scripts/get-google-analytics-refresh-token.ts"
+    "auth:analytics": "ts-node scripts/get-google-analytics-refresh-token.ts",
+    "growth-director-v2:run": "ts-node scripts/run-growth-director-v2.ts",
+    "growth-director-v2:parse-runner-result-for-ci": "ts-node scripts/parse-growth-director-v2-runner-result-for-ci.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

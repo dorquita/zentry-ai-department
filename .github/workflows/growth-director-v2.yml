@@ -1,0 +1,214 @@
+name: Growth Director v2 (GitHub Actions + Claude)
+
+# Objetivo de este workflow (ver docs/claude-employee-runtime.md):
+# ejecutar el subagente growth-director-v2 de principio a fin en GitHub
+# Actions, SIN portatil encendido, SIN VPS, SIN Claude Routines y SIN
+# Agent/Task anidado. La sesion principal de claude-code-action ES
+# directamente el empleado (--agent growth-director-v2) -- nunca una
+# sesion generica que a su vez invoca un subagente.
+#
+# NOTA de naming: growth-director-v2 es un empleado Claude NUEVO,
+# DISTINTO del agente determinista v1 src/agents/growth-director.ts
+# (identificador "growth-director", sin sufijo, sigue generando
+# reports/daily/*.md sin cambios). Los dos identificadores conviven en
+# paralelo a proposito -- ver el sufijo -v2 ya establecido por
+# ux-ui-landing-architect / ux-ui-landing-architect-v2.
+#
+# Este workflow NO implementa el runtime generico el mismo (auth,
+# invocacion de claude-code-action, fallback via execution_file, y
+# validacion contra el JSON Schema versionado): eso lo hace
+# .github/actions/claude-employee-runtime/action.yml, compartido por
+# cualquier empleado Claude. Este fichero solo contiene lo ESPECIFICO
+# del dominio de growth-director-v2: construccion del contexto
+# cross-channel, preparacion de su prompt, y la validacion/auditoria
+# propia de GrowthDirectorV2Output -- ver
+# src/employees/growth-director-v2/, sin modificar el runtime comun.
+#
+# No hace deploy, no publica nada, no toca WordPress/staging/produccion/
+# Ads/GA4/GTM/Search Console/n8n/VPS, no escribe en el repositorio
+# (contents: read). El resultado se sube como artifact de GitHub
+# Actions, nunca se commitea.
+
+on:
+  workflow_dispatch:
+    inputs:
+      departmentRunId:
+        description: >-
+          departmentRunId especifico a usar (opcional, solo para
+          debugging manual). Vacio (por defecto) = el runner elige el
+          mas reciente disponible en data/department-events.jsonl (o
+          sigue funcionando con contexto vacio si no hay ninguno).
+        required: false
+        type: string
+
+# Sin `schedule:` a proposito -- ver docs/claude-employee-runtime.md,
+# "E2E reality": este workflow todavia no ha tenido una validacion
+# end-to-end real (no puede tenerla hasta que este fichero exista en la
+# rama por defecto). Activar `schedule:` es una decision futura,
+# separada, tras esa primera validacion -- mismo criterio que se aplico
+# a ux-ui-landing-architect-v2.
+
+# Un solo empleado growth-director-v2 corriendo a la vez: si ya hay una
+# ejecucion en curso (p.ej. un workflow_dispatch manual solapado con
+# otro), la nueva ejecucion espera en cola en vez de correr en paralelo
+# y arriesgarse a que dos ejecuciones escriban a la vez sobre el mismo
+# reports/growth-director-v2/<departmentRunId>/.
+concurrency:
+  group: growth-director-v2
+  cancel-in-progress: false
+
+# Principio de minimo privilegio: este empleado NUNCA escribe en el repo
+# (no commit, no push, no PR, no comentarios en issues/PRs). Con
+# `contents: read` alcanza.
+permissions:
+  contents: read
+
+jobs:
+  run-growth-director-v2:
+    name: Ejecutar growth-director-v2
+    runs-on: ubuntu-latest
+    # Backstop de tiempo en dos capas (ver docs/claude-employee-runtime.md,
+    # seccion de timeouts): timeout-minutes: 20 aqui es el limite del JOB
+    # completo (incluye los pasos de dominio antes y despues del
+    # runtime); el step [RUNTIME] mas abajo lleva su propio
+    # timeout-minutes: 10.
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --- [DOMINIO] Paso 1 del runner: construye el contexto
+      # cross-channel real (reutilizando los mismos lectores que el
+      # agente v1 determinista) + prompt.md -- ver
+      # src/employees/growth-director-v2/context.ts,
+      # scripts/run-growth-director-v2.ts, sin modificar. ---
+      - name: "[DOMINIO] Runner (paso 1): preparar contexto cross-channel"
+        id: prepare
+        run: |
+          set -o pipefail
+          if [ -n "$DEPARTMENT_RUN_ID" ]; then
+            npm run growth-director-v2:run -- --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee runner-step1.log
+          else
+            npm run growth-director-v2:run -- 2>&1 | tee runner-step1.log
+          fi
+        env:
+          DEPARTMENT_RUN_ID: ${{ inputs.departmentRunId }}
+
+      - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 1)"
+        id: step1
+        run: npm run growth-director-v2:parse-runner-result-for-ci -- runner-step1.log
+
+      - name: "[DOMINIO] Validar estado tras el paso 1 (pending_execution + prompt existe)"
+        run: |
+          if [ "$STATUS" != "pending_execution" ]; then
+            echo "::error::status inesperado tras el paso 1 del runner: \"$STATUS\" (se esperaba pending_execution). Abortando antes de invocar a Claude."
+            exit 1
+          fi
+          if [ ! -f "$PROMPT_FILE_PATH" ]; then
+            echo "::error::promptFilePath no existe en disco: $PROMPT_FILE_PATH"
+            exit 1
+          fi
+          echo "OK: status=pending_execution, promptFilePath existe ($PROMPT_FILE_PATH)."
+        env:
+          STATUS: ${{ steps.step1.outputs.status }}
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      - name: "[DOMINIO] Leer contenido completo de prompt.md"
+        id: read_prompt
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      # --- [RUNTIME COMUN] Autenticacion + invocacion de
+      # claude-code-action (--agent growth-director-v2) + resolucion
+      # structured_output/fallback via execution_file + validacion
+      # contra config/growth-director-v2-output.schema.json. Identico
+      # para cualquier empleado Claude -- ver
+      # docs/claude-employee-runtime.md. ---
+      - name: "[RUNTIME] Ejecutar growth-director-v2 (Claude Employee Runtime)"
+        id: runtime
+        # timeout-minutes: 10 -- mismo backstop practico que
+        # ux-ui-landing-architect-v2, ver docs/claude-employee-runtime.md.
+        timeout-minutes: 10
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: growth-director-v2
+          prompt: ${{ steps.read_prompt.outputs.content }}
+          output-schema-path: config/growth-director-v2-output.schema.json
+          expected-output-path: ${{ steps.step1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ github.token }}
+
+      # --- [DOMINIO] Paso 2 del runner: valida contra
+      # GrowthDirectorV2Output + auditoria de dominio (rationale/
+      # evidenceRefs/dependencias) -- sin modificar. Sale con codigo != 0
+      # (sin continue-on-error) si status queda en "invalid_output". El
+      # fichero que lee (expectedOutputPath) ya lo escribio el runtime
+      # comun en el step anterior. ---
+      - name: "[DOMINIO] Runner (paso 2): validar salida de Claude + auditar dominio"
+        run: |
+          set -o pipefail
+          npm run growth-director-v2:run -- --departmentRunId "$DEPARTMENT_RUN_ID" --growth-director-v2-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee runner-step2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.step1.outputs.departmentRunId }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.step1.outputs.expectedOutputPath }}
+
+      - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 2)"
+        id: step2
+        run: npm run growth-director-v2:parse-runner-result-for-ci -- runner-step2.log
+
+      - name: "[DOMINIO] Subir artifact (artifact.json, artifact.md, output.json)"
+        uses: actions/upload-artifact@v4
+        with:
+          name: growth-director-v2-${{ steps.step2.outputs.departmentRunId }}
+          path: |
+            ${{ steps.step2.outputs.artifactJsonPath }}
+            ${{ steps.step2.outputs.artifactMdPath }}
+            ${{ steps.step1.outputs.expectedOutputPath }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: "[DOMINIO] Generar GitHub Step Summary"
+        run: |
+          {
+            echo "## growth-director-v2"
+            echo ""
+            echo "- **agent:** growth-director-v2 (Claude, NO reemplaza a src/agents/growth-director.ts v1)"
+            echo "- **departmentRunId:** \`$DEPARTMENT_RUN_ID\`"
+            echo "- **Claude execution (outcome del step, sin enmascarar por continue-on-error):** $CLAUDE_OUTCOME"
+            echo "- **Origen de la salida:** $OUTPUT_SOURCE"
+            echo "- **status:** \`$STATUS\`"
+            echo "- **auditWarnings:** $AUDIT_WARNING_COUNT"
+            echo "- **artifact generado:** \`growth-director-v2-$DEPARTMENT_RUN_ID\`"
+            echo "- **Escritura externa realizada:** ninguna (WordPress/staging/produccion/Ads/GA4/GTM/Search Console/n8n/VPS no se han tocado; nada se ha commiteado)."
+            echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo ""
+            if [ "$AUDIT_WARNING_COUNT" != "0" ] && [ "$AUDIT_WARNING_COUNT" != "null" ]; then
+              echo "> ⚠️ Hay avisos de la auditoria de dominio (rationale/evidenceRefs/dependencias sin reconocer -- listados tambien en artifact.md del artifact) -- revisar antes de dar por buena esta sintesis. No se han descartado ni reinterpretado."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.step2.outputs.departmentRunId }}
+          STATUS: ${{ steps.step2.outputs.status }}
+          AUDIT_WARNING_COUNT: ${{ steps.step2.outputs.auditWarningCount }}
+          # steps.runtime.outputs.claude-outcome / .output-source:
+          # outputs declarados por la composite action del runtime comun
+          # (ver .github/actions/claude-employee-runtime/action.yml).
+          CLAUDE_OUTCOME: ${{ steps.runtime.outputs.claude-outcome }}
+          OUTPUT_SOURCE: ${{ steps.runtime.outputs.output-source == 'structured_output' && 'structured_output directo (caso A)' || (steps.runtime.outputs.output-source == 'execution_file_fallback' && 'fallback via execution_file (caso B)' || 'ninguno (caso C, el workflow ya deberia haber fallado antes de este step)') }}

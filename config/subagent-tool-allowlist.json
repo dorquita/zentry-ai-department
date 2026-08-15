@@ -74,6 +74,14 @@
       "externalWriteToolsGranted": [],
       "maxRiskCategory": "none",
       "notes": "Fase 1 del experimento: cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt (change pack + skill zentry-brand), construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+    },
+    "growth-director-v2": {
+      "definitionFile": ".claude/agents/growth-director-v2.md",
+      "description": "Subagente experimental Claude que sintetiza y prioriza senales cross-channel del departamento (accion backlog, work orders, change packs, approval requests, jobs, eventos). Solo debe razonar sobre el GrowthDirectorV2Context que le entrega scripts/run-growth-director-v2.ts -- cero acceso indiscriminado al repositorio, cero escritura externa. NO es el agente determinista growth-director (v1, src/agents/growth-director.ts) -- identificador distinto a proposito.",
+      "allowedTools": [],
+      "externalWriteToolsGranted": [],
+      "maxRiskCategory": "none",
+      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita (resumenes deterministas + catalogo de evidencia + dependencias conocidas) se le inyecta ya resuelto en el prompt, construido por el runner (funcion TOOL determinista que reutiliza los mismos lectores que el agente v1). Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
     }
   }
 }
