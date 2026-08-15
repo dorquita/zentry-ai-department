@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import * as fs from "fs";
 import * as path from "path";
-import { auditV2OutputForFabrication, buildRunnerResultSummary, extractJsonFromModelResponse, LandingArchitectComparisonArtifact, LandingArchitectV2Output, renderComparisonMarkdown, V2Result } from "../src/core/landing-architect-comparison";
+import { auditV2OutputForFabrication, buildRunnerResultSummary, LandingArchitectComparisonArtifact, LandingArchitectV2Output, renderComparisonMarkdown, V2Result } from "../src/core/landing-architect-comparison";
 import { LandingArchitectContext } from "../src/core/landing-architect-v2-context";
 
 export interface TestCase {
@@ -219,45 +219,10 @@ export function runLandingArchitectComparisonTests(): TestCase[] {
       },
     },
 
-    // --- extractJsonFromModelResponse (ver ejecucion real en Claude Cloud, docs/ux-ui-landing-architect-v2-experiment.md) ---
-    {
-      name: "extractJsonFromModelResponse parsea JSON sin fences",
-      fn: () => {
-        const result = extractJsonFromModelResponse('{"a": 1}');
-        assert.deepEqual(result, { a: 1 });
-      },
-    },
-    {
-      name: "extractJsonFromModelResponse quita un fence ```json ... ``` (caso real observado en la ejecucion via Agent tool)",
-      fn: () => {
-        const raw = '```json\n{"a": 1, "b": [1, 2]}\n```';
-        const result = extractJsonFromModelResponse(raw);
-        assert.deepEqual(result, { a: 1, b: [1, 2] });
-      },
-    },
-    {
-      name: "extractJsonFromModelResponse quita un fence generico sin la etiqueta 'json'",
-      fn: () => {
-        const raw = '```\n{"a": 1}\n```';
-        const result = extractJsonFromModelResponse(raw);
-        assert.deepEqual(result, { a: 1 });
-      },
-    },
-    {
-      name: "extractJsonFromModelResponse tolera espacio en blanco alrededor del fence",
-      fn: () => {
-        const raw = '  \n```json\n  {"a": 1}  \n```\n  ';
-        const result = extractJsonFromModelResponse(raw);
-        assert.deepEqual(result, { a: 1 });
-      },
-    },
-    {
-      name: "extractJsonFromModelResponse falla (fail-closed) con texto que no es JSON, con o sin fence",
-      fn: () => {
-        assert.throws(() => extractJsonFromModelResponse("esto no es JSON"));
-        assert.throws(() => extractJsonFromModelResponse("```json\nesto tampoco\n```"));
-      },
-    },
+    // --- extractJsonFromModelResponse se movio al runtime comun
+    // (src/core/claude-employee-runtime.ts, ya no es especifico de
+    // Landing Architect) -- sus tests viven ahora en
+    // test/claude-employee-runtime.test.ts. ---
 
     // --- buildRunnerResultSummary: contrato RUNNER_RESULT_JSON (estructura fija en los 3 estados) ---
     {

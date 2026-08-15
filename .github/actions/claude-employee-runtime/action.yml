@@ -1,0 +1,253 @@
+name: "Claude Employee Runtime"
+description: >-
+  Runtime GENERICO y reutilizable para invocar cualquier "empleado
+  Claude" (un .claude/agents/*.md ejecutado como sesion PRINCIPAL de
+  claude-code-action via --agent, nunca via Agent/Task anidado). Resuelve
+  autenticacion, invoca la Action pinneada, y resuelve la salida
+  (structured_output o fallback via execution_file) validandola contra
+  el JSON Schema versionado del empleado que la llama -- sin saber NADA
+  de la logica de negocio de ningun empleado concreto. Ver
+  docs/claude-employee-runtime.md.
+
+inputs:
+  agent-name:
+    description: 'Nombre EXACTO del subagente (debe existir en .claude/agents/<agent-name>.md), pasado a --agent.'
+    required: true
+  prompt:
+    description: 'Contenido COMPLETO del prompt ya preparado por el codigo de dominio del empleado (ya incluye instrucciones del agente + contexto). Se pasa tal cual al input `prompt` de claude-code-action.'
+    required: true
+  output-schema-path:
+    description: 'Ruta (relativa al repo) al JSON Schema versionado del empleado, p.ej. config/<agent-name>-output.schema.json. Se usa tanto para --json-schema como para validar el fallback.'
+    required: true
+  expected-output-path:
+    description: 'Ruta donde este runtime escribira el texto de salida ya resuelto (structured_output o fallback), tal cual, sin reinterpretar. El directorio debe existir ya (lo crea el codigo de preparacion de dominio del empleado).'
+    required: true
+  claude-code-oauth-token:
+    description: 'Valor de secrets.CLAUDE_CODE_OAUTH_TOKEN del caller (puede ser cadena vacia). Preferido sobre anthropic-api-key.'
+    required: true
+  anthropic-api-key:
+    description: 'Valor de secrets.ANTHROPIC_API_KEY del caller (puede ser cadena vacia). Alternativa si no hay claude-code-oauth-token.'
+    required: true
+  github-token:
+    description: 'Token de GitHub a pasar EXPLICITAMENTE a claude-code-action (normalmente el valor de github.token del caller) -- ver el porque en el step de invocacion mas abajo. AVISO para quien edite este fichero: no escribas aqui, ni en ningun otro description de este fichero, la secuencia de interpolacion de GitHub Actions (llave-llave-porciento, espacio, llave-llave-porciento cerrando) ni siquiera vacia -- el parser de manifest de una composite action evalua esa secuencia en CUALQUIER string del fichero, incluido texto puramente documental, y el contexto "github" no esta disponible en ese momento de evaluacion (bug real detectado en el primer E2E de PR #6, run 31877237097/31877352330: "Unrecognized named-value: github" y luego "An expression was expected").'
+    required: true
+  max-turns:
+    description: 'Limite de turnos pasado a --max-turns (fail-closed frente a sesiones que no convergen).'
+    required: false
+    default: "8"
+  disallowed-tools:
+    description: 'Patron pasado a --disallowedTools, defensa en profundidad sobre el tools:[] del propio agente.'
+    required: false
+    default: "mcp__*"
+
+outputs:
+  claude-outcome:
+    description: >-
+      Resultado REAL (sin enmascarar por continue-on-error) del step que
+      invoca claude-code-action: "success" o "failure". Un "failure" aqui
+      NO significa necesariamente que el empleado fallara -- puede haberse
+      recuperado via el fallback (ver output-source).
+    value: ${{ steps.claude.outcome }}
+  output-source:
+    description: >-
+      "structured_output" si la salida vino directa de claude-code-action,
+      "execution_file_fallback" si se recupero del execution_file. Vacio
+      si el runtime fallo por completo (el step del runtime ya habra
+      fallado en ese caso -- este output es solo para Step Summary).
+    value: ${{ steps.resolve.outputs.source }}
+
+runs:
+  using: "composite"
+  steps:
+    # --- Autenticacion Claude: explicita, sin fallback silencioso ---
+    # Preferencia documentada: CLAUDE_CODE_OAUTH_TOKEN. Alternativa:
+    # ANTHROPIC_API_KEY. El metodo elegido se registra en el output
+    # `method` (visible en logs y en el Step Summary si falla) -- nunca
+    # se prueban los dos en silencio ni se combinan. Los valores llegan
+    # como inputs (no via `secrets.*` directo: una composite action NO
+    # tiene acceso al contexto `secrets` del caller, solo a lo que se le
+    # pase explicitamente por `with:` -- ver docs/claude-employee-runtime.md).
+    - name: Resolver metodo de autenticacion Claude
+      id: claude-auth
+      shell: bash
+      run: |
+        if [ -n "$HAS_OAUTH" ]; then
+          echo "method=oauth" >> "$GITHUB_OUTPUT"
+          echo "Autenticacion Claude resuelta: CLAUDE_CODE_OAUTH_TOKEN (preferido)."
+        elif [ -n "$HAS_API_KEY" ]; then
+          echo "method=api_key" >> "$GITHUB_OUTPUT"
+          echo "Autenticacion Claude resuelta: ANTHROPIC_API_KEY (CLAUDE_CODE_OAUTH_TOKEN no configurado)."
+        else
+          echo "method=none" >> "$GITHUB_OUTPUT"
+          echo "::warning::Ninguna autenticacion Claude configurada (falta el secret CLAUDE_CODE_OAUTH_TOKEN o ANTHROPIC_API_KEY)."
+        fi
+      env:
+        HAS_OAUTH: ${{ inputs.claude-code-oauth-token != '' && '1' || '' }}
+        HAS_API_KEY: ${{ inputs.anthropic-api-key != '' && '1' || '' }}
+
+    - name: Abortar (BLOCKED_BY_AUTH) si falta autenticacion Claude
+      if: steps.claude-auth.outputs.method == 'none'
+      shell: bash
+      run: |
+        {
+          echo "## ${{ inputs.agent-name }} -- BLOCKED_BY_AUTH"
+          echo ""
+          echo "Falta configurar autenticacion de Claude para este repositorio. Accion manual (una sola vez):"
+          echo ""
+          echo "1. Genera un token: \`claude setup-token\` en local (cuentas Claude Pro/Max) para CLAUDE_CODE_OAUTH_TOKEN,"
+          echo "   o una API key en la Consola de Anthropic para ANTHROPIC_API_KEY."
+          echo "2. Anade el secret **CLAUDE_CODE_OAUTH_TOKEN** (preferido) o **ANTHROPIC_API_KEY** en:"
+          echo "   Settings -> Secrets and variables -> Actions -> New repository secret."
+          echo "3. Vuelve a lanzar este workflow con \`workflow_dispatch\`."
+        } >> "$GITHUB_STEP_SUMMARY"
+        echo "::error::BLOCKED_BY_AUTH -- falta CLAUDE_CODE_OAUTH_TOKEN o ANTHROPIC_API_KEY. Ver el Step Summary para la accion manual exacta."
+        exit 1
+
+    # --- Preflights DETERMINISTICOS (sin usar Claude para nada), ambos
+    # AUTORIDAD UNICA de su politica para CUALQUIER empleado que use este
+    # runtime -- ningun empleado nuevo debe duplicar esta logica en su
+    # propio workflow. Corren ANTES de gastar ninguna invocacion de
+    # Claude, para fallar rapido y barato si algo esta mal configurado. ---
+
+    # 1) Tool guard: el subagente debe estar declarado "cero herramientas"
+    # tanto en config/subagent-tool-allowlist.json como en el frontmatter
+    # de su propio .claude/agents/<agent>.md (ver
+    # src/core/subagent-tool-guard.ts, assertSubagentIsToolless()). Antes
+    # de PR #6 este chequeo solo vivia en tests
+    # (test/subagent-tool-guard.test.ts) -- correcto para detectar drift
+    # en CI, pero no impedia por si solo que un futuro
+    # .claude/agents/<agent>.md con `tools:` mal declarado llegase a
+    # invocarse en produccion si alguien se saltara los tests. Ahora el
+    # runtime comun lo verifica el mismo, en el momento exacto antes de
+    # invocar a Claude, para TODOS los empleados.
+    - name: "[RUNTIME] Preflight: verificar que el agente es cero-herramientas (Subagent Tool Guard)"
+      id: toolless-guard
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: npm run claude-employee:assert-safety-for-ci -- "$AGENT_NAME"
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+
+    # 2) Schema guard: el JSON Schema de salida del empleado solo puede
+    # usar keywords que src/core/json-schema-lite.ts sabe validar -- si
+    # no, caso A (--json-schema) y caso B (fallback) dejarian de tener el
+    # mismo contrato (ver src/core/json-schema-lite.ts,
+    # assertJsonSchemaLiteSupported()). Corre ANTES de invocar a Claude
+    # para no gastar inferencia con un schema que este runtime no podria
+    # validar con paridad.
+    - name: "[RUNTIME] Preflight: verificar que el schema de salida solo usa keywords soportadas (json-schema-lite)"
+      id: schema-guard
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: npm run claude-employee:assert-schema-supported-for-ci -- "$OUTPUT_SCHEMA_PATH"
+      env:
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+
+    - name: Preparar JSON Schema de salida para --json-schema
+      id: schema
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: echo "json=$(jq -c . "$OUTPUT_SCHEMA_PATH")" >> "$GITHUB_OUTPUT"
+      env:
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+
+    # --- Invocacion real de Claude: LA SESION PRINCIPAL de claude-code-action
+    # ES el empleado (--agent ${{ inputs.agent-name }}), nunca una sesion
+    # generica que a su vez invoca Agent/Task.
+    #
+    # SHA fijado (no el tag movible @v1): este step recibe
+    # CLAUDE_CODE_OAUTH_TOKEN/ANTHROPIC_API_KEY -- @v1 es un tag movible
+    # que Anthropic puede reapuntar a otro commit en cualquier momento,
+    # asi que se fija el commit exacto auditado (ver
+    # docs/ux-ui-landing-architect-v2-experiment.md para la verificacion
+    # completa contra el repositorio oficial anthropics/claude-code-action:
+    # `--agent` es una opcion real de primer nivel del Claude Agent SDK
+    # 0.3.233, y --json-schema/structured_output es el mecanismo oficial
+    # documentado). Fijar el SHA aqui, en UN unico sitio, significa que
+    # actualizarlo para TODOS los empleados que usen este runtime es un
+    # solo cambio, no uno por cada workflow de empleado.
+    #
+    # `--disallowedTools "mcp__*"` -- defensa en profundidad sobre el
+    # tools:[] del propio agente (capa 1). NO se anade `--tools ""`:
+    # verificado que el parser de claude_args de la Action trata un valor
+    # vacio ("") como "sin valor" (cadena vacia es falsy en JS), asi que
+    # `--tools ""` se interpretaria como el flag booleano `--tools` sin
+    # argumento en vez de "sin herramientas" -- se omite en vez de
+    # arriesgar un flag no documentado.
+    #
+    # `github-token` se pasa EXPLICITAMENTE: sin el, claude-code-action
+    # pide su propio token via OIDC (requiere `id-token: write`) contra
+    # el GitHub App oficial de Claude, con permisos de ESCRITURA por
+    # defecto (contents/pull_requests/issues) sin importar el
+    # `permissions:` del workflow caller. Pasar el token del caller
+    # explicitamente limita lo que ve Claude a los permisos que declare
+    # el workflow del empleado (`contents: read`).
+    #
+    # `continue-on-error: true` -- JUSTIFICADO Y ACOTADO a este unico
+    # step, con un fail-closed explicito inmediatamente despues (step
+    # "Resolver salida"). Motivo real, observado en produccion (ver
+    # docs/ux-ui-landing-architect-v2-experiment.md): claude-code-action
+    # puede terminar `subtype: "success", is_error: false` (Claude SI
+    # respondio, sin fallo real) pero sin `structured_output` --
+    # comportamiento documentado oficialmente por Anthropic, no un bug.
+    # Sin continue-on-error, ese fallo tumbaria el job ENTERO antes de
+    # poder distinguir "Claude fallo de verdad" de "la entrega de
+    # structured_output fallo". El commit fijado sigue exponiendo el
+    # output `execution_file` aunque el step termine fallando (verificado
+    # leyendo su codigo fuente real), asi que el fallback sigue siendo
+    # posible. La autoridad sobre si la salida final es valida NUNCA deja
+    # de ser el step "Resolver salida" de abajo: si no hay nada
+    # recuperable, ese step falla explicitamente igual que si
+    # continue-on-error no existiera.
+    #
+    # LIMITACION CONOCIDA (parcialmente mitigada): los steps INTERNOS de
+    # una composite action NO soportan `timeout-minutes` propio (no es un
+    # campo valido en runs.steps para `using: composite` -- verificado
+    # contra el JSON Schema oficial de metadata de Actions, no asumido),
+    # asi que este step "Ejecutar empleado Claude" en concreto no puede
+    # llevar su propio timeout de 10 min como antes de PR #6. Pero el
+    # CALLER (el workflow del empleado que hace
+    # `uses: ./.github/actions/claude-employee-runtime`) SI puede poner
+    # `timeout-minutes: 10` en ESE step -- eso limita la composite action
+    # COMPLETA (auth + preflights + este step + resolucion de salida) a
+    # 10 min, recuperando de forma practica el mismo backstop que existia
+    # antes. Ver .github/workflows/ux-ui-landing-architect-v2.yml (step
+    # "[RUNTIME] Ejecutar...") y docs/claude-employee-runtime.md, seccion
+    # de timeouts -- todo empleado nuevo debe copiar ese
+    # timeout-minutes: 10 en su propio caller.
+    - name: Ejecutar empleado Claude
+      id: claude
+      if: steps.claude-auth.outputs.method != 'none'
+      continue-on-error: true
+      uses: anthropics/claude-code-action@9d7150bc8a3dae8149739a88019d192b579ad90c # v1.0.193
+      with:
+        prompt: ${{ inputs.prompt }}
+        github_token: ${{ inputs.github-token }}
+        anthropic_api_key: ${{ steps.claude-auth.outputs.method == 'api_key' && inputs.anthropic-api-key || '' }}
+        claude_code_oauth_token: ${{ steps.claude-auth.outputs.method == 'oauth' && inputs.claude-code-oauth-token || '' }}
+        claude_args: |
+          --agent ${{ inputs.agent-name }}
+          --disallowedTools "${{ inputs.disallowed-tools }}"
+          --max-turns ${{ inputs.max-turns }}
+          --json-schema '${{ steps.schema.outputs.json }}'
+
+    # --- Resolver la salida (caso A/B/C) + validarla contra el schema +
+    # escribirla en expected-output-path -- TODO en un unico step
+    # generico (scripts/resolve-claude-employee-output-for-ci.ts,
+    # src/core/claude-employee-runtime.ts). Falla explicitamente
+    # (codigo != 0) si no hay nada recuperable o si el JSON no cumple el
+    # schema -- eso deja este step, y por tanto el job del caller, en
+    # FAILED. La autoridad sobre la validez de la salida es este runtime
+    # generico (JSON Schema), nunca Claude ni la Action; la validacion de
+    # FORMA especifica de cada empleado la hace el propio empleado
+    # DESPUES de este step, leyendo expected-output-path.
+    - name: Resolver salida del empleado (structured_output o fallback via execution_file)
+      id: resolve
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: npm run claude-employee:resolve-output-for-ci -- "$OUTPUT_SCHEMA_PATH" "$EXPECTED_OUTPUT_PATH" "$EXECUTION_FILE_PATH"
+      env:
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+        EXPECTED_OUTPUT_PATH: ${{ inputs.expected-output-path }}
+        EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
+        CLAUDE_STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}

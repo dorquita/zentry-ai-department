@@ -37,25 +37,6 @@ export interface LandingArchitectV2Output {
 export type V1BlueprintInput = Omit<LandingBlueprint, "blueprintId" | "createdAt" | "updatedAt">;
 
 /**
- * Extrae JSON de la respuesta cruda de texto del subagente. Las
- * instrucciones de `.claude/agents/ux-ui-landing-architect-v2.md` piden
- * "sin markdown fences", pero en la practica (ver ejecucion real
- * documentada en docs/ux-ui-landing-architect-v2-experiment.md) el
- * modelo puede envolver la respuesta en ```json ... ``` de todas formas
- * -- esta funcion tolera ese caso (y el caso sin fences) antes de
- * intentar `JSON.parse`, para que una diferencia de formato no tumbe
- * todo el pipeline automatico. Fail-closed igualmente: si tras quitar un
- * posible fence el contenido no es JSON valido, lanza -- nunca intenta
- * "adivinar" ni reparar el contenido.
- */
-export function extractJsonFromModelResponse(raw: string): unknown {
-  const trimmed = raw.trim();
-  const fenceMatch = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i);
-  const jsonText = fenceMatch ? fenceMatch[1].trim() : trimmed;
-  return JSON.parse(jsonText);
-}
-
-/**
  * Valida (sin librerias externas -- ninguna dependencia nueva) que un
  * objeto crudo tiene la forma minima de un `LandingArchitectV2Output`.
  * Fail-closed: cualquier campo obligatorio ausente o del tipo
