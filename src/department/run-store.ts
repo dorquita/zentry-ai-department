@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { resolveActiveClientPaths } from "../core/client-paths";
+import { extractJsonFromModelResponse } from "../core/claude-employee-runtime";
 import {
   assertSupportedContractVersion,
   DEPARTMENT_RUN_CONTRACT_VERSION,
@@ -234,6 +235,33 @@ export function findStageRecord(manifest: DepartmentRunManifest, stage: Departme
 }
 
 /**
+ * Parsea el TEXTO de la salida de una etapa. Funcion pura (sin I/O) para
+ * poder testearla directamente.
+ *
+ * Tolerante a fences de markdown (```json ... ```) por la misma razon
+ * que todos los runners de empleado de este repositorio: el runtime
+ * comun escribe en `expected-output-path` el texto que devolvio Claude
+ * TAL CUAL, sin reinterpretarlo, y ese texto puede venir envuelto en
+ * fences aunque las instrucciones del agente pidan no hacerlo. Usar
+ * `JSON.parse` directo aqui rompia la lectura de una salida por lo demas
+ * perfectamente valida (fallo real observado en el primer E2E
+ * coordinado, run 31892955242).
+ *
+ * Devuelve `undefined` (nunca lanza) si el texto no es recuperable: quien
+ * llama lo registra como degradacion explicita (`invalid_output`), que es
+ * justo el comportamiento fail-closed de este sistema -- pero no tumba la
+ * fase entera por un fichero roto.
+ */
+export function parseStageOutputText(text: string, label: string): unknown | undefined {
+  try {
+    return extractJsonFromModelResponse(text);
+  } catch (err) {
+    console.error(`[department] La salida registrada de ${label} no es JSON recuperable (${err instanceof Error ? err.message : String(err)}). Se trata como ausente, no se reinterpreta.`);
+    return undefined;
+  }
+}
+
+/**
  * Lee la salida ya validada de una etapa desde su ruta determinista.
  * Devuelve `undefined` si esa etapa no llego a producir salida (no
  * lanza): "no hay salida" es un estado NORMAL y explicito de este
@@ -245,7 +273,7 @@ export function readStageOutput(manifest: DepartmentRunManifest, stage: Departme
   if (!record || record.status !== "executed" || !record.outputPath) return undefined;
   const absolute = fromRepoRelative(record.outputPath);
   if (!fs.existsSync(absolute)) return undefined;
-  return JSON.parse(fs.readFileSync(absolute, "utf-8")) as unknown;
+  return parseStageOutputText(fs.readFileSync(absolute, "utf-8"), `${stage} (${record.outputPath})`);
 }
 
 export function writeStageContext(departmentRunId: string, stage: DepartmentStageName, context: unknown): string {

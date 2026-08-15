@@ -151,6 +151,19 @@ function stageStatusOf(manifest: DepartmentRunManifest, stage: DepartmentStageNa
   };
 }
 
+/**
+ * Anexa al motivo registrado lo que el runtime comun reporto de esa
+ * invocacion (`claude-outcome` / `output-source`, los dos unicos outputs
+ * que expone la composite action). Sin esto, un fallo dentro del runtime
+ * solo era diagnosticable leyendo miles de lineas de log; con esto queda
+ * en el manifiesto y, por tanto, en el Daily Brief y en el artifact.
+ */
+function withRuntimeNote(reason: string, args: Record<string, string>): string {
+  const note = args["runtime-note"];
+  if (!note || note === "true") return reason;
+  return `${reason} [runtime: ${note}]`;
+}
+
 function loadPromotion(departmentRunId: string): DepartmentPromotionResult | undefined {
   const { promotionPath } = resolveDepartmentRunPaths(departmentRunId);
   if (!fs.existsSync(promotionPath)) return undefined;
@@ -234,7 +247,7 @@ function phaseCompleteGrowth(args: Record<string, string>): DepartmentRunnerResu
   const outputArg = args.output && args.output !== "true" ? args.output : outputPath;
 
   if (!fs.existsSync(outputArg)) {
-    const reason = `growth-director-v2 no dejo ninguna salida en ${toRepoRelative(outputPath)} -- la invocacion de Claude no produjo un fichero utilizable.`;
+    const reason = withRuntimeNote(`growth-director-v2 no dejo ninguna salida en ${toRepoRelative(outputPath)} -- la invocacion de Claude no produjo un fichero utilizable.`, args);
     recordStage({ departmentRunId, stage: "growth-director-v2", status: "failed", reason });
     console.error(reason);
     process.exitCode = 1;
@@ -248,7 +261,7 @@ function phaseCompleteGrowth(args: Record<string, string>): DepartmentRunnerResu
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     const quarantinePath = quarantineInvalidOutput(departmentRunId, "growth-director-v2", rawText);
-    const reason = `Salida de growth-director-v2 invalida (fail-closed, no se reinterpreta): ${error}. Copia cruda en ${toRepoRelative(quarantinePath)}.`;
+    const reason = withRuntimeNote(`Salida de growth-director-v2 invalida (fail-closed, no se reinterpreta): ${error}. Copia cruda en ${toRepoRelative(quarantinePath)}.`, args);
     recordStage({ departmentRunId, stage: "growth-director-v2", status: "invalid_output", reason });
     console.error(reason);
     process.exitCode = 1;
@@ -363,7 +376,7 @@ function phaseCompleteQa(args: Record<string, string>): DepartmentRunnerResultSu
     departmentRunId,
     stage: "qa-reviewer",
     status: qaStatus,
-    reason,
+    reason: qaStatus === "executed" ? reason : withRuntimeNote(reason, args),
     sourceOutputPath: qaStatus === "executed" && args["qa-output"] && args["qa-output"] !== "true" && fs.existsSync(args["qa-output"]) ? args["qa-output"] : undefined,
     sourceArtifactPath: reviewArg && reviewArg !== "true" && fs.existsSync(reviewArg) ? reviewArg : undefined,
   });
@@ -454,7 +467,7 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
   const outputArg = args.output && args.output !== "true" ? args.output : outputPath;
 
   if (!fs.existsSync(outputArg)) {
-    const reason = `web-engineer no dejo ninguna salida en ${toRepoRelative(outputPath)} -- la invocacion de Claude no produjo un fichero utilizable.`;
+    const reason = withRuntimeNote(`web-engineer no dejo ninguna salida en ${toRepoRelative(outputPath)} -- la invocacion de Claude no produjo un fichero utilizable.`, args);
     recordStage({ departmentRunId, stage: "web-engineer", status: "failed", reason });
     console.error(reason);
     process.exitCode = 1;
@@ -468,7 +481,7 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     const quarantinePath = quarantineInvalidOutput(departmentRunId, "web-engineer", rawText);
-    const reason = `Salida de web-engineer invalida (fail-closed, incluida la regla approvalRequired=true): ${error}. Copia cruda en ${toRepoRelative(quarantinePath)}.`;
+    const reason = withRuntimeNote(`Salida de web-engineer invalida (fail-closed, incluida la regla approvalRequired=true): ${error}. Copia cruda en ${toRepoRelative(quarantinePath)}.`, args);
     recordStage({ departmentRunId, stage: "web-engineer", status: "invalid_output", reason });
     console.error(reason);
     process.exitCode = 1;
