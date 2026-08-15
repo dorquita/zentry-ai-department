@@ -1,0 +1,230 @@
+name: SEM Specialist (GitHub Actions + Claude)
+
+# Objetivo de este workflow (ver docs/claude-employee-runtime.md):
+# ejecutar el subagente sem-specialist de principio a fin en GitHub
+# Actions, SIN portatil encendido, SIN VPS, SIN Claude Routines y SIN
+# Agent/Task anidado. La sesion principal de claude-code-action ES
+# directamente el empleado (--agent sem-specialist) -- nunca una sesion
+# generica que a su vez invoca un subagente.
+#
+# Este workflow NO implementa el runtime generico el mismo (auth,
+# invocacion de claude-code-action, fallback via execution_file, y
+# validacion contra el JSON Schema versionado): eso lo hace
+# .github/actions/claude-employee-runtime/action.yml, compartido por
+# cualquier empleado Claude. Este fichero solo contiene lo ESPECIFICO del
+# dominio de sem-specialist: lectura del ULTIMO snapshot de sem-watcher
+# ya persistido en el bus de eventos, preparacion de su prompt, y la
+# validacion/auditoria propia de SemSpecialistOutput (afirmaciones
+# cuantitativas sin respaldo) -- ver
+# src/employees/sem-specialist/sem-specialist-output.ts.
+#
+# sem-specialist es READ/PROPOSE unicamente: NUNCA llama a Google Ads (ni
+# en vivo ni via ningun otro adaptador), NUNCA modifica campanas,
+# presupuestos, keywords ni anuncios, no hace deploy, no publica nada, no
+# toca WordPress/staging/produccion/GA4/GTM/Search Console/n8n/VPS. El
+# resultado se sube como artifact de GitHub Actions, nunca se commitea.
+
+on:
+  workflow_dispatch:
+
+# SIN schedule: este empleado se activa unicamente por workflow_dispatch
+# hasta que se valide end-to-end de verdad (mismo criterio que
+# ux-ui-landing-architect-v2 antes de su primera activacion automatica --
+# ver docs/claude-employee-runtime.md).
+
+# Un solo empleado sem-specialist corriendo a la vez: si ya hay una
+# ejecucion en curso, la nueva ejecucion espera en cola en vez de correr
+# en paralelo y arriesgarse a que dos ejecuciones escriban a la vez sobre
+# los mismos reports/sem-specialist/<fecha>/.
+concurrency:
+  group: sem-specialist
+  cancel-in-progress: false
+
+# Principio de minimo privilegio: este empleado NUNCA escribe en el repo
+# (no commit, no push, no PR, no comentarios en issues/PRs) y NUNCA
+# escribe en Google Ads (ni tiene ninguna via, directa o indirecta, para
+# hacerlo). Con `contents: read` alcanza.
+permissions:
+  contents: read
+
+jobs:
+  run-sem-specialist:
+    name: Ejecutar sem-specialist
+    runs-on: ubuntu-latest
+    # Backstop de tiempo en dos capas (ver docs/claude-employee-runtime.md,
+    # seccion de timeouts): timeout-minutes: 20 aqui es el limite del JOB
+    # completo (incluye los pasos de dominio antes y despues del runtime);
+    # el step "[RUNTIME]" de mas abajo lleva su propio timeout-minutes: 10.
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --- [DOMINIO] Paso 1 del runner: lee el ULTIMO evento sem-watcher
+      # (agent_finished) del bus de eventos, construye el contexto
+      # SemSpecialistContext y prepara sem-specialist-prompt.md -- o
+      # termina en status=no_data (no-op) si nunca se ha registrado
+      # ningun evento sem-watcher. Nunca llama a Google Ads. ---
+      - name: "[DOMINIO] Runner (paso 1): leer snapshot SEM + preparar contexto/prompt"
+        id: prepare
+        run: |
+          set -o pipefail
+          npm run sem-specialist:run -- 2>&1 | tee runner-step1.log
+
+      - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 1)"
+        id: step1
+        run: npm run sem-specialist:parse-runner-result-for-ci -- runner-step1.log
+
+      # --- [DOMINIO] Validar el estado tras el paso 1. "no_data" es un
+      # estado terminal LEGITIMO (nunca un error): significa que
+      # sem-watcher no ha registrado todavia ningun snapshot SEM, asi que
+      # este empleado no tiene nada real sobre lo que razonar y NO invoca
+      # a Claude. Cualquier otro estado que no sea pending_execution en
+      # este punto es inesperado y aborta el job. ---
+      - name: "[DOMINIO] Validar estado tras el paso 1"
+        run: |
+          if [ "$STATUS" = "no_data" ]; then
+            echo "sem-specialist: sin datos SEM disponibles (no_data) -- no se invoca a Claude en esta ejecucion. Ver el artifact para el detalle."
+          elif [ "$STATUS" = "pending_execution" ]; then
+            if [ ! -f "$PROMPT_FILE_PATH" ]; then
+              echo "::error::promptFilePath no existe en disco: $PROMPT_FILE_PATH"
+              exit 1
+            fi
+            echo "OK: status=pending_execution, promptFilePath existe ($PROMPT_FILE_PATH)."
+          else
+            echo "::error::status inesperado tras el paso 1 del runner: \"$STATUS\" (se esperaba no_data o pending_execution). Abortando antes de invocar a Claude."
+            exit 1
+          fi
+        env:
+          STATUS: ${{ steps.step1.outputs.status }}
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      - name: "[DOMINIO] Leer contenido completo de sem-specialist-prompt.md"
+        id: read_prompt
+        if: steps.step1.outputs.status == 'pending_execution'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.step1.outputs.promptFilePath }}
+
+      # --- [RUNTIME COMUN] Autenticacion + invocacion de
+      # claude-code-action (--agent sem-specialist) + resolucion
+      # structured_output/fallback via execution_file + validacion contra
+      # config/sem-specialist-output.schema.json. Identico al de cualquier
+      # otro empleado Claude -- ver docs/claude-employee-runtime.md. Solo
+      # corre si hay un snapshot SEM real (status=pending_execution). ---
+      - name: "[RUNTIME] Ejecutar sem-specialist (Claude Employee Runtime)"
+        id: runtime
+        if: steps.step1.outputs.status == 'pending_execution'
+        # timeout-minutes: 10 -- limita TODA la composite action (auth +
+        # preflights + claude-code-action + resolucion de salida), mismo
+        # backstop practico que el resto de empleados Claude (ver
+        # docs/claude-employee-runtime.md, seccion de timeouts).
+        timeout-minutes: 10
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: sem-specialist
+          prompt: ${{ steps.read_prompt.outputs.content }}
+          output-schema-path: config/sem-specialist-output.schema.json
+          expected-output-path: ${{ steps.step1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ github.token }}
+
+      # --- [DOMINIO] Paso 2 del runner: valida la forma de
+      # SemSpecialistOutput + audita afirmaciones cuantitativas
+      # (CPC/conversiones/ROAS/gasto/presupuesto) sin respaldo trazable en
+      # evidence[] -- una violacion es un fallo DURO (status=invalid_output,
+      # el step sale con codigo != 0 sin continue-on-error). El fichero
+      # que lee (expectedOutputPath) ya lo escribio el runtime comun en el
+      # step anterior. ---
+      - name: "[DOMINIO] Runner (paso 2): validar salida de Claude + auditar afirmaciones cuantitativas"
+        if: steps.step1.outputs.status == 'pending_execution'
+        run: |
+          set -o pipefail
+          npm run sem-specialist:run -- --sem-specialist-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee runner-step2.log
+        env:
+          EXPECTED_OUTPUT_PATH: ${{ steps.step1.outputs.expectedOutputPath }}
+
+      - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 2)"
+        id: step2
+        if: steps.step1.outputs.status == 'pending_execution'
+        run: npm run sem-specialist:parse-runner-result-for-ci -- runner-step2.log
+
+      # --- [DOMINIO] Subir artifact -- artifactJsonPath/artifactMdPath son
+      # rutas FIJAS (mismo fichero, sobrescrito por el paso 2 si corrio),
+      # ya existen tras el paso 1 en TODOS los estados (incluido no_data),
+      # asi que esta subida no depende de si el paso 2 corrio. ---
+      - name: "[DOMINIO] Subir artifact (sem-specialist-result.json, sem-specialist-result.md)"
+        uses: actions/upload-artifact@v4
+        with:
+          name: sem-specialist-${{ github.run_id }}
+          path: |
+            ${{ steps.step1.outputs.artifactJsonPath }}
+            ${{ steps.step1.outputs.artifactMdPath }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: "[DOMINIO] Generar GitHub Step Summary"
+        run: |
+          FINAL_STATUS="$STATUS_STEP1"
+          if [ -n "$STATUS_STEP2" ]; then
+            FINAL_STATUS="$STATUS_STEP2"
+          fi
+          UNSUPPORTED_CLAIM_COUNT="$UNSUPPORTED_CLAIM_COUNT_STEP1"
+          if [ -n "$UNSUPPORTED_CLAIM_COUNT_STEP2" ]; then
+            UNSUPPORTED_CLAIM_COUNT="$UNSUPPORTED_CLAIM_COUNT_STEP2"
+          fi
+          {
+            echo "## sem-specialist"
+            echo ""
+            echo "- **agente:** sem-specialist"
+            if [ -z "$SOURCE_EVENT_ID" ]; then
+              echo "- **input seleccionado:** ninguno (no hay ningun snapshot SEM de sem-watcher registrado todavia)."
+            else
+              echo "- **input seleccionado:** evento sem-watcher \`$SOURCE_EVENT_ID\` (departmentRunId \`$SOURCE_DEPARTMENT_RUN_ID\`)."
+            fi
+            if [ "$FINAL_STATUS" = "no_data" ]; then
+              echo "- **Claude execution:** N/A (no se invoco a Claude -- sin datos SEM disponibles)."
+              echo "- **Origen de la salida:** N/A"
+            else
+              echo "- **Claude execution (outcome del step, sin enmascarar por continue-on-error):** $CLAUDE_OUTCOME"
+              echo "- **Origen de la salida:** $V2_SOURCE"
+            fi
+            echo "- **status:** \`$FINAL_STATUS\`"
+            echo "- **afirmaciones cuantitativas sin respaldo:** $UNSUPPORTED_CLAIM_COUNT"
+            echo "- **artifact generado:** \`sem-specialist-${{ github.run_id }}\`"
+            echo "- **Escritura externa realizada:** ninguna (Google Ads/WordPress/staging/produccion/GA4/GTM/Search Console/n8n/VPS no se han tocado; nada se ha commiteado; sem-specialist es solo lectura + propuesta)."
+            echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo ""
+            if [ "$UNSUPPORTED_CLAIM_COUNT" != "0" ] && [ "$UNSUPPORTED_CLAIM_COUNT" != "null" ]; then
+              echo "> ⚠️ Hay afirmaciones cuantitativas (CPC/conversiones/ROAS/gasto/presupuesto) sin respaldo trazable en evidence[] -- la salida se ha rechazado (status=invalid_output). Ver el artifact para el detalle completo."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          STATUS_STEP1: ${{ steps.step1.outputs.status }}
+          STATUS_STEP2: ${{ steps.step2.outputs.status }}
+          SOURCE_EVENT_ID: ${{ steps.step1.outputs.sourceEventId }}
+          SOURCE_DEPARTMENT_RUN_ID: ${{ steps.step1.outputs.sourceDepartmentRunId }}
+          UNSUPPORTED_CLAIM_COUNT_STEP1: ${{ steps.step1.outputs.unsupportedClaimCount }}
+          UNSUPPORTED_CLAIM_COUNT_STEP2: ${{ steps.step2.outputs.unsupportedClaimCount }}
+          # steps.runtime.outputs.claude-outcome / .output-source: outputs
+          # declarados por la composite action del runtime comun (ver
+          # .github/actions/claude-employee-runtime/action.yml). Vacios
+          # (cadena vacia) si el step [RUNTIME] no corrio (status=no_data).
+          CLAUDE_OUTCOME: ${{ steps.runtime.outputs.claude-outcome }}
+          V2_SOURCE: ${{ steps.runtime.outputs.output-source == 'structured_output' && 'structured_output directo (caso A)' || (steps.runtime.outputs.output-source == 'execution_file_fallback' && 'fallback via execution_file (caso B)' || 'ninguno') }}
