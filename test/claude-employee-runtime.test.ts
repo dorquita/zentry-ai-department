@@ -108,6 +108,41 @@ export function runClaudeEmployeeRuntimeTests(): TestCase[] {
         assert.throws(() => extractJsonFromModelResponse("```json\nesto tampoco\n```"));
       },
     },
+    {
+      name: 'REGRESION (run 31884785206 sem-specialist / run 31884787140 growth-director-v2, ambos "SyntaxError: Expected \',\' or \'}\' after property value"): extractJsonFromModelResponse falla (fail-closed, no repara) cuando un valor string contiene una comilla doble SIN escapar',
+      fn: () => {
+        const rawWithUnescapedQuote = '{"summary": "el termino "biometrico" genera confusion en el anuncio"}';
+        assert.throws(() => extractJsonFromModelResponse(rawWithUnescapedQuote), SyntaxError);
+      },
+    },
+    {
+      name: "REGRESION: extractJsonFromModelResponse falla con prosa ANTES del objeto JSON, sin fence que la envuelva",
+      fn: () => {
+        const rawWithLeadingProse = 'Aqui tienes el analisis solicitado:\n{"a": 1}';
+        assert.throws(() => extractJsonFromModelResponse(rawWithLeadingProse), SyntaxError);
+      },
+    },
+    {
+      name: "REGRESION: extractJsonFromModelResponse falla con prosa DESPUES del objeto JSON, sin fence que la envuelva",
+      fn: () => {
+        const rawWithTrailingProse = '{"a": 1}\nEspero que este analisis te sea util.';
+        assert.throws(() => extractJsonFromModelResponse(rawWithTrailingProse), SyntaxError);
+      },
+    },
+    {
+      name: "REGRESION: extractJsonFromModelResponse falla con JSON truncado/incorrecto (estructura sin cerrar)",
+      fn: () => {
+        const truncated = '{"summary": "texto", "campaignFindings": [{"title": "x", "description": "y"';
+        assert.throws(() => extractJsonFromModelResponse(truncated), SyntaxError);
+      },
+    },
+    {
+      name: "output JSON valido exacto (sin fence, sin prosa, estructuras cerradas) -> extractJsonFromModelResponse NO lanza",
+      fn: () => {
+        const validExact = '{"summary": "texto valido", "campaignFindings": [{"title": "x", "description": "y", "evidenceRefs": [], "severity": "low"}], "unknowns": []}';
+        assert.doesNotThrow(() => extractJsonFromModelResponse(validExact));
+      },
+    },
 
     // --- extractFinalResultMessage (generico) ---
     {

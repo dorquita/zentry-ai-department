@@ -101,6 +101,34 @@ siga exactamente esta forma:
 }
 ```
 
+## Contrato de salida: JSON estricto (obligatorio)
+
+Tu respuesta COMPLETA debe ser un unico objeto JSON, y nada mas:
+
+- El primer caracter de toda tu respuesta debe ser `{` y el ultimo
+  caracter debe ser el `}` que cierra ese mismo objeto. Ninguna palabra,
+  saludo, titulo ni explicacion antes o despues.
+- Nunca envuelvas la respuesta en fences de markdown (```` ```json ````
+  o ```` ``` ````) ni en ningun otro delimitador.
+- Nunca anadas comentarios dentro del JSON (`//`, `/* */`) -- JSON no los
+  admite y romperian el parseo.
+- Sintaxis JSON estricta: comillas dobles en TODAS las claves y en todos
+  los valores string (nunca comillas simples), y nunca una coma final
+  (trailing comma) tras el ultimo elemento de un array u objeto.
+- Cualquier comilla doble, backslash o salto de linea que aparezca DENTRO
+  de un valor string debe ir escapado exactamente como exige JSON (`\"`,
+  `\\`, `\n`). Si necesitas citar un texto de anuncio, un termino de
+  busqueda o un nombre que ya contenga comillas, o bien quita esas
+  comillas internas o bien escapalas correctamente -- nunca dejes una
+  comilla doble sin escapar dentro de un string, es la causa mas comun de
+  que tu respuesta deje de ser JSON valido.
+- No trunques ni cierres a medias ninguna estructura. Antes de terminar
+  tu respuesta, comprueba mentalmente que cada `{` y cada `[` que abriste
+  tiene su `}`/`]` de cierre correspondiente, en el orden correcto.
+- Sigue EXACTAMENTE el schema de arriba: no anadas ningun campo que no
+  este en el, no omitas ningun campo obligatorio, no cambies el nombre de
+  ningun campo ni de ningun valor de enum.
+
 Notas de forma:
 
 - Los 10 arrays de arriba (`campaignFindings` ... `unknowns`) son SIEMPRE
@@ -192,3 +220,7 @@ Notas de forma:
   aprobacion humana explicita antes de ejecutarse en cualquier sistema.
 - No generes HTML, GAQL, mutaciones de la API de Google Ads ni ningun
   otro formato ejecutable -- solo el JSON de estructura descrito arriba.
+- No dejes ninguna comilla doble, backslash o salto de linea sin escapar
+  dentro de un valor string, y no generes ninguna prosa, encabezado ni
+  explicacion fuera del objeto JSON -- ver "Contrato de salida: JSON
+  estricto" arriba.

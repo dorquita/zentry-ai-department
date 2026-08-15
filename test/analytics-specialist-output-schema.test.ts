@@ -162,5 +162,85 @@ export function runAnalyticsSpecialistOutputSchemaTests(): TestCase[] {
         );
       },
     },
+
+    // --- REGRESION (run 31884786170, analytics-specialist): Claude copio la
+    // forma del AnalyticsSpecialistContext de ENTRADA (departmentRunId,
+    // reportGeneratedAt, reportPath, ga4Connected, gtmConnected sueltos en
+    // la raiz) en vez de la forma de SALIDA (runSummary anidado + los 11
+    // arrays), y uso "text"/"reason"/"detail" en vez de "statement"/
+    // "evidenceIds" -- ver .claude/agents/analytics-specialist.md, seccion
+    // "Frontera OBLIGATORIA: INPUT CONTEXT vs OUTPUT CONTRACT" (fix
+    // aplicado tras ese fallo real). ---
+    {
+      name: 'REGRESION: campos del INPUT CONTEXT sueltos en la raiz del output (departmentRunId/reportGeneratedAt/reportPath/ga4Connected/gtmConnected sin anidar en runSummary) -- ambas capas deben rechazarlo',
+      fn: () => {
+        const output: Record<string, unknown> = {
+          departmentRunId: "growth-department-2026-08-14T111247Z",
+          reportGeneratedAt: "2026-08-14T11:12:47.000Z",
+          reportPath: "reports/analytics/analytics-2026-08-14.md",
+          ga4Connected: true,
+          gtmConnected: true,
+          dateRangeAnalyzed: "last_30_days",
+          measurementFindings: [],
+          funnelObservations: [],
+          trafficObservations: [],
+          conversionObservations: [],
+          trackingIssues: [],
+          anomalyCandidates: [],
+          hypotheses: [],
+          recommendedMeasurements: [],
+          prioritizedActions: [],
+          evidence: [],
+          unknowns: [],
+        };
+        const schemaErrors = validateAgainstSchema(schema, schema, output);
+        assert.ok(schemaErrors.length > 0, "el schema deberia rechazar los campos de contexto sueltos en la raiz (falta runSummary + additionalProperties no declarados)");
+        assert.ok(
+          schemaErrors.some((e) => e.includes("runSummary")),
+          `deberia reportar runSummary como requerido y ausente, errores: ${JSON.stringify(schemaErrors)}`
+        );
+        assert.throws(() => validateAnalyticsSpecialistOutput(output), /runSummary/);
+      },
+    },
+    {
+      name: 'REGRESION: "text" en vez de "statement" en un finding -- ambas capas deben rechazarlo',
+      fn: () => {
+        const output = minimalValidOutput();
+        output.measurementFindings = [{ claimType: "FACT", text: "el evento click_phone no se disparo", evidenceIds: [] }];
+        const schemaErrors = validateAgainstSchema(schema, schema, output);
+        assert.ok(schemaErrors.length > 0, "el schema deberia rechazar 'text' (no declarado) y 'statement' ausente (requerido)");
+        assert.throws(() => validateAnalyticsSpecialistOutput(output), /statement/);
+      },
+    },
+    {
+      name: 'REGRESION: "evidenceIds" ausente en un finding -- ambas capas deben rechazarlo',
+      fn: () => {
+        const output = minimalValidOutput();
+        output.measurementFindings = [{ claimType: "FACT", statement: "el evento click_phone no se disparo" }];
+        const schemaErrors = validateAgainstSchema(schema, schema, output);
+        assert.ok(
+          schemaErrors.some((e) => e.includes("evidenceIds")),
+          `el schema deberia reportar evidenceIds como requerido y ausente, errores: ${JSON.stringify(schemaErrors)}`
+        );
+        assert.throws(() => validateAnalyticsSpecialistOutput(output), /evidenceIds/);
+      },
+    },
+    {
+      name: 'REGRESION: campos extra "reason"/"detail" no declarados en prioritizedActions[]/evidence[] -- ambas capas deben rechazarlo',
+      fn: () => {
+        const output = minimalValidOutput();
+        output.prioritizedActions = [{ claimType: "RECOMMENDATION", statement: "x", evidenceIds: [], priority: "high", reason: "no deberia estar aqui" }];
+        output.evidence = [{ id: "e1", source: "ga4_channel_traffic", description: "x", detail: "no deberia estar aqui" }];
+        const schemaErrors = validateAgainstSchema(schema, schema, output);
+        assert.ok(
+          schemaErrors.some((e) => e.includes("reason")),
+          `el schema deberia rechazar prioritizedActions[0].reason, errores: ${JSON.stringify(schemaErrors)}`
+        );
+        assert.ok(
+          schemaErrors.some((e) => e.includes("detail")),
+          `el schema deberia rechazar evidence[0].detail, errores: ${JSON.stringify(schemaErrors)}`
+        );
+      },
+    },
   ];
 }
