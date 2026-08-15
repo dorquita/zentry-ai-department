@@ -1,5 +1,14 @@
 import * as assert from "node:assert/strict";
+import * as fs from "fs";
+import * as path from "path";
 import { buildGrowthDirectorV2Context, SIBLING_CLAUDE_EMPLOYEES } from "../src/employees/growth-director-v2/context";
+
+const AGENTS_DIR = path.join(__dirname, "..", ".claude", "agents");
+
+/** Mismo criterio que agentDefinitionExists() en context.ts -- no importado (no exportado a proposito), reimplementado aqui para que el test verifique la REALIDAD del checkout, no una asuncion fija. */
+function siblingAgentDefinitionExists(agentName: string): boolean {
+  return fs.existsSync(path.join(AGENTS_DIR, `${agentName}.md`));
+}
 
 export interface TestCase {
   name: string;
@@ -50,13 +59,24 @@ export function runGrowthDirectorV2ContextTests(): TestCase[] {
       },
     },
     {
-      name: "REGRESION anti-fabricacion: en este checkout (worktree aislado, PR sin mergear todavia) los 6 empleados hermanos NO tienen definicion de agente -- deben aparecer como missing, nunca como available",
+      // REGRESION anti-fabricacion: originalmente este test fijaba que los
+      // 6 hermanos SIEMPRE debian aparecer "missing", porque en el
+      // momento de escribirlo ningun otro de los 7 PRs paralelos habia
+      // mergeado todavia. Esa asuncion es correcta solo hasta el primer
+      // merge de un hermano -- se rompe en cuanto CUALQUIERA de los 7
+      // aterriza en main (justo lo que este mismo tren de merges hace).
+      // El invariante real que interesa proteger no es "todos ausentes",
+      // es "el status nunca miente sobre si existe de verdad
+      // .claude/agents/<hermano>.md en este checkout" -- reescrito para
+      // comparar contra la presencia REAL del fichero, no un valor fijo.
+      name: "anti-fabricacion: el status de cada hermano en knownDependencies coincide con si su .claude/agents/<hermano>.md existe de verdad en este checkout",
       fn: () => {
         const context = buildGrowthDirectorV2Context();
         for (const sibling of SIBLING_CLAUDE_EMPLOYEES) {
           const dep = context.knownDependencies.find((d) => d.name === sibling);
           assert.ok(dep, `falta la entrada de dependencia para ${sibling}`);
-          assert.equal(dep!.status, "missing", `${sibling} deberia estar "missing" en este worktree (todavia no existe .claude/agents/${sibling}.md)`);
+          const expectedStatus = siblingAgentDefinitionExists(sibling) ? "available" : "missing";
+          assert.equal(dep!.status, expectedStatus, `${sibling}: status deberia ser "${expectedStatus}" segun la presencia real de .claude/agents/${sibling}.md`);
           assert.ok(dep!.note.length > 0);
         }
       },
