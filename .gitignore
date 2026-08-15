@@ -14,3 +14,8 @@ build/
 # usado en tests/docs, ver test/fixtures/landing-architect-comparison-example.json
 # (fixture sanitizado, sin datos operativos reales).
 reports/ux-ui-landing-comparison/
+
+# Worktrees aislados creados por el harness de Claude Code para agentes en
+# background (isolation: "worktree") -- son checkouts de git reales, cada
+# uno con su propia rama, no contenido a versionar dentro de este repo.
+.claude/worktrees/
