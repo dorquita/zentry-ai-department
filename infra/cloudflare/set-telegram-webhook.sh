@@ -36,6 +36,15 @@
 
 set -euo pipefail
 
+# AVISO: registrar un webhook DESACTIVA getUpdates para ese bot (el Bot
+# API devuelve 409 a partir de ese momento). Si este token es el mismo
+# que usa el poller del VPS (scripts/telegram-approvals-service.ts), ese
+# servicio dejara de funcionar. Ver la seccion "conflicto de bot" del
+# README de este directorio: la recomendacion es usar un SEGUNDO bot.
+echo "AVISO: registrar el webhook desactiva getUpdates para este bot." >&2
+echo "       Si el poller del VPS usa el MISMO token, dejara de recibir nada (409)." >&2
+echo "       Ver infra/cloudflare/README.md, seccion 'conflicto de bot con el sistema V1'." >&2
+
 readonly TELEGRAM_API_BASE="${TELEGRAM_API_BASE:-https://api.telegram.org}"
 
 # Ruta del webhook. Es la misma constante que API_ROUTES.telegramWebhook
