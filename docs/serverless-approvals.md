@@ -1,5 +1,28 @@
 # Aprobaciones serverless: Cloudflare Workers + D1
 
+> ## ⏸ STANDBY — NO desplegado, NO activo
+>
+> Este sistema está **implementado y probado**, pero **no está desplegado
+> ni en uso**. Está en standby por una decisión de producto, no por un
+> problema técnico.
+>
+> - Requiere `SERVERLESS_APPROVALS_ENABLED=true` **más** toda la
+>   infraestructura del runbook
+>   ([`infra/cloudflare/README.md`](../infra/cloudflare/README.md)):
+>   Worker, base de datos D1, secretos y registro del webhook.
+> - Mientras el flag esté en `false`, **no hace falta ninguna
+>   infraestructura cloud**: ni Cloudflare, ni D1, ni Telegram, ni
+>   `APPROVALS_API_*`. La pasada diaria funciona igual sin nada de eso.
+> - **El código se conserva a propósito** para poder retomarlo tal cual.
+>   No se borra nada.
+>
+> **Flujo vigente hoy:
+> [`docs/manual-approval-flow.md`](manual-approval-flow.md)** — email
+> diario con las propuestas numeradas y decisión manual por prompt en
+> Claude Code.
+>
+> Todo lo que sigue describe el carril en standby.
+
 Arquitectura del sistema de aprobaciones del departamento IA después de
 sacarlo del VPS.
 

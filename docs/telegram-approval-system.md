@@ -1,16 +1,29 @@
 # Telegram Approval System + Staging-First Apply
 
-> **La parte de APROBACIONES de este documento esta SUPERADA por la fase
-> serverless.** El flujo staging-first, la maquina de estados, las
-> capacidades, los executors, el anti-TOCTOU y los guards siguen siendo
-> validos y vigentes tal como se describen aqui.
+> ## ⏸ La parte de APROBACIONES POR TELEGRAM esta en STANDBY
 >
-> Lo que ha cambiado es DONDE viven las aprobaciones: ya no hay poller de
-> Telegram ni registro en el filesystem del VPS. El webhook lo recibe un
-> Worker de Cloudflare con persistencia en D1, y quien publica en
-> produccion sigue siendo GitHub Actions.
+> **Ningun boton de Telegram esta activo.** Ni el poller del VPS de la
+> primera fase, ni el Worker de Cloudflare + D1 que lo sustituyo: ese
+> carril serverless esta **implementado y probado, pero NO desplegado ni
+> activo**, y requiere `SERVERLESS_APPROVALS_ENABLED=true` mas la
+> infraestructura del runbook
+> ([`infra/cloudflare/README.md`](../infra/cloudflare/README.md)).
+> Mientras el flag este en `false` no hace falta ninguna infraestructura
+> cloud. El codigo se conserva a proposito para retomarlo.
 >
-> Documento vigente para esa parte: **[docs/serverless-approvals.md](serverless-approvals.md)**.
+> **Como se aprueba hoy:
+> [`docs/manual-approval-flow.md`](manual-approval-flow.md)** — email
+> diario con las propuestas numeradas, y la decision se da despues por
+> prompt en Claude Code ("aprueba 1, 2 y 4; rechaza 3 porque...").
+>
+> **Lo que SIGUE VIGENTE de este documento**, sin cambios y en uso: el
+> flujo staging-first, la maquina de estados, las capacidades de apply,
+> los executors deterministas, el anti-TOCTOU por hash de version, los
+> guards de entorno y el audit trail. La decision humana entra por otro
+> sitio; lo que ocurre despues de ella es exactamente esto.
+>
+> Arquitectura del carril en standby:
+> [`docs/serverless-approvals.md`](serverless-approvals.md).
 
 Documento de referencia del flujo operativo por el que un cambio del
 departamento IA llega desde una recomendacion hasta produccion.
