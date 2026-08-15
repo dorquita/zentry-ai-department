@@ -38,7 +38,9 @@ import { GrowthDirectorV2Output } from "../src/employees/growth-director-v2/type
 import { QaReviewerOutput, validateQaReviewerOutput } from "../src/employees/qa-reviewer/output";
 import { auditWebEngineerOutputForUnconfirmedCapabilities, validateWebEngineerOutput } from "../src/employees/web-engineer/validator";
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
+import { readApplySummary } from "../src/department/apply/store";
 import { buildDepartmentDailyBrief, DepartmentDailyBrief, PreviousRunSnapshot, renderDepartmentDailyBriefMarkdown, renderDepartmentStepSummary } from "../src/department/daily-brief";
+import { summarizeDepartmentRunCost } from "../src/department/employee-runs";
 import { buildDepartmentGrowthContext, buildDepartmentGrowthPrompt, DepartmentGrowthContext } from "../src/department/growth-input";
 import { buildDepartmentQaInputBundle } from "../src/department/qa-input";
 import { DepartmentPromotionResult, resolvePromotion } from "../src/department/promotion";
@@ -53,6 +55,7 @@ import {
   findStageRecord,
   fromRepoRelative,
   initDepartmentRun,
+  readDepartmentEmployeeRuns,
   readManifest,
   readStageOutput,
   recordStage,
@@ -564,6 +567,16 @@ function phaseBrief(args: Record<string, string>): DepartmentRunnerResultSummary
   const growthAuditWarnings = readGrowthAuditWarnings(departmentRunId);
   const webAuditWarnings = readWebEngineerAuditWarnings(departmentRunId);
 
+  // APPLY y COSTE son ADITIVOS: si la pasada no los produjo, el brief lo
+  // dice explicitamente en vez de omitirlo o inventarlo.
+  let applySummary = null;
+  try {
+    applySummary = readApplySummary(departmentRunId) ?? null;
+  } catch (err) {
+    console.error(`[department] No se pudo leer el contrato de apply de esta pasada (${err instanceof Error ? err.message : String(err)}). El brief se genera sin la seccion de APPLY.`);
+  }
+  const cost = summarizeDepartmentRunCost(readDepartmentEmployeeRuns(departmentRunId));
+
   const brief = buildDepartmentDailyBrief({
     manifest,
     specialists,
@@ -572,6 +585,8 @@ function phaseBrief(args: Record<string, string>): DepartmentRunnerResultSummary
     webEngineer: { status: webStage.status, reason: webStage.reason, output: webOutput, auditWarnings: webAuditWarnings },
     promotion,
     previousRun: loadPreviousRunSnapshot(departmentRunId),
+    apply: applySummary,
+    cost: cost.runs.length > 0 ? cost : null,
   });
 
   writeDepartmentJson(paths.briefJsonPath, brief);

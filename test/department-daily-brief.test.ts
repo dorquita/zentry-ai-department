@@ -217,11 +217,19 @@ export function runDepartmentDailyBriefTests(): TestCase[] {
       },
     },
     {
-      name: "El brief declara que no hubo ninguna escritura externa y que toda accion requiere aprobacion",
+      name: "Sin apply, el brief declara que no hubo ninguna escritura externa y que toda accion requiere aprobacion",
       fn: () => {
         const brief = buildDepartmentDailyBrief(briefInput());
         assert.equal(brief.externalWrites, "none");
-        assert.ok(brief.note.includes("no se ha escrito en WordPress"));
+        // Desde la fase de APPLY la nota ya no puede decir "no se ha
+        // enviado ningun correo" (el Daily Brief SI se envia), pero sigue
+        // teniendo que dejar claras las dos cosas que importan: que el
+        // analisis no escribe en ningun sistema, y que nada se ejecuta
+        // sin pasar la puerta de aprobacion.
+        assert.ok(brief.note.includes("PROPUESTAS"), `nota inesperada: ${brief.note}`);
+        assert.ok(brief.note.includes("puerta de aprobacion"));
+        assert.ok(brief.note.includes("NO se ha escrito en ningun sistema externo"));
+        assert.ok(brief.apply === null, "una pasada sin planificacion de apply lo dice con null, no con un objeto vacio");
         assert.ok(brief.topPriorities.every((p) => p.approvalRequired === true));
       },
     },
