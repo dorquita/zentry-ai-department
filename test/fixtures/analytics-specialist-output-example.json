@@ -1,0 +1,92 @@
+{
+  "runSummary": {
+    "departmentRunId": "growth-department-2026-08-10T090000Z",
+    "reportGeneratedAt": "2026-08-10T09:00:12.000Z",
+    "ga4Connected": true,
+    "gtmConnected": true
+  },
+  "measurementFindings": [
+    {
+      "claimType": "FACT",
+      "statement": "El evento clave click_phone no se disparo ninguna vez en el periodo (0 ocurrencias).",
+      "evidenceIds": ["ev-key-events"]
+    }
+  ],
+  "funnelObservations": [
+    {
+      "claimType": "OBSERVATION",
+      "statement": "click_request_quote (40 ocurrencias) y generate_lead_form_submit (12 ocurrencias) muestran una caida entre la intencion de solicitar presupuesto y el envio final del formulario.",
+      "evidenceIds": ["ev-key-events"]
+    }
+  ],
+  "trafficObservations": [
+    {
+      "claimType": "OBSERVATION",
+      "statement": "El canal Direct concentra 200 de las sesiones totales del periodo, muy por delante de Organic Search (50) y Paid Search (10).",
+      "evidenceIds": ["ev-channel-traffic"]
+    }
+  ],
+  "conversionObservations": [
+    {
+      "claimType": "FACT",
+      "statement": "El canal Direct registro 40 conversiones sobre 200 sesiones en el periodo.",
+      "evidenceIds": ["ev-channel-traffic"]
+    }
+  ],
+  "trackingIssues": [
+    {
+      "claimType": "FACT",
+      "statement": "El tag GA4 Event - click_phone esta marcado como pausado en GTM, consistente con que el evento click_phone no se registrara en GA4.",
+      "evidenceIds": ["ev-gtm-tags", "ev-key-events"]
+    }
+  ],
+  "anomalyCandidates": [
+    {
+      "claimType": "OBSERVATION",
+      "statement": "Paid Search aporta solo 10 sesiones en el periodo, un volumen bajo candidato a revisar si hay una campana activa.",
+      "evidenceIds": ["ev-channel-traffic"]
+    }
+  ],
+  "hypotheses": [
+    {
+      "claimType": "HYPOTHESIS",
+      "statement": "El tag pausado de click_phone podria explicar por que ese evento no se registro en GA4 en el periodo -- pendiente de confirmar revisando el historial de cambios de GTM.",
+      "evidenceIds": ["ev-gtm-tags", "ev-key-events"]
+    }
+  ],
+  "recommendedMeasurements": [
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Reactivar (o confirmar la baja intencional de) el tag GA4 Event - click_phone en GTM y validar en DebugView que click_phone vuelve a dispararse.",
+      "evidenceIds": ["ev-gtm-tags"]
+    }
+  ],
+  "prioritizedActions": [
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Revisar el tag pausado GA4 Event - click_phone antes de la siguiente revision mensual de tracking.",
+      "priority": "high",
+      "evidenceIds": ["ev-gtm-tags"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-channel-traffic",
+      "source": "ga4_channel_traffic",
+      "description": "Trafico por canal 2026-07-13 a 2026-08-09: Direct 200 sesiones / 40 conversiones, Organic Search 50 sesiones / 10 conversiones, Paid Search 10 sesiones / 1 conversion."
+    },
+    {
+      "id": "ev-key-events",
+      "source": "ga4_key_events",
+      "description": "Eventos clave del periodo: generate_lead_form_submit 12 ocurrencias, click_whatsapp 18 ocurrencias, click_phone 0 ocurrencias (NO se disparo), click_request_quote 40 ocurrencias."
+    },
+    {
+      "id": "ev-gtm-tags",
+      "source": "gtm_tags",
+      "description": "Tag GTM GA4 Event - click_phone (tipo gaawe) esta marcado como pausado."
+    }
+  ],
+  "unknowns": [
+    "No hay datos de Search Console en este contexto, por lo que no se puede evaluar si la caida de click_phone afecta al CTR organico."
+  ]
+}

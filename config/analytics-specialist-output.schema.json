@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zentrylockers.internal/schemas/analytics-specialist-output.schema.json",
+  "title": "AnalyticsSpecialistOutput",
+  "description": "Contrato de salida del subagente Claude analytics-specialist, pasado a claude-code-action via --json-schema (ver .github/workflows/analytics-specialist.yml). Debe reflejar EXACTAMENTE la interfaz TypeScript AnalyticsSpecialistOutput en src/employees/analytics-specialist/types.ts (ver test/analytics-specialist-output-schema.test.ts). Deliberadamente draft-07 (no 2020-12): el SDK de Claude Agent rechaza schemas que declaren un draft mas nuevo. Este fichero se embebe tal cual dentro de un string shell entre comillas simples (--json-schema entrecomillado) en el workflow -- ningun valor de texto de este JSON debe contener el caracter apostrofe.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runSummary": { "$ref": "#/definitions/runSummary" },
+    "measurementFindings": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "funnelObservations": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "trafficObservations": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "conversionObservations": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "trackingIssues": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "anomalyCandidates": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "hypotheses": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "recommendedMeasurements": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "prioritizedActions": { "type": "array", "items": { "$ref": "#/definitions/prioritizedAction" } },
+    "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidenceItem" } },
+    "unknowns": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": [
+    "runSummary",
+    "measurementFindings",
+    "funnelObservations",
+    "trafficObservations",
+    "conversionObservations",
+    "trackingIssues",
+    "anomalyCandidates",
+    "hypotheses",
+    "recommendedMeasurements",
+    "prioritizedActions",
+    "evidence",
+    "unknowns"
+  ],
+  "definitions": {
+    "runSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "departmentRunId": { "type": "string" },
+        "reportGeneratedAt": { "type": "string" },
+        "ga4Connected": { "type": "boolean" },
+        "gtmConnected": { "type": "boolean" }
+      },
+      "required": ["departmentRunId", "reportGeneratedAt", "ga4Connected", "gtmConnected"]
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claimType": { "type": "string", "enum": ["FACT", "OBSERVATION", "HYPOTHESIS", "RECOMMENDATION"] },
+        "statement": { "type": "string" },
+        "evidenceIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["claimType", "statement", "evidenceIds"]
+    },
+    "prioritizedAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claimType": { "type": "string", "enum": ["FACT", "OBSERVATION", "HYPOTHESIS", "RECOMMENDATION"] },
+        "statement": { "type": "string" },
+        "evidenceIds": { "type": "array", "items": { "type": "string" } },
+        "priority": { "type": "string", "enum": ["high", "medium", "low"] }
+      },
+      "required": ["claimType", "statement", "evidenceIds", "priority"]
+    },
+    "evidenceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "source": {
+          "type": "string",
+          "enum": ["ga4_channel_traffic", "ga4_landing_pages", "ga4_key_events", "ga4_source_medium", "gtm_container", "gtm_tags", "gtm_triggers", "key_events_catalog"]
+        },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "source", "description"]
+    }
+  }
+}
