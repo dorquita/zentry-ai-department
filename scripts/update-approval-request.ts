@@ -163,6 +163,16 @@ function main(): void {
     console.log(
       `Respuesta registrada para la ejecucion de staging "${existing.relatedId}". No cascada ningun cambio de estado aqui: el Staging Executor leera esta respuesta en su siguiente pasada (npm run staging:execute) para decidir si aplica la ejecucion real (approved) o la marca rejected.`
     );
+  } else if (existing.relatedType === "department_apply_item") {
+    // Fase EMAIL + SCHEDULE + APPLY — mismo patron sin cascada: esta
+    // respuesta no aplica nada por si sola. Solo desbloquea que
+    // `npm run department:apply -- --phase apply` pueda intentar el
+    // cambio (reversible, en staging, con snapshot y rollback) la
+    // proxima vez que se ejecute, y solo si ademas los interruptores de
+    // entorno lo permiten. Ver docs/department-apply.md.
+    console.log(
+      `Respuesta registrada para el elemento de apply del departamento "${existing.relatedId}". No cascada ningun cambio de estado aqui: el executor del departamento leera esta respuesta en su siguiente ejecucion (npm run department:apply -- --phase apply --departmentRunId <id>) para decidir si intenta el cambio real (approved) o lo marca rejected.`
+    );
   }
 
   console.log("");
