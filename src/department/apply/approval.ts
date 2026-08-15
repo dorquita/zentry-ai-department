@@ -8,16 +8,16 @@ import { DepartmentHumanApproval, DepartmentHumanApprovalStatus } from "./types"
  * su canal de Telegram y su CLI `npm run approvals:update`): NO se crea
  * un segundo sistema de aprobaciones en paralelo. Este modulo solo LEE
  * instantaneas ya reducidas al estado actual y decide, de forma pura y
- * determinista, si existe una aprobacion humana valida para un
- * `applyItemId`.
+ * determinista, si existe una aprobacion humana valida para una
+ * version concreta de un cambio (`changeId`).
  *
  * Fail-closed en todas las direcciones:
  *
- * - No hay solicitud  -> `none`    (nunca se aplica)
- * - `pending`/`snoozed` -> `pending` (nunca se aplica)
- * - `rejected`/`cancelled`/`expired` -> `rejected` (nunca se aplica)
- * - `approved` pero caducada por tiempo -> `rejected` (nunca se aplica)
- * - status desconocido / solicitud incoherente -> `unknown` (nunca se aplica, y ademas BLOQUEA)
+ * - No hay solicitud  -> `none`    (nunca se publica)
+ * - `pending`/`snoozed` -> `pending` (nunca se publica)
+ * - `rejected`/`cancelled`/`expired` -> `rejected` (nunca se publica)
+ * - `approved` pero caducada por tiempo -> `rejected` (nunca se publica)
+ * - status desconocido / solicitud incoherente -> `unknown` (nunca se publica, y ademas BLOQUEA)
  *
  * Nada de esto mira el veredicto de QA: QA decide si algo es proponible,
  * no si esta aprobado.
@@ -26,7 +26,12 @@ import { DepartmentHumanApproval, DepartmentHumanApprovalStatus } from "./types"
 /** Ventana de validez de una aprobacion, igual que la del receptor de Telegram del proyecto (72 h). */
 export const APPROVAL_VALIDITY_HOURS = 72;
 
-/** Tipo de solicitud que usa el apply del departamento en el registro comun de aprobaciones. */
+/**
+ * Tipo de solicitud que usa el apply del departamento en el registro
+ * comun de aprobaciones. `relatedId` es el `changeId` de la version
+ * concreta que se aprueba -- nunca la recomendacion "en general": cada
+ * version necesita su propia aprobacion.
+ */
 export const DEPARTMENT_APPLY_RELATED_TYPE = "department_apply_item";
 
 /** Forma MINIMA que necesita esta puerta -- no se importa el tipo completo del registro para mantener el modulo puro. */
@@ -51,19 +56,24 @@ function hoursBetween(fromIso: string, now: Date): number | null {
 }
 
 export interface ResolveHumanApprovalInput {
-  applyItemId: string;
+  /** `changeId` de la version concreta cuya aprobacion se consulta. */
+  relatedId: string;
   requests: ApprovalSnapshotLike[];
   now?: Date;
 }
 
 /**
- * Resuelve la aprobacion humana de UN elemento de apply. Nunca lanza:
- * cualquier caso raro acaba en `unknown`, que el planificador traduce a
- * `blocked`.
+ * Resuelve la aprobacion humana de UNA version concreta de un cambio.
+ * Nunca lanza: cualquier caso raro acaba en `unknown`, que se traduce a
+ * `blocked` -- jamas a "adelante".
+ *
+ * Se usa como COMPROBACION ADICIONAL antes de publicar en produccion: el
+ * registro persistente de cambios y este registro comun de aprobaciones
+ * tienen que decir lo mismo. Si discrepan, no se publica nada.
  */
 export function resolveHumanApproval(input: ResolveHumanApprovalInput): DepartmentHumanApproval {
   const now = input.now ?? new Date();
-  const matches = input.requests.filter((r) => r.relatedType === DEPARTMENT_APPLY_RELATED_TYPE && r.relatedId === input.applyItemId);
+  const matches = input.requests.filter((r) => r.relatedType === DEPARTMENT_APPLY_RELATED_TYPE && r.relatedId === input.relatedId);
 
   if (matches.length === 0) {
     return {
@@ -71,7 +81,7 @@ export function resolveHumanApproval(input: ResolveHumanApprovalInput): Departme
       approvalRequestId: null,
       answeredBy: null,
       answeredAt: null,
-      reason: `No existe ninguna solicitud de aprobacion humana para "${input.applyItemId}" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.`,
+      reason: `No existe ninguna solicitud de aprobacion humana para "${input.relatedId}" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.`,
     };
   }
 
@@ -83,7 +93,7 @@ export function resolveHumanApproval(input: ResolveHumanApprovalInput): Departme
       approvalRequestId: null,
       answeredBy: null,
       answeredAt: null,
-      reason: `Hay ${matches.length} solicitudes de aprobacion distintas para el mismo elemento "${input.applyItemId}". Fail-closed: no se elige ninguna, el elemento queda bloqueado hasta que un humano lo resuelva.`,
+      reason: `Hay ${matches.length} solicitudes de aprobacion distintas para el mismo elemento "${input.relatedId}". Fail-closed: no se elige ninguna, el elemento queda bloqueado hasta que un humano lo resuelva.`,
     };
   }
 

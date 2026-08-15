@@ -46,11 +46,24 @@ export interface ProductionPageState {
   link: string;
 }
 
+/** Identidad minima de un candidato de produccion -- nunca contenido inventado. */
+export interface ProductionPageCandidate {
+  id: number;
+  slug: string;
+  status: string;
+}
+
 export interface ProductionExecutorDeps {
   /** Relee staging para la comprobacion anti-TOCTOU. */
   getStagingPage: (pageId: number) => Promise<StagingPageState>;
-  /** Busca en produccion candidatos por slug. El filtrado exacto lo hace este modulo, no la busqueda. */
-  findProductionPagesBySlug: (slug: string) => Promise<ProductionPageState[]>;
+  /**
+   * Busca en produccion candidatos por slug. Devuelve solo identidad y
+   * estado a proposito: el filtrado EXACTO lo hace este modulo, no la
+   * busqueda (una busqueda por texto libre nunca decide un destino de
+   * escritura), y el contenido completo se lee despues con
+   * `getProductionPage` sobre el unico candidato valido.
+   */
+  findProductionPagesBySlug: (slug: string) => Promise<ProductionPageCandidate[]>;
   getProductionPage: (pageId: number) => Promise<ProductionPageState>;
   /** Actualiza una pagina de produccion YA publicada. Nunca cambia status ni slug. */
   updateProductionPublishedPage: (input: { pageId: number; title: string; contentHtml: string; excerpt: string }) => Promise<void>;
@@ -189,7 +202,7 @@ export async function applyApprovedChangeToProduction(
     return { change: blocked.ok ? blocked.change : change, externalWritePerformed: false, message: detail };
   }
 
-  let candidates: ProductionPageState[];
+  let candidates: ProductionPageCandidate[];
   try {
     candidates = await deps.findProductionPagesBySlug(slug);
   } catch (err) {
@@ -357,13 +370,17 @@ export async function applyApprovedChangeToProduction(
 
 async function rollbackProduction(
   change: DepartmentChangeRequest,
-  record: EnvironmentApplyRecord,
+  fallbackRecord: EnvironmentApplyRecord,
   before: ProductionPageState,
   deps: ProductionExecutorDeps,
   port: ChangeTransitionPort,
   clock: () => Date,
   externalWritePerformed: boolean
 ): Promise<ProductionApplyResult> {
+  // Se parte del registro YA persistido (que incluye el motivo real del
+  // fallo), no del previo a escribir: si no, el rollback borraria la
+  // evidencia de por que se esta revirtiendo.
+  const record = change.production ?? fallbackRecord;
   const snapshot = record.snapshot;
   const criticalMessage = (detail: string): string => `🚨 PUBLICACION FALLIDA\n\n${change.title}\n\n${detail}\n\nREQUIERE INTERVENCION HUMANA INMEDIATA.`;
 

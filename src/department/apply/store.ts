@@ -57,13 +57,14 @@ export function readApplySummary(departmentRunId: string): DepartmentApplySummar
 export function updateApplySummaryItems(
   summary: DepartmentApplySummary,
   items: DepartmentApplyItem[],
-  updates: { externalWritesPerformed: boolean; applyNotAttemptedReason: string }
+  updates: { externalWritesPerformed: boolean; productionWritesPerformed: boolean; applyNotAttemptedReason: string }
 ): DepartmentApplySummary {
   return {
     ...summary,
     items,
     counts: countApplyItems(items),
     externalWritesPerformed: updates.externalWritesPerformed,
+    productionWritesPerformed: updates.productionWritesPerformed,
     applyNotAttemptedReason: updates.applyNotAttemptedReason,
   };
 }

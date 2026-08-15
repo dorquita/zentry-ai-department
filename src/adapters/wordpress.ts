@@ -210,6 +210,13 @@ export interface WordpressPageInfo {
   contentHtml: string;
   excerpt: string;
   link: string;
+  /**
+   * Slug real de la pagina. Es el unico criterio con el que el apply del
+   * departamento empareja una pagina de staging con su equivalente de
+   * produccion (y solo si la coincidencia es exacta y unica) -- ver
+   * src/department/apply/production-executor.ts.
+   */
+  slug: string;
 }
 
 /**
@@ -253,6 +260,7 @@ export async function getWordpressPage(pageId: number): Promise<WordpressPageInf
     content?: { raw?: string; rendered?: string };
     excerpt?: { raw?: string; rendered?: string };
     link?: string;
+    slug?: string;
   };
   if (typeof json.id !== "number") {
     throw new Error(`Respuesta inesperada de WordPress leyendo la pagina ${pageId} (sin id numerico).`);
@@ -265,6 +273,7 @@ export async function getWordpressPage(pageId: number): Promise<WordpressPageInf
     contentHtml: json.content?.raw ?? json.content?.rendered ?? "",
     excerpt: json.excerpt?.raw ?? json.excerpt?.rendered ?? "",
     link: json.link ?? "",
+    slug: json.slug ?? "",
   };
 }
 

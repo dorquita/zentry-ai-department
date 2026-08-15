@@ -1,4 +1,4 @@
-import { DepartmentApplyItem, DepartmentApplyStatus, DepartmentApplySummary } from "./apply/types";
+import { APPLY_STATUS_LABEL, APPLY_STATUS_REPORT_ORDER, DepartmentApplyItem, DepartmentApplyStatus, DepartmentApplySummary } from "./apply/types";
 import { DepartmentDailyBrief } from "./daily-brief";
 import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./employee-runs";
 
@@ -46,16 +46,16 @@ export interface DailyBriefEmail {
 const SAFETY_MESSAGE =
   "Este informe contiene propuestas. Solo las acciones que hayan pasado la puerta de aprobacion correspondiente pueden ejecutarse mediante APPLY.";
 
-const APPLY_SECTION_LABELS: { status: DepartmentApplyStatus; label: string }[] = [
-  { status: "awaiting_approval", label: "READY FOR APPROVAL" },
-  { status: "approved", label: "APPROVED / QUEUED FOR APPLY" },
-  { status: "applied", label: "APPLIED SUCCESSFULLY" },
-  { status: "validation_failed", label: "VALIDATION FAILED" },
-  { status: "rolled_back", label: "ROLLED BACK" },
-  { status: "rejected", label: "REJECTED" },
-  { status: "blocked", label: "BLOCKED" },
-  { status: "requires_manual_implementation", label: "REQUIRES MANUAL IMPLEMENTATION" },
-];
+/**
+ * Bloques del email, en el orden en el que interesan a un director: lo
+ * accionable primero. Las etiquetas salen de una unica fuente compartida
+ * con el Daily Brief (`APPLY_STATUS_LABEL`), para que el mismo estado no
+ * se llame de dos formas distintas en dos informes.
+ */
+const APPLY_SECTION_LABELS: { status: DepartmentApplyStatus; label: string }[] = APPLY_STATUS_REPORT_ORDER.map((status) => ({
+  status,
+  label: APPLY_STATUS_LABEL[status],
+}));
 
 export function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -90,13 +90,21 @@ export function buildExecutiveLines(input: DailyBriefEmailInput): string[] {
 
   if (input.apply) {
     const counts = input.apply.counts;
+    const readyForReview = counts.staging_applied + counts.awaiting_approval;
     lines.push(
-      `APPLY: ${counts.awaiting_approval} esperando tu aprobacion, ${counts.approved} aprobada(s) en cola, ${counts.applied} aplicada(s), ${counts.requires_manual_implementation} que requieren implementacion manual.`
+      `APPLY: ${counts.staging_applied} listo(s) en staging, ${counts.awaiting_approval} esperando tu aprobacion en Telegram, ${counts.approved} aprobada(s), ${counts.production_applied} publicada(s) en produccion, ${counts.rejected} rechazada(s), ${counts.requires_manual_staging_implementation} que requieren implementacion manual en staging.`
     );
+    if (readyForReview > 0) {
+      // El email informa; la aprobacion se hace en Telegram, que es el
+      // canal OPERATIVO de esta fase. Aqui no se aprueba nada.
+      lines.push(`${readyForReview} cambio(s) estan listos para revisar en Telegram. La aprobacion se hace alli, no por email.`);
+    }
     lines.push(
-      input.apply.externalWritesPerformed
-        ? "Se han realizado escrituras reales en staging en esta pasada (ver la seccion de APPLY)."
-        : "No se ha escrito en ningun sistema externo en esta pasada."
+      input.apply.productionWritesPerformed
+        ? "Se han publicado cambios en PRODUCCION en esta pasada, cada uno con aprobacion humana explicita (ver la seccion de APPLY)."
+        : input.apply.externalWritesPerformed
+          ? "Se han aplicado cambios reversibles en STAGING en esta pasada. Produccion no se ha tocado."
+          : "No se ha escrito en ningun sistema externo en esta pasada."
     );
   } else {
     lines.push("No se ha escrito en ningun sistema externo en esta pasada.");
@@ -213,6 +221,8 @@ export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
         lines.push(`  - #${item.recommendationRank} ${shorten(item.title, 160)}`);
         lines.push(`    Capacidad de apply: ${item.applyCapability.supported ? String(item.applyCapability.id) : "ninguna"} -- ${shorten(item.applyCapability.reason, 260)}`);
         lines.push(`    Aprobacion humana: ${item.humanApproval.status} -- ${shorten(item.humanApproval.reason, 220)}`);
+        if (item.traceability.stagingUrl) lines.push(`    Staging: ${item.traceability.stagingUrl}`);
+        if (item.traceability.productionUrl) lines.push(`    Produccion: ${item.traceability.productionUrl}`);
         if (item.validationStatus !== "not_run" || item.rollbackStatus !== "not_needed") {
           lines.push(`    Validacion: ${item.validationStatus} | Rollback: ${item.rollbackStatus}`);
         }
@@ -317,7 +327,7 @@ export function renderDailyBriefEmailHtml(input: DailyBriefEmailInput): string {
         return `<p style="margin:12px 0 4px;font-weight:600;color:#0b1b33;">${escapeHtml(label)} (${items.length})</p>${htmlList(
           items.map(
             (item) =>
-              `#${item.recommendationRank} ${shorten(item.title, 160)} -- capacidad: ${item.applyCapability.supported ? String(item.applyCapability.id) : "ninguna"}; aprobacion humana: ${item.humanApproval.status}; validacion: ${item.validationStatus}; rollback: ${item.rollbackStatus}`
+              `#${item.recommendationRank} ${shorten(item.title, 160)} -- capacidad: ${item.applyCapability.supported ? String(item.applyCapability.id) : "ninguna"}; aprobacion humana: ${item.humanApproval.status}; validacion: ${item.validationStatus}; rollback: ${item.rollbackStatus}${item.traceability.stagingUrl ? `; staging: ${item.traceability.stagingUrl}` : ""}${item.traceability.productionUrl ? `; produccion: ${item.traceability.productionUrl}` : ""}`
           )
         )}`;
       }).join("") + (apply.applyNotAttemptedReason ? `<p style="margin:8px 0;color:#54617a;">${escapeHtml(apply.applyNotAttemptedReason)}</p>` : "")

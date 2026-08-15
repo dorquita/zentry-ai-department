@@ -364,12 +364,17 @@ export async function applyChangeToStaging(
 
 async function rollbackStaging(
   change: DepartmentChangeRequest,
-  record: EnvironmentApplyRecord,
+  fallbackRecord: EnvironmentApplyRecord,
   before: StagingPageState,
   deps: StagingExecutorDeps,
   port: ChangeTransitionPort,
   clock: () => Date
 ): Promise<DepartmentChangeRequest> {
+  // Se parte del registro YA persistido en el cambio (que incluye el
+  // motivo real del fallo de validacion), no del que se construyo antes
+  // de escribir: si no, el rollback borraria la evidencia de por que se
+  // esta revirtiendo.
+  const record = change.staging ?? fallbackRecord;
   const snapshot = record.snapshot;
   if (!snapshot) {
     const blocked = port.transition(
