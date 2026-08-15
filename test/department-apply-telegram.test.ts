@@ -1,4 +1,6 @@
 import * as assert from "node:assert/strict";
+import * as fs from "fs";
+import * as path from "path";
 import { DepartmentChangeRequest, EnvironmentApplyRecord } from "../src/department/apply/change-types";
 import {
   authorizeTelegramActor,
@@ -400,6 +402,22 @@ export function runDepartmentApplyTelegramTests(): TestCase[] {
         assert.equal(result?.outcome, "department_ignored");
         assert.equal(h.productionCalls, 0);
         assert.equal(checkRejectionAllowed(change({ status: "rejected" })).allowed, false);
+      },
+    },
+    {
+      name: "El flujo historico NO puede resolver un cambio del departamento (ni por texto libre ni por el callback viejo)",
+      fn: () => {
+        // El receiver rechaza `relatedType: "department_apply_item"` en su
+        // ruta historica: aprobarlo ahi marcaria la solicitud comun como
+        // aprobada sin comprobacion anti-TOCTOU ni decision registrada en
+        // el registro de cambios -- los dos registros acabarian diciendo
+        // cosas distintas.
+        const receiver = fs.readFileSync(path.join(__dirname, "..", "src", "agents", "telegram-approval-receiver.ts"), "utf-8");
+        assert.ok(
+          /request\.relatedType === "department_apply_item"/.test(receiver),
+          "el receiver debe rechazar explicitamente los cambios del departamento en su ruta historica"
+        );
+        assert.ok(/se decide con los botones/.test(receiver), "y debe decir por que, remitiendo a los botones");
       },
     },
     {

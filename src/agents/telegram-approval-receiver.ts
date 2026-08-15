@@ -194,6 +194,19 @@ async function handleApproveOrReject(command: { type: "approve" | "reject"; id: 
     await reply(`No encontre ninguna solicitud pendiente con id "${command.id}".`);
     return { ...base, outcome: "ignored_not_found" };
   }
+  // Los cambios del DEPARTAMENTO tienen su propia maquina de estados y su
+  // propio registro persistente: aprobarlos por esta via (texto libre
+  // "ok", o el callback historico `appr:`) marcaria la solicitud comun
+  // como aprobada sin pasar por la comprobacion anti-TOCTOU ni registrar
+  // la decision en el registro de cambios -- es decir, dejaria los dos
+  // registros diciendo cosas distintas. Fail-closed: se rechaza y se
+  // remite a los botones del propio mensaje.
+  if (request.relatedType === "department_apply_item") {
+    await reply(
+      "Ese cambio es del departamento y se decide con los botones de su mensaje (APROBAR / RECHAZAR / VER CAMBIOS). No lo resuelvo por texto: la aprobacion tiene que ir atada a la version exacta que hay en staging."
+    );
+    return { ...base, outcome: "department_ignored", approvalRequestId: request.approvalRequestId, relatedType: request.relatedType };
+  }
   if (CASCADE_REQUIRED_TYPES.has(request.relatedType)) {
     await reply(
       `Esta solicitud (${request.relatedType}) todavia necesita "npm run approvals:update" desde el VPS para sincronizar el backlog. No la resuelvo desde aqui.`

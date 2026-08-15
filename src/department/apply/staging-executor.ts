@@ -1,6 +1,9 @@
 import {
   buildStagingChangeId,
   ChangedField,
+  CHANGE_FIELD_BODY,
+  CHANGE_FIELD_META,
+  CHANGE_FIELD_TITLE,
   ChangeSnapshot,
   DepartmentChangeRequest,
   EnvironmentApplyRecord,
@@ -111,13 +114,13 @@ export interface StagingApplyResult {
 function buildChangedFields(before: StagingPageState, target: StagingMetaUpdateTarget): ChangedField[] {
   const fields: ChangedField[] = [];
   fields.push({
-    field: "title",
+    field: CHANGE_FIELD_TITLE,
     before: before.title,
     after: target.newTitle ?? before.title,
     changed: target.newTitle !== null && normalizeForVersioning(target.newTitle) !== normalizeForVersioning(before.title),
   });
   fields.push({
-    field: "meta description",
+    field: CHANGE_FIELD_META,
     before: before.excerpt,
     after: target.newMetaDescription ?? before.excerpt,
     changed:
@@ -126,7 +129,7 @@ function buildChangedFields(before: StagingPageState, target: StagingMetaUpdateT
   // El cuerpo NO se modifica en esta capacidad: se declara explicitamente
   // para que el mensaje de Telegram pueda decir "sin cambio" con datos
   // reales, en vez de callarselo.
-  fields.push({ field: "contenido (cuerpo)", before: "(sin cambios)", after: "(sin cambios)", changed: false });
+  fields.push({ field: CHANGE_FIELD_BODY, before: "(sin cambios)", after: "(sin cambios)", changed: false });
   return fields;
 }
 

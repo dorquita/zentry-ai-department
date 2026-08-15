@@ -37,6 +37,16 @@ export type DepartmentChangeCapabilityId = "staging_published_meta_update";
 
 export const DEPARTMENT_CHANGE_CAPABILITY_IDS: DepartmentChangeCapabilityId[] = ["staging_published_meta_update"];
 
+/**
+ * Nombres ESTABLES de los campos de un cambio. Son la clave con la que el
+ * executor de produccion recupera "lo que se aprobo" del registro del
+ * cambio (`resolveApprovedValues`), asi que no son texto decorativo:
+ * cambiarlos rompe esa correspondencia. Viven aqui, en un solo sitio.
+ */
+export const CHANGE_FIELD_TITLE = "title";
+export const CHANGE_FIELD_META = "meta description";
+export const CHANGE_FIELD_BODY = "contenido (cuerpo)";
+
 /** Un campo concreto que el cambio toca, con su valor antes y despues. Solo datos REALES leidos del sistema. */
 export interface ChangedField {
   /** "title" | "meta_description" | ... -- nombre estable, legible en el mensaje de Telegram. */

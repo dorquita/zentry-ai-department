@@ -1,6 +1,9 @@
 import {
   buildProductionApplyId,
   ChangedField,
+  CHANGE_FIELD_BODY,
+  CHANGE_FIELD_META,
+  CHANGE_FIELD_TITLE,
   ChangeSnapshot,
   DepartmentChangeRequest,
   EnvironmentApplyRecord,
@@ -81,8 +84,8 @@ export interface ProductionApplyResult {
 /** Valores aprobados: se toman del registro del cambio (lo que se enseño en Telegram), no de una relectura. */
 export function resolveApprovedValues(change: DepartmentChangeRequest): { title: string | null; metaDescription: string | null } {
   const fields = change.staging?.changedFields ?? [];
-  const title = fields.find((f) => f.field === "title");
-  const meta = fields.find((f) => f.field === "meta description");
+  const title = fields.find((f) => f.field === CHANGE_FIELD_TITLE);
+  const meta = fields.find((f) => f.field === CHANGE_FIELD_META);
   return {
     title: title?.changed ? title.after : null,
     metaDescription: meta?.changed ? meta.after : null,
@@ -242,19 +245,19 @@ export async function applyApprovedChangeToProduction(
   const snapshot = snapshotOf(before, at);
   const changedFields: ChangedField[] = [
     {
-      field: "title",
+      field: CHANGE_FIELD_TITLE,
       before: before.title,
       after: approved.title ?? before.title,
       changed: approved.title !== null && normalizeForVersioning(approved.title) !== normalizeForVersioning(before.title),
     },
     {
-      field: "meta description",
+      field: CHANGE_FIELD_META,
       before: before.excerpt,
       after: approved.metaDescription ?? before.excerpt,
       changed:
         approved.metaDescription !== null && normalizeForVersioning(approved.metaDescription) !== normalizeForVersioning(before.excerpt),
     },
-    { field: "contenido (cuerpo)", before: "(sin cambios)", after: "(sin cambios)", changed: false },
+    { field: CHANGE_FIELD_BODY, before: "(sin cambios)", after: "(sin cambios)", changed: false },
   ];
 
   const record: EnvironmentApplyRecord = {
