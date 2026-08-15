@@ -134,8 +134,19 @@ export function buildClaudeEmployeeExecutionRecord(input: BuildExecutionRecordIn
   }
   const final = resultMessages[resultMessages.length - 1];
 
+  // AUTORIDAD sobre el resultado: el mensaje final de la PROPIA sesion de
+  // Claude, no el codigo de salida del step de claude-code-action.
+  //
+  // Los dos no significan lo mismo, y confundirlos daba un informe falso:
+  // la Action puede terminar en "failure" por no haber entregado
+  // `structured_output` aunque la sesion de Claude fuera bien y el runtime
+  // comun recuperase la salida via `execution_file` (comportamiento
+  // documentado, ver docs/claude-employee-runtime.md). Con el criterio
+  // anterior, los seis empleados del primer E2E salian como "error"
+  // habiendo ejecutado y validado correctamente. Como se entrego la salida
+  // ya lo cuenta `outputSource`, que es donde pertenece esa informacion.
   const outcome: ClaudeExecutionOutcome =
-    final.is_error === true || (typeof final.subtype === "string" && final.subtype !== "success") ? "error" : base.outcome === "unknown" ? "success" : base.outcome;
+    final.is_error === true || (typeof final.subtype === "string" && final.subtype !== "success") ? "error" : "success";
 
   return {
     ...base,

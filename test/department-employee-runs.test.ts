@@ -81,6 +81,32 @@ export function runDepartmentEmployeeRunsTests(): TestCase[] {
       },
     },
     {
+      name: "Regresion (E2E run 31897976465): la sesion de Claude manda sobre el codigo de salida del step de la Action",
+      fn: () => {
+        // Caso REAL de la primera pasada con coste por empleado: los seis
+        // empleados ejecutaron y validaron bien, pero claude-code-action
+        // termino en "failure" por no entregar structured_output y la
+        // salida se recupero via execution_file. El registro decia
+        // "error" para los seis, lo cual era simplemente falso.
+        const record = buildClaudeEmployeeExecutionRecord({
+          employee: "seo-specialist",
+          executionFileContent: executionFile(),
+          outputSource: "execution_file_fallback",
+          claudeOutcome: "failure",
+        });
+        assert.equal(record.outcome, "success", "la sesion de Claude fue bien: el fallo fue de la ENTREGA de la salida");
+        assert.equal(record.outputSource, "execution_file_fallback", "como se entrego la salida se cuenta aqui, que es donde pertenece");
+      },
+    },
+    {
+      name: "Sin execution file, el resultado del step de la Action sigue siendo la unica pista disponible",
+      fn: () => {
+        assert.equal(buildClaudeEmployeeExecutionRecord({ employee: "qa-reviewer", claudeOutcome: "failure" }).outcome, "error");
+        assert.equal(buildClaudeEmployeeExecutionRecord({ employee: "qa-reviewer", claudeOutcome: "success" }).outcome, "success");
+        assert.equal(buildClaudeEmployeeExecutionRecord({ employee: "qa-reviewer" }).outcome, "unknown");
+      },
+    },
+    {
       name: "Un registro de OTRO empleado no se acepta para esta etapa (fail-closed contra mezclas)",
       fn: () => {
         const record = buildClaudeEmployeeExecutionRecord({ employee: "qa-reviewer", executionFileContent: executionFile() });
