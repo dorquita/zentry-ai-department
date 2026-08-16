@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - main
+  # Permite verificar CI en una rama de trabajo ANTES de abrir el PR
+  # (p.ej. durante un incidente, para no tener que abrir un PR solo para
+  # saber si typecheck/tests/actionlint pasan en la rama).
+  workflow_dispatch: {}
 
 jobs:
   typecheck-and-test:
