@@ -379,45 +379,58 @@ Los tres son necesarios. Apagar cualquiera desactiva el fallback.
 
 ---
 
-## 14. E2E real ejecutado (2026-08-16)
+## 14. E2E reales ejecutados (2026-08-16)
 
-Run: [31942175626](https://github.com/dorquita/zentry-ai-department/actions/runs/31942175626).
-Página: `https://staging.zentrylockers.com/configurador-bancos/` (post **2077**,
-"Configurador de bancos (prototipo)") — la menos crítica del sitio: su
-propio excerpt la declara prototipo interno, no es landing comercial y no
-tiene keyword objetivo.
+### 14.1 — Cambio de H2 (`core/heading`) por el fallback
 
-Operación: `update_post_excerpt`. **No tiene ability nativa**, así que
-`selectExecutionPath()` eligió el fallback sin necesidad de declarar
-ningún motivo — la consigna era demostrar el fallback donde no hay
-alternativa nativa, y esto lo cumple sin forzar nada.
+Página: `https://staging.zentrylockers.com/digitalizacion-taquillas/`
+(post **1867**). Elegida entre las que tienen un `core/heading` real por
+ser la menos crítica: informativa, no comercial, no es la home ni la
+página de presupuesto, y no figura en el backlog SEO del Daily Brief.
 
-> Un H2 habría vivido en `post_content`, que **sí** tiene ability nativa
-> (`gutenberg-write-content`). Bajo esta misma política ese cambio se
-> habría enrutado a la nativa, y llevarlo a PHP habría exigido declarar un
-> motivo falso. Por eso el E2E cambia una frase que no es un H2.
+Bloques reales de la página: `core/button`, `core/buttons`,
+`core/heading`, `core/image`, `core/list`, `core/paragraph`,
+`yoast/faq-block`. Ninguno es `novamira/*` → `selectExecutionPath()`
+deriva `execute_php_fallback` **del contenido**, sin que nadie declare
+nada.
+
+> **Censo del sitio**: en las 50 páginas publicadas de staging **no hay
+> ni un solo bloque `novamira/*`**. Todo es `core/*`, `kadence/*`,
+> `yoast/*` y `complianz/*`. Es decir: hoy `gutenberg-write-content` no
+> puede escribir **ninguna** página de este sitio. La corrección del
+> selector no era teórica.
+
+Run: [31945963268](https://github.com/dorquita/zentry-ai-department/actions/runs/31945963268).
 
 | Paso | Resultado real |
 |---|---|
-| BEFORE | `"Prototipo interno del configurador 3D de bancos de vestuario -- Fase O23.2."` — versión `d782b5795d99` |
-| Cambio temporal | `"… Fase O23.2. [E2E execute-php 2026-08-16T10:38:24.357Z]"` — versión `f18f92ff8d19` |
-| AFTER validado | releído por REST: valor exacto + nada fuera del scope cambió |
-| Reversión | `applied`, validación `passed` |
-| Read-back final | `"Prototipo interno del configurador 3D de bancos de vestuario -- Fase O23.2."` — versión `d782b5795d99` |
+| BEFORE (H2) | `"Problemas habituales con taquillas ya instaladas"` — versión `6cdc897a5d90` |
+| Camino | `execute_php_fallback` — motivo derivado: *"…este contenido incluye 7 tipo(s) que no lo son: core/button, core/buttons, core/heading, core/image, core/list, core/paragraph, yoast/faq-block"* |
+| Cambio temporal (H2) | `"Configurador de bancos [E2E execute-php 2026-08-16T12:02:41.895Z]"` — versión `8f1639a77440` |
+| AFTER | `applied`, validación `passed`, releído por REST; **nada fuera de `post_content` cambió** |
+| Reversión | plan nuevo con el `post_content` original → `applied` / `passed` |
+| Read-back final (H2) | `"Problemas habituales con taquillas ya instaladas"` — versión `6cdc897a5d90` |
 | **Idéntico al inicio** | **sí** (`identicalToStart: true`) |
 | **Staging writes** | **2** |
 | **Production writes** | **0** |
 
+### 14.2 — Primer E2E: `post_excerpt` (run [31942175626](https://github.com/dorquita/zentry-ai-department/actions/runs/31942175626))
+
+Página 2077 (`configurador-bancos`, prototipo interno), operación
+`update_post_excerpt` — sin ability nativa. BEFORE `d782b5795d99` →
+temporal `f18f92ff8d19` → reversión → final `d782b5795d99`,
+`identicalToStart: true`, 2 escrituras en staging, 0 en producción.
+
 ### El primer intento falló, y eso es la mejor evidencia
 
-El run anterior ([31941898596](https://github.com/dorquita/zentry-ai-department/actions/runs/31941898596))
+El run [31941898596](https://github.com/dorquita/zentry-ai-department/actions/runs/31941898596)
 escribió y **no aplicó nada**: el `input_schema` real de la ability dice
-*"Do NOT include `<?php` tags"* porque hace `eval()` del código, y las
-plantillas lo incluían. El sistema **no se creyó** el "ok" de
-`execute-php`: releyó, vio que el valor no había cambiado, revirtió y
-verificó la reversión. La página quedó intacta y el run acabó en rojo.
+*"Do NOT include `<?php` tags"* porque hace `eval()`, y las plantillas lo
+incluían. El sistema **no se creyó** el "ok" de `execute-php`: releyó, vio
+que el valor no había cambiado, revirtió y verificó la reversión. La
+página quedó intacta y el run acabó en rojo.
 
-De ahí salieron dos correcciones, ninguna de ellas relajando nada:
+De ahí salieron dos correcciones, ninguna relajando nada:
 
 - Las plantillas ya no llevan la etiqueta de apertura, y el resultado
   viaja en base64 para sobrevivir al anidamiento JSON del sobre MCP.
@@ -426,4 +439,4 @@ De ahí salieron dos correcciones, ninguna de ellas relajando nada:
   coincide".
 
 El esquema se obtuvo preguntando (`mcp-adapter-get-ability-info`, sólo
-lectura de metadatos), no adivinando — que es lo que había fallado.
+lectura), no adivinando — que es lo que había fallado.

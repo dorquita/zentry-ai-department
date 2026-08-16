@@ -1,15 +1,16 @@
 {
   "authorizedBy": "pau",
   "authorization": "Aprobacion humana para UN E2E reversible sobre STAGING del fallback execute-php. No autoriza produccion.",
-  "mode": "run",
+  "mode": "list",
   "postId": 1867,
   "pageChosen": "staging /digitalizacion-taquillas/ -- 'Digitalizacion de taquillas existentes'. Elegida entre las que SI tienen un core/heading H2 real por ser la menos critica: es informativa, no es una landing comercial, no es la home ni la pagina de presupuesto, y no figura en el backlog SEO del Daily Brief. Bloques reales: core/button, core/buttons, core/heading, core/image, core/list, core/paragraph, yoast/faq-block.",
   "operation": "update_post_content",
   "whyNotAnAbility": "gutenberg-write-content EXISTE para post_content, pero el servidor declara textualmente que solo escribe cuando TODOS los bloques son novamira/* dynamic-only, y que para bloques nativos/estaticos RECHAZA la escritura. Esta pagina es core/* + yoast/*, asi que selectExecutionPath() lo deriva del contenido real y devuelve execute_php_fallback. Dato del censo: NINGUNA pagina del sitio tiene bloques novamira/*.",
-  "note": "mode=run: E2E de cambio temporal de un H2 (core/heading) por el fallback de PHP, con reversion verificada.",
+  "note": "Vuelto a mode=list: el fichero queda en su estado seguro (solo lectura) para que un push futuro no dispare otra escritura. Para repetir el E2E hay que ponerlo en mode=run explicitamente, y ese cambio queda en el historial de git como autorizacion de esa ejecucion concreta.",
   "lastRun": {
-    "runUrl": "https://github.com/dorquita/zentry-ai-department/actions/runs/31942175626",
-    "postId": 2077,
+    "runUrl": "https://github.com/dorquita/zentry-ai-department/actions/runs/31945963268",
+    "postId": 1867,
+    "operation": "update_post_content (H2 core/heading)",
     "result": "OK -- identicalToStart=true, stagingWrites=2, productionWrites=0"
   }
 }
