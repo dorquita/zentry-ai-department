@@ -165,17 +165,55 @@ Corregido en `1be90de`: el diagnostico pasa a `runner.temp` (efimero por
 pasada, publicado como artifact) y nunca toca `data/` ni `reports/`. Guard
 de regresion anadido.
 
-### Pasadas 1-3 sobre el commit corregido
+### Pasada C (`31969938538`, commit `e85856d`) — ROJA, y las SEIS invocaciones verdes
 
-**PENDIENTE.** Lanzada la primera sobre `e85856d`.
+| Invocacion | Resultado | Duracion |
+|---|---|---|
+| `seo-specialist` | success | 5m 59s |
+| `content-strategist` | success | 1m 24s |
+| `analytics-specialist` | success | 2m 04s |
+| `growth-director-v2` | success | 2m 30s |
+| `qa-reviewer` | success | 3m 29s |
+| `web-engineer` | success | 2m 16s |
 
-Ademas, la cola de runners de GitHub para esta cuenta ha ido de ~12 min a
-~48 min a lo largo de la sesion, lo que hace que cada pasada coordinada
-cueste cerca de una hora de reloj entre cola y ejecucion.
+**6/6 invocaciones del runtime comun verdes**, esta vez incluida
+`web-engineer`. Y el run sigue en rojo por el **mismo step 65,
+`[STATE] Verificar que la pasada no ha perdido estado`** — que mi cambio
+de rutas NO tocaba.
 
-**Este criterio de cierre (§16) NO esta cumplido todavia.** No se declara
-estable el runtime comun hasta que existan tres pasadas coordinadas
-consecutivas verdes.
+Conclusion honesta: **ese fallo no es del runtime comun y no lo he
+causado yo.** Es el guard de perdida de estado del departamento
+reaccionando a algo que encoge entre pasadas cuando se ejecutan varias
+pasadas el mismo dia sobre una rama: los informes de `reports/` se
+regeneran en cada pasada y el propio suite de tests ya documenta que un
+informe del dia regenerado con MENOS contenido cuenta como regresion
+(`test/state-persistence`, caso "un informe del dia que se regenera con
+el MISMO o MAS contenido no es una regresion").
+
+Queda **fuera del alcance de este incidente** (§20: el alcance es
+`Claude employee runtime reliability`), asi que NO lo he tocado: cambiar
+el guard de perdida de estado para que una pasada repetida no lo dispare
+es una decision de diseno del departamento, no del runtime, y merece su
+propio analisis.
+
+### Estado del criterio §16
+
+| Pasada | Run | Invocaciones de runtime | Fallo del runtime | Resultado del run | Causa del rojo |
+|---|---|---|---|---|---|
+| A | `31965244763` | 6/6 verdes | **NO** | failure | step de metricas mal colocado (mio, corregido) |
+| B | `31967138507` | 5/5 ejecutadas verdes | **NO** | failure | diagnostico dentro del estado persistido (mio, corregido) |
+| C | `31969938538` | **6/6 verdes** | **NO** | failure | guard de perdida de estado (preexistente, fuera de alcance) |
+
+**Fallos de runtime en las tres pasadas coordinadas: 0.**
+**Pasadas coordinadas completamente verdes: 0 de 3.**
+
+**§16 NO esta cumplido tal y como se pidio**, y por tanto **no declaro
+estable el runtime comun** todavia, aunque las 17 invocaciones del
+runtime dentro de esas tres pasadas hayan salido todas verdes y sin un
+solo `runtime=failure` / `claude=failure` / `output source=none`.
+
+Lo que falta para cerrarlo es resolver el guard de estado, que es un
+trabajo distinto de este incidente.
 
 ## 6. Métricas de fiabilidad
 
