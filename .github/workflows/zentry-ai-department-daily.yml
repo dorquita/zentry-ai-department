@@ -84,11 +84,14 @@ jobs:
     outputs:
       departmentRunId: ${{ steps.run.outputs.departmentRunId }}
     # Seis invocaciones de Claude (SEO, Content, Analytics, Growth, QA,
-    # Web Engineer), cada una acotada a 10 min en su propio step del
-    # runtime comun, mas los pasos deterministas de coordinacion y, desde
-    # la Fase O52, el pipeline determinista de 26 agentes que antes solo
-    # corria en el VPS (hasta 30 min propios). 120 min es el backstop del
-    # JOB completo.
+    # Web Engineer), cada una acotada a 22 min en su propio step del
+    # runtime comun -- 22 y no 10 porque ese step cubre ahora hasta dos
+    # invocaciones (intento + reintento acotado) mas el backoff, y con
+    # structured_output activo se han medido invocaciones de hasta 5,5
+    # min. Mas los pasos deterministas de coordinacion y, desde la Fase
+    # O52, el pipeline determinista de 26 agentes que antes solo corria
+    # en el VPS (hasta 30 min propios). 180 min es el backstop del JOB
+    # completo.
     timeout-minutes: 180
     steps:
       - name: Checkout
