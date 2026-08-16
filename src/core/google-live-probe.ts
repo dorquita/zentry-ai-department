@@ -161,6 +161,51 @@ export function listNotLiveRequiredServices(
   return required.filter((service) => byService.get(service)?.status !== "live");
 }
 
+/**
+ * Fase O54 — traduce los errores OAuth de Google a la causa real.
+ *
+ * Existe porque `invalid_client` e `invalid_grant` se parecen mucho y
+ * significan cosas OPUESTAS: el primero dice que el par client
+ * id/secret no vale, el segundo que el refresh token caduco. Confundirlos
+ * lleva a regenerar el token cuando el problema esta en el cliente, o al
+ * reves. Se busca por subcadena porque el mensaje llega ya saneado por
+ * el adaptador y puede traer texto alrededor.
+ */
+const OAUTH_ERROR_HINTS: Array<{ match: string; hint: string }> = [
+  {
+    match: "invalid_client",
+    hint:
+      "el par CLIENT_ID/CLIENT_SECRET no lo reconoce Google. Causas, por probabilidad: (1) el valor pegado lleva un espacio o salto de linea de mas -- desde la Fase O54 se recorta automaticamente, asi que si persiste NO es esto; (2) el client secret pertenece a OTRO client id (pares cruzados); (3) el cliente OAuth se borro o se regenero en Google Cloud Console. NO es un token caducado: eso seria invalid_grant.",
+  },
+  {
+    match: "invalid_grant",
+    hint:
+      "el REFRESH_TOKEN ya no vale (caducado o revocado). Regeneralo con el comando `auth:` del servicio. Si vuelve a caducar a los ~7 dias, la app OAuth sigue en modo Testing en Google Cloud Console: publicala a Production.",
+  },
+  {
+    match: "insufficient",
+    hint:
+      "las credenciales son validas pero les falta el SCOPE necesario. Regenera el refresh token pidiendo todos los scopes a la vez (GA4 y GTM comparten cliente y necesitan LOS DOS).",
+  },
+  {
+    match: "PERMISSION_DENIED",
+    hint:
+      "las credenciales son validas pero la cuenta autenticada no tiene acceso a ese recurso concreto (propiedad GA4, contenedor GTM, cuenta de Ads). Es un permiso en el producto, no un problema de credencial.",
+  },
+  {
+    match: "DEVELOPER_TOKEN",
+    hint:
+      "el developer token de Google Ads no es valido o no esta aprobado para esta cuenta. Revisalo en Google Ads > Herramientas > Centro de API.",
+  },
+];
+
+/** Pista accionable para un error ya saneado, o `null` si no se reconoce. */
+export function explainOAuthError(error: string | null): string | null {
+  if (!error) return null;
+  const found = OAUTH_ERROR_HINTS.find((entry) => error.includes(entry.match));
+  return found ? found.hint : null;
+}
+
 function renderEvidence(evidence: Record<string, string | number | boolean> | null): string {
   if (!evidence) return "-";
   const entries = Object.entries(evidence);
@@ -189,6 +234,16 @@ export function renderGoogleProbeMarkdown(report: GoogleProbeReport): string {
       `| ${GOOGLE_PROBE_SERVICE_LABELS[result.service]} | \`${result.status}\` | ${detail} | ${missing} |`
     );
   }
+  const failures = report.results.filter((r) => r.status === "failed" && explainOAuthError(r.error));
+  if (failures.length > 0) {
+    lines.push("");
+    lines.push("### Diagnostico de los fallos");
+    lines.push("");
+    for (const failure of failures) {
+      lines.push(`- **${GOOGLE_PROBE_SERVICE_LABELS[failure.service]}** — ${explainOAuthError(failure.error)}`);
+    }
+  }
+
   lines.push("");
   lines.push(
     "Leyenda: `live` = la API respondio en esta pasada. `missing_credentials` = falta configuracion, no se llamo a la API. `failed` = habia credenciales pero la llamada fallo. Ninguna llamada de este probe escribe nada en ningun sistema Google."

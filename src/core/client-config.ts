@@ -477,14 +477,40 @@ export function resolveClientEnvVarName(clientId: string, key: string): string {
  * credencial de otro).
  */
 export function resolveClientEnvVar(clientId: string, key: string): string | undefined {
-  const prefixed = process.env[resolveClientEnvVarName(clientId, key)];
+  const prefixed = readTrimmedEnv(resolveClientEnvVarName(clientId, key));
   if (prefixed) {
     return prefixed;
   }
   if (clientId === DEFAULT_CLIENT_ID) {
-    return process.env[key];
+    return readTrimmedEnv(key);
   }
   return undefined;
+}
+
+/**
+ * Fase O54 — lee una variable RECORTANDO espacios y saltos de linea, y
+ * trata "solo espacios" igual que "no configurada".
+ *
+ * Por que importa (fallo real, probe run 31954605518): un secreto de
+ * GitHub pegado con un salto de linea final conserva ese `\n`. El valor
+ * llega entero al cliente OAuth y Google responde `invalid_client` — un
+ * error que apunta a "el client id/secret no existe", no a "sobra un
+ * caracter invisible", asi que se diagnostica fatal. El mismo problema
+ * existia ya con los `.env` (una linea `GSC_START_DATE=` deja la
+ * variable en ""), y varios adaptadores tenian su propio `optionalEnv`
+ * local justo para eso; esto lo resuelve en el unico punto por el que
+ * pasan TODAS las credenciales, en vez de repetir el parche.
+ *
+ * Recortar es seguro para todas las credenciales que maneja este
+ * sistema: ni los client id/secret de Google, ni los refresh token, ni
+ * los developer token, ni los identificadores de cuenta pueden empezar o
+ * terminar por un espacio.
+ */
+function readTrimmedEnv(name: string): string | undefined {
+  const raw = process.env[name];
+  if (typeof raw !== "string") return undefined;
+  const trimmed = raw.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 /** Como `resolveClientEnvVar`, pero lanza con un mensaje claro (nunca imprime el valor) si falta. */

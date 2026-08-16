@@ -14,6 +14,7 @@ import {
   GOOGLE_ENV_SENSITIVITY,
   GOOGLE_PROBE_SERVICES,
   GoogleProbeReport,
+  explainOAuthError,
   listGoogleSecretEnvVarNames,
   listGoogleSecretEnvVarNamesForClient,
   listNotLiveRequiredServices,
@@ -24,6 +25,7 @@ import {
 import {
   CLIENT_SERVICE_CREDENTIAL_KEYS,
   resolveClientConfigProvidedCredentialKeys,
+  resolveClientEnvVar,
   resolveClientServiceCredentials,
 } from "../src/core/client-config";
 import { containsSecretValue } from "../src/department/email-config";
@@ -610,7 +612,73 @@ export function runExternalDependenciesAuditTests(): TestCase[] {
     },
 
     // ---------------------------------------------------------------
-    // 8. El catalogo de credenciales sigue siendo la unica fuente
+    // 8. Higiene de credenciales y diagnostico de errores OAuth
+    // ---------------------------------------------------------------
+    {
+      name: "una credencial con espacios o salto de linea se recorta: un secreto mal pegado no puede dar invalid_client",
+      fn: () => {
+        withEnv({ GSC_OAUTH_CLIENT_ID: "  abc123.apps.googleusercontent.com\n" }, () => {
+          assert.equal(resolveClientEnvVar("zentry", "GSC_OAUTH_CLIENT_ID"), "abc123.apps.googleusercontent.com");
+        });
+      },
+    },
+    {
+      name: "una credencial que solo tiene espacios cuenta como ausente, no como valor vacio",
+      fn: () => {
+        withEnv({ GSC_OAUTH_CLIENT_SECRET: "   ", ZENTRY_GSC_OAUTH_CLIENT_SECRET: undefined }, () => {
+          assert.equal(resolveClientEnvVar("zentry", "GSC_OAUTH_CLIENT_SECRET"), undefined);
+          const status = resolveClientServiceCredentials("zentry", "search_console");
+          assert.ok(status.missing.includes("ZENTRY_GSC_OAUTH_CLIENT_SECRET"));
+        });
+      },
+    },
+    {
+      name: "la forma prefijada tambien se recorta y sigue teniendo prioridad sobre la legacy",
+      fn: () => {
+        withEnv({ ZENTRY_GSC_OAUTH_CLIENT_ID: " prefijado ", GSC_OAUTH_CLIENT_ID: "legacy" }, () => {
+          assert.equal(resolveClientEnvVar("zentry", "GSC_OAUTH_CLIENT_ID"), "prefijado");
+        });
+      },
+    },
+    {
+      name: "invalid_client e invalid_grant se explican como causas DISTINTAS, no como el mismo fallo",
+      fn: () => {
+        const clientHint = explainOAuthError("Probe de GA4 fallo: invalid_client");
+        const grantHint = explainOAuthError("Lectura de GA4 fallo: invalid_grant");
+        assert.ok(clientHint && /CLIENT_ID\/CLIENT_SECRET/.test(clientHint));
+        assert.ok(clientHint && /NO es un token caducado/.test(clientHint));
+        assert.ok(grantHint && /REFRESH_TOKEN/.test(grantHint));
+        assert.notEqual(clientHint, grantHint);
+      },
+    },
+    {
+      name: "un error no reconocido no inventa un diagnostico",
+      fn: () => {
+        assert.equal(explainOAuthError("algo raro que nadie ha visto"), null);
+        assert.equal(explainOAuthError(null), null);
+      },
+    },
+    {
+      name: "el informe del probe incluye el diagnostico cuando un servicio falla por OAuth",
+      fn: () => {
+        const report: GoogleProbeReport = {
+          clientId: "zentry",
+          probedAt: "2026-08-16T15:05:42.870Z",
+          results: [
+            { service: "search_console", status: "live", missing: [], evidence: { accessibleSiteCount: 1 }, error: null },
+            { service: "ga4", status: "failed", missing: [], evidence: null, error: "Probe de GA4 fallo: invalid_client" },
+            { service: "gtm", status: "failed", missing: [], evidence: null, error: "Probe de GTM fallo: invalid_client" },
+            { service: "google_ads", status: "live", missing: [], evidence: { customerId: "8369126564" }, error: null },
+          ],
+        };
+        const markdown = renderGoogleProbeMarkdown(report);
+        assert.match(markdown, /Diagnostico de los fallos/);
+        assert.match(markdown, /CLIENT_ID\/CLIENT_SECRET/);
+      },
+    },
+
+    // ---------------------------------------------------------------
+    // 9. El catalogo de credenciales sigue siendo la unica fuente
     // ---------------------------------------------------------------
     {
       name: "el probe cubre exactamente los cuatro servicios Google del catalogo de credenciales",
