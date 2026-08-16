@@ -171,7 +171,13 @@ function fakeWorld(states: PhpTargetState[], options: { throwOnPhpCall?: number;
     runPhp: async (php: string) => {
       phpCalls.push(php);
       if (options.throwOnPhpCall === phpCalls.length) throw new Error("execute-php devolvio 500 desde el sandbox");
-      return `${PHP_RESULT_MARKER}${JSON.stringify({ ok: true, postId: TARGET_ID })}${PHP_RESULT_MARKER}`;
+      // El servidor real devuelve el resultado en base64 entre los dos
+      // marcadores (ver execute-php-builder.ts): el sobre MCP lo entrega
+      // anidado en JSON y asi sobrevive al escapado. El doble no puede
+      // ser mas benevolo que el real -- si lo fuera, un fallo de
+      // ejecucion pasaria desapercibido aqui y no en produccion.
+      const payload = Buffer.from(JSON.stringify({ ok: true, postId: TARGET_ID }), "utf8").toString("base64");
+      return `${PHP_RESULT_MARKER}${payload}${PHP_RESULT_MARKER}`;
     },
     now: () => new Date("2026-08-16T09:00:00.000Z"),
   };
