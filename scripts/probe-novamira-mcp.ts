@@ -64,7 +64,11 @@ export interface McpProbe {
   serverName: string | null;
   sessionId: "present" | "absent";
   tools: string[];
+  /** Argumentos que declara cada tool, leidos de su inputSchema real. */
+  toolSchemas: Record<string, string[]>;
   abilities: string[];
+  /** Forma cruda (truncada) de la respuesta del censo, solo si no se reconocio ningun nombre. */
+  rawCensusShape: string;
   note: string;
 }
 
@@ -266,6 +270,35 @@ function extractToolNames(body: Record<string, unknown> | null): string[] {
   return tools.map((tool) => String((tool as Record<string, unknown>)?.name ?? "")).filter((name) => name.length > 0);
 }
 
+/**
+ * Nombres de argumento que declara cada tool. Se capturan del propio
+ * `tools/list` en vez de suponerlos: el servidor sanea los nombres de
+ * tool (`mcp-adapter/discover-abilities` se publica como
+ * `mcp-adapter-discover-abilities`, porque MCP no admite barras), asi
+ * que dar por hecho cualquier otra forma es exactamente el error que ya
+ * dejo el censo vacio una vez.
+ */
+function extractToolSchemas(body: Record<string, unknown> | null): Record<string, string[]> {
+  const result = (body?.result ?? {}) as Record<string, unknown>;
+  const tools = Array.isArray(result.tools) ? result.tools : [];
+  const schemas: Record<string, string[]> = {};
+  for (const tool of tools) {
+    const record = tool as Record<string, unknown>;
+    const name = String(record?.name ?? "");
+    if (name.length === 0) continue;
+    const schema = (record.inputSchema ?? {}) as Record<string, unknown>;
+    const properties = (schema.properties ?? {}) as Record<string, unknown>;
+    schemas[name] = Object.keys(properties);
+  }
+  return schemas;
+}
+
+/** Localiza un tool por su sufijo, tolerando el separador que use el servidor. */
+export function findToolBySuffix(tools: string[], suffix: string): string | null {
+  const normalized = suffix.toLowerCase();
+  return tools.find((tool) => tool.toLowerCase().replace(/[/_]/g, "-").endsWith(normalized)) ?? null;
+}
+
 function extractAbilityNames(body: Record<string, unknown> | null): string[] {
   const result = (body?.result ?? {}) as Record<string, unknown>;
   const names = new Set<string>();
@@ -307,7 +340,9 @@ async function probeNovamiraMcp(endpoint: string, authHeader: string, routeSegme
     serverName: null,
     sessionId: "absent",
     tools: [],
+    toolSchemas: {},
     abilities: [],
+    rawCensusShape: "",
     note: "",
   };
 
@@ -337,13 +372,24 @@ async function probeNovamiraMcp(endpoint: string, authHeader: string, routeSegme
 
     // Solo si initialize paso: censo real, todo lectura.
     await jsonRpc(endpoint, authHeader, init.sessionId, "notifications/initialized", null);
-    probe.tools = extractToolNames((await jsonRpc(endpoint, authHeader, init.sessionId, "tools/list", 2, {})).body);
-    if (probe.tools.includes("mcp-adapter/discover-abilities")) {
+    const toolsResponse = await jsonRpc(endpoint, authHeader, init.sessionId, "tools/list", 2, {});
+    probe.tools = extractToolNames(toolsResponse.body);
+    probe.toolSchemas = extractToolSchemas(toolsResponse.body);
+
+    const discoverTool = findToolBySuffix(probe.tools, "discover-abilities");
+    if (discoverTool) {
       const abilities = await jsonRpc(endpoint, authHeader, init.sessionId, "tools/call", 3, {
-        name: "mcp-adapter/discover-abilities",
+        name: discoverTool,
         arguments: {},
       });
       probe.abilities = extractAbilityNames(abilities.body);
+      if (probe.abilities.length === 0) {
+        // Sin nombres reconocibles no se inventa un censo: se deja
+        // constancia de la forma cruda para poder ajustar el extractor.
+        probe.rawCensusShape = JSON.stringify(abilities.body ?? {}).slice(0, 1200);
+      }
+    } else {
+      probe.note = `${probe.note} No se encontro ningun tool cuyo nombre acabe en "discover-abilities" entre: ${probe.tools.join(", ")}.`;
     }
   } catch (err) {
     probe.note = `No se pudo completar la peticion: ${err instanceof Error ? err.message : String(err)}`;
@@ -415,6 +461,8 @@ async function main(): Promise<void> {
     MCP_SERVER_NAME: mcp.serverName,
     MCP_SESSION: mcp.sessionId,
     MCP_TOOLS: mcp.tools,
+    MCP_TOOL_SCHEMAS: mcp.toolSchemas,
+    MCP_RAW_CENSUS_SHAPE: mcp.rawCensusShape,
     MCP_ABILITIES: mcp.abilities,
     MCP_NOTE: mcp.note,
     INTERPRETACION: interpret(core, mcp),
