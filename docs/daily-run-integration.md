@@ -126,3 +126,25 @@ plan ejecutable, que no haya página objetivo resuelta *y* que el texto
 nombre un componente interno — y `buildNumberedProposals()` los excluye
 allí mismo, en la única función que numera, para que el email y la sesión
 de aprobación sigan viendo exactamente la misma lista.
+
+## La segunda mitad del día, en Actions
+
+`.github/workflows/department-approval-session.yml` (`workflow_dispatch`)
+ejecuta la decisión humana sobre un Daily Brief concreto:
+`departmentRunId` + `decisions` (JSON) + `execute`.
+
+Recupera el **artifact de esa pasada** — el nombre lleva el
+`departmentRunId`, así que la correspondencia es exacta — y ejecuta la
+sesión sobre los mismos ficheros que produjeron el Daily Brief, no sobre
+una reconstrucción. Sin artifact no hay nada que aprobar y el job para
+antes de escribir nada.
+
+`execute: false` (por defecto) es dry-run: enseña la interpretación y no
+toca nada. Al job no se le pasa ninguna variable de producción, ni
+siquiera apagada.
+
+Una modificación pedida al aprobar (*"cambia el title por X"*) sobre una
+propuesta que ya lleva ChangePlan **no se ejecuta**: el payload del plan
+es el que se validó y contra el que se compara el AFTER, así que aplicarlo
+ignorando la modificación escribiría algo que nadie aprobó. Se para y se
+dice por qué; el cambio pedido vuelve como propuesta nueva.
