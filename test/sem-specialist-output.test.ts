@@ -754,6 +754,82 @@ export function runSemSpecialistOutputTests(): TestCase[] {
         assert.deepEqual(violations, [], `un CPC REAL citado correctamente no debe rechazarse: ${JSON.stringify(violations)}`);
       },
     },
+    // --- REGRESION run 31960785519: recuentos de listas citables ---
+    //
+    // El catalogo prometia que "cada numero real del contexto tiene ya su
+    // entrada aqui" y no lo cumplia para los TAMANOS de lista: los
+    // nombres de las conversiones primarias estaban uno a uno, pero su
+    // TOTAL no, asi que "las 3 conversiones primarias configuradas" era
+    // una afirmacion correcta e IMPOSIBLE de respaldar.
+    {
+      name: "REGRESION run 31960785519: el recuento de conversiones primarias tiene entrada propia en el catalogo",
+      fn: () => {
+        const context = baseContext({
+          departmentSummary: {
+            totalCampaigns: 7,
+            activeCampaignCount: 0,
+            pausedCampaignCount: 7,
+            allPaused: true,
+            totalDailyBudgetIfActivatedEUR: 44,
+            totalMonthlyBudgetIfActivatedEUR: 1320,
+            campaigns: [],
+            totalPositiveKeywords: 60,
+            totalNegativeKeywords: 115,
+            realSpendEUR: 0,
+            primaryConversionActionNames: ["generate_lead_form_submit", "click_whatsapp", "click_phone"],
+            unexpectedPrimaryConversionActionNames: [],
+            duplicateKeywordWarnings: ["a", "b"],
+          },
+        });
+        assert.equal(catalogItem(context, "sem-primary-conversion-count").value, "3");
+        assert.equal(catalogItem(context, "sem-unexpected-conversion-count").value, "0");
+        assert.equal(catalogItem(context, "sem-duplicate-keyword-warning-count").value, "2");
+        assert.equal(catalogItem(context, "sem-search-term-count").value, "0");
+        assert.equal(catalogItem(context, "sem-metrics-count").value, "0");
+
+        // Y citandolo, la frase que tumbo el run 31960785519 pasa.
+        const countItem = catalogItem(context, "sem-primary-conversion-count");
+        const output = baseOutput({
+          conversionRiskFindings: [
+            emptyFinding({ description: "Las 3 conversiones primarias configuradas son las esperadas.", evidenceRefs: [countItem.id] }),
+          ],
+          evidence: [evidenceFromCatalog(countItem)],
+        });
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
+    {
+      name: "REGRESION run 31960785519: 'N conversiones primarias' cuenta acciones configuradas, no conversiones medidas",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          conversionRiskFindings: [emptyFinding({ description: "Las 3 conversiones primarias configuradas son las esperadas.", evidenceRefs: [] })],
+        });
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), []);
+      },
+    },
+    {
+      name: "REGRESION run 31960785519: la exencion es SOLO para 'primaria/principal' -- '3 conversiones registradas' sin citar sigue siendo violacion",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          conversionRiskFindings: [emptyFinding({ description: "Se han registrado 3 conversiones registradas en la ventana.", evidenceRefs: [] })],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /conversiones/i.test(v)), "una conversion MEDIDA sin respaldo sigue siendo un fallo duro");
+      },
+    },
+    {
+      name: "REGRESION run 31960785519: la exencion de 'primarias' NO se extiende a gasto ni presupuesto",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: "El gasto de 777 primarias campanas no cuadra.", evidenceRefs: [] })],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /gasto/i.test(v)), "una cifra de gasto no cambia de naturaleza por llevar 'primarias' al lado");
+      },
+    },
     {
       name: "O51: averageCpcEUR null (sin clics) NO genera entrada de CPC 0 -- 'CPC de 0 €' se sigue rechazando",
       fn: () => {

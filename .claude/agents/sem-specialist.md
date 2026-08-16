@@ -126,6 +126,14 @@ vez de asumirlo:
   copies a tu propio `evidence[]`, que solo tiene
   `id`/`contextField`/`value` (ver schema de salida).
 
+  Los RECUENTOS de listas tienen su propia entrada, aparte de los
+  elementos uno a uno: `sem-primary-conversion-count`,
+  `sem-unexpected-conversion-count`, `sem-duplicate-keyword-warning-count`,
+  `sem-search-term-count` y `sem-metrics-count`. Si escribes "hay 3
+  conversiones primarias configuradas" o "11 avisos de keywords
+  duplicadas", la cifra que debes citar es la del `*-count`
+  correspondiente, NO la de un elemento individual de la lista.
+
   Dos entradas centinela con `value: "not_available"` pueden aparecer:
   - `sem-cpc-not-available`: SOLO cuando ninguna campana tuvo clics en la
     ventana, y por tanto no existe ningun CPC real. Si alguna SI tuvo

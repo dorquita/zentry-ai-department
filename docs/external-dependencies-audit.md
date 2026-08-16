@@ -69,7 +69,7 @@ reales se recuperan **parseando el Markdown** de `reports/analytics/*.md`.
 Es decir, el especialista de analitica depende de un fichero Markdown
 commiteado por el VPS.
 
-### Google Ads → sem-specialist (fuera de fase)
+### Google Ads → sem-specialist (en fase desde 2026-08-16)
 
 ```
 Google Ads API (googleAds:search, GAQL solo lectura)
@@ -77,17 +77,31 @@ Google Ads API (googleAds:search, GAQL solo lectura)
       └─> src/agents/sem-watcher.ts     npm run sem:watch
           └─> data/department-events.jsonl (agent_finished con el snapshot
                                             SEM COMPLETO en el payload)
-                  ▲
-              [git commit desde el VPS]
-                  │
+                  │  (MISMA pasada, MISMO departmentRunId -- ya no hay
+                  │   commit del VPS de por medio)
                   ▼
       src/employees/sem-specialist/sem-specialist-context.ts
           └─> scripts/run-sem-specialist.ts → subagente `sem-specialist`
+              └─> src/department/specialist-inputs.ts (evidencia dept-sem-*)
+                  └─> growth-director-v2 + Daily Brief
 ```
 
-SEM sigue **fuera de fase por decision explicita**: la pasada diaria lo
-registra siempre como `not_available`. Aqui solo se ha identificado su
-infraestructura de datos; no se ha reactivado nada.
+SEM ya **no esta fuera de fase**. El watcher lee la cuenta en vivo y el
+especialista razona sobre ESA lectura dentro de la misma pasada, con el
+mismo `departmentRunId` (`freshness=live_this_run`), y su salida llega a
+Growth Director como la de cualquier otro especialista.
+
+Lo que estaba roto hasta 2026-08-16 (y por que el probe pasaba mientras
+el departamento SEM no funcionaba):
+
+1. `sem-specialist.yml` no ejecutaba el watcher: leia el ultimo evento
+   `sem-watcher` **commiteado**, siempre stale y anterior a la Fase O51.
+2. El auditor de afirmaciones cuantitativas rechazaba frases legitimas
+   (la duracion de la ventana, "30 dias", se leia como una cifra de
+   conversiones inventada) -- 8 ejecuciones seguidas en rojo.
+3. `sem-specialist` estaba cableado a `not_available` en la fase `init`
+   de la pasada coordinada, asi que Ads se leia en vivo cada dia y no
+   llegaba ni a Growth ni al brief.
 
 ### Que NO estaba en el DAG
 
@@ -318,7 +332,7 @@ imprimir si detectara el valor de un secreto en su propia salida.
 | `seo-specialist` | Con los 3 secretos GSC: **datos live de esa pasada**. Sin ellos: usa el ultimo snapshot, **etiquetado `stale`** con su antigüedad exacta. |
 | `analytics-specialist` | Igual, con los 3 secretos `GOOGLE_ANALYTICS_*`. |
 | `content-strategist`, `qa-reviewer`, `web-engineer`, `growth-director-v2` | Sin cambios: ya operaban sobre artefactos de la propia pasada. |
-| `sem-specialist` | Ya estaba `not_available` en la pasada diaria. Su snapshot SEM queda **congelado al 2026-08-14** y envejecera indefinidamente hasta que se retome SEM. |
+| `sem-specialist` | Desde 2026-08-16 corre en la pasada diaria sobre la lectura live de Google Ads de esa misma pasada (`live_this_run`). Ya no depende de ningun snapshot commiteado. |
 | `growth-director` **v1** (informes `reports/daily/*.md`) | **Se pierde.** Solo lo ejecuta el VPS (`npm run growth:daily`); ningun workflow lo lanza. No se ha migrado en esta fase. |
 | Email del Daily Brief | Sigue funcionando (SMTP ya esta en Actions). |
 | Timer systemd, cron legacy, servicios del VPS | Se paran. No se ha apagado nada. |

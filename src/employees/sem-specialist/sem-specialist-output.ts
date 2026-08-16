@@ -268,6 +268,23 @@ const DURATION_UNIT_AFTER_NUMBER = /^\s*(?:d[ií]as?|jornadas?|semanas?|mes(?:es
 /** Cuantos caracteres se miran tras la cifra para decidir si lleva una unidad de tiempo pegada. */
 const UNIT_LOOKAHEAD_CHARS = 24;
 
+/**
+ * "conversion primaria" / "conversion principal" no es una CONVERSION
+ * medida: es una ACCION DE CONVERSION configurada en la cuenta. Contar
+ * cuantas hay ("las 3 conversiones primarias configuradas") es una
+ * afirmacion sobre la CONFIGURACION, no sobre el rendimiento, y el
+ * catalogo la respalda con `sem-primary-conversion-count` -- nunca con una
+ * entrada de categoria "conversiones".
+ *
+ * Caso real: el run 31960785519 se rechazo por la frase "3 conversiones"
+ * dentro de "Las 3 conversiones primarias configuradas...", que era un
+ * recuento correcto y perfectamente verificable.
+ *
+ * Solo se aplica a la categoria "conversiones": una cifra de gasto o de
+ * presupuesto no cambia de naturaleza por llevar esta palabra al lado.
+ */
+const CONVERSION_ACTION_QUALIFIER = /^\s*(?:primaria|principal|secundaria)/i;
+
 const QUANT_CLAIM_CATEGORIES: QuantClaimCategory[] = [
   { id: "cpc", label: "CPC", pattern: new RegExp(`cpc${GAP}${NUM}`, "gi") },
   // Dos ordenes de frase: "12 conversiones" (numero primero, habitual en
@@ -449,7 +466,12 @@ export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecial
         // categoria -- y no existe ninguna entrada de catalogo que pudiera
         // respaldarla. Ver DURATION_UNIT_AFTER_NUMBER.
         const matchEnd = (match.index ?? 0) + match[0].length;
-        if (DURATION_UNIT_AFTER_NUMBER.test(claim.text.slice(matchEnd, matchEnd + UNIT_LOOKAHEAD_CHARS))) continue;
+        const tail = claim.text.slice(matchEnd, matchEnd + UNIT_LOOKAHEAD_CHARS);
+        if (DURATION_UNIT_AFTER_NUMBER.test(tail)) continue;
+
+        // "3 conversiones primarias" cuenta acciones configuradas, no
+        // conversiones medidas. Ver CONVERSION_ACTION_QUALIFIER.
+        if (category.id === "conversiones" && CONVERSION_ACTION_QUALIFIER.test(tail)) continue;
 
         const candidates = resolveClaimCandidateEntries(category.id, pool);
         if (findMatchingCatalogEntry(numberRaw, candidates)) continue;
