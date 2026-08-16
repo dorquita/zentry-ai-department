@@ -1,0 +1,372 @@
+[
+  {
+    "productId": 334,
+    "combo": "anchura=40cm|tipo de cerradura=yr titan",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1743,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1733,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1723,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1713,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1703,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=40cm|tipo de cerradura=orbis",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1742,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1732,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1722,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1712,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1702,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=40cm|tipo de cerradura=neo",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1741,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1731,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1721,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1711,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1701,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=40cm|tipo de cerradura=boxis",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1740,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1730,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1720,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1710,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1700,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=40cm|tipo de cerradura=ares",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1739,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1729,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1719,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1709,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1699,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=30cm|tipo de cerradura=yr titan",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1738,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1728,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1718,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1708,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1698,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=30cm|tipo de cerradura=orbis",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1737,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1727,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1717,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1707,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1697,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=30cm|tipo de cerradura=neo",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1736,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1726,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1716,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1706,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1696,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=30cm|tipo de cerradura=boxis",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1735,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1725,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1715,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1705,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1695,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  },
+  {
+    "productId": 334,
+    "combo": "anchura=30cm|tipo de cerradura=ares",
+    "staging_regular_price": "95",
+    "variations": [
+      {
+        "id": 1734,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1724,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1714,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1704,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      },
+      {
+        "id": 1694,
+        "regular_price": "95",
+        "live_price": "95",
+        "matches_staging_regular": true
+      }
+    ]
+  }
+]

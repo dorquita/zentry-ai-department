@@ -1,0 +1,11 @@
+{
+  "result": {
+    "wordpressDraftId": 2067,
+    "wordpressDraftUrl": "https://staging.zentrylockers.com/?page_id=2067"
+  },
+  "verify": {
+    "id": 2067,
+    "status": "draft",
+    "link": "https://staging.zentrylockers.com/?page_id=2067"
+  }
+}

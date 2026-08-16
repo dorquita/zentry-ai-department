@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "log": [
+    "Campaña renombrada a 'SEM | ES | Compra | Taquillas / Gimnasios'",
+    "Presupuesto actualizado: 5€/día -> 10€/día (150€/mes -> 300€/mes)",
+    "Ad group Test1 pasado de ENABLED a PAUSED (defensa en profundidad, la campaña ya estaba pausada)",
+    "Nuevo RSA creado (PAUSED): customers/8369126564/adGroupAds/201838491344~820954750268, final URL: https://zentrylockers.com/taquillas-para-gimnasios/",
+    "RSA antiguo eliminado: customers/8369126564/adGroupAds/201838491344~803754613588 (mencionaba Barcelona y demo gratuita, apuntaba a home)"
+  ],
+  "newAdResourceName": "customers/8369126564/adGroupAds/201838491344~820954750268"
+}

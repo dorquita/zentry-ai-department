@@ -1,0 +1,81 @@
+# Preview VISUAL (local, no publicado) — taquilla para el personal
+
+- **draftId:** `cc38c38b-6af9-46d6-afc2-46dfc7de9299`
+- **changePackId:** `dd755e6e-2556-41ff-9760-ee17c96b2972` (status: ready_for_review)
+- **Plantilla visual:** `blog_article` — Articulo de blog / contenido informativo
+- **Por que esta plantilla:** Cuando el change pack es un brief editorial informativo (changeType "new_content_page"/"content_update" sin intencion transaccional clara) — el contenido es mas informativo que de venta directa.
+- **Generado:** 2026-08-10T13:22:34.348Z
+
+> Este fichero es un preview VISUAL local (Fase O12.4), complementario al preview de texto ya generado por el WordPress Draft Agent (`cc38c38b-6af9-46d6-afc2-46dfc7de9299.md`, sin tocar). No se ha llamado a WordPress ni generado ninguna imagen real.
+
+---
+
+## 🔝 HERO
+
+> 🖼️ **[Imagen — hero, 1600x900px]** — Placeholder hoy: bloque solido/icono generico de Kadence (sin imagen real). Imagen editorial/de contexto, no necesariamente de producto — estilo mas fotografico/lifestyle que las plantillas transaccionales. Se sustituye por una imagen real solo cuando exista una peticion de asset "generated"/"uploaded_to_wordpress" — ver docs/asset-generation-workflow.md. Nunca se genera ni se sube nada en esta fase.
+
+### taquilla para el personal
+
+Bajada editorial breve, tono informativo — nunca lenguaje de venta directa aqui.
+
+**[ (sin CTA fuerte en el hero — es contenido informativo) ]**
+
+## 🖼️ IMAGEN DESTACADA
+
+> 🖼️ **[Imagen — card, 800x600px]** — Placeholder hoy: bloque solido/icono generico de Kadence (sin imagen real). Miniatura para el listado del blog y para compartir en redes. Se sustituye por una imagen real solo cuando exista una peticion de asset "generated"/"uploaded_to_wordpress" — ver docs/asset-generation-workflow.md. Nunca se genera ni se sube nada en esta fase.
+
+## ✅ Puntos clave
+
+_(3-4 items — Equivalente informativo del bloque beneficios: un resumen de 3-4 ideas clave del articulo (no beneficios de producto/marca).)_
+
+(brief de contenido, no copy final) Posible cluster SEO con: taquillas melamina, taquillas de melamina, taquillas colegios, taquillas escolares, taquilla madera. Considerar enlazado interno entre estas paginas.
+
+## 🧱 Productos relacionados (mencion contextual)
+
+Mencion breve y no intrusiva de productos Zentry relacionados con el tema del articulo, con enlace — nunca el foco principal del articulo.
+
+- H2: ¿Que es taquilla para el personal?
+- H2: Tipos y materiales disponibles
+- H3: Metalica vs fenolica vs melamina
+- H2: Como elegir la medida correcta
+- H2: Precios y presupuesto
+- H2: Preguntas frecuentes sobre taquilla para el personal
+
+## 🔐 Relacionado: cerraduras inteligentes
+
+> 🖼️ **[Imagen — icon, 256x256px]** — Icono de cerradura electronica/control de acceso.
+
+Mencion contextual opcional si el tema del articulo se cruza con seguridad/control de acceso.
+
+## ❓ Preguntas frecuentes sobre este tema
+
+_(2-3 preguntas — Opcional en esta plantilla (a diferencia de las demas, donde es casi siempre recomendable) — solo si el tema genera preguntas reales.)_
+
+Ninguna FAQ propuesta por el change pack de origen todavia.
+## 🎯 CTA FINAL
+
+**[ Ver catalogo de taquillas Zentry ]**
+
+_CTA suave (descubrir mas contenido/catalogo), nunca un CTA de venta directa agresivo en un articulo informativo._
+
+## 🔗 Enlaces internos
+
+Enlazar a otros articulos del mismo cluster de contenido y, de forma secundaria, a paginas de producto relacionadas — el enlace interno aqui prioriza SEO topical authority sobre conversion directa.
+
+- Enlazar hacia la landing/categoria principal relacionada
+
+## 🏷️ Schema recomendado
+
+- `Article`
+- `FAQPage`
+
+## 🧩 Notas de diseno Kadence/Gutenberg
+
+- Usar la plantilla de entrada de blog estandar del tema (no forzar los mismos bloques Kadence de landing transaccional).
+- Imagen destacada obligatoria para que el articulo se vea bien en el listado del blog y al compartir en redes sociales.
+
+## Confirmacion de seguridad
+
+- No se ha publicado nada. No se ha llamado a WordPress.
+- No se ha generado ni subido ninguna imagen real (los bloques de imagen son placeholders con proposito/dimensiones, no imagenes).
+- No se ha llamado a n8n.

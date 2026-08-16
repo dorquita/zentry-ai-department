@@ -1,0 +1,1747 @@
+{
+  "departmentRunId": "growth-department-2026-08-14T111247Z",
+  "hasDepartmentRunData": true,
+  "generatedAt": "2026-08-16T19:03:16.378Z",
+  "agentActivity": [
+    {
+      "agent": "seo-watcher",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "SEO Watcher Agent finalizado: 31 oportunidad(es) detectada(s)"
+    },
+    {
+      "agent": "seo-director",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "SEO Director Agent finalizado: 16 accion(es) recomendada(s)"
+    },
+    {
+      "agent": "competitor-intelligence",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Competitor Intelligence Agent finalizado: 12 gap(s) de keyword, 10 gap(s) de contenido"
+    },
+    {
+      "agent": "content-planner",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Content Planner Agent finalizado: 50 propuesta(s) de contenido"
+    },
+    {
+      "agent": "cro-landing-reviewer",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "CRO / Landing Reviewer Agent finalizado: 7 landing(s) revisada(s)"
+    },
+    {
+      "agent": "sem-watcher",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "SEM Watcher Agent finalizado. Conectado=true. Candidatas SEM: 70."
+    },
+    {
+      "agent": "analytics-watcher",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Analytics Watcher Agent finalizado. GA4=true GTM=true."
+    },
+    {
+      "agent": "approval-queue",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Approval Queue Agent finalizado: 86 auto-aprobada(s) para planificacion, 0 pendiente(s) de aprobacion"
+    },
+    {
+      "agent": "approved-action-planner",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Approved Action Planner Agent finalizado: 0 work order(s) nueva(s)"
+    },
+    {
+      "agent": "seo-work-order-builder",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "SEO Work Order Builder finalizado: 0 work order(s) lista(s) para revisar"
+    },
+    {
+      "agent": "content-work-order-builder",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Content Work Order Builder finalizado: 0 brief(s) listo(s)"
+    },
+    {
+      "agent": "cro-work-order-builder",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "CRO Work Order Builder finalizado: 0 propuesta(s) lista(s)"
+    },
+    {
+      "agent": "seo-change-pack-builder",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "SEO Change Pack Builder finalizado: 0 change pack(s) nuevo(s), 2 bloqueado(s) por cluster gate"
+    },
+    {
+      "agent": "content-change-pack-builder",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Content Change Pack Builder finalizado: 0 change pack(s) nuevo(s), 10 bloqueado(s) por cluster gate"
+    },
+    {
+      "agent": "cro-change-pack-builder",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "CRO Change Pack Builder finalizado: 0 change pack(s) nuevo(s), 1 bloqueado(s) por cluster gate"
+    },
+    {
+      "agent": "ux-ui-landing-architect",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "UX/UI Landing Architect finalizado: 0 blueprint(s) nuevo(s), 77 en total."
+    },
+    {
+      "agent": "wordpress-draft-agent",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "WordPress Draft Agent finalizado: 0 preview(s) nuevo(s), 0 borrador(es) real(es) nuevo(s)"
+    },
+    {
+      "agent": "visual-template-builder",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Visual Template Builder Agent finalizado: 0 preview(s) visual(es) nuevo(s)"
+    },
+    {
+      "agent": "visual-asset-planner",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Visual Asset Planner Agent finalizado: 0 peticion(es) nueva(s), n8n NO se ha ejecutado"
+    },
+    {
+      "agent": "staging-executor",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Staging Executor Agent finalizado: 0 ejecucion(es) aplicada(s), 0 pendiente(s) de aprobacion"
+    },
+    {
+      "agent": "staging-qa-agent",
+      "status": "completado",
+      "warningCount": 2,
+      "lastSummary": "Staging QA Agent finalizado: 20/21 borrador(es) pasan (20 con warning)"
+    },
+    {
+      "agent": "approval-gateway",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Approval Gateway Agent finalizado: 0 solicitud(es) nueva(s), 0 enviada(s) por Telegram"
+    },
+    {
+      "agent": "production-deployment-planner",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Production Deployment Planner finalizado: 0 plan(es) nuevo(s), 22 en total. Produccion no tocada."
+    },
+    {
+      "agent": "production-draft-executor",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Production Draft Executor finalizado: 0 pendiente(s) nueva(s), 0 aplicada(s), canAttemptRealWrites=false."
+    },
+    {
+      "agent": "growth-director",
+      "status": "completado",
+      "warningCount": 0,
+      "lastSummary": "Growth Director Agent finalizado: informes diarios consolidados (ejecutivo + tecnico)"
+    }
+  ],
+  "warnings": [
+    "[staging-qa-agent] Staging QA detecto 1 borrador(es) con problemas",
+    "[staging-qa-agent] Staging QA detecto 1 borrador(es) con problemas"
+  ],
+  "actionsSummary": {
+    "totalActions": 112,
+    "liveActionCount": 102,
+    "byStatus": {
+      "approved": 6,
+      "snoozed": 4,
+      "auto_approved_for_planning": 96,
+      "rejected": 6
+    },
+    "byPriority": {
+      "high": 8,
+      "medium": 94
+    },
+    "topOpenActions": [
+      {
+        "actionId": "19599263-9e05-4bca-8d6a-761cf54f3aad",
+        "title": "SEO: \"cerraduras inteligentes para taquillas\" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)",
+        "priority": "high",
+        "status": "approved",
+        "keyword": "cerraduras inteligentes para taquillas",
+        "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "targetBrand": "both",
+        "brandIntent": "zentry_smart_locker"
+      },
+      {
+        "actionId": "ed5b4c93-0841-43bd-b881-c662e668f201",
+        "title": "Competencia: keyword no cubierta \"taquillas inteligentes\"",
+        "priority": "high",
+        "status": "auto_approved_for_planning",
+        "keyword": "taquillas inteligentes",
+        "targetBrand": "both",
+        "brandIntent": "zentry_smart_locker"
+      },
+      {
+        "actionId": "4bdbbe6e-743a-40df-822f-615935e57cfa",
+        "title": "Mejorar title/meta de https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "priority": "high",
+        "status": "approved",
+        "keyword": "cerraduras inteligentes para taquillas",
+        "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "targetBrand": "both",
+        "brandIntent": "zentry_smart_locker"
+      },
+      {
+        "actionId": "ef7a3825-b95f-4942-a4dc-46faed0d825e",
+        "title": "Reforzar enlazado interno hacia https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "priority": "high",
+        "status": "approved",
+        "keyword": "cerraduras inteligentes para taquillas",
+        "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "targetBrand": "both",
+        "brandIntent": "zentry_smart_locker"
+      },
+      {
+        "actionId": "b8632ce3-723c-4aca-b355-56beee9c10b5",
+        "title": "Contenido nuevo para \"taquillas inteligentes\"",
+        "priority": "high",
+        "status": "auto_approved_for_planning",
+        "keyword": "taquillas inteligentes",
+        "targetBrand": "both",
+        "brandIntent": "zentry_smart_locker"
+      },
+      {
+        "actionId": "25d36c60-b32a-4fd0-8de5-b910cb886507",
+        "title": "CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "priority": "high",
+        "status": "approved",
+        "keyword": "cerraduras electronicas para taquillas",
+        "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "targetBrand": "both",
+        "brandIntent": "zentry_smart_locker"
+      },
+      {
+        "actionId": "1a0e540c-8785-482b-9be2-217c5d6fe818",
+        "title": "SEO: \"cerraduras inteligentes para taquillas\" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)",
+        "priority": "high",
+        "status": "approved",
+        "keyword": "cerraduras inteligentes para taquillas",
+        "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "targetBrand": "both",
+        "brandIntent": "zentry_smart_locker"
+      },
+      {
+        "actionId": "b764c03e-3b88-441f-aa88-117d45d97e21",
+        "title": "CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "priority": "high",
+        "status": "approved",
+        "keyword": "cerraduras inteligentes para taquillas",
+        "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+        "targetBrand": "both",
+        "brandIntent": "zentry_smart_locker"
+      }
+    ]
+  },
+  "workOrdersSummary": {
+    "total": 111,
+    "readyForReviewCount": 110,
+    "byCategory": {
+      "cro": 10,
+      "seo": 21,
+      "competitor_gap": 21,
+      "sem": 2,
+      "content": 56,
+      "analytics": 1
+    },
+    "byBrand": {
+      "both": 42,
+      "zentry": 57,
+      "tukandado": 12
+    }
+  },
+  "changePacksSummary": {
+    "total": 77,
+    "readyForReviewCount": 5,
+    "byType": {
+      "seo_on_page_update": 18,
+      "content_update": 31,
+      "new_content_page": 19,
+      "cro_conversion_update": 9
+    }
+  },
+  "approvalRequestsSummary": {
+    "pendingCount": 1,
+    "byRiskLevel": {
+      "critical": 1
+    },
+    "topPending": [
+      {
+        "title": "taquillas melamina (https://zentrylockers.com/taquillas-melamina-fenolico/)",
+        "riskLevel": "critical",
+        "relatedType": "production_deployment_plan"
+      }
+    ]
+  },
+  "jobsSummary": {
+    "totalJobSnapshots": 2000,
+    "latestRunId": "seo-watcher-2026-08-16T185149Z",
+    "latestRunJobCount": 35
+  },
+  "knownDependencies": [
+    {
+      "name": "seo-specialist",
+      "status": "available",
+      "note": ".claude/agents/seo-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "name": "content-strategist",
+      "status": "available",
+      "note": ".claude/agents/content-strategist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "name": "sem-specialist",
+      "status": "available",
+      "note": ".claude/agents/sem-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "name": "analytics-specialist",
+      "status": "available",
+      "note": ".claude/agents/analytics-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "name": "qa-reviewer",
+      "status": "available",
+      "note": ".claude/agents/qa-reviewer.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "name": "web-engineer",
+      "status": "available",
+      "note": ".claude/agents/web-engineer.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "name": "sem-watcher (V1 deterministico)",
+      "status": "available",
+      "note": "Ultimo agent_finished de sem-watcher en este departmentRunId: connected=true."
+    },
+    {
+      "name": "analytics-watcher (V1 deterministico)",
+      "status": "available",
+      "note": "Ultimo agent_finished de analytics-watcher en este departmentRunId: ga4Connected=true, gtmConnected=true."
+    }
+  ],
+  "evidenceCatalog": [
+    {
+      "ref": "dept-seo-summary",
+      "description": "seo-specialist (salida real de esta pasada): Datos live de esta pasada (Search Console leido hace 0h, run seo-watcher-2026-08-16T185149Z, 35 jobs). El backlog trae 18 actionItems reales, cruzados contra 10 target keywords y 20 clusters ya decididos. Hay 6 quick wins listos para ejecu... [findings=6, opportunities=10, technicalIssues=2, contentGaps=4, prioritizedActions=6]"
+    },
+    {
+      "ref": "dept-seo-action-1",
+      "description": "seo-specialist, accion priorizada #1: \"Corregir el enrutado de actionItems que apuntan a la pagina obsoleta /cerraduras/ (en papelera, redirige a /cerraduras-para-taquillas/)\" (priority=high, impact=high, effort=low, relatedIds=f1/o8/t1)."
+    },
+    {
+      "ref": "dept-seo-action-2",
+      "description": "seo-specialist, accion priorizada #2: \"Cerrar via el script existente las keywords genericas de melamina mal enrutadas a /taquillas-melamina-fenolico/\" (priority=high, impact=medium, effort=low, relatedIds=f2/o7)."
+    },
+    {
+      "ref": "dept-seo-action-3",
+      "description": "seo-specialist, accion priorizada #3: \"Ejecutar los 6 quick wins on-page ya identificados (posiciones 17-28.8) en cerraduras-inteligentes-taquillas, taquillas-melamina, taquillas-para-colegios y taq...\" (priority=high, impact=medium, effort=medium, relatedIds=o1/o2/o3/o4/o5/o6)."
+    },
+    {
+      "ref": "dept-seo-action-4",
+      "description": "seo-specialist, accion priorizada #4: \"Auditar y reescribir meta titles/descriptions en las paginas con 0% CTR pese a impresiones reales (patron sistemico en al menos 6 paginas)\" (priority=medium, impact=medium, effort=medium, relatedIds=f5/t2/o9)."
+    },
+    {
+      "ref": "dept-seo-action-5",
+      "description": "seo-specialist, accion priorizada #5: \"Publicar a produccion las 4 paginas de staging ya aprobadas para los clusters new_page_candidate (universidad, metalicas, vestuarios, taquillas inteligentes ge...\" (priority=medium, impact=high, effort=medium, relatedIds=f3/cg1/cg2/cg3/cg4/o10)."
+    },
+    {
+      "ref": "dept-seo-action-6",
+      "description": "seo-specialist, accion priorizada #6: \"Documentar en el catalogo de clusters una decision de enrutado para \"cerraduras sostenibles para gimnasios\" (sin cluster propio y con dos paginas destino disti...\" (priority=low, impact=low, effort=low, relatedIds=f4)."
+    },
+    {
+      "ref": "dept-seo-opportunity-1",
+      "description": "seo-specialist, oportunidad (quick_win, priority=high, basis=evidence) sobre keyword \"cerraduras inteligentes para taquillas\" / pagina \"https://zentrylockers.com/cerraduras-inteligentes-taquillas/\": Reforzar H1/H2, ampliar profundidad del texto, mejorar enlazado interno y actualizar meta title/description para pasar de posicion 20.5 a top 10."
+    },
+    {
+      "ref": "dept-seo-opportunity-2",
+      "description": "seo-specialist, oportunidad (quick_win, priority=medium, basis=evidence) sobre keyword \"taquillas de melamina\" / pagina \"https://zentrylockers.com/taquillas-melamina/\": Optimizar on-page (H1/H2, profundidad de texto, enlazado interno, meta title/description) para pasar de posicion 28.8 a top 10; CTR actual 0.00% pese a 72 impresiones."
+    },
+    {
+      "ref": "dept-seo-opportunity-3",
+      "description": "seo-specialist, oportunidad (quick_win, priority=medium, basis=evidence) sobre keyword \"taquillas colegios\" / pagina \"https://zentrylockers.com/taquillas-para-colegios/\": Optimizar on-page y meta title/description para pasar de posicion 25.1 a top 10; CTR actual 0.00% pese a 40 impresiones."
+    },
+    {
+      "ref": "dept-seo-opportunity-4",
+      "description": "seo-specialist, oportunidad (quick_win, priority=medium, basis=evidence) sobre keyword \"taquillas vestuarios de melamina\" / pagina \"https://zentrylockers.com/taquillas-melamina/\": Optimizar on-page para pasar de posicion 28.0 a top 10, reforzando el contenido de vestuarios dentro de la pagina de melamina."
+    },
+    {
+      "ref": "dept-seo-opportunity-5",
+      "description": "seo-specialist, oportunidad (quick_win, priority=medium, basis=evidence) sobre keyword \"cerraduras electronicas para taquillas\" / pagina \"https://zentrylockers.com/cerraduras-inteligentes-taquillas/\": Optimizar on-page y meta title/description para pasar de posicion 24.4 a top 10; CTR actual 0.00% pese a 26 impresiones."
+    },
+    {
+      "ref": "dept-seo-opportunity-6",
+      "description": "seo-specialist, oportunidad (quick_win, priority=medium, basis=evidence) sobre keyword \"taquillas para hospital\" / pagina \"https://zentrylockers.com/taquillas-para-hospitales/\": Optimizar on-page y meta title/description para pasar de posicion 17.0 a top 10; CTR actual 0.00% pese a 20 impresiones."
+    },
+    {
+      "ref": "dept-seo-opportunity-7",
+      "description": "seo-specialist, oportunidad (cannibalization, priority=high, basis=evidence) sobre keyword \"taquillas melamina / taquillas de melamina (genericas mal enrutadas)\" / pagina \"https://zentrylockers.com/taquillas-melamina-fenolico/\": No ejecutar el on-page sugerido en /taquillas-melamina-fenolico/ para estas keywords genericas; cerrarlas via el script existente scripts/o291-resolve-melamina-cannibalization.ts ..."
+    },
+    {
+      "ref": "dept-seo-opportunity-8",
+      "description": "seo-specialist, oportunidad (technical, priority=high, basis=evidence) sobre keyword \"cerraduras inteligentes para centros deportivos\" / pagina \"https://zentrylockers.com/cerraduras/\": No ejecutar la accion tal cual sobre /cerraduras/ (papelera, redirige a /cerraduras-para-taquillas/). Escalar a Pau para decidir si el objetivo real es /cerraduras-para-taquillas/..."
+    },
+    {
+      "ref": "dept-content-summary",
+      "description": "content-strategist (salida real de esta pasada): oportunidad \"Guia de compra de taquillas para colegios, gimnasios y oficinas\" -- \"comprar taquillas\" tiene intencion de compra clara y arrastra un cluster de keywords relacionadas (melamina, colegios, escolares, fenolicas en Palencia) que hoy no estan cubiertas de forma coordinada en una sola pieza de referencia. (priority=medium, contentType=article, targetBrand=zentry, searchIntent=transactional)."
+    },
+    {
+      "ref": "dept-content-structure",
+      "description": "content-strategist, estructura propuesta: H1 \"Comprar taquillas para tu colegio, gimnasio u oficina: guia practica\" con 7 seccion(es); audiencia \"Responsable de compras o mantenimiento de un colegio, gimnasio, polideportivo u oficina que necesita renovar o instalar...\"; angulo \"En vez de un articulo generico sobre \"que son las taquillas\", enfocar la pieza como guia de decision de compra B2B: que material y configur...\"."
+    },
+    {
+      "ref": "dept-content-cta",
+      "description": "content-strategist, estrategia de CTA: primario \"Solicitar presupuesto sin compromiso\". Motivo: La keyword primaria (\"comprar taquillas\") tiene intencion transactional clara, por lo que el CTA de presupuesto del hint encaja directamente con la fase de decision del usuario; n..."
+    },
+    {
+      "ref": "dept-content-risks",
+      "description": "content-strategist, riesgos/incognitas declarados (4): Riesgo de canibalizacion SEO con las paginas de cluster (taquillas melamina, colegios, escolares, fenolicas en Palencia) si no se coordina el enlazado interno real antes de publicar, tal como señala el pipeline determinista. | No se dispone de una URL real (\"page\") en el contexto, por lo que todo e..."
+    },
+    {
+      "ref": "dept-analytics-summary",
+      "description": "analytics-specialist (salida real de esta pasada, snapshot del departmentRunId de datos \"dept-2026-08-16T185140Z\", ga4Connected=true, gtmConnected=true): measurementFindings=4, trafficObservations=4, conversionObservations=3, trackingIssues=4, prioritizedActions=6."
+    },
+    {
+      "ref": "dept-analytics-action-1",
+      "description": "analytics-specialist, accion priorizada (high, claimType=RECOMMENDATION): Validar en GA4 DebugView el disparo de click_phone, ya que es un evento clave del catalogo con tag/trigger activos en GTM pero sin ninguna ocurrencia registrada en GA4 durante el periodo."
+    },
+    {
+      "ref": "dept-analytics-action-2",
+      "description": "analytics-specialist, accion priorizada (high, claimType=RECOMMENDATION): Confirmar si la version live del contenedor GTM esta realmente publicada, dado que su nombre indica \"sin publicar, pendiente aprobacion Pau\", lo que podria afectar a la medicion de los nuevos eventos..."
+    },
+    {
+      "ref": "dept-analytics-action-3",
+      "description": "analytics-specialist, accion priorizada (medium, claimType=RECOMMENDATION): Revisar la configuracion de eventos clave en GA4 para view_quote_page, view_contact_page y click_catalog_download, que se disparan pero no generan conversiones."
+    },
+    {
+      "ref": "dept-analytics-action-4",
+      "description": "analytics-specialist, accion priorizada (medium, claimType=RECOMMENDATION): Identificar el trigger real que dispara generate_lead_form_submit en GTM, dado que no hay ningun trigger de tipo formSubmission en la lista disponible."
+    },
+    {
+      "ref": "dept-analytics-action-5",
+      "description": "analytics-specialist, accion priorizada (low, claimType=RECOMMENDATION): Segmentar el trafico Direct para entender su composicion, dado su peso desproporcionado frente a los demas canales listados."
+    },
+    {
+      "ref": "dept-analytics-action-6",
+      "description": "analytics-specialist, accion priorizada (low, claimType=RECOMMENDATION): Revisar el desglose de conversiones por sesion en /product/taquilla-2-puertas-modulo-1-melamina, donde las conversiones superan a las sesiones."
+    },
+    {
+      "ref": "dept-analytics-tracking-issue-1",
+      "description": "analytics-specialist, problema de medicion (claimType=FACT): click_phone no registro ninguna ocurrencia en GA4 durante el periodo, a pesar de que el tag de GTM \"GA4 Event - click_phone\" (tipo gaawe) no esta pausado y existe un trigger linkClick llamado click_p..."
+    },
+    {
+      "ref": "dept-analytics-tracking-issue-2",
+      "description": "analytics-specialist, problema de medicion (claimType=OBSERVATION): Ninguno de los 7 triggers listados en GTM es de tipo formSubmission, aunque existe un tag gaawe para generate_lead_form_submit que registro 6 ocurrencias en GA4; el trigger que respalda ese tag no es..."
+    },
+    {
+      "ref": "dept-analytics-tracking-issue-3",
+      "description": "analytics-specialist, problema de medicion (claimType=OBSERVATION): view_quote_page, view_contact_page y click_catalog_download se disparan en GA4 (ocurrencias mayores a cero) pero no generan conversiones (0), a diferencia de generate_lead_form_submit, click_whatsapp..."
+    },
+    {
+      "ref": "dept-analytics-tracking-issue-4",
+      "description": "analytics-specialist, problema de medicion (claimType=OBSERVATION): La version live del contenedor GTM se llama \"O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5)\", un nombre que sugiere aprobacion pendiente pese a describirse como la version a..."
+    },
+    {
+      "ref": "dept-sem-unavailable",
+      "description": "sem-specialist: not_available / pendiente. sem-specialist queda explicitamente FUERA de esta fase (pendiente). No se ejecuta, no se intenta arreglar, y su ausencia nunca bloquea la pasada del departamento."
+    },
+    {
+      "ref": "department-run",
+      "description": "departmentRunId mas reciente: \"growth-department-2026-08-14T111247Z\" (196 evento(s) registrados en data/department-events.jsonl para esta pasada)."
+    },
+    {
+      "ref": "agent-activity",
+      "description": "Actividad de agentes en esta pasada: 25 agente(s) con eventos (25 completados). Detalle completo en agentActivity[] del contexto."
+    },
+    {
+      "ref": "department-warnings",
+      "description": "2 warning(s) emitidos por agentes del departamento en esta pasada. Ver warnings[] del contexto."
+    },
+    {
+      "ref": "actions-live",
+      "description": "102 accion(es) vivas en el backlog (por prioridad: high=8, medium=94). Total historico (todos los estados): 112. Por estado: approved=6, snoozed=4, auto_approved_for_planning=96, rejected=6."
+    },
+    {
+      "ref": "actions-top",
+      "description": "Top 8 acciones vivas por prioridad: \"SEO: \"cerraduras inteligentes para taquillas\" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)\" (high, approved); \"Competencia: keyword no cubierta \"taquillas inteligentes\"\" (high, auto_approved_for_planning); \"Mejorar title/meta de https://zentrylockers.com/cerraduras-inteligentes-taquillas/\" (high, approved); \"Reforzar enlazado interno hacia https://zentrylockers.com/cerraduras-inteligentes-taquillas/\" (high, approved); \"Contenido nuevo para \"taquillas inteligentes\"\" (high, auto_approved_for_planning); \"CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/\" (high, approved); \"SEO: \"cerraduras inteligentes para taquillas\" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)\" (high, approved); \"CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/\" (high, approved)."
+    },
+    {
+      "ref": "workorders-ready",
+      "description": "110 work order(s) listas para revisar de 111 totales. Por categoria: cro=10, seo=21, competitor_gap=21, sem=2, content=56, analytics=1. Por marca: both=42, zentry=57, tukandado=12."
+    },
+    {
+      "ref": "changepacks-ready",
+      "description": "5 change pack(s) listos para revisar de 77 totales. Por tipo: seo_on_page_update=18, content_update=31, new_content_page=19, cro_conversion_update=9."
+    },
+    {
+      "ref": "approvals-pending",
+      "description": "1 solicitud(es) de aprobacion pendientes. Por riesgo: critical=1."
+    },
+    {
+      "ref": "jobs-latest-run",
+      "description": "Ultima ejecucion de SEO Watcher (runId \"seo-watcher-2026-08-16T185149Z\"): 35 job(s) propuestos. Total historico en data/jobs.jsonl: 2000."
+    },
+    {
+      "ref": "dependency-seo-specialist",
+      "description": "seo-specialist: available. .claude/agents/seo-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "ref": "dependency-content-strategist",
+      "description": "content-strategist: available. .claude/agents/content-strategist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "ref": "dependency-sem-specialist",
+      "description": "sem-specialist: available. .claude/agents/sem-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "ref": "dependency-analytics-specialist",
+      "description": "analytics-specialist: available. .claude/agents/analytics-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "ref": "dependency-qa-reviewer",
+      "description": "qa-reviewer: available. .claude/agents/qa-reviewer.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "ref": "dependency-web-engineer",
+      "description": "web-engineer: available. .claude/agents/web-engineer.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+    },
+    {
+      "ref": "dependency-sem-watcher-v1-deterministico",
+      "description": "sem-watcher (V1 deterministico): available. Ultimo agent_finished de sem-watcher en este departmentRunId: connected=true."
+    },
+    {
+      "ref": "dependency-analytics-watcher-v1-deterministico",
+      "description": "analytics-watcher (V1 deterministico): available. Ultimo agent_finished de analytics-watcher en este departmentRunId: ga4Connected=true, gtmConnected=true."
+    }
+  ],
+  "contextKind": "department_coordination_v1",
+  "departmentCoordinationRunId": "dept-2026-08-16T185140Z",
+  "specialistInputs": [
+    {
+      "employee": "seo-specialist",
+      "status": "executed",
+      "note": "seo-specialist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas.",
+      "sourceRunId": null,
+      "output": {
+        "executiveSummary": "Datos live de esta pasada (Search Console leido hace 0h, run seo-watcher-2026-08-16T185149Z, 35 jobs). El backlog trae 18 actionItems reales, cruzados contra 10 target keywords y 20 clusters ya decididos. Hay 6 quick wins listos para ejecutar en paginas ya indexadas entre posicion 17 y 28.8 (cerraduras-inteligentes-taquillas, taquillas-melamina, taquillas-para-colegios, taquillas-para-hospitales). Pero hay dos problemas de higiene de datos que deben resolverse antes de ejecutar nada mas: (1) al menos 2 actionItems (cerraduras inteligentes para centros deportivos, cerraduras sostenibles para gimnasios) siguen recomendando trabajo on-page sobre https://zentrylockers.com/cerraduras/, una pagina que el propio catalogo de clusters marca como en papelera desde O22 con redireccion 301 a /cerraduras-para-taquillas/ -- ejecutarlo tal cual desperdiciaria WordPress; (2) 2 actionItems de keywords genericas de melamina siguen apuntando a /taquillas-melamina-fenolico/ pese a que el catalogo documenta esa cannibalizacion como YA resuelta por Pau (decision O29.1) y con un script dedicado para cerrarlos. Ademas, practicamente todos los actionItems con kind low_ctr reportan CTR real de 0.00% pese a tener impresiones, lo que apunta a un problema sistemico de meta titles/descriptions, no solo casos aislados. Por el lado de contenido, 4 clusters marcados new_page_candidate (universidades, metalicas, vestuarios, taquillas inteligentes solucion general) ya tienen paginas de staging aprobadas visualmente y representan huecos de contenido reales pendientes de publicar. Finalmente, la keyword \"cerraduras sostenibles para gimnasios\" no esta cubierta por ningun cluster del catalogo y aparece apuntando a dos paginas distintas, senal de que falta una decision de enrutado documentada.",
+        "findings": [
+          {
+            "id": "f1",
+            "category": "technical",
+            "description": "El actionItem para \"cerraduras inteligentes para centros deportivos\" (y tambien \"cerraduras sostenibles para gimnasios\") recomienda reforzar/reescribir meta title-description en https://zentrylockers.com/cerraduras/, pero el catalogo de clusters documenta que esa URL esta en papelera desde O22 con redireccion 301 real a /cerraduras-para-taquillas/, y que la decision correcta del cluster es \"reject\" hasta que Pau apruebe un nuevo objetivo (2060 o 1865). Ejecutar la accion tal cual desperdicia trabajo de WordPress sobre una pagina muerta.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev2",
+              "ev3",
+              "ev17"
+            ]
+          },
+          {
+            "id": "f2",
+            "category": "cannibalization",
+            "description": "Dos actionItems (\"taquillas melamina\" y \"taquillas de melamina\") apuntan a https://zentrylockers.com/taquillas-melamina-fenolico/ usando la keyword generica de melamina, pero el catalogo de clusters documenta explicitamente (decision O29.1, Pau) que esta cannibalizacion ya esta resuelta: la keyword generica debe ir a /taquillas-melamina/ y cualquier actionId historico apuntando a la pagina de combinacion melamina-fenolico se considera mal enrutado y se cierra via scripts/o291-resolve-melamina-cannibalization.ts.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev4",
+              "ev5",
+              "ev6",
+              "ev7"
+            ]
+          },
+          {
+            "id": "f3",
+            "category": "content",
+            "description": "4 clusters del catalogo (taquillas_universidad, taquillas_metalicas, taquillas_vestuarios, taquillas_inteligentes_general) tienen action \"new_page_candidate\" con paginas de staging ya creadas y aprobadas visualmente, pero ninguna aparece todavia como pagina real en los actionItems de este run -- son huecos de contenido ya validados y pendientes de publicar.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev11",
+              "ev12",
+              "ev13",
+              "ev14"
+            ]
+          },
+          {
+            "id": "f4",
+            "category": "keyword_strategy",
+            "description": "La keyword \"cerraduras sostenibles para gimnasios\" aparece dos veces en actionItems apuntando a dos paginas distintas (/cerraduras-inteligentes-taquillas/ y /cerraduras/, esta ultima ya senalada como obsoleta en f1) y no coincide con ningun matchPattern del catalogo de clusters -- no hay una decision de enrutado documentada para ella, lo que genera riesgo de duplicar esfuerzo o de ejecutar sobre la pagina equivocada sin control.",
+            "basis": "inference",
+            "evidenceRefs": [
+              "ev16",
+              "ev17"
+            ]
+          },
+          {
+            "id": "f5",
+            "category": "technical",
+            "description": "Multiples actionItems con kind low_ctr reportan explicitamente CTR actual de 0.00% pese a tener impresiones reales (40, 47, 72, 33, 27 impresiones entre otros) en paginas de sector/producto ya indexadas -- patron sistemico de meta titles/descriptions poco atractivos, no un caso aislado de una sola pagina.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev2",
+              "ev4",
+              "ev8",
+              "ev18",
+              "ev21",
+              "ev23"
+            ]
+          },
+          {
+            "id": "f6",
+            "category": "keyword_strategy",
+            "description": "Tres keywords de prioridad alta/media en el catalogo de negocio (\"lockers inteligentes\", \"taquillas para gimnasios\", \"digitalizacion de taquillas\") no aparecen en ningun actionItem de este run -- no hay senal de posicion/impresiones reciente de Search Console para ellas pese a su prioridad declarada.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev30",
+              "ev31",
+              "ev32"
+            ]
+          }
+        ],
+        "opportunities": [
+          {
+            "id": "o1",
+            "keyword": "cerraduras inteligentes para taquillas",
+            "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+            "kind": "quick_win",
+            "priority": "high",
+            "recommendedAction": "Reforzar H1/H2, ampliar profundidad del texto, mejorar enlazado interno y actualizar meta title/description para pasar de posicion 20.5 a top 10.",
+            "rationale": "47 impresiones en el periodo, posicion actual 20.5 -- a un empujon de primera pagina.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev1"
+            ]
+          },
+          {
+            "id": "o2",
+            "keyword": "taquillas de melamina",
+            "page": "https://zentrylockers.com/taquillas-melamina/",
+            "kind": "quick_win",
+            "priority": "medium",
+            "recommendedAction": "Optimizar on-page (H1/H2, profundidad de texto, enlazado interno, meta title/description) para pasar de posicion 28.8 a top 10; CTR actual 0.00% pese a 72 impresiones.",
+            "rationale": "Keyword correctamente enrutada segun el cluster taquillas_melamina (decision O29.1) y con volumen real de impresiones.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev8",
+              "ev6"
+            ]
+          },
+          {
+            "id": "o3",
+            "keyword": "taquillas colegios",
+            "page": "https://zentrylockers.com/taquillas-para-colegios/",
+            "kind": "quick_win",
+            "priority": "medium",
+            "recommendedAction": "Optimizar on-page y meta title/description para pasar de posicion 25.1 a top 10; CTR actual 0.00% pese a 40 impresiones.",
+            "rationale": "Alineado con el cluster taquillas_colegios_escolares (pagina real ya existente).",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev18",
+              "ev20"
+            ]
+          },
+          {
+            "id": "o4",
+            "keyword": "taquillas vestuarios de melamina",
+            "page": "https://zentrylockers.com/taquillas-melamina/",
+            "kind": "quick_win",
+            "priority": "medium",
+            "recommendedAction": "Optimizar on-page para pasar de posicion 28.0 a top 10, reforzando el contenido de vestuarios dentro de la pagina de melamina.",
+            "rationale": "28 impresiones, posicion 28.0, keyword correctamente enrutada por el cluster taquillas_melamina.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev10",
+              "ev6"
+            ]
+          },
+          {
+            "id": "o5",
+            "keyword": "cerraduras electronicas para taquillas",
+            "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+            "kind": "quick_win",
+            "priority": "medium",
+            "recommendedAction": "Optimizar on-page y meta title/description para pasar de posicion 24.4 a top 10; CTR actual 0.00% pese a 26 impresiones.",
+            "rationale": "Variante de la misma intencion que ya cubre el cluster cerraduras_inteligentes_taquillas.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev27",
+              "ev28"
+            ]
+          },
+          {
+            "id": "o6",
+            "keyword": "taquillas para hospital",
+            "page": "https://zentrylockers.com/taquillas-para-hospitales/",
+            "kind": "quick_win",
+            "priority": "medium",
+            "recommendedAction": "Optimizar on-page y meta title/description para pasar de posicion 17.0 a top 10; CTR actual 0.00% pese a 20 impresiones.",
+            "rationale": "Posicion mas cercana al top 10 de todo el listado (17.0) -- muy bajo esfuerzo relativo para el impacto.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev29"
+            ]
+          },
+          {
+            "id": "o7",
+            "keyword": "taquillas melamina / taquillas de melamina (genericas mal enrutadas)",
+            "page": "https://zentrylockers.com/taquillas-melamina-fenolico/",
+            "kind": "cannibalization",
+            "priority": "high",
+            "recommendedAction": "No ejecutar el on-page sugerido en /taquillas-melamina-fenolico/ para estas keywords genericas; cerrarlas via el script existente scripts/o291-resolve-melamina-cannibalization.ts y reenrutar el interes real hacia /taquillas-melamina/.",
+            "rationale": "El catalogo de clusters documenta que esta cannibalizacion ya fue resuelta por Pau (O29.1) y que estos actionIds se consideran mal enrutados.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev4",
+              "ev5",
+              "ev6",
+              "ev7"
+            ]
+          },
+          {
+            "id": "o8",
+            "keyword": "cerraduras inteligentes para centros deportivos",
+            "page": "https://zentrylockers.com/cerraduras/",
+            "kind": "technical",
+            "priority": "high",
+            "recommendedAction": "No ejecutar la accion tal cual sobre /cerraduras/ (papelera, redirige a /cerraduras-para-taquillas/). Escalar a Pau para decidir si el objetivo real es /cerraduras-para-taquillas/ (2060) o el cluster de cerraduras inteligentes (1865) antes de invertir trabajo de WordPress.",
+            "rationale": "El cluster correspondiente tiene action \"reject\" precisamente por este motivo.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev2",
+              "ev3"
+            ]
+          },
+          {
+            "id": "o9",
+            "keyword": "taquillas colegios",
+            "page": "https://zentrylockers.com/taquillas-para-colegios/",
+            "kind": "technical",
+            "priority": "medium",
+            "recommendedAction": "Auditar y reescribir meta titles/descriptions de las paginas con impresiones pero 0% CTR, empezando por esta y extendiendo el mismo diagnostico a cerraduras-inteligentes-taquillas, taquillas-melamina, taquillas-para-empresas y taquillas-fenolicas (mismo patron); valorar datos estructurados/rich snippets.",
+            "rationale": "El patron de 0% CTR se repite en al menos 6 paginas distintas del backlog, sugiriendo una causa comun (plantilla de snippet, falta de rich results) mas que problemas aislados por pagina.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev18",
+              "ev2",
+              "ev4",
+              "ev8",
+              "ev21",
+              "ev23"
+            ]
+          },
+          {
+            "id": "o10",
+            "keyword": "taquillas universidad / taquillas metalicas / taquillas vestuarios / taquillas inteligentes",
+            "kind": "content_gap",
+            "priority": "medium",
+            "recommendedAction": "Avanzar a produccion las 4 paginas de staging ya aprobadas visualmente para los clusters new_page_candidate (universidad, metalicas, vestuarios, taquillas inteligentes general) para capturar demanda ya validada.",
+            "rationale": "Son huecos de contenido reales ya detectados por el pipeline de clustering, con trabajo de staging ya completado -- publicar es de bajo esfuerzo adicional relativo.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev11",
+              "ev12",
+              "ev13",
+              "ev14"
+            ]
+          }
+        ],
+        "technicalIssues": [
+          {
+            "id": "t1",
+            "page": "https://zentrylockers.com/cerraduras/",
+            "issue": "Pagina en papelera desde O22 con redireccion 301 real a /cerraduras-para-taquillas/, pero sigue siendo el targetUrl de un cluster con action \"reject\" y de al menos 2 actionItems activos (cerraduras inteligentes para centros deportivos, cerraduras sostenibles para gimnasios) que recomiendan trabajo on-page sobre ella.",
+            "severity": "high",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev2",
+              "ev3",
+              "ev17"
+            ]
+          },
+          {
+            "id": "t2",
+            "page": "https://zentrylockers.com/taquillas-para-colegios/",
+            "issue": "Patron sistemico de CTR actual 0.00% pese a impresiones reales en al menos 6 paginas distintas del backlog (esta pagina, cerraduras-inteligentes-taquillas, taquillas-melamina, taquillas-para-empresas, taquillas-fenolicas) -- sintoma de meta titles/descriptions poco atractivos o ausencia de rich snippets, no un caso aislado.",
+            "severity": "medium",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev18",
+              "ev2",
+              "ev4",
+              "ev8",
+              "ev21",
+              "ev23"
+            ]
+          }
+        ],
+        "contentGaps": [
+          {
+            "id": "cg1",
+            "topic": "Taquillas para universidades",
+            "relatedKeyword": "taquillas universidad",
+            "rationale": "Cluster taquillas_universidad, action new_page_candidate, sin pagina de produccion equivalente confirmada; staging 2110 ya creada y aprobada visualmente.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev11"
+            ]
+          },
+          {
+            "id": "cg2",
+            "topic": "Taquillas metalicas",
+            "relatedKeyword": "taquillas metalicas",
+            "rationale": "Cluster taquillas_metalicas, action new_page_candidate: tercer material del catalogo (junto a melamina/fenolica) sin pagina propia; staging 2105 aprobada visualmente. Coincide ademas con una target keyword de prioridad media en el catalogo de negocio.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev12",
+              "ev33"
+            ]
+          },
+          {
+            "id": "cg3",
+            "topic": "Taquillas para vestuarios",
+            "relatedKeyword": "taquillas vestuarios",
+            "rationale": "Cluster taquillas_vestuarios, action new_page_candidate: distinto de /bancos-de-vestuario/ (mobiliario complementario), sin pagina equivalente sobre las taquillas en si; staging 2104 aprobada visualmente.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev13"
+            ]
+          },
+          {
+            "id": "cg4",
+            "topic": "Taquillas inteligentes (solucion general)",
+            "relatedKeyword": "taquillas inteligentes",
+            "rationale": "Cluster taquillas_inteligentes_general, action new_page_candidate: es la solucion completa (mueble+cerradura+PIN/RFID/app), distinta del hardware de cierre que ya cubre cerraduras_inteligentes_taquillas; staging 2103 corregida en O28.6 pero aun pendiente de aprobacion visual real, a diferencia de las otras 3 candidatas.",
+            "basis": "evidence",
+            "evidenceRefs": [
+              "ev14"
+            ]
+          }
+        ],
+        "internalLinkRecommendations": [
+          {
+            "id": "il1",
+            "fromPage": "https://zentrylockers.com/taquillas-melamina/",
+            "toPage": "https://zentrylockers.com/taquillas-melamina-fenolico/",
+            "anchorTextSuggestion": "taquillas de melamina con puertas fenolicas para mayor resistencia",
+            "rationale": "Ambas paginas atacan intenciones diferenciadas pero relacionadas (material generico vs. combinacion especifica) segun la decision O29.1 de Pau. Un enlace contextual desde la pagina general ayuda a los usuarios que buscan mas resistencia a la humedad/impactos a encontrar la variante especifica sin fusionar ni canibalizar las paginas.",
+            "basis": "inference",
+            "evidenceRefs": [
+              "ev6",
+              "ev7"
+            ]
+          },
+          {
+            "id": "il2",
+            "fromPage": "https://zentrylockers.com/taquillas-para-colegios/",
+            "toPage": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+            "anchorTextSuggestion": "cerraduras inteligentes para taquillas escolares",
+            "rationale": "Los centros educativos son un comprador tipico de sistemas de cierre inteligente para taquillas de alumnos; enlazar desde la pagina de sector (colegios, con un quick win pendiente en posicion 25.1 que ya pide mejorar el enlazado interno) hacia la pagina informativa de cerraduras inteligentes refuerza la relevancia tematica cruzada.",
+            "basis": "inference",
+            "evidenceRefs": [
+              "ev18",
+              "ev28"
+            ]
+          }
+        ],
+        "prioritizedActions": [
+          {
+            "rank": 1,
+            "title": "Corregir el enrutado de actionItems que apuntan a la pagina obsoleta /cerraduras/ (en papelera, redirige a /cerraduras-para-taquillas/)",
+            "relatedIds": [
+              "f1",
+              "o8",
+              "t1"
+            ],
+            "priority": "high",
+            "effort": "low",
+            "impact": "high"
+          },
+          {
+            "rank": 2,
+            "title": "Cerrar via el script existente las keywords genericas de melamina mal enrutadas a /taquillas-melamina-fenolico/",
+            "relatedIds": [
+              "f2",
+              "o7"
+            ],
+            "priority": "high",
+            "effort": "low",
+            "impact": "medium"
+          },
+          {
+            "rank": 3,
+            "title": "Ejecutar los 6 quick wins on-page ya identificados (posiciones 17-28.8) en cerraduras-inteligentes-taquillas, taquillas-melamina, taquillas-para-colegios y taquillas-para-hospitales",
+            "relatedIds": [
+              "o1",
+              "o2",
+              "o3",
+              "o4",
+              "o5",
+              "o6"
+            ],
+            "priority": "high",
+            "effort": "medium",
+            "impact": "medium"
+          },
+          {
+            "rank": 4,
+            "title": "Auditar y reescribir meta titles/descriptions en las paginas con 0% CTR pese a impresiones reales (patron sistemico en al menos 6 paginas)",
+            "relatedIds": [
+              "f5",
+              "t2",
+              "o9"
+            ],
+            "priority": "medium",
+            "effort": "medium",
+            "impact": "medium"
+          },
+          {
+            "rank": 5,
+            "title": "Publicar a produccion las 4 paginas de staging ya aprobadas para los clusters new_page_candidate (universidad, metalicas, vestuarios, taquillas inteligentes general)",
+            "relatedIds": [
+              "f3",
+              "cg1",
+              "cg2",
+              "cg3",
+              "cg4",
+              "o10"
+            ],
+            "priority": "medium",
+            "effort": "medium",
+            "impact": "high"
+          },
+          {
+            "rank": 6,
+            "title": "Documentar en el catalogo de clusters una decision de enrutado para \"cerraduras sostenibles para gimnasios\" (sin cluster propio y con dos paginas destino distintas)",
+            "relatedIds": [
+              "f4"
+            ],
+            "priority": "low",
+            "effort": "low",
+            "impact": "low"
+          }
+        ],
+        "evidence": [
+          {
+            "id": "ev1",
+            "source": "job_data",
+            "keyword": "cerraduras inteligentes para taquillas",
+            "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+            "description": "actionItem quick_win, prioridad high, posicion actual 20.51 -> objetivo 10, 47 impresiones."
+          },
+          {
+            "id": "ev2",
+            "source": "job_data",
+            "keyword": "cerraduras inteligentes para centros deportivos",
+            "page": "https://zentrylockers.com/cerraduras/",
+            "description": "actionItem future_opportunity+low_ctr, prioridad high, posicion actual 36.97, 31 impresiones, CTR actual 0.00% segun rationale."
+          },
+          {
+            "id": "ev3",
+            "source": "cluster_catalog",
+            "keyword": "cerraduras inteligentes para centros deportivos",
+            "page": "https://zentrylockers.com/cerraduras/",
+            "description": "cluster cerraduras_inteligentes_centros_deportivos, action reject: la pagina /cerraduras/ (id 1751) esta en papelera desde O22 con redireccion 301 real a /cerraduras-para-taquillas/ (2060); el objetivo correcto seria 2060 o el cluster 1865, a decidir por Pau."
+          },
+          {
+            "id": "ev4",
+            "source": "job_data",
+            "keyword": "taquillas melamina",
+            "page": "https://zentrylockers.com/taquillas-melamina-fenolico/",
+            "description": "actionItem future_opportunity+low_ctr apuntando a la pagina de combinacion melamina-fenolico con la keyword generica melamina, posicion 43.03, 62 impresiones."
+          },
+          {
+            "id": "ev5",
+            "source": "job_data",
+            "keyword": "taquillas de melamina",
+            "page": "https://zentrylockers.com/taquillas-melamina-fenolico/",
+            "description": "actionItem future_opportunity+low_ctr apuntando a la pagina de combinacion melamina-fenolico con la keyword generica melamina, posicion 43.08, 49 impresiones."
+          },
+          {
+            "id": "ev6",
+            "source": "cluster_catalog",
+            "keyword": "taquillas melamina",
+            "page": "https://zentrylockers.com/taquillas-melamina/",
+            "description": "cluster taquillas_melamina, decision O29.1 (Pau, aprobada): esta URL es la pagina general de material; cualquier actionId historico con keyword generica de melamina apuntando a /taquillas-melamina-fenolico/ se considera mal enrutado y se cierra via scripts/o291-resolve-melamina-cannibalization.ts."
+          },
+          {
+            "id": "ev7",
+            "source": "cluster_catalog",
+            "page": "https://zentrylockers.com/taquillas-melamina-fenolico/",
+            "description": "cluster taquillas_melamina_fenolico, action differentiate: pagina especifica de la combinacion melamina+fenolico, no debe recibir la keyword generica melamina; decision O29.1 aprobada por Pau."
+          },
+          {
+            "id": "ev8",
+            "source": "job_data",
+            "keyword": "taquillas de melamina",
+            "page": "https://zentrylockers.com/taquillas-melamina/",
+            "description": "actionItem quick_win+low_ctr, prioridad medium, posicion 28.78, 72 impresiones, CTR actual 0.00%."
+          },
+          {
+            "id": "ev9",
+            "source": "job_data",
+            "keyword": "taquilla madera",
+            "page": "https://zentrylockers.com/taquillas-melamina/",
+            "description": "actionItem future_opportunity+low_ctr, posicion 43.20, 51 impresiones."
+          },
+          {
+            "id": "ev10",
+            "source": "job_data",
+            "keyword": "taquillas vestuarios de melamina",
+            "page": "https://zentrylockers.com/taquillas-melamina/",
+            "description": "actionItem quick_win+low_ctr, prioridad medium, posicion 28.0, 28 impresiones."
+          },
+          {
+            "id": "ev11",
+            "source": "cluster_catalog",
+            "keyword": "taquillas universidad",
+            "description": "cluster taquillas_universidad, action new_page_candidate, targetUrl null: sin pagina de produccion equivalente confirmada, staging 2110 ya creada y aprobada visualmente."
+          },
+          {
+            "id": "ev12",
+            "source": "cluster_catalog",
+            "keyword": "taquillas metalicas",
+            "description": "cluster taquillas_metalicas, action new_page_candidate, targetUrl null: tercer material del catalogo (junto a melamina/fenolica) sin pagina propia, staging 2105 aprobada visualmente."
+          },
+          {
+            "id": "ev13",
+            "source": "cluster_catalog",
+            "keyword": "taquillas vestuarios",
+            "description": "cluster taquillas_vestuarios, action new_page_candidate, targetUrl null: distinto de /bancos-de-vestuario/, sin pagina equivalente, staging 2104 aprobada visualmente."
+          },
+          {
+            "id": "ev14",
+            "source": "cluster_catalog",
+            "keyword": "taquillas inteligentes",
+            "description": "cluster taquillas_inteligentes_general, action new_page_candidate, targetUrl null: solucion general (mueble+cerradura+PIN/RFID/app), distinta del hardware de cierre; staging 2103 corregida en O28.6, pendiente de aprobacion visual real."
+          },
+          {
+            "id": "ev15",
+            "source": "cluster_catalog",
+            "keyword": "comprar taquillas / soluciones de taquillas",
+            "description": "cluster taquillas_comercial_generico, action postpone: intencion transaccional sin angulo de producto/sector propio, se recomienda no crear paginas nuevas y mejorar CTA/enlazado interno en paginas existentes."
+          },
+          {
+            "id": "ev16",
+            "source": "job_data",
+            "keyword": "cerraduras sostenibles para gimnasios",
+            "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+            "description": "actionItem future_opportunity+low_ctr, posicion 45.7, 20 impresiones."
+          },
+          {
+            "id": "ev17",
+            "source": "job_data",
+            "keyword": "cerraduras sostenibles para gimnasios",
+            "page": "https://zentrylockers.com/cerraduras/",
+            "description": "actionItem future_opportunity+low_ctr, posicion 31.1, 20 impresiones, apuntando a la misma pagina obsoleta /cerraduras/ senalada en el cluster reject."
+          },
+          {
+            "id": "ev18",
+            "source": "job_data",
+            "keyword": "taquillas colegios",
+            "page": "https://zentrylockers.com/taquillas-para-colegios/",
+            "description": "actionItem quick_win+low_ctr, prioridad medium, posicion 25.13, 40 impresiones, CTR actual 0.00%."
+          },
+          {
+            "id": "ev19",
+            "source": "job_data",
+            "keyword": "taquillas escolares",
+            "page": "https://zentrylockers.com/taquillas-para-colegios/",
+            "description": "actionItem future_opportunity+low_ctr, posicion 33.84, 32 impresiones."
+          },
+          {
+            "id": "ev20",
+            "source": "cluster_catalog",
+            "keyword": "taquillas colegios / taquillas escolares",
+            "page": "https://zentrylockers.com/taquillas-para-colegios/",
+            "description": "cluster taquillas_colegios_escolares, action update_existing_page: colegios y escolares son sinonimos de intencion identica, una sola pagina real ya existe."
+          },
+          {
+            "id": "ev21",
+            "source": "job_data",
+            "keyword": "taquilla para el personal",
+            "page": "https://zentrylockers.com/taquillas-para-empresas/",
+            "description": "actionItem future_opportunity+low_ctr, posicion 65.48, 33 impresiones, CTR actual 0.00%."
+          },
+          {
+            "id": "ev22",
+            "source": "cluster_catalog",
+            "keyword": "taquilla para el personal",
+            "page": "https://zentrylockers.com/taquillas-para-empresas/",
+            "description": "cluster taquillas_empresas_personal, action update_existing_page: taquilla para el personal es la misma intencion comercial que taquillas para empresas."
+          },
+          {
+            "id": "ev23",
+            "source": "job_data",
+            "keyword": "taquillas fenolicas en palencia",
+            "page": "https://zentrylockers.com/taquillas-fenolicas/",
+            "description": "actionItem future_opportunity+low_ctr, posicion 73.48, 27 impresiones, CTR actual 0.00%."
+          },
+          {
+            "id": "ev24",
+            "source": "job_data",
+            "keyword": "fabricante de taquillas fenolicas en badajoz",
+            "page": "https://zentrylockers.com/taquillas-fenolicas/",
+            "description": "actionItem future_opportunity+low_ctr, posicion 83.74, 23 impresiones."
+          },
+          {
+            "id": "ev25",
+            "source": "cluster_catalog",
+            "keyword": "taquillas fenolicas en palencia",
+            "page": "https://zentrylockers.com/taquillas-fenolicas/",
+            "description": "cluster taquillas_fenolicas: en Palencia se trata como ruido geografico sin intencion comercial local real detectada, se agrupa en el cluster generico de fenolicas."
+          },
+          {
+            "id": "ev26",
+            "source": "job_data",
+            "keyword": "cerraduras electronicas taquillas",
+            "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+            "description": "actionItem future_opportunity+low_ctr, posicion 34.75, 32 impresiones."
+          },
+          {
+            "id": "ev27",
+            "source": "job_data",
+            "keyword": "cerraduras electronicas para taquillas",
+            "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+            "description": "actionItem quick_win+low_ctr, prioridad medium, posicion 24.38, 26 impresiones, CTR actual 0.00%."
+          },
+          {
+            "id": "ev28",
+            "source": "cluster_catalog",
+            "keyword": "cerraduras inteligentes para taquillas",
+            "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+            "description": "cluster cerraduras_inteligentes_taquillas, action update_existing_page: 4 variantes de la misma intencion (electronica=inteligente) sobre la misma pagina real."
+          },
+          {
+            "id": "ev29",
+            "source": "job_data",
+            "keyword": "taquillas para hospital",
+            "page": "https://zentrylockers.com/taquillas-para-hospitales/",
+            "description": "actionItem quick_win+low_ctr, prioridad medium, posicion 17.0, 20 impresiones, CTR actual 0.00%."
+          },
+          {
+            "id": "ev30",
+            "source": "target_keyword_catalog",
+            "keyword": "lockers inteligentes",
+            "description": "target keyword commercial, priority high, sin actionItem correspondiente en este run."
+          },
+          {
+            "id": "ev31",
+            "source": "target_keyword_catalog",
+            "keyword": "taquillas para gimnasios",
+            "description": "target keyword commercial, priority high, sin actionItem correspondiente en este run."
+          },
+          {
+            "id": "ev32",
+            "source": "target_keyword_catalog",
+            "keyword": "digitalizacion de taquillas",
+            "description": "target keyword informational, priority medium, sin actionItem correspondiente en este run."
+          },
+          {
+            "id": "ev33",
+            "source": "target_keyword_catalog",
+            "keyword": "taquillas metalicas",
+            "description": "target keyword commercial, priority medium, coincide con el cluster taquillas_metalicas (new_page_candidate)."
+          }
+        ],
+        "unknowns": [
+          "No hay cifras exactas de clics mas alla de lo citado en los rationale de cada actionItem (CTR actual 0.00%); no se puede calcular con precision el impacto potencial en clics de cada mejora de CTR.",
+          "No se puede confirmar el estado final de aprobacion de la pagina de staging 2103 (cluster taquillas_inteligentes_general) -- el catalogo la marca como pendiente de aprobacion visual real, a diferencia de las otras 3 candidatas a pagina nueva que si estan confirmadas.",
+          "No hay informacion en este contexto sobre el contenido real actual (texto, H1, meta tags existentes) de las paginas objetivo -- las mejoras on-page se infieren a partir de las acciones sugeridas por el pipeline, no de una auditoria directa del HTML.",
+          "No se puede confirmar si existe canibalizacion adicional no documentada entre otros clusters de sector (colegios, oficinas, empresas, industria, hoteles) mas alla de lo que el catalogo ya resuelve explicitamente.",
+          "Las target keywords \"lockers inteligentes\", \"taquillas para gimnasios\" y \"digitalizacion de taquillas\" no tienen actionItems en este run -- se desconoce su posicion e impresiones actuales en Search Console."
+        ]
+      }
+    },
+    {
+      "employee": "content-strategist",
+      "status": "executed",
+      "note": "content-strategist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas.",
+      "sourceRunId": null,
+      "output": {
+        "contentOpportunity": {
+          "title": "Guia de compra de taquillas para colegios, gimnasios y oficinas",
+          "summary": "\"comprar taquillas\" tiene intencion de compra clara y arrastra un cluster de keywords relacionadas (melamina, colegios, escolares, fenolicas en Palencia) que hoy no estan cubiertas de forma coordinada en una sola pieza de referencia."
+        },
+        "targetAudience": "Responsable de compras o mantenimiento de un colegio, gimnasio, polideportivo u oficina que necesita renovar o instalar taquillas y esta comparando materiales y proveedores antes de pedir presupuesto.",
+        "searchIntent": "transactional",
+        "commercialIntent": "El usuario que busca \"comprar taquillas\" ya esta en fase de decision de compra, no de investigacion pura: la pieza debe resolver dudas de material/medida rapido y empujar hacia solicitar presupuesto, no distraer con contenido puramente informativo.",
+        "angle": "En vez de un articulo generico sobre \"que son las taquillas\", enfocar la pieza como guia de decision de compra B2B: que material y configuracion encajan segun el entorno (colegio, gimnasio, oficina), y como es el proceso de pedir presupuesto -- absorbiendo dentro del mismo articulo las variantes de cluster (colegios, escolares, melamina) mediante secciones dedicadas y enlazado interno, en vez de competir contra paginas mas especificas del propio sitio.",
+        "contentType": "article",
+        "targetBrand": "zentry",
+        "recommendedStructure": {
+          "h1": "Comprar taquillas para tu colegio, gimnasio u oficina: guia practica",
+          "sections": [
+            {
+              "heading": "Que tener en cuenta antes de comprar taquillas",
+              "level": "H2",
+              "purpose": "Ayudar al lector a definir uso, entorno (humedo/seco) y publico antes de elegir modelo, para que la decision de material tenga sentido."
+            },
+            {
+              "heading": "Materiales disponibles: metalica, fenolica y melamina",
+              "level": "H2",
+              "purpose": "Presentar el catalogo real de materiales y sus propiedades tecnicas confirmadas (resistencia a humedad/impacto, coste relativo, entornos tipicos)."
+            },
+            {
+              "heading": "Metalica vs fenolica vs melamina: que material elegir segun el entorno",
+              "level": "H3",
+              "purpose": "Comparativa directa orientada a decision, en formato tabla, para entornos humedos (fenolica), uso intensivo (metalica) o presupuesto/estetica (melamina)."
+            },
+            {
+              "heading": "Como elegir la medida y configuracion correcta",
+              "level": "H2",
+              "purpose": "Guiar sobre numero de compartimentos y dimensionado segun cantidad de usuarios y espacio disponible, sin dar cifras de precio."
+            },
+            {
+              "heading": "Como funciona el proceso de compra y presupuesto",
+              "level": "H2",
+              "purpose": "Explicar los pasos para solicitar presupuesto a medida (sin afirmar precios, plazos ni garantias no confirmados en el input) y dirigir al CTA principal."
+            },
+            {
+              "heading": "Taquillas para colegios y centros escolares",
+              "level": "H2",
+              "purpose": "Cubrir de forma especifica las necesidades del segmento educativo (taquillas colegios/escolares) dentro de la misma pieza para reducir el riesgo de canibalizacion con paginas del cluster."
+            },
+            {
+              "heading": "Preguntas frecuentes sobre comprar taquillas",
+              "level": "H2",
+              "purpose": "Responder dudas long-tail (medidas, materiales, plazos de fabricacion) remitiendo siempre a \"solicitar presupuesto\" cuando falte un dato concreto."
+            }
+          ]
+        },
+        "ctaStrategy": {
+          "primaryCta": "Solicitar presupuesto sin compromiso",
+          "rationale": "La keyword primaria (\"comprar taquillas\") tiene intencion transactional clara, por lo que el CTA de presupuesto del hint encaja directamente con la fase de decision del usuario; no se anade CTA secundario para no diluir el mensaje de compra con otro objetivo distinto."
+        },
+        "internalLinks": [
+          {
+            "anchorIdea": "taquillas de melamina",
+            "targetDescription": "pagina o categoria de taquillas de melamina, keyword relacionada: taquillas melamina / taquillas de melamina",
+            "isRealLink": false
+          },
+          {
+            "anchorIdea": "taquillas para colegios y centros escolares",
+            "targetDescription": "pagina especifica de taquillas escolares/colegios, keyword relacionada: taquillas colegios / taquillas escolares",
+            "isRealLink": false
+          },
+          {
+            "anchorIdea": "taquillas fenolicas en Palencia",
+            "targetDescription": "pagina o landing local de taquillas fenolicas en Palencia, keyword relacionada: taquillas fenólicas en palencia",
+            "isRealLink": false
+          },
+          {
+            "anchorIdea": "ver todas las taquillas Zentry",
+            "targetDescription": "landing o categoria principal de taquillas de Zentry (segun internalLinkHints del pipeline determinista)",
+            "isRealLink": false
+          }
+        ],
+        "supportingEvidence": [
+          "clusterNote indica posible cluster SEO con taquillas melamina, taquillas de melamina, taquillas colegios, taquillas escolares y taquillas fenólicas en palencia, lo que justifica cubrir esos segmentos con enlazado interno en vez de contenido duplicado.",
+          "secondaryKeywords confirma la relevancia de melamina y del segmento colegios/escolares como sub-temas dentro del articulo.",
+          "currentAssumptions confirma que \"comprar taquillas\" sigue siendo relevante para zentry y que el brief original sigue vigente, lo que respalda mantener el enfoque comercial de la pieza.",
+          "brandRationale del contexto confirma que la intencion es de mobiliario (Zentry), sin mencion de cerraduras, por lo que no se introduce Tukandado."
+        ],
+        "priority": "medium",
+        "risksAndUnknowns": [
+          "Riesgo de canibalizacion SEO con las paginas de cluster (taquillas melamina, colegios, escolares, fenolicas en Palencia) si no se coordina el enlazado interno real antes de publicar, tal como señala el pipeline determinista.",
+          "No se dispone de una URL real (\"page\") en el contexto, por lo que todo el enlazado interno propuesto es orientativo y debe confirmarse/mapearse a URLs reales antes de publicar.",
+          "No hay datos de precio, plazo de entrega ni garantia en currentAssumptions: la seccion de presupuesto debe evitar cualquier cifra y remitir siempre a \"solicitar presupuesto\".",
+          "Decision humana previa (rechazo de publicar paginas nuevas de staging por falta de imagenes/profundidad visual) no aplica directamente a este content_update sobre articulo existente, pero es una señal de que el liston de calidad visual/contenido debe ser alto antes de publicar cualquier pieza nueva."
+        ],
+        "reasoningNotes": [
+          "Se mantiene contentType como article (coincide con contentTypeHint) en vez de proponer new_landing pese a la intencion transactional, porque el hint del pipeline no aporta estructura de landing y porque la decision humana registrada muestra reticencia a publicar paginas nuevas sin suficiente desarrollo visual/de contenido -- mas prudente reforzar el articulo existente que abrir una pieza nueva sin ese trabajo adicional.",
+          "searchIntent se marca como transactional (no informational) porque el verbo \"comprar\" en la keyword primaria indica que el usuario ya busca adquirir, no solo informarse; esto condiciona el angulo hacia decision de compra en vez de divulgacion generica.",
+          "La seccion \"Precios y presupuesto\" del proposedStructureHint se reformulo como \"Como funciona el proceso de compra y presupuesto\" para evitar sugerir que se van a dar cifras concretas, ya que currentAssumptions no confirma ningun precio, plazo ni condicion de garantia.",
+          "Se añadio una seccion H2 dedicada a colegios/centros escolares (ausente del proposedStructureHint) precisamente porque clusterNote senala riesgo de canibalizacion con esas keywords; absorberlas dentro del articulo principal con enlazado interno reduce ese riesgo en vez de ignorarlo."
+        ]
+      }
+    },
+    {
+      "employee": "analytics-specialist",
+      "status": "executed",
+      "note": "analytics-specialist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas.",
+      "sourceRunId": "dept-2026-08-16T185140Z",
+      "output": {
+        "runSummary": {
+          "departmentRunId": "dept-2026-08-16T185140Z",
+          "reportGeneratedAt": "2026-08-16T18:52:00.369Z",
+          "ga4Connected": true,
+          "gtmConnected": true
+        },
+        "measurementFindings": [
+          {
+            "claimType": "FACT",
+            "statement": "El catalogo de 7 eventos clave comparado con GA4 (2026-07-18 a 2026-08-15) muestra 6 eventos con fired=true (generate_lead_form_submit, click_whatsapp, click_request_quote, click_catalog_download, view_quote_page, view_contact_page) y 1 evento con fired=false (click_phone, 0 ocurrencias).",
+            "evidenceIds": [
+              "e8",
+              "e9",
+              "e10",
+              "e11",
+              "e12",
+              "e13",
+              "e14"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "De los 6 eventos clave que si se dispararon, 3 (generate_lead_form_submit, click_whatsapp, click_request_quote) tienen conversions=occurrences, mientras que otros 3 (click_catalog_download, view_quote_page, view_contact_page) tienen ocurrencias mayores que cero pero 0 conversiones registradas.",
+            "evidenceIds": [
+              "e9",
+              "e10",
+              "e11",
+              "e12",
+              "e13",
+              "e14"
+            ]
+          },
+          {
+            "claimType": "FACT",
+            "statement": "El contenedor GTM-MSPSGLK5 tiene 8 tags (7 de tipo gaawe mas 1 Google Tag base) y 7 triggers, y ninguno de los tags esta marcado como pausado.",
+            "evidenceIds": [
+              "e21"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "El nombre de la version live del contenedor GTM incluye el texto \"sin publicar, pendiente aprobacion Pau\", lo cual introduce ambiguedad sobre si los cambios de esa version (Eventos CTA nuevos) estan realmente publicados en el sitio en produccion.",
+            "evidenceIds": [
+              "e18"
+            ]
+          }
+        ],
+        "funnelObservations": [
+          {
+            "claimType": "OBSERVATION",
+            "statement": "view_contact_page registra 38 ocurrencias en el periodo frente a solo 6 ocurrencias de generate_lead_form_submit, una diferencia notable entre visitas a la pagina de contacto y envios de formulario de lead.",
+            "evidenceIds": [
+              "e14",
+              "e10"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "click_request_quote registra 65 ocurrencias, un numero mayor que las 12 ocurrencias de view_quote_page, es decir el evento de clic en \"solicitar presupuesto\" supera en volumen a las vistas de la propia pagina de presupuesto.",
+            "evidenceIds": [
+              "e11",
+              "e13"
+            ]
+          },
+          {
+            "claimType": "HYPOTHESIS",
+            "statement": "Una posible explicacion de que click_request_quote supere a view_quote_page es que el CTA de solicitar presupuesto este presente en varias paginas del sitio (no solo en /solicitar-presupuesto/), permitiendo el clic sin haber visitado antes esa pagina especifica.",
+            "evidenceIds": [
+              "e11",
+              "e13"
+            ]
+          }
+        ],
+        "trafficObservations": [
+          {
+            "claimType": "OBSERVATION",
+            "statement": "El canal Direct concentra 166 de las sesiones y 81 de las conversiones registradas entre los cuatro canales listados (Direct, Organic Search, Referral, AI Assistant) del periodo 2026-07-18 a 2026-08-15, muy por encima de Organic Search (5 sesiones), Referral (3) y AI Assistant (2).",
+            "evidenceIds": [
+              "e1",
+              "e2",
+              "e3",
+              "e4"
+            ]
+          },
+          {
+            "claimType": "FACT",
+            "statement": "La combinacion de fuente/medio (direct)/(none) por si sola representa 166 sesiones y 81 conversiones en el periodo.",
+            "evidenceIds": [
+              "e15"
+            ]
+          },
+          {
+            "claimType": "FACT",
+            "statement": "La landing page \"/\" es la de mayor trafico, con 108 sesiones, 58 conversiones y una tasa de rebote del 29.6%.",
+            "evidenceIds": [
+              "e5"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "Aparece un canal AI Assistant (fuente chatgpt.com, medio ai-assistant) con 2 sesiones y 0 conversiones en el periodo.",
+            "evidenceIds": [
+              "e4",
+              "e17"
+            ]
+          }
+        ],
+        "conversionObservations": [
+          {
+            "claimType": "OBSERVATION",
+            "statement": "La landing page /product/taquilla-2-puertas-modulo-1-melamina registra 11 conversiones a partir de solo 4 sesiones en el periodo.",
+            "evidenceIds": [
+              "e6"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "Entre los eventos clave, click_request_quote es el mas frecuente (65 ocurrencias/conversiones), seguido de click_whatsapp (15) y generate_lead_form_submit (6).",
+            "evidenceIds": [
+              "e11",
+              "e9",
+              "e10"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "click_catalog_download se disparo 3 veces pero registro 0 conversiones, a diferencia de otros eventos de tipo clic (click_whatsapp, click_request_quote) cuyas conversiones coinciden exactamente con sus ocurrencias.",
+            "evidenceIds": [
+              "e12",
+              "e9",
+              "e11"
+            ]
+          }
+        ],
+        "trackingIssues": [
+          {
+            "claimType": "FACT",
+            "statement": "click_phone no registro ninguna ocurrencia en GA4 durante el periodo, a pesar de que el tag de GTM \"GA4 Event - click_phone\" (tipo gaawe) no esta pausado y existe un trigger linkClick llamado click_phone configurado.",
+            "evidenceIds": [
+              "e8",
+              "e19",
+              "e20"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "Ninguno de los 7 triggers listados en GTM es de tipo formSubmission, aunque existe un tag gaawe para generate_lead_form_submit que registro 6 ocurrencias en GA4; el trigger que respalda ese tag no es identificable por nombre o tipo en los datos entregados.",
+            "evidenceIds": [
+              "e10",
+              "e22"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "view_quote_page, view_contact_page y click_catalog_download se disparan en GA4 (ocurrencias mayores a cero) pero no generan conversiones (0), a diferencia de generate_lead_form_submit, click_whatsapp y click_request_quote donde conversiones=ocurrencias.",
+            "evidenceIds": [
+              "e12",
+              "e13",
+              "e14",
+              "e9",
+              "e10",
+              "e11"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "La version live del contenedor GTM se llama \"O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5)\", un nombre que sugiere aprobacion pendiente pese a describirse como la version activa.",
+            "evidenceIds": [
+              "e18"
+            ]
+          }
+        ],
+        "anomalyCandidates": [
+          {
+            "claimType": "OBSERVATION",
+            "statement": "La landing page /product/taquilla-2-puertas-modulo-1-melamina muestra mas conversiones (11) que sesiones (4) en el periodo, una cifra que llama la atencion frente al resto de landing pages listadas.",
+            "evidenceIds": [
+              "e6"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "El canal Direct representa aproximadamente el 94% de las sesiones sumadas entre los cuatro canales listados (166 de 176), mientras Organic Search, Referral y AI Assistant combinados son una fraccion pequena, un patron candidato a revision.",
+            "evidenceIds": [
+              "e1",
+              "e2",
+              "e3",
+              "e4"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "click_phone no muestra ninguna actividad en GA4 pese a tener tag y trigger activos en GTM, un candidato de anomalia a investigar.",
+            "evidenceIds": [
+              "e8",
+              "e19",
+              "e20"
+            ]
+          },
+          {
+            "claimType": "OBSERVATION",
+            "statement": "La landing page \"/\" tiene 58 conversiones sobre 108 sesiones, una proporcion elevada (~54%) que destaca frente a otras landing pages del listado.",
+            "evidenceIds": [
+              "e5"
+            ]
+          }
+        ],
+        "hypotheses": [
+          {
+            "claimType": "HYPOTHESIS",
+            "statement": "Una hipotesis es que parte del trafico clasificado como Direct provenga en realidad de canales sin etiquetar (enlaces de WhatsApp, campanas sin UTM, apps) que GA4 no puede atribuir a su fuente original, lo que explicaria su peso desproporcionado.",
+            "evidenceIds": [
+              "e1",
+              "e15"
+            ]
+          },
+          {
+            "claimType": "HYPOTHESIS",
+            "statement": "Una posible explicacion de que click_phone no registre ocurrencias es que el elemento de click-to-call no este presente actualmente en las paginas visitadas o que el selector del trigger no coincida con el enlace real del sitio, aunque tag y trigger figuran activos en GTM.",
+            "evidenceIds": [
+              "e8",
+              "e19",
+              "e20"
+            ]
+          },
+          {
+            "claimType": "HYPOTHESIS",
+            "statement": "El hecho de que view_quote_page, view_contact_page y click_catalog_download tengan 0 conversiones podria deberse a que esos eventos no estan marcados como \"evento clave\" de conversion dentro de la configuracion de GA4, aunque si se registran como eventos.",
+            "evidenceIds": [
+              "e12",
+              "e13",
+              "e14"
+            ]
+          },
+          {
+            "claimType": "HYPOTHESIS",
+            "statement": "Las 11 conversiones frente a 4 sesiones en /product/taquilla-2-puertas-modulo-1-melamina podrian deberse a multiples eventos de conversion atribuidos dentro de las mismas sesiones o a conversiones asociadas a visitas posteriores a esa pagina fuera de la sesion de entrada inicial.",
+            "evidenceIds": [
+              "e6"
+            ]
+          }
+        ],
+        "recommendedMeasurements": [
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Validar en GA4 DebugView si el evento click_phone se dispara correctamente al interactuar con los enlaces de telefono del sitio, dado que el tag y el trigger existen en GTM pero GA4 no registro ninguna ocurrencia en el periodo.",
+            "evidenceIds": [
+              "e8",
+              "e19",
+              "e20"
+            ]
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Revisar en la configuracion de eventos clave de GA4 si view_quote_page, view_contact_page y click_catalog_download deberian marcarse como conversiones, dado que actualmente registran ocurrencias pero 0 conversiones.",
+            "evidenceIds": [
+              "e12",
+              "e13",
+              "e14"
+            ]
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Confirmar el estado de publicacion real del contenedor GTM-MSPSGLK5 en produccion, dado que el nombre de la version live indica \"sin publicar, pendiente aprobacion Pau\".",
+            "evidenceIds": [
+              "e18"
+            ]
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Crear una segmentacion del trafico Direct con sus conversiones para identificar si corresponde a usuarios recurrentes, enlaces sin UTM o trafico mal atribuido, dado que este canal concentra la gran mayoria de sesiones y conversiones del periodo.",
+            "evidenceIds": [
+              "e1",
+              "e15"
+            ]
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Revisar en GTM que trigger dispara exactamente el tag de generate_lead_form_submit, ya que ninguno de los 7 triggers listados es de tipo formSubmission.",
+            "evidenceIds": [
+              "e10",
+              "e22"
+            ]
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Verificar en GA4 el desglose de conversiones por sesion en la landing page /product/taquilla-2-puertas-modulo-1-melamina, dado que registra mas conversiones (11) que sesiones (4) en el periodo.",
+            "evidenceIds": [
+              "e6"
+            ]
+          }
+        ],
+        "prioritizedActions": [
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Validar en GA4 DebugView el disparo de click_phone, ya que es un evento clave del catalogo con tag/trigger activos en GTM pero sin ninguna ocurrencia registrada en GA4 durante el periodo.",
+            "evidenceIds": [
+              "e8",
+              "e19",
+              "e20"
+            ],
+            "priority": "high"
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Confirmar si la version live del contenedor GTM esta realmente publicada, dado que su nombre indica \"sin publicar, pendiente aprobacion Pau\", lo que podria afectar a la medicion de los nuevos eventos CTA.",
+            "evidenceIds": [
+              "e18"
+            ],
+            "priority": "high"
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Revisar la configuracion de eventos clave en GA4 para view_quote_page, view_contact_page y click_catalog_download, que se disparan pero no generan conversiones.",
+            "evidenceIds": [
+              "e12",
+              "e13",
+              "e14"
+            ],
+            "priority": "medium"
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Identificar el trigger real que dispara generate_lead_form_submit en GTM, dado que no hay ningun trigger de tipo formSubmission en la lista disponible.",
+            "evidenceIds": [
+              "e10",
+              "e22"
+            ],
+            "priority": "medium"
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Segmentar el trafico Direct para entender su composicion, dado su peso desproporcionado frente a los demas canales listados.",
+            "evidenceIds": [
+              "e1",
+              "e15"
+            ],
+            "priority": "low"
+          },
+          {
+            "claimType": "RECOMMENDATION",
+            "statement": "Revisar el desglose de conversiones por sesion en /product/taquilla-2-puertas-modulo-1-melamina, donde las conversiones superan a las sesiones.",
+            "evidenceIds": [
+              "e6"
+            ],
+            "priority": "low"
+          }
+        ],
+        "evidence": [
+          {
+            "id": "e1",
+            "source": "ga4_channel_traffic",
+            "description": "Canal Direct: 166 sesiones, 68 usuarios activos, 81 conversiones (periodo 2026-07-18 a 2026-08-15)."
+          },
+          {
+            "id": "e2",
+            "source": "ga4_channel_traffic",
+            "description": "Canal Organic Search: 5 sesiones, 5 usuarios activos, 3 conversiones."
+          },
+          {
+            "id": "e3",
+            "source": "ga4_channel_traffic",
+            "description": "Canal Referral: 3 sesiones, 1 usuario activo, 2 conversiones."
+          },
+          {
+            "id": "e4",
+            "source": "ga4_channel_traffic",
+            "description": "Canal AI Assistant: 2 sesiones, 2 usuarios activos, 0 conversiones."
+          },
+          {
+            "id": "e5",
+            "source": "ga4_landing_pages",
+            "description": "Landing page \"/\": 108 sesiones, 58 conversiones, 29.6% de tasa de rebote."
+          },
+          {
+            "id": "e6",
+            "source": "ga4_landing_pages",
+            "description": "Landing page /product/taquilla-2-puertas-modulo-1-melamina: 4 sesiones, 11 conversiones, 25% de tasa de rebote."
+          },
+          {
+            "id": "e8",
+            "source": "ga4_key_events",
+            "description": "Evento click_phone: fired=false, 0 ocurrencias, 0 conversiones."
+          },
+          {
+            "id": "e9",
+            "source": "ga4_key_events",
+            "description": "Evento click_whatsapp: fired=true, 15 ocurrencias, 15 conversiones."
+          },
+          {
+            "id": "e10",
+            "source": "ga4_key_events",
+            "description": "Evento generate_lead_form_submit: fired=true, 6 ocurrencias, 6 conversiones."
+          },
+          {
+            "id": "e11",
+            "source": "ga4_key_events",
+            "description": "Evento click_request_quote: fired=true, 65 ocurrencias, 65 conversiones."
+          },
+          {
+            "id": "e12",
+            "source": "ga4_key_events",
+            "description": "Evento click_catalog_download: fired=true, 3 ocurrencias, 0 conversiones."
+          },
+          {
+            "id": "e13",
+            "source": "ga4_key_events",
+            "description": "Evento view_quote_page: fired=true, 12 ocurrencias, 0 conversiones."
+          },
+          {
+            "id": "e14",
+            "source": "ga4_key_events",
+            "description": "Evento view_contact_page: fired=true, 38 ocurrencias, 0 conversiones."
+          },
+          {
+            "id": "e15",
+            "source": "ga4_source_medium",
+            "description": "Fuente/medio (direct)/(none): 166 sesiones, 81 conversiones."
+          },
+          {
+            "id": "e17",
+            "source": "ga4_source_medium",
+            "description": "Fuente/medio chatgpt.com/ai-assistant: 2 sesiones, 0 conversiones."
+          },
+          {
+            "id": "e18",
+            "source": "gtm_container",
+            "description": "liveVersionName del contenedor GTM-MSPSGLK5: \"O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5)\"."
+          },
+          {
+            "id": "e19",
+            "source": "gtm_tags",
+            "description": "Tag \"GA4 Event - click_phone\", tipo gaawe, paused=false."
+          },
+          {
+            "id": "e20",
+            "source": "gtm_triggers",
+            "description": "Trigger \"click_phone\", tipo linkClick."
+          },
+          {
+            "id": "e21",
+            "source": "gtm_tags",
+            "description": "El contenedor tiene tagCount=8 (incluye 7 tags gaawe y 1 Google Tag base) y ninguno de los tags listados tiene paused=true."
+          },
+          {
+            "id": "e22",
+            "source": "gtm_triggers",
+            "description": "Lista de 7 triggers del contenedor: click_phone (linkClick), /solicitar-presupuesto/ (linkClick), click_whatsapp (linkClick), Vista de una pagina - /gracias (pageview), click_catalog_download (linkClick), Page Path equals /solicitar-presupuesto/ (pageview), visita contacto (pageview); ninguno es de tipo formSubmission."
+          }
+        ],
+        "unknowns": [
+          "No se dispone de datos de un periodo anterior comparable para evaluar si las cifras del periodo 2026-07-18 a 2026-08-15 representan una tendencia o un cambio puntual.",
+          "No se especifica en el contexto que criterio determina en GA4 si un evento clave cuenta como conversion (conversions=occurrences) o no (conversions=0) para cada uno de los 7 eventos.",
+          "No se puede identificar con certeza que trigger de GTM dispara el tag generate_lead_form_submit, ya que no hay ningun trigger de tipo formSubmission en la lista entregada.",
+          "No se sabe si la version live del contenedor GTM etiquetada como \"sin publicar, pendiente aprobacion Pau\" es efectivamente la version activa en el sitio en produccion o si existe una version publicada distinta.",
+          "No se dispone de datos de dispositivo, geografia o comportamiento de usuario que permitan explicar por que el canal Direct concentra la mayoria de las sesiones y conversiones."
+        ]
+      }
+    },
+    {
+      "employee": "sem-specialist",
+      "status": "not_available",
+      "note": "sem-specialist queda EXPLICITAMENTE FUERA de esta fase (pendiente / temporalmente no disponible). No hay ninguna senal de SEM/Google Ads en esta pasada: no asumas gasto, CPC, impresiones, campanas activas ni ningun otro dato de Ads, y no trates su ausencia como si SEM estuviera sano o vacio. Su ausencia NUNCA bloquea esta pasada.",
+      "sourceRunId": null
+    }
+  ]
+}

@@ -1,0 +1,877 @@
+[
+  {
+    "productId": 334,
+    "dupes": [
+      {
+        "combo": "anchura=40cm|tipo de cerradura=yr titan",
+        "variations": [
+          {
+            "id": 1743,
+            "regular_price": "95"
+          },
+          {
+            "id": 1733,
+            "regular_price": "95"
+          },
+          {
+            "id": 1723,
+            "regular_price": "95"
+          },
+          {
+            "id": 1713,
+            "regular_price": "95"
+          },
+          {
+            "id": 1703,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40cm|tipo de cerradura=orbis",
+        "variations": [
+          {
+            "id": 1742,
+            "regular_price": "95"
+          },
+          {
+            "id": 1732,
+            "regular_price": "95"
+          },
+          {
+            "id": 1722,
+            "regular_price": "95"
+          },
+          {
+            "id": 1712,
+            "regular_price": "95"
+          },
+          {
+            "id": 1702,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40cm|tipo de cerradura=neo",
+        "variations": [
+          {
+            "id": 1741,
+            "regular_price": "95"
+          },
+          {
+            "id": 1731,
+            "regular_price": "95"
+          },
+          {
+            "id": 1721,
+            "regular_price": "95"
+          },
+          {
+            "id": 1711,
+            "regular_price": "95"
+          },
+          {
+            "id": 1701,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40cm|tipo de cerradura=boxis",
+        "variations": [
+          {
+            "id": 1740,
+            "regular_price": "95"
+          },
+          {
+            "id": 1730,
+            "regular_price": "95"
+          },
+          {
+            "id": 1720,
+            "regular_price": "95"
+          },
+          {
+            "id": 1710,
+            "regular_price": "95"
+          },
+          {
+            "id": 1700,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40cm|tipo de cerradura=ares",
+        "variations": [
+          {
+            "id": 1739,
+            "regular_price": "95"
+          },
+          {
+            "id": 1729,
+            "regular_price": "95"
+          },
+          {
+            "id": 1719,
+            "regular_price": "95"
+          },
+          {
+            "id": 1709,
+            "regular_price": "95"
+          },
+          {
+            "id": 1699,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=yr titan",
+        "variations": [
+          {
+            "id": 1738,
+            "regular_price": "95"
+          },
+          {
+            "id": 1728,
+            "regular_price": "95"
+          },
+          {
+            "id": 1718,
+            "regular_price": "95"
+          },
+          {
+            "id": 1708,
+            "regular_price": "95"
+          },
+          {
+            "id": 1698,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=orbis",
+        "variations": [
+          {
+            "id": 1737,
+            "regular_price": "95"
+          },
+          {
+            "id": 1727,
+            "regular_price": "95"
+          },
+          {
+            "id": 1717,
+            "regular_price": "95"
+          },
+          {
+            "id": 1707,
+            "regular_price": "95"
+          },
+          {
+            "id": 1697,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=neo",
+        "variations": [
+          {
+            "id": 1736,
+            "regular_price": "95"
+          },
+          {
+            "id": 1726,
+            "regular_price": "95"
+          },
+          {
+            "id": 1716,
+            "regular_price": "95"
+          },
+          {
+            "id": 1706,
+            "regular_price": "95"
+          },
+          {
+            "id": 1696,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=boxis",
+        "variations": [
+          {
+            "id": 1735,
+            "regular_price": "95"
+          },
+          {
+            "id": 1725,
+            "regular_price": "95"
+          },
+          {
+            "id": 1715,
+            "regular_price": "95"
+          },
+          {
+            "id": 1705,
+            "regular_price": "95"
+          },
+          {
+            "id": 1695,
+            "regular_price": "95"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=ares",
+        "variations": [
+          {
+            "id": 1734,
+            "regular_price": "95"
+          },
+          {
+            "id": 1724,
+            "regular_price": "95"
+          },
+          {
+            "id": 1714,
+            "regular_price": "95"
+          },
+          {
+            "id": 1704,
+            "regular_price": "95"
+          },
+          {
+            "id": 1694,
+            "regular_price": "95"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 489,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2276,
+            "regular_price": "460"
+          },
+          {
+            "id": 2274,
+            "regular_price": "489"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2275,
+            "regular_price": "471"
+          },
+          {
+            "id": 2273,
+            "regular_price": "508"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 499,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2304,
+            "regular_price": "496"
+          },
+          {
+            "id": 2302,
+            "regular_price": "533"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2303,
+            "regular_price": "506"
+          },
+          {
+            "id": 2301,
+            "regular_price": "545"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 505,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2332,
+            "regular_price": "768"
+          },
+          {
+            "id": 2330,
+            "regular_price": "830"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2331,
+            "regular_price": "792"
+          },
+          {
+            "id": 2329,
+            "regular_price": "864"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 513,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2360,
+            "regular_price": "615"
+          },
+          {
+            "id": 2358,
+            "regular_price": "645"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2359,
+            "regular_price": "633"
+          },
+          {
+            "id": 2357,
+            "regular_price": "669"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 519,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2388,
+            "regular_price": "814"
+          },
+          {
+            "id": 2386,
+            "regular_price": "876"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2387,
+            "regular_price": "843"
+          },
+          {
+            "id": 2385,
+            "regular_price": "912"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 525,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2416,
+            "regular_price": "992"
+          },
+          {
+            "id": 2414,
+            "regular_price": "1054"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2415,
+            "regular_price": "1027"
+          },
+          {
+            "id": 2413,
+            "regular_price": "1099"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 531,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2444,
+            "regular_price": "1121"
+          },
+          {
+            "id": 2442,
+            "regular_price": "1211"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2443,
+            "regular_price": "1155"
+          },
+          {
+            "id": 2441,
+            "regular_price": "1263"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 537,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2472,
+            "regular_price": "1212"
+          },
+          {
+            "id": 2470,
+            "regular_price": "1304"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2471,
+            "regular_price": "1256"
+          },
+          {
+            "id": 2469,
+            "regular_price": "1363"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 543,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2500,
+            "regular_price": "1409"
+          },
+          {
+            "id": 2498,
+            "regular_price": "1498"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2499,
+            "regular_price": "1461"
+          },
+          {
+            "id": 2497,
+            "regular_price": "1569"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 549,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2528,
+            "regular_price": "1456"
+          },
+          {
+            "id": 2526,
+            "regular_price": "1577"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2527,
+            "regular_price": "1507"
+          },
+          {
+            "id": 2525,
+            "regular_price": "1647"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 555,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2556,
+            "regular_price": "1555"
+          },
+          {
+            "id": 2554,
+            "regular_price": "1676"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2555,
+            "regular_price": "1613"
+          },
+          {
+            "id": 2553,
+            "regular_price": "1757"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 561,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2584,
+            "regular_price": "1773"
+          },
+          {
+            "id": 2582,
+            "regular_price": "1918"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2583,
+            "regular_price": "1843"
+          },
+          {
+            "id": 2581,
+            "regular_price": "1987"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 567,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2612,
+            "regular_price": "2048"
+          },
+          {
+            "id": 2610,
+            "regular_price": "2191"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2611,
+            "regular_price": "2117"
+          },
+          {
+            "id": 2609,
+            "regular_price": "2261"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 573,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2640,
+            "regular_price": "526"
+          },
+          {
+            "id": 2638,
+            "regular_price": "590"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2639,
+            "regular_price": "549"
+          },
+          {
+            "id": 2637,
+            "regular_price": "651"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 579,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2668,
+            "regular_price": "905"
+          },
+          {
+            "id": 2666,
+            "regular_price": "1007"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2667,
+            "regular_price": "950"
+          },
+          {
+            "id": 2665,
+            "regular_price": "1126"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 585,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2696,
+            "regular_price": "1325"
+          },
+          {
+            "id": 2694,
+            "regular_price": "1477"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2695,
+            "regular_price": "1394"
+          },
+          {
+            "id": 2693,
+            "regular_price": "1622"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 591,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2724,
+            "regular_price": "1728"
+          },
+          {
+            "id": 2722,
+            "regular_price": "1925"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2723,
+            "regular_price": "1809"
+          },
+          {
+            "id": 2721,
+            "regular_price": "2024"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 1248,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2794,
+            "regular_price": "737"
+          },
+          {
+            "id": 2792,
+            "regular_price": "767"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2793,
+            "regular_price": "754"
+          },
+          {
+            "id": 2791,
+            "regular_price": "790"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 1254,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2822,
+            "regular_price": "1181"
+          },
+          {
+            "id": 2820,
+            "regular_price": "1241"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2821,
+            "regular_price": "1215"
+          },
+          {
+            "id": 2819,
+            "regular_price": "1287"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 1261,
+    "dupes": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2850,
+            "regular_price": "1610"
+          },
+          {
+            "id": 2848,
+            "regular_price": "1736"
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "variations": [
+          {
+            "id": 2849,
+            "regular_price": "1662"
+          },
+          {
+            "id": 2847,
+            "regular_price": "1806"
+          }
+        ]
+      }
+    ]
+  }
+]

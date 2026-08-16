@@ -1,0 +1,797 @@
+[
+  {
+    "productId": 339,
+    "stale": [
+      {
+        "id": 343,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 341,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 364,
+    "stale": [
+      {
+        "id": 368,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 366,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 372,
+    "stale": [
+      {
+        "id": 376,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 374,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 393,
+    "stale": [
+      {
+        "id": 397,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 395,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 398,
+    "stale": [
+      {
+        "id": 402,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 400,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 408,
+    "stale": [
+      {
+        "id": 412,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 410,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 413,
+    "stale": [
+      {
+        "id": 417,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 415,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 420,
+    "stale": [
+      {
+        "id": 424,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 422,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 425,
+    "stale": [
+      {
+        "id": 429,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 427,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 430,
+    "stale": [
+      {
+        "id": 434,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 432,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 435,
+    "stale": [
+      {
+        "id": 439,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 437,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 440,
+    "stale": [
+      {
+        "id": 444,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 442,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 445,
+    "stale": [
+      {
+        "id": 449,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 447,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 450,
+    "stale": [
+      {
+        "id": 454,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 452,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 489,
+    "stale": [
+      {
+        "id": 493,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 491,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 499,
+    "stale": [
+      {
+        "id": 503,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 501,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 505,
+    "stale": [
+      {
+        "id": 509,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 507,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 513,
+    "stale": [
+      {
+        "id": 517,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 515,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 519,
+    "stale": [
+      {
+        "id": 523,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 521,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 525,
+    "stale": [
+      {
+        "id": 529,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 527,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 531,
+    "stale": [
+      {
+        "id": 535,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 533,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 537,
+    "stale": [
+      {
+        "id": 541,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 539,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 543,
+    "stale": [
+      {
+        "id": 547,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 545,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 549,
+    "stale": [
+      {
+        "id": 553,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 551,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 555,
+    "stale": [
+      {
+        "id": 559,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 557,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 561,
+    "stale": [
+      {
+        "id": 565,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 563,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 567,
+    "stale": [
+      {
+        "id": 571,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 569,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 573,
+    "stale": [
+      {
+        "id": 577,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 575,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 579,
+    "stale": [
+      {
+        "id": 583,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 581,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 585,
+    "stale": [
+      {
+        "id": 589,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 587,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 591,
+    "stale": [
+      {
+        "id": 595,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 593,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 597,
+    "stale": [
+      {
+        "id": 601,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 599,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 603,
+    "stale": [
+      {
+        "id": 607,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 605,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 609,
+    "stale": [
+      {
+        "id": 613,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 611,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1248,
+    "stale": [
+      {
+        "id": 1252,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1250,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1254,
+    "stale": [
+      {
+        "id": 1258,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1256,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1261,
+    "stale": [
+      {
+        "id": 1265,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1263,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1286,
+    "stale": [
+      {
+        "id": 1290,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1288,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1291,
+    "stale": [
+      {
+        "id": 1295,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1293,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1296,
+    "stale": [
+      {
+        "id": 1300,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1298,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1301,
+    "stale": [
+      {
+        "id": 1305,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1303,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1306,
+    "stale": [
+      {
+        "id": 1310,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1308,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1311,
+    "stale": [
+      {
+        "id": 1315,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1313,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1319,
+    "stale": [
+      {
+        "id": 1323,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1321,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1325,
+    "stale": [
+      {
+        "id": 1329,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1327,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1331,
+    "stale": [
+      {
+        "id": 1335,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1333,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1337,
+    "stale": [
+      {
+        "id": 1341,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1339,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1343,
+    "stale": [
+      {
+        "id": 1347,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1345,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1349,
+    "stale": [
+      {
+        "id": 1353,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1351,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1355,
+    "stale": [
+      {
+        "id": 1359,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1357,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1361,
+    "stale": [
+      {
+        "id": 1365,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1363,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1367,
+    "stale": [
+      {
+        "id": 1371,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1369,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  },
+  {
+    "productId": 1373,
+    "stale": [
+      {
+        "id": 1377,
+        "combo": "40 cm/Resbalón",
+        "price": "255"
+      },
+      {
+        "id": 1375,
+        "combo": "30 cm/Resbalón",
+        "price": "199"
+      }
+    ]
+  }
+]

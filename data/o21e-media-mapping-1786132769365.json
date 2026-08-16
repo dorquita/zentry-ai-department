@@ -1,0 +1,182 @@
+[
+  {
+    "group": "main",
+    "stagingMediaId": 2021,
+    "filename": "banco-vestuario-pino-principal.webp",
+    "altText": "Banco de vestuario de pino, sin respaldo, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1968,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-pino-principal.webp"
+  },
+  {
+    "group": "main",
+    "stagingMediaId": 2027,
+    "filename": "banco-vestuario-pino-perchero-principal.webp",
+    "altText": "Banco de vestuario de pino con respaldo y perchero, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1969,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-pino-perchero-principal.webp"
+  },
+  {
+    "group": "main",
+    "stagingMediaId": 2028,
+    "filename": "banco-vestuario-pino-zapatero-principal.webp",
+    "altText": "Banco de vestuario de pino con respaldo, perchero y zapatero, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1970,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-pino-zapatero-principal.webp"
+  },
+  {
+    "group": "main",
+    "stagingMediaId": 2029,
+    "filename": "banco-vestuario-fenolico-principal.webp",
+    "altText": "Banco de vestuario fenolico, sin respaldo, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1971,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-fenolico-principal.webp"
+  },
+  {
+    "group": "main",
+    "stagingMediaId": 2024,
+    "filename": "banco-vestuario-fenolico-perchero-principal-v2.webp",
+    "altText": "Banco de vestuario fenolico con respaldo y perchero doble en J, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1972,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-fenolico-perchero-principal-v2.webp"
+  },
+  {
+    "group": "main",
+    "stagingMediaId": 2030,
+    "filename": "banco-vestuario-fenolico-zapatero-principal.webp",
+    "altText": "Banco de vestuario fenolico con respaldo, perchero y zapatero, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1973,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-fenolico-zapatero-principal.webp"
+  },
+  {
+    "group": "main",
+    "stagingMediaId": 2031,
+    "filename": "banco-vestuario-melamina-principal.webp",
+    "altText": "Banco de vestuario de melamina, sin respaldo, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1974,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-melamina-principal.webp"
+  },
+  {
+    "group": "main",
+    "stagingMediaId": 2032,
+    "filename": "banco-vestuario-melamina-perchero-principal.webp",
+    "altText": "Banco de vestuario de melamina con respaldo y perchero, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1975,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-melamina-perchero-principal.webp"
+  },
+  {
+    "group": "main",
+    "stagingMediaId": 2025,
+    "filename": "banco-vestuario-melamina-zapatero-principal-v2.webp",
+    "altText": "Banco de vestuario de melamina con respaldo, perchero doble en J y zapatero, Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1976,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-melamina-zapatero-principal-v2.webp"
+  },
+  {
+    "group": "detail",
+    "stagingMediaId": 2033,
+    "filename": "banco-vestuario-pino-perchero-detalle.webp",
+    "altText": "Detalle del perchero, banco de pino Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1977,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-pino-perchero-detalle.webp"
+  },
+  {
+    "group": "detail",
+    "stagingMediaId": 2034,
+    "filename": "banco-vestuario-pino-zapatero-detalle.webp",
+    "altText": "Detalle del zapatero, banco de pino Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1978,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-pino-zapatero-detalle.webp"
+  },
+  {
+    "group": "detail",
+    "stagingMediaId": 2036,
+    "filename": "banco-vestuario-fenolico-zapatero-detalle.webp",
+    "altText": "Detalle del zapatero y estructura, banco fenolico Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1979,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-fenolico-zapatero-detalle.webp"
+  },
+  {
+    "group": "detail",
+    "stagingMediaId": 2039,
+    "filename": "banco-vestuario-melamina-perchero-detalle-2.webp",
+    "altText": "Detalle del perchero, banco melamina Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1980,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-melamina-perchero-detalle-2.webp"
+  },
+  {
+    "group": "detail",
+    "stagingMediaId": 2040,
+    "filename": "banco-vestuario-melamina-zapatero-detalle.webp",
+    "altText": "Detalle del zapatero y estructura, banco melamina Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1981,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-melamina-zapatero-detalle.webp"
+  },
+  {
+    "group": "detail",
+    "stagingMediaId": 2041,
+    "filename": "banco-vestuario-fenolico-perchero-detalle-1.webp",
+    "altText": "Detalle del perchero, banco fenolico Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1982,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/banco-vestuario-fenolico-perchero-detalle-1.webp"
+  },
+  {
+    "group": "family",
+    "stagingMediaId": 2042,
+    "filename": "bancos-vestuario-hero-zentry.webp",
+    "altText": "Bancos de vestuario Zentry en instalacion deportiva",
+    "mimeType": "image/webp",
+    "productionMediaId": 1983,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/bancos-vestuario-hero-zentry.webp"
+  },
+  {
+    "group": "family",
+    "stagingMediaId": 2043,
+    "filename": "bancos-pino-familia-zentry.webp",
+    "altText": "Gama de bancos de vestuario de pino Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1984,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/bancos-pino-familia-zentry.webp"
+  },
+  {
+    "group": "family",
+    "stagingMediaId": 2044,
+    "filename": "bancos-fenolicos-familia-zentry.webp",
+    "altText": "Gama de bancos de vestuario fenolicos Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1985,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/bancos-fenolicos-familia-zentry.webp"
+  },
+  {
+    "group": "family",
+    "stagingMediaId": 2046,
+    "filename": "bancos-melamina-familia-zentry-1.webp",
+    "altText": "Gama de bancos de vestuario de melamina Zentry",
+    "mimeType": "image/webp",
+    "productionMediaId": 1986,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/bancos-melamina-familia-zentry-1.webp"
+  },
+  {
+    "group": "heroCrop16x9",
+    "stagingMediaId": 2047,
+    "filename": "bancos-vestuario-hero-zentry-16x9-1.webp",
+    "altText": "Bancos de vestuario Zentry en instalacion deportiva",
+    "mimeType": "image/webp",
+    "productionMediaId": 1987,
+    "productionMediaUrl": "https://zentrylockers.com/wp-content/uploads/2026/08/bancos-vestuario-hero-zentry-16x9-1.webp"
+  }
+]

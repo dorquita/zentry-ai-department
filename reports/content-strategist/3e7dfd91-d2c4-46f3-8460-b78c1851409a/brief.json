@@ -1,0 +1,149 @@
+{
+  "changePackId": "3e7dfd91-d2c4-46f3-8460-b78c1851409a",
+  "generatedAt": "2026-08-16T19:00:40.348Z",
+  "input": {
+    "changePackId": "3e7dfd91-d2c4-46f3-8460-b78c1851409a",
+    "workOrderId": "37ffff95-44eb-47ea-a33f-99276097f011",
+    "keyword": "comprar taquillas",
+    "changeType": "content_update",
+    "priority": "medium",
+    "status": "approved_to_execute",
+    "targetBrand": "zentry",
+    "brandIntent": "zentry_locker_core",
+    "contentTypeHint": "Articulo",
+    "recommendedTitleHint": "Comprar Taquillas",
+    "primaryKeyword": "comprar taquillas",
+    "secondaryKeywords": [
+      "taquillas melamina",
+      "taquillas de melamina",
+      "taquillas colegios",
+      "taquillas escolares",
+      "taquillas fenólicas en palencia"
+    ],
+    "proposedStructureHint": [
+      "H2: ¿Que es comprar taquillas?",
+      "H2: Tipos y materiales disponibles",
+      "H3: Metalica vs fenolica vs melamina",
+      "H2: Como elegir la medida correcta",
+      "H2: Precios y presupuesto",
+      "H2: Preguntas frecuentes sobre comprar taquillas"
+    ],
+    "intentHint": "Zentry principal — mobiliario/taquillas/lockers",
+    "brandRationale": "Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.",
+    "recommendedCtaHint": "CTA: \"Solicitar presupuesto sin compromiso\"",
+    "internalLinkHints": [
+      "Enlazar hacia la landing/categoria principal relacionada"
+    ],
+    "clusterNote": "Posible cluster SEO con: taquillas melamina, taquillas de melamina, taquillas colegios, taquillas escolares, taquillas fenólicas en palencia. Considerar enlazado interno entre estas paginas.",
+    "currentAssumptions": [
+      "Se asume que \"comprar taquillas\" sigue siendo relevante para zentry.",
+      "Se asume que el brief sigue vigente (no ha cambiado la estrategia de contenido desde que se genero la work order origen)."
+    ],
+    "risks": [
+      "Posible cluster SEO con: taquillas melamina, taquillas de melamina, taquillas colegios, taquillas escolares, taquillas fenólicas en palencia. Considerar enlazado interno entre estas paginas.",
+      "Publicar contenido nuevo sin revisar el cluster SEO puede generar canibalizacion con paginas ya existentes."
+    ]
+  },
+  "result": {
+    "status": "executed",
+    "output": {
+      "contentOpportunity": {
+        "title": "Guia de compra de taquillas para colegios, gimnasios y oficinas",
+        "summary": "\"comprar taquillas\" tiene intencion de compra clara y arrastra un cluster de keywords relacionadas (melamina, colegios, escolares, fenolicas en Palencia) que hoy no estan cubiertas de forma coordinada en una sola pieza de referencia."
+      },
+      "targetAudience": "Responsable de compras o mantenimiento de un colegio, gimnasio, polideportivo u oficina que necesita renovar o instalar taquillas y esta comparando materiales y proveedores antes de pedir presupuesto.",
+      "searchIntent": "transactional",
+      "commercialIntent": "El usuario que busca \"comprar taquillas\" ya esta en fase de decision de compra, no de investigacion pura: la pieza debe resolver dudas de material/medida rapido y empujar hacia solicitar presupuesto, no distraer con contenido puramente informativo.",
+      "angle": "En vez de un articulo generico sobre \"que son las taquillas\", enfocar la pieza como guia de decision de compra B2B: que material y configuracion encajan segun el entorno (colegio, gimnasio, oficina), y como es el proceso de pedir presupuesto -- absorbiendo dentro del mismo articulo las variantes de cluster (colegios, escolares, melamina) mediante secciones dedicadas y enlazado interno, en vez de competir contra paginas mas especificas del propio sitio.",
+      "contentType": "article",
+      "targetBrand": "zentry",
+      "recommendedStructure": {
+        "h1": "Comprar taquillas para tu colegio, gimnasio u oficina: guia practica",
+        "sections": [
+          {
+            "heading": "Que tener en cuenta antes de comprar taquillas",
+            "level": "H2",
+            "purpose": "Ayudar al lector a definir uso, entorno (humedo/seco) y publico antes de elegir modelo, para que la decision de material tenga sentido."
+          },
+          {
+            "heading": "Materiales disponibles: metalica, fenolica y melamina",
+            "level": "H2",
+            "purpose": "Presentar el catalogo real de materiales y sus propiedades tecnicas confirmadas (resistencia a humedad/impacto, coste relativo, entornos tipicos)."
+          },
+          {
+            "heading": "Metalica vs fenolica vs melamina: que material elegir segun el entorno",
+            "level": "H3",
+            "purpose": "Comparativa directa orientada a decision, en formato tabla, para entornos humedos (fenolica), uso intensivo (metalica) o presupuesto/estetica (melamina)."
+          },
+          {
+            "heading": "Como elegir la medida y configuracion correcta",
+            "level": "H2",
+            "purpose": "Guiar sobre numero de compartimentos y dimensionado segun cantidad de usuarios y espacio disponible, sin dar cifras de precio."
+          },
+          {
+            "heading": "Como funciona el proceso de compra y presupuesto",
+            "level": "H2",
+            "purpose": "Explicar los pasos para solicitar presupuesto a medida (sin afirmar precios, plazos ni garantias no confirmados en el input) y dirigir al CTA principal."
+          },
+          {
+            "heading": "Taquillas para colegios y centros escolares",
+            "level": "H2",
+            "purpose": "Cubrir de forma especifica las necesidades del segmento educativo (taquillas colegios/escolares) dentro de la misma pieza para reducir el riesgo de canibalizacion con paginas del cluster."
+          },
+          {
+            "heading": "Preguntas frecuentes sobre comprar taquillas",
+            "level": "H2",
+            "purpose": "Responder dudas long-tail (medidas, materiales, plazos de fabricacion) remitiendo siempre a \"solicitar presupuesto\" cuando falte un dato concreto."
+          }
+        ]
+      },
+      "ctaStrategy": {
+        "primaryCta": "Solicitar presupuesto sin compromiso",
+        "rationale": "La keyword primaria (\"comprar taquillas\") tiene intencion transactional clara, por lo que el CTA de presupuesto del hint encaja directamente con la fase de decision del usuario; no se anade CTA secundario para no diluir el mensaje de compra con otro objetivo distinto."
+      },
+      "internalLinks": [
+        {
+          "anchorIdea": "taquillas de melamina",
+          "targetDescription": "pagina o categoria de taquillas de melamina, keyword relacionada: taquillas melamina / taquillas de melamina",
+          "isRealLink": false
+        },
+        {
+          "anchorIdea": "taquillas para colegios y centros escolares",
+          "targetDescription": "pagina especifica de taquillas escolares/colegios, keyword relacionada: taquillas colegios / taquillas escolares",
+          "isRealLink": false
+        },
+        {
+          "anchorIdea": "taquillas fenolicas en Palencia",
+          "targetDescription": "pagina o landing local de taquillas fenolicas en Palencia, keyword relacionada: taquillas fenólicas en palencia",
+          "isRealLink": false
+        },
+        {
+          "anchorIdea": "ver todas las taquillas Zentry",
+          "targetDescription": "landing o categoria principal de taquillas de Zentry (segun internalLinkHints del pipeline determinista)",
+          "isRealLink": false
+        }
+      ],
+      "supportingEvidence": [
+        "clusterNote indica posible cluster SEO con taquillas melamina, taquillas de melamina, taquillas colegios, taquillas escolares y taquillas fenólicas en palencia, lo que justifica cubrir esos segmentos con enlazado interno en vez de contenido duplicado.",
+        "secondaryKeywords confirma la relevancia de melamina y del segmento colegios/escolares como sub-temas dentro del articulo.",
+        "currentAssumptions confirma que \"comprar taquillas\" sigue siendo relevante para zentry y que el brief original sigue vigente, lo que respalda mantener el enfoque comercial de la pieza.",
+        "brandRationale del contexto confirma que la intencion es de mobiliario (Zentry), sin mencion de cerraduras, por lo que no se introduce Tukandado."
+      ],
+      "priority": "medium",
+      "risksAndUnknowns": [
+        "Riesgo de canibalizacion SEO con las paginas de cluster (taquillas melamina, colegios, escolares, fenolicas en Palencia) si no se coordina el enlazado interno real antes de publicar, tal como señala el pipeline determinista.",
+        "No se dispone de una URL real (\"page\") en el contexto, por lo que todo el enlazado interno propuesto es orientativo y debe confirmarse/mapearse a URLs reales antes de publicar.",
+        "No hay datos de precio, plazo de entrega ni garantia en currentAssumptions: la seccion de presupuesto debe evitar cualquier cifra y remitir siempre a \"solicitar presupuesto\".",
+        "Decision humana previa (rechazo de publicar paginas nuevas de staging por falta de imagenes/profundidad visual) no aplica directamente a este content_update sobre articulo existente, pero es una señal de que el liston de calidad visual/contenido debe ser alto antes de publicar cualquier pieza nueva."
+      ],
+      "reasoningNotes": [
+        "Se mantiene contentType como article (coincide con contentTypeHint) en vez de proponer new_landing pese a la intencion transactional, porque el hint del pipeline no aporta estructura de landing y porque la decision humana registrada muestra reticencia a publicar paginas nuevas sin suficiente desarrollo visual/de contenido -- mas prudente reforzar el articulo existente que abrir una pieza nueva sin ese trabajo adicional.",
+        "searchIntent se marca como transactional (no informational) porque el verbo \"comprar\" en la keyword primaria indica que el usuario ya busca adquirir, no solo informarse; esto condiciona el angulo hacia decision de compra en vez de divulgacion generica.",
+        "La seccion \"Precios y presupuesto\" del proposedStructureHint se reformulo como \"Como funciona el proceso de compra y presupuesto\" para evitar sugerir que se van a dar cifras concretas, ya que currentAssumptions no confirma ningun precio, plazo ni condicion de garantia.",
+        "Se añadio una seccion H2 dedicada a colegios/centros escolares (ausente del proposedStructureHint) precisamente porque clusterNote senala riesgo de canibalizacion con esas keywords; absorberlas dentro del articulo principal con enlazado interno reduce ese riesgo en vez de ignorarlo."
+      ]
+    },
+    "auditWarnings": []
+  },
+  "note": "Artefacto de solo lectura/propuesta. Ningun brief de este empleado se ha publicado en WordPress, Google Ads, GA4, GTM, n8n ni qdrant. La redaccion del contenido final (nunca generada por defecto por este empleado) y la decision de publicar las hace un humano por fuera de este sistema."
+}

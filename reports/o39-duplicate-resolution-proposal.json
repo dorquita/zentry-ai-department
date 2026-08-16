@@ -1,0 +1,1237 @@
+[
+  {
+    "productId": 334,
+    "groups": [
+      {
+        "combo": "anchura=40cm|tipo de cerradura=yr titan",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1743,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1733,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1723,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1713,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1703,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40cm|tipo de cerradura=orbis",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1742,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1732,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1722,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1712,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1702,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40cm|tipo de cerradura=neo",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1741,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1731,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1721,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1711,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1701,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40cm|tipo de cerradura=boxis",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1740,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1730,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1720,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1710,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1700,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40cm|tipo de cerradura=ares",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1739,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1729,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1719,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1709,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1699,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=yr titan",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1738,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1728,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1718,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1708,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1698,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=orbis",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1737,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1727,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1717,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1707,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1697,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=neo",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1736,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1726,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1716,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1706,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1696,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=boxis",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1735,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1725,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1715,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1705,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1695,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      },
+      {
+        "combo": "anchura=30cm|tipo de cerradura=ares",
+        "staging_regular_price": "95",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 1734,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1724,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1714,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1704,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 1694,
+            "regular_price": "95",
+            "live_price": "95",
+            "matches_staging_regular": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 489,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "460",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2276,
+            "regular_price": "460",
+            "live_price": "460",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2274,
+            "regular_price": "489",
+            "live_price": "460",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "471",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2275,
+            "regular_price": "471",
+            "live_price": "471",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2273,
+            "regular_price": "508",
+            "live_price": "471",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 499,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "496",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2304,
+            "regular_price": "496",
+            "live_price": "496",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2302,
+            "regular_price": "533",
+            "live_price": "496",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "506",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2303,
+            "regular_price": "506",
+            "live_price": "506",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2301,
+            "regular_price": "545",
+            "live_price": "506",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 505,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "768",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2332,
+            "regular_price": "768",
+            "live_price": "768",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2330,
+            "regular_price": "830",
+            "live_price": "768",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "792",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2331,
+            "regular_price": "792",
+            "live_price": "792",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2329,
+            "regular_price": "864",
+            "live_price": "792",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 513,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "615",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2360,
+            "regular_price": "615",
+            "live_price": "615",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2358,
+            "regular_price": "645",
+            "live_price": "615",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "633",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2359,
+            "regular_price": "633",
+            "live_price": "633",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2357,
+            "regular_price": "669",
+            "live_price": "633",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 519,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "814",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2388,
+            "regular_price": "814",
+            "live_price": "814",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2386,
+            "regular_price": "876",
+            "live_price": "814",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "843",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2387,
+            "regular_price": "843",
+            "live_price": "843",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2385,
+            "regular_price": "912",
+            "live_price": "843",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 525,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "992",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2416,
+            "regular_price": "992",
+            "live_price": "992",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2414,
+            "regular_price": "1054",
+            "live_price": "992",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1027",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2415,
+            "regular_price": "1027",
+            "live_price": "1027",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2413,
+            "regular_price": "1099",
+            "live_price": "1027",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 531,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1121",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2444,
+            "regular_price": "1121",
+            "live_price": "1121",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2442,
+            "regular_price": "1211",
+            "live_price": "1121",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1155",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2443,
+            "regular_price": "1155",
+            "live_price": "1155",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2441,
+            "regular_price": "1263",
+            "live_price": "1155",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 537,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1212",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2472,
+            "regular_price": "1212",
+            "live_price": "1212",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2470,
+            "regular_price": "1304",
+            "live_price": "1212",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1256",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2471,
+            "regular_price": "1256",
+            "live_price": "1256",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2469,
+            "regular_price": "1363",
+            "live_price": "1256",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 543,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1409",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2500,
+            "regular_price": "1409",
+            "live_price": "1409",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2498,
+            "regular_price": "1498",
+            "live_price": "1409",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1461",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2499,
+            "regular_price": "1461",
+            "live_price": "1461",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2497,
+            "regular_price": "1569",
+            "live_price": "1461",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 549,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1456",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2528,
+            "regular_price": "1456",
+            "live_price": "1456",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2526,
+            "regular_price": "1577",
+            "live_price": "1456",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1507",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2527,
+            "regular_price": "1507",
+            "live_price": "1507",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2525,
+            "regular_price": "1647",
+            "live_price": "1507",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 555,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1555",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2556,
+            "regular_price": "1555",
+            "live_price": "1555",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2554,
+            "regular_price": "1676",
+            "live_price": "1555",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1613",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2555,
+            "regular_price": "1613",
+            "live_price": "1613",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2553,
+            "regular_price": "1757",
+            "live_price": "1613",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 561,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1773",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2584,
+            "regular_price": "1773",
+            "live_price": "1773",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2582,
+            "regular_price": "1918",
+            "live_price": "1773",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1843",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2583,
+            "regular_price": "1843",
+            "live_price": "1843",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2581,
+            "regular_price": "1987",
+            "live_price": "1843",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 567,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "2048",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2612,
+            "regular_price": "2048",
+            "live_price": "2048",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2610,
+            "regular_price": "2191",
+            "live_price": "2048",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "2117",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2611,
+            "regular_price": "2117",
+            "live_price": "2117",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2609,
+            "regular_price": "2261",
+            "live_price": "2117",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 573,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "526",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2640,
+            "regular_price": "526",
+            "live_price": "526",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2638,
+            "regular_price": "590",
+            "live_price": "526",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "549",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2639,
+            "regular_price": "549",
+            "live_price": "549",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2637,
+            "regular_price": "651",
+            "live_price": "549",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 579,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "905",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2668,
+            "regular_price": "905",
+            "live_price": "905",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2666,
+            "regular_price": "1007",
+            "live_price": "905",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "950",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2667,
+            "regular_price": "950",
+            "live_price": "950",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2665,
+            "regular_price": "1126",
+            "live_price": "950",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 585,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1325",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2696,
+            "regular_price": "1325",
+            "live_price": "1325",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2694,
+            "regular_price": "1477",
+            "live_price": "1325",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1394",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2695,
+            "regular_price": "1394",
+            "live_price": "1394",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2693,
+            "regular_price": "1622",
+            "live_price": "1394",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 591,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1728",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2724,
+            "regular_price": "1728",
+            "live_price": "1728",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2722,
+            "regular_price": "1925",
+            "live_price": "1728",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1809",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2723,
+            "regular_price": "1809",
+            "live_price": "1809",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2721,
+            "regular_price": "2024",
+            "live_price": "1809",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 1248,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "737",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2794,
+            "regular_price": "737",
+            "live_price": "737",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2792,
+            "regular_price": "767",
+            "live_price": "737",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "754",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2793,
+            "regular_price": "754",
+            "live_price": "754",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2791,
+            "regular_price": "790",
+            "live_price": "754",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 1254,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1181",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2822,
+            "regular_price": "1181",
+            "live_price": "1181",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2820,
+            "regular_price": "1241",
+            "live_price": "1181",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1215",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2821,
+            "regular_price": "1215",
+            "live_price": "1215",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2819,
+            "regular_price": "1287",
+            "live_price": "1215",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "productId": 1261,
+    "groups": [
+      {
+        "combo": "anchura=30 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1610",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2850,
+            "regular_price": "1610",
+            "live_price": "1610",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2848,
+            "regular_price": "1736",
+            "live_price": "1610",
+            "matches_staging_regular": false
+          }
+        ]
+      },
+      {
+        "combo": "anchura=40 cm|tipo de cerradura=cerradura de resbalón",
+        "staging_regular_price": "1662",
+        "staging_sale_price": "",
+        "variations": [
+          {
+            "id": 2849,
+            "regular_price": "1662",
+            "live_price": "1662",
+            "matches_staging_regular": true
+          },
+          {
+            "id": 2847,
+            "regular_price": "1806",
+            "live_price": "1662",
+            "matches_staging_regular": false
+          }
+        ]
+      }
+    ]
+  }
+]

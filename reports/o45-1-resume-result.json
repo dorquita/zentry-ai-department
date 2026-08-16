@@ -1,0 +1,61 @@
+[
+  {
+    "ok": true,
+    "key": "melamina_fenolicas",
+    "name": "SEM | Producto | Melamina y Fenólicas",
+    "note": "resumed: added missing Fenólicas RSA to existing campaign/ad groups",
+    "campaignResourceName": "customers/8369126564/campaigns/24140637772"
+  },
+  {
+    "ok": true,
+    "key": "cerraduras",
+    "name": "SEM | Cerraduras inteligentes",
+    "budgetResourceName": "customers/8369126564/campaignBudgets/15795912148",
+    "campaignResourceName": "customers/8369126564/campaigns/24130076094",
+    "adGroups": [
+      {
+        "name": "Cerraduras inteligentes para taquillas",
+        "adGroupResourceName": "customers/8369126564/adGroups/199967498140"
+      }
+    ]
+  },
+  {
+    "ok": true,
+    "key": "colegios",
+    "name": "SEM | Sector | Colegios",
+    "budgetResourceName": "customers/8369126564/campaignBudgets/15790759815",
+    "campaignResourceName": "customers/8369126564/campaigns/24140647387",
+    "adGroups": [
+      {
+        "name": "Taquillas para colegios",
+        "adGroupResourceName": "customers/8369126564/adGroups/202292684347"
+      }
+    ]
+  },
+  {
+    "ok": true,
+    "key": "empresas",
+    "name": "SEM | Sector | Empresas",
+    "budgetResourceName": "customers/8369126564/campaignBudgets/15795912124",
+    "campaignResourceName": "customers/8369126564/campaigns/24135669032",
+    "adGroups": [
+      {
+        "name": "Taquillas para empresas",
+        "adGroupResourceName": "customers/8369126564/adGroups/199544783655"
+      }
+    ]
+  },
+  {
+    "ok": true,
+    "key": "marca",
+    "name": "SEM | Marca | Zentry",
+    "budgetResourceName": "customers/8369126564/campaignBudgets/15785338517",
+    "campaignResourceName": "customers/8369126564/campaigns/24130076364",
+    "adGroups": [
+      {
+        "name": "Zentry marca",
+        "adGroupResourceName": "customers/8369126564/adGroups/194498014290"
+      }
+    ]
+  }
+]

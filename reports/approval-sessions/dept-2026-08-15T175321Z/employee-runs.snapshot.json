@@ -1,0 +1,62 @@
+[
+  {
+    "employee": "analytics-specialist",
+    "model": "claude-sonnet-5",
+    "durationMs": 105748,
+    "costUsd": 0.207862,
+    "numTurns": 1,
+    "outputSource": "execution_file_fallback",
+    "outcome": "success",
+    "note": ""
+  },
+  {
+    "employee": "content-strategist",
+    "model": "claude-sonnet-5",
+    "durationMs": 50178,
+    "costUsd": 0.13867310000000005,
+    "numTurns": 1,
+    "outputSource": "execution_file_fallback",
+    "outcome": "success",
+    "note": ""
+  },
+  {
+    "employee": "growth-director-v2",
+    "model": "claude-sonnet-5",
+    "durationMs": 182967,
+    "costUsd": 0.6012785,
+    "numTurns": 1,
+    "outputSource": "execution_file_fallback",
+    "outcome": "success",
+    "note": ""
+  },
+  {
+    "employee": "qa-reviewer",
+    "model": "claude-sonnet-5",
+    "durationMs": 117223,
+    "costUsd": 0.445226,
+    "numTurns": 1,
+    "outputSource": "execution_file_fallback",
+    "outcome": "success",
+    "note": ""
+  },
+  {
+    "employee": "seo-specialist",
+    "model": "claude-sonnet-5",
+    "durationMs": 270348,
+    "costUsd": 0.6540676,
+    "numTurns": 1,
+    "outputSource": "execution_file_fallback",
+    "outcome": "success",
+    "note": ""
+  },
+  {
+    "employee": "web-engineer",
+    "model": "claude-sonnet-5",
+    "durationMs": 84573,
+    "costUsd": 0.2269328,
+    "numTurns": 1,
+    "outputSource": "execution_file_fallback",
+    "outcome": "success",
+    "note": ""
+  }
+]

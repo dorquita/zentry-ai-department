@@ -1,0 +1,58 @@
+{
+  "operations": [
+    {
+      "update": {
+        "resourceName": "customers/8369126564/conversionActions/7560709627",
+        "primaryForGoal": false
+      },
+      "updateMask": "primaryForGoal"
+    },
+    {
+      "update": {
+        "resourceName": "customers/8369126564/conversionActions/7560824781",
+        "primaryForGoal": false
+      },
+      "updateMask": "primaryForGoal"
+    },
+    {
+      "update": {
+        "resourceName": "customers/8369126564/conversionActions/7704254293",
+        "primaryForGoal": true
+      },
+      "updateMask": "primaryForGoal"
+    },
+    {
+      "update": {
+        "resourceName": "customers/8369126564/conversionActions/7704254296",
+        "primaryForGoal": true
+      },
+      "updateMask": "primaryForGoal"
+    },
+    {
+      "update": {
+        "resourceName": "customers/8369126564/conversionActions/7704254299",
+        "primaryForGoal": true
+      },
+      "updateMask": "primaryForGoal"
+    }
+  ],
+  "result": {
+    "results": [
+      {
+        "resourceName": "customers/8369126564/conversionActions/7560709627"
+      },
+      {
+        "resourceName": "customers/8369126564/conversionActions/7560824781"
+      },
+      {
+        "resourceName": "customers/8369126564/conversionActions/7704254293"
+      },
+      {
+        "resourceName": "customers/8369126564/conversionActions/7704254296"
+      },
+      {
+        "resourceName": "customers/8369126564/conversionActions/7704254299"
+      }
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+# QA Reviewer -- revision de generic_json_artifact (dept-2026-08-16T185140Z-qa-input)
+
+- **Generado:** 2026-08-16T19:11:26.905Z
+- **sourceEmployee:** unknown
+- **artifactPath:** `reports/department/dept-2026-08-16T185140Z/dept-2026-08-16T185140Z-qa-input.json`
+
+**qa-reviewer no vuelve a hacer el trabajo original ni aplica correcciones -- solo evalua.**
+
+## Resultado
+
+- **reviewStatus:** `fail`
+- **overallPass:** no | **hasWarnings:** si
+- **findings:** 8 (critical: 3, warning: 3, info: 2)
+- **approvalRecommendation:** `pending` (riesgo: `high`)
+
+**Resumen:** Las salidas de seo-specialist, content-strategist y analytics-specialist son coherentes, bien evidenciadas y ya senalan sus propias contradicciones y riesgos internos de forma explicita. Sin embargo, la sintesis de growth-director-v2 introduce cifras de negocio (backlog de 102 acciones, 111 work orders, 77 change packs, una solicitud de aprobacion critica de despliegue, 70 candidatas SEM) sin ninguna evidencia rastreable dentro de este artifact, y sus evidenceRefs en general no resuelven contra ningun catalogo de evidencia real incluido. Ademas mezcla en un mismo bloque las 4 paginas de staging pese a que seo-specialist documenta que solo 3 de las 4 estan visualmente aprobadas. Estos problemas de fabricacion y evidencia bloquean la promocion automatica de al menos la recomendacion sobre la solicitud de aprobacion critica hasta verificacion humana.
+
+### Findings
+
+| Categoria | Severidad | Descripcion |
+|---|---|---|
+| fabrication_risk | critical | growth.output.currentSignals[0] (channel seo) afirma que el backlog SEO vivo tiene 102 acciones (8 high, 94 medium), pero no hay ningun dato en este artifact que respalde esa cifra: seo-specialist.output.executiveSummary habla de 18 actionItems reales y sus propias opportunities solo marcan 3 como priority high (o1, o7, o8), no 8. La cifra no se deriva de ningun dato incluido en el artifact. |
+| fabrication_risk | critical | growth.output.currentSignals[3] y [4] (channel ops) introducen datos operativos completamente nuevos (111 work orders totales, 110 listas para revisar; solo 5 de 77 change packs listos; 1 solicitud de aprobacion pendiente con riesgo critico sobre un plan de despliegue a produccion para taquillas melamina) sin que exista ninguna etapa ops en specialistOutputs ni ninguna entrada de evidencia trazable en el artifact. Esa afirmacion sustenta directamente el recommendedPriority titulado Revisar la solicitud de aprobacion critica pendiente sobre el plan de despliegue a produccion de taquillas melamina, que por tanto se apoya en un dato no verificable dentro de este mismo artifact. |
+| unsupported_claims | critical | growth.output.dependencies (entrada sem-watcher V1 deterministico) afirma 70 candidatas SEM detectadas. Las instrucciones del propio artifact indican explicitamente no asumir ningun dato de SEM/Ads mientras sem-specialist este fuera de fase. Esta cifra no tiene ninguna entrada de evidencia en el artifact y contradice directamente esa directriz. |
+| evidence_coverage | warning | growth.output.evidence solo contiene dos entradas (human-rejection-staging-pages y analytics-funnel-observation-cta), pero currentSignals, bottlenecks, opportunities, experiments y recommendedPriorities citan decenas de evidenceRefs (por ejemplo actions-live, actions-top, dept-seo-action-1 a dept-seo-action-5, dept-content-summary, dept-content-structure, dept-content-cta, dept-analytics-action-1, dept-analytics-action-2, dept-analytics-tracking-issue-1, dept-analytics-tracking-issue-4, workorders-ready, changepacks-ready, agent-activity, approvals-pending) que no existen ni en growth.output.evidence ni en los catalogos de evidencia de seo-specialist (ev1 a ev33) ni de analytics-specialist (e1 a e22). Son referencias colgantes, no verificables dentro del propio artifact. |
+| contradictions | warning | growth.output.bottlenecks[1] y el recommendedPriority titulado No publicar aun las 4 paginas nuevas de staging; priorizar una segunda iteracion visual y de contenido tratan las 4 paginas de staging como un bloque uniforme ya aprobadas visualmente y rechazadas en conjunto. Pero seo-specialist.output.contentGaps[3] (cg4, taquillas_inteligentes_general/2103) dice explicitamente que esa cuarta pagina esta aun pendiente de aprobacion visual real, a diferencia de las otras 3 candidatas, que si estan aprobadas (cg1/cg2/cg3). Growth no distingue esa diferencia documentada por el propio especialista. |
+| unsupported_claims | warning | growth.output.opportunities (channel analytics) afirma que click_request_quote registra mas volumen y que eso es senal de que el CTA de presupuesto ya funciona bien en varias paginas del sitio y podria replicarse ese patron, presentandolo como constatacion. Pero analytics-specialist.output.funnelObservations marca la explicacion equivalente explicitamente como claimType HYPOTHESIS (una posible explicacion de que click_request_quote supere a view_quote_page es que el CTA este presente en varias paginas), no como hecho confirmado. Growth eleva una hipotesis a certeza sin el matiz original. |
+| approval_requirements | info | El recommendedPriority titulado Corregir el enrutado de acciones SEO mal dirigidas (pagina obsoleta y cannibalizacion de melamina) agrupa dos acciones de estado de aprobacion distinto (escalar a Pau para /cerraduras/, y ejecutar un script ya cubierto por la decision O29.1 aprobada) bajo un unico dependsOn que solo menciona la confirmacion de Pau para la primera, sin aclarar si la parte del script de melamina puede avanzar de forma independiente. |
+| other | info | growth.output.dependencies para qa-reviewer y web-engineer afirman que el fichero de definicion del agente existe en el checkout, un dato sobre el repositorio que no forma parte de ningun especialista incluido en este artifact y por tanto no es verificable con lo aqui suministrado. |
+
+### Unsupported claims
+
+- growth.output.currentSignals[0]: el backlog SEO vivo tiene 102 acciones (8 high, 94 medium), sin respaldo en seo-specialist.output (que habla de 18 actionItems y 3 opportunities high).
+- growth.output.currentSignals[3]-[4]: de 111 work orders totales, 110 estan listas para revisar, 77 change packs y 1 solicitud de aprobacion pendiente con riesgo critico, sin ninguna etapa o evidencia de origen en el artifact.
+- growth.output.dependencies: 70 candidatas SEM detectadas, pese a que sem-specialist esta explicitamente fuera de fase y sin evidencia SEM en el artifact.
+- growth.output.opportunities (channel analytics): el CTA de presupuesto ya funciona bien en varias paginas del sitio, presentado como hecho cuando analytics-specialist lo marca como HYPOTHESIS.
+
+### Contradictions
+
+- growth caracteriza las 4 paginas de staging como ya aprobadas visualmente y rechazadas en bloque, mientras seo-specialist.output.contentGaps[3] (cg4) documenta que solo 3 de las 4 estan realmente aprobadas visualmente y la cuarta (2103) sigue pendiente.
+
+### Safety concerns
+
+_Sin problemas de seguridad detectados._
+
+### Required corrections
+
+- Verificar o eliminar la cifra sobre 102 acciones (8 high, 94 medium) en growth.output.currentSignals antes de usarla para priorizar; no coincide con los datos de seo-specialist incluidos en este mismo artifact.
+- No promover el recommendedPriority Revisar la solicitud de aprobacion critica pendiente sobre el plan de despliegue a produccion de taquillas melamina hasta verificar contra una fuente real la existencia de esa solicitud, los 111 work orders y los 77 change packs citados, ya que no hay evidencia de ellos en este artifact.
+- Eliminar o matizar explicitamente la cifra de 70 candidatas SEM detectadas en growth.output.dependencies, dado que las instrucciones del propio artifact prohiben asumir datos de SEM mientras sem-specialist este fuera de fase.
+- Corregir los evidenceRefs de growth.output (currentSignals, bottlenecks, opportunities, experiments, recommendedPriorities) para que apunten a ids reales existentes en growth.output.evidence, seo-specialist.output.evidence (ev1 a ev33) o analytics-specialist.output.evidence (e1 a e22), en vez del esquema actual no resuelto.
+- Reconciliar la afirmacion de que las 4 paginas de staging ya aprobadas visualmente fueron rechazadas, con el detalle de seo-specialist de que solo 3 de las 4 estan realmente aprobadas y la cuarta (2103) sigue pendiente.
+- Reformular la oportunidad sobre click_request_quote para reflejar que es una HYPOTHESIS de analytics-specialist y no un hecho confirmado.
+
+### Approval recommendation
+
+- **recommendedStatus:** `pending`
+- **riskLevel:** `high`
+- **rationale:** Aunque los outputs de seo-specialist, content-strategist y analytics-specialist son internamente solidos, trazables a evidencia propia y con contradicciones ya bien senaladas (por ejemplo o8 y cg4), la capa de sintesis de growth-director-v2 introduce varias cifras de negocio (backlog de 102 acciones, 111 work orders, 77 change packs, una solicitud de aprobacion critica, 70 candidatas SEM) que no tienen ninguna evidencia rastreable dentro de este artifact y en un caso viola explicitamente la directriz de no asumir datos de SEM. Esto exige revision humana antes de usar la sintesis de growth para decidir que recomendaciones avanzan a ingenieria, especialmente la de la solicitud de aprobacion critica de taquillas melamina.
+
+### Evidence
+
+- growth.output.currentSignals[0].description: backlog SEO vivo con 102 acciones (8 high, 94 medium)
+- seo-specialist.output.executiveSummary: 18 actionItems reales
+- growth.output.currentSignals[3].description: 111 work orders totales, 110 listas para revisar, solo 5 de 77 change packs listos para revisar
+- growth.output.currentSignals[4].description: 1 solicitud de aprobacion pendiente con riesgo critico relacionada con un plan de despliegue a produccion para la pagina de taquillas melamina
+- growth.output.recommendedPriorities titulo: Revisar la solicitud de aprobacion critica pendiente sobre el plan de despliegue a produccion de taquillas melamina
+- growth.output.dependencies (sem-watcher V1): 70 candidatas SEM detectadas
+- growth.output.evidence contiene solo ids human-rejection-staging-pages y analytics-funnel-observation-cta, mientras otras secciones citan actions-live, dept-seo-action-1, workorders-ready, etc.
+- seo-specialist.output.contentGaps[3] (cg4): staging 2103 corregida en O28.6 pero aun pendiente de aprobacion visual real, a diferencia de las otras 3 candidatas
+- analytics-specialist.output.funnelObservations[2]: claimType HYPOTHESIS, una posible explicacion de que click_request_quote supere a view_quote_page es que el CTA de solicitar presupuesto este presente en varias paginas del sitio
+- growth.output.opportunities (channel analytics): senal de que el CTA de presupuesto ya funciona bien en varias paginas del sitio y podria replicarse ese patron
+
+_Artefacto de solo lectura/revision. qa-reviewer no vuelve a hacer el trabajo original ni aplica ninguna correccion -- solo evalua el artifact ya producido. La decision de aplicar/rechazar cualquier correccion la toma un humano._

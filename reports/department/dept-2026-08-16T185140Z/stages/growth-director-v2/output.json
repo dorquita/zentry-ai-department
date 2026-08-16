@@ -1,0 +1,350 @@
+{
+  "growthSummary": "El esfuerzo inmediato debe concentrarse en limpiar el enrutado SEO ya mal dirigido (pagina obsoleta /cerraduras/ y cannibalizacion de melamina, ya resuelta por decision humana previa pero aun activa en el backlog) y en ejecutar los 6 quick wins on-page ya identificados por seo-specialist, ambas acciones de esfuerzo bajo-medio y confianza alta. En paralelo, hay que resolver dos huecos de medicion en Analytics (click_phone sin ocurrencias pese a tag/trigger activos, y una version de GTM cuyo nombre sugiere que no esta realmente publicada) antes de apoyarse en esas metricas para decisiones futuras. La recomendacion de seo-specialist de publicar ya las 4 paginas nuevas de staging entra en conflicto directo con una decision humana previa que rechazo esa misma publicacion por falta de calidad visual: se propone priorizar la segunda iteracion, no la publicacion. sem-specialist sigue fuera de esta fase, por lo que esta sintesis no incluye ninguna senal analizada de SEM/Google Ads.",
+  "currentSignals": [
+    {
+      "channel": "seo",
+      "description": "El backlog SEO vivo tiene 102 acciones (8 high, 94 medium), con 8 acciones de alta prioridad concentradas en cerraduras-inteligentes-taquillas y taquillas inteligentes; seo-specialist confirma 6 quick wins reales listos para ejecutar entre posicion 17 y 28.8.",
+      "evidenceRefs": [
+        "actions-live",
+        "actions-top",
+        "dept-seo-action-3"
+      ]
+    },
+    {
+      "channel": "analytics",
+      "description": "analytics-specialist confirma GA4 y GTM conectados y 6 de 7 eventos clave disparandose, pero detecta que click_phone no registro ninguna ocurrencia pese a tener tag y trigger activos, y que la version live del contenedor GTM se llama textualmente sin publicar, pendiente aprobacion Pau.",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-4"
+      ]
+    },
+    {
+      "channel": "content",
+      "description": "content-strategist propone reforzar (no crear pagina nueva) un articulo de guia de compra para el cluster comprar taquillas, colegios, melamina y fenolicas en Palencia, evitando canibalizacion mediante enlazado interno.",
+      "evidenceRefs": [
+        "dept-content-summary",
+        "dept-content-structure"
+      ]
+    },
+    {
+      "channel": "ops",
+      "description": "De 111 work orders totales, 110 estan listas para revisar, pero solo 5 de 77 change packs estan listos para revisar, con varios bloqueados por el cluster gate segun la actividad de agentes de esta pasada.",
+      "evidenceRefs": [
+        "workorders-ready",
+        "changepacks-ready",
+        "agent-activity"
+      ]
+    },
+    {
+      "channel": "ops",
+      "description": "Hay 1 solicitud de aprobacion pendiente con riesgo critico, relacionada con un plan de despliegue a produccion para la pagina de taquillas melamina.",
+      "evidenceRefs": [
+        "approvals-pending"
+      ]
+    }
+  ],
+  "bottlenecks": [
+    {
+      "channel": "seo",
+      "description": "Al menos 2 actionItems siguen recomendando trabajo on-page sobre https://zentrylockers.com/cerraduras/, pagina en papelera desde O22 que redirige a /cerraduras-para-taquillas/, y otros 2 actionItems de melamina generica siguen apuntando a /taquillas-melamina-fenolico/ pese a que esa cannibalizacion ya fue resuelta por decision O29.1; ejecutar estas acciones tal cual desperdicia trabajo.",
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-action-2"
+      ]
+    },
+    {
+      "channel": "content",
+      "description": "seo-specialist recomienda publicar a produccion las 4 paginas de staging ya aprobadas visualmente (universidades, metalicas, vestuarios, taquillas inteligentes general), pero esta misma propuesta ya fue planteada antes y rechazada por una persona el 2026-08-16 con el motivo textual de que las paginas de staging se ven demasiado basicas y sin suficientes imagenes o fotografias y necesitan una segunda iteracion visual y de contenido. Publicar ahora contradice esa decision humana explicita.",
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "human-rejection-staging-pages"
+      ]
+    },
+    {
+      "channel": "analytics",
+      "description": "El nombre de la version live del contenedor GTM sugiere que los eventos CTA nuevos podrian no estar realmente publicados en produccion pendiente aprobacion de Pau, lo que introduce incertidumbre sobre la fiabilidad de cualquier metrica de conversion basada en esos eventos.",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-4",
+        "dept-analytics-action-2"
+      ]
+    },
+    {
+      "channel": "ops",
+      "description": "Solo 5 de 77 change packs estan listos para revisar y varios quedan bloqueados por el cluster gate segun la actividad de esta pasada, limitando cuanto trabajo aprobado puede avanzar a ejecucion.",
+      "evidenceRefs": [
+        "changepacks-ready",
+        "agent-activity"
+      ]
+    }
+  ],
+  "opportunities": [
+    {
+      "channel": "seo",
+      "description": "6 quick wins on-page ya identificados en paginas indexadas entre posicion 17 y 28.8 (cerraduras-inteligentes-taquillas, taquillas-melamina, taquillas-para-colegios, taquillas-para-hospitales), de bajo esfuerzo relativo por tratarse de refuerzos on-page sobre paginas ya existentes.",
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-1"
+      ]
+    },
+    {
+      "channel": "seo",
+      "description": "Ya existe un script (scripts/o291-resolve-melamina-cannibalization.ts) para cerrar de forma automatica las keywords genericas de melamina mal enrutadas, lo que convierte la limpieza de ese enrutado en una accion de esfuerzo muy bajo.",
+      "evidenceRefs": [
+        "dept-seo-action-2"
+      ]
+    },
+    {
+      "channel": "content",
+      "description": "El cluster comprar taquillas, colegios, escolares, melamina y fenolicas en Palencia puede cubrirse con una sola pieza de referencia con intencion transaccional clara, reduciendo el riesgo de canibalizacion frente a mantener el trafico disperso entre paginas de cluster.",
+      "evidenceRefs": [
+        "dept-content-summary",
+        "dept-content-cta"
+      ]
+    },
+    {
+      "channel": "analytics",
+      "description": "click_request_quote registra mas volumen que view_quote_page en el periodo, senal de que el CTA de presupuesto ya funciona bien en varias paginas del sitio y podria replicarse ese patron en otras paginas con menor conversion.",
+      "evidenceRefs": [
+        "analytics-funnel-observation-cta"
+      ]
+    }
+  ],
+  "experiments": [
+    {
+      "title": "Optimizacion on-page de los 6 quick wins SEO identificados",
+      "hypothesis": "Reforzar H1/H2, profundidad de texto, enlazado interno y meta title/description en las 6 paginas con posicion 17-28.8 movera esas keywords a la primera pagina de resultados.",
+      "channel": "seo",
+      "successMetric": "Posicion media en Search Console para las 6 keywords objetivo por debajo de 10 en 60 dias.",
+      "evidenceRefs": [
+        "dept-seo-action-3"
+      ]
+    },
+    {
+      "title": "Reescritura de meta titles/descriptions en paginas con CTR sistemico de 0%",
+      "hypothesis": "El patron de 0% CTR pese a impresiones reales en al menos 6 paginas se debe a snippets poco atractivos; reescribir meta titles/descriptions elevara el CTR real por encima de 0% en esas paginas.",
+      "channel": "seo",
+      "successMetric": "CTR medio en Search Console mayor que 0% en las paginas auditadas en el siguiente periodo de reporte.",
+      "evidenceRefs": [
+        "dept-seo-action-4"
+      ]
+    },
+    {
+      "title": "Validacion del tracking de click_phone en GA4",
+      "hypothesis": "El evento click_phone no se registra porque el selector del trigger no coincide con el enlace real del sitio, no porque nadie llame; validando en DebugView se podra confirmar y corregir la causa.",
+      "channel": "analytics",
+      "successMetric": "Al menos 1 ocurrencia de click_phone registrada en GA4 tras la validacion y correccion.",
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-tracking-issue-1"
+      ]
+    },
+    {
+      "title": "Confirmacion de publicacion real del contenedor GTM",
+      "hypothesis": "La version live del contenedor GTM etiquetada como sin publicar, pendiente aprobacion Pau, podria no estar realmente activa en produccion, dejando sin medir los eventos CTA nuevos.",
+      "channel": "analytics",
+      "successMetric": "Confirmacion explicita de si la version live coincide con la version publicada en produccion.",
+      "evidenceRefs": [
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-4"
+      ]
+    }
+  ],
+  "recommendedPriorities": [
+    {
+      "title": "Corregir el enrutado de acciones SEO mal dirigidas (pagina obsoleta y cannibalizacion de melamina)",
+      "rationale": "Impacto alto porque desperdicia trabajo de WordPress sobre una pagina en papelera y sobre una cannibalizacion ya resuelta por decision humana previa (O29.1); confianza alta porque el propio catalogo de clusters documenta ambas decisiones; esfuerzo bajo porque ya existe un script dedicado y la correccion es de reenrutado, no de contenido nuevo.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Confirmacion de Pau sobre el objetivo real de /cerraduras/ (2060 o 1865)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-action-2"
+      ]
+    },
+    {
+      "title": "Ejecutar los 6 quick wins on-page ya identificados",
+      "rationale": "Impacto medio-alto porque son keywords ya indexadas entre posicion 17 y 28.8, a un empujon de top 10; confianza alta porque se basan en datos reales de Search Console de esta misma pasada; esfuerzo medio porque requiere trabajo on-page en 4 paginas distintas.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Corregir el enrutado de acciones SEO mal dirigidas (pagina obsoleta y cannibalizacion de melamina)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "actions-top"
+      ]
+    },
+    {
+      "title": "Resolver los huecos de medicion en Analytics antes de confiar en las metricas de conversion para priorizar",
+      "rationale": "Impacto alto porque cualquier decision de priorizacion posterior se apoya en datos de GA4/GTM, y hay dos senales que ponen en duda su fiabilidad (click_phone sin ocurrencias pese a tag/trigger activos, y version live de GTM con nombre que sugiere no estar publicada); confianza media porque son observaciones, no confirmaciones; esfuerzo bajo porque son validaciones puntuales en GA4 DebugView y en el panel de GTM.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Confirmacion de Pau sobre el estado de publicacion del contenedor GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-4"
+      ]
+    },
+    {
+      "title": "Auditar y reescribir meta titles/descriptions en paginas con CTR sistemico de 0%",
+      "rationale": "Impacto medio porque afecta a al menos 6 paginas con impresiones reales pero ningun clic, sugiriendo una causa comun de plantilla de snippet; confianza alta porque el patron se repite de forma consistente en los datos de esta pasada; esfuerzo medio porque implica trabajo de copywriting en varias paginas.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-seo-action-4"
+      ]
+    },
+    {
+      "title": "No publicar aun las 4 paginas nuevas de staging; priorizar una segunda iteracion visual y de contenido",
+      "rationale": "seo-specialist recomienda publicar estas 4 paginas a produccion, pero esta misma propuesta ya fue rechazada por una persona el 2026-08-16 con el motivo textual de que las paginas se ven demasiado basicas y sin suficientes imagenes o fotografias y necesitan una segunda iteracion antes de publicarse; impacto potencial alto si se hace bien, pero confianza baja en la version actual de las paginas dado el rechazo explicito; esfuerzo medio si el trabajo de esta pasada se limita a coordinar esa segunda iteracion en vez de publicar.",
+      "impact": "high",
+      "confidence": "low",
+      "effort": "medium",
+      "dependsOn": [
+        "Segunda iteracion visual y de contenido de las paginas de staging (universidades, metalicas, vestuarios, taquillas inteligentes general)",
+        "Nueva aprobacion humana explicita tras esa iteracion"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "human-rejection-staging-pages"
+      ]
+    },
+    {
+      "title": "Reforzar el articulo de guia de compra para el cluster comprar taquillas sin crear pagina nueva",
+      "rationale": "content-strategist propone deliberadamente un articulo existente en vez de una landing nueva, en linea con la misma senal de cautela que motivo el rechazo humano de las paginas de staging; impacto medio porque cubre un cluster de keywords con intencion transaccional hoy disperso; confianza media porque el enlazado interno propuesto es orientativo y no esta mapeado a URLs reales; esfuerzo medio por el trabajo de redaccion y enlazado.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Mapeo de URLs reales para el enlazado interno propuesto por content-strategist"
+      ],
+      "evidenceRefs": [
+        "dept-content-summary",
+        "dept-content-structure",
+        "dept-content-cta"
+      ]
+    },
+    {
+      "title": "Revisar la solicitud de aprobacion critica pendiente sobre el plan de despliegue a produccion de taquillas melamina",
+      "rationale": "Impacto alto porque es la unica solicitud pendiente con nivel de riesgo critico y bloquea un plan de despliegue a produccion; confianza media porque el contexto solo da el titulo y el nivel de riesgo, sin detalle del cambio propuesto; esfuerzo bajo porque es una revision de aprobacion, no ejecucion nueva.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Revision humana directa de la solicitud critica en approval-queue"
+      ],
+      "evidenceRefs": [
+        "approvals-pending"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "seo-specialist",
+      "status": "available",
+      "note": "Ejecutado en esta pasada coordinada; salida real usada como base de las prioridades SEO (dept-seo-*)."
+    },
+    {
+      "name": "content-strategist",
+      "status": "available",
+      "note": "Ejecutado en esta pasada coordinada; salida real usada para la prioridad de contenido (dept-content-*)."
+    },
+    {
+      "name": "analytics-specialist",
+      "status": "available",
+      "note": "Ejecutado en esta pasada coordinada; salida real usada para las prioridades de medicion (dept-analytics-*)."
+    },
+    {
+      "name": "sem-specialist",
+      "status": "missing",
+      "note": "Marcado not_available en specialistInputs de esta pasada; no hay ninguna senal SEM/Google Ads generada por este especialista, pese a que el fichero de definicion del agente existe en el checkout."
+    },
+    {
+      "name": "qa-reviewer",
+      "status": "missing",
+      "note": "No aparece en specialistInputs de esta pasada; no genero ninguna salida verificable, aunque el fichero de definicion del agente existe en el checkout."
+    },
+    {
+      "name": "web-engineer",
+      "status": "missing",
+      "note": "No aparece en specialistInputs de esta pasada; no genero ninguna salida verificable, aunque el fichero de definicion del agente existe en el checkout."
+    },
+    {
+      "name": "sem-watcher (V1 deterministico)",
+      "status": "available",
+      "note": "Conectado=true segun agentActivity de esta pasada, 70 candidatas SEM detectadas, pero sin analisis cualitativo de un especialista Claude en esta ronda."
+    },
+    {
+      "name": "analytics-watcher (V1 deterministico)",
+      "status": "available",
+      "note": "GA4 y GTM conectados segun agentActivity; sus datos alimentan directamente la salida real de analytics-specialist en esta pasada."
+    }
+  ],
+  "risks": [
+    {
+      "description": "Contradiccion entre la recomendacion de seo-specialist de publicar a produccion las 4 paginas nuevas de staging y una decision humana previa que ya rechazo esa misma propuesta por falta de calidad visual y de contenido.",
+      "severity": "high",
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "human-rejection-staging-pages"
+      ]
+    },
+    {
+      "description": "El nombre de la version live del contenedor GTM sugiere que los eventos CTA nuevos podrian no estar realmente publicados en produccion, lo que podria estar sesgando las metricas de conversion usadas para priorizar.",
+      "severity": "medium",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-4"
+      ]
+    },
+    {
+      "description": "click_phone no registra ninguna ocurrencia en GA4 pese a tener tag y trigger activos en GTM, lo que podria estar ocultando una parte real de los leads por telefono en cualquier analisis de conversion.",
+      "severity": "medium",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-1"
+      ]
+    },
+    {
+      "description": "sem-specialist no esta disponible en esta pasada, por lo que no hay ninguna senal analizada de SEM/Google Ads pese a que sem-watcher V1 reporta 70 candidatas SEM; cualquier priorizacion cross-channel ignora por completo ese canal.",
+      "severity": "medium",
+      "evidenceRefs": [
+        "dept-sem-unavailable"
+      ]
+    },
+    {
+      "description": "Solo 5 de 77 change packs estan listos para revisar, con varios bloqueados por el cluster gate, lo que limita cuanto de lo priorizado puede convertirse en ejecucion real a corto plazo.",
+      "severity": "low",
+      "evidenceRefs": [
+        "changepacks-ready"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "ref": "human-rejection-staging-pages",
+      "description": "Decision humana registrada en esta pasada (fuera del evidenceCatalog estandar): la propuesta de publicar en produccion las paginas nuevas ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general) fue rechazada el 2026-08-16T09:32:20.630Z con el motivo textual de que las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes o fotografias y necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion."
+    },
+    {
+      "ref": "analytics-funnel-observation-cta",
+      "description": "Extraido de la salida real de analytics-specialist (funnelObservations, evidencia e11 y e13): click_request_quote registra 65 ocurrencias frente a 12 de view_quote_page en el periodo 2026-07-18 a 2026-08-15."
+    }
+  ],
+  "unknowns": [
+    "sem-specialist no ejecuto en esta pasada: no se conoce el estado real de las campanas de Google Ads mas alla de que sem-watcher V1 reporta 70 candidatas SEM sin analizar cualitativamente.",
+    "qa-reviewer y web-engineer no aparecen en specialistInputs de esta pasada: no se conoce si hay hallazgos de QA tecnico o de ingenieria web pendientes.",
+    "No se puede confirmar si la version live del contenedor GTM (nombre sin publicar, pendiente aprobacion Pau) esta realmente publicada en produccion.",
+    "No se conoce el detalle completo de la solicitud de aprobacion critica pendiente sobre el plan de despliegue de taquillas melamina, mas alla de su titulo y nivel de riesgo.",
+    "No se sabe si la pagina de staging del cluster taquillas_inteligentes_general (2103) ya tiene aprobacion visual real, a diferencia de las otras 3 candidatas, segun senala seo-specialist.",
+    "No hay datos de un periodo anterior comparable en Analytics para saber si las cifras actuales (por ejemplo la dominancia del canal Direct) son una tendencia o un cambio puntual."
+  ]
+}

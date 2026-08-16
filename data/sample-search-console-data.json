@@ -1,0 +1,97 @@
+{
+  "note": "DATOS DE EJEMPLO (mock). No provienen de la API real de Google Search Console. Sirven unicamente para probar la logica del SEO Watcher Agent en modo READ/PROPOSE.",
+  "siteUrl": "https://zentrylockers.co/",
+  "dateRange": { "start": "2026-07-01", "end": "2026-07-28" },
+  "rows": [
+    {
+      "query": "zentry lockers",
+      "page": "https://zentrylockers.co/",
+      "clicks": 210,
+      "impressions": 260,
+      "ctr": 0.808,
+      "position": 1.0,
+      "previousPosition": 1.0
+    },
+    {
+      "query": "cerraduras inteligentes para taquillas",
+      "page": "https://zentrylockers.co/cerraduras-inteligentes-taquillas/",
+      "clicks": 4,
+      "impressions": 190,
+      "ctr": 0.021,
+      "position": 18.6,
+      "previousPosition": 19.4
+    },
+    {
+      "query": "taquillas de melamina",
+      "page": "https://zentrylockers.co/taquillas-melamina/",
+      "clicks": 1,
+      "impressions": 45,
+      "ctr": 0.022,
+      "position": 37.0,
+      "previousPosition": 35.0
+    },
+    {
+      "query": "taquillas escolares",
+      "page": "https://zentrylockers.co/taquillas-escolares/",
+      "clicks": 0,
+      "impressions": 38,
+      "ctr": 0.0,
+      "position": 33.0,
+      "previousPosition": 31.0
+    },
+    {
+      "query": "cerraduras inteligentes para centros deportivos",
+      "page": "https://zentrylockers.co/cerraduras-inteligentes-centros-deportivos/",
+      "clicks": 1,
+      "impressions": 30,
+      "ctr": 0.033,
+      "position": 37.0,
+      "previousPosition": 34.0
+    },
+    {
+      "query": "taquillas para gimnasios",
+      "page": "https://zentrylockers.co/taquillas-gimnasios/",
+      "clicks": 2,
+      "impressions": 520,
+      "ctr": 0.0038,
+      "position": 6.2,
+      "previousPosition": 5.8
+    },
+    {
+      "query": "lockers inteligentes",
+      "page": "https://zentrylockers.co/lockers-inteligentes/",
+      "clicks": 5,
+      "impressions": 140,
+      "ctr": 0.036,
+      "position": 15.3,
+      "previousPosition": 9.1
+    },
+    {
+      "query": "taquillas para empresas",
+      "page": "https://zentrylockers.co/taquillas-empresas/",
+      "clicks": 3,
+      "impressions": 90,
+      "ctr": 0.033,
+      "position": 22.4,
+      "previousPosition": 24.0
+    },
+    {
+      "query": "taquillas fenolicas",
+      "page": "https://zentrylockers.co/taquillas-fenolicas/",
+      "clicks": 0,
+      "impressions": 8,
+      "ctr": 0.0,
+      "position": 45.0,
+      "previousPosition": 44.0
+    },
+    {
+      "query": "taquillas metalicas",
+      "page": "https://zentrylockers.co/taquillas-metalicas/",
+      "clicks": 6,
+      "impressions": 65,
+      "ctr": 0.092,
+      "position": 12.0,
+      "previousPosition": 13.5
+    }
+  ]
+}
