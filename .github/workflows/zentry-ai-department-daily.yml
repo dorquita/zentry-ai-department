@@ -786,11 +786,30 @@ jobs:
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
 
+      # El tamano del prompt se REPORTA siempre y un prompt vacio aborta
+      # aqui, con un mensaje explicito, en vez de llegar a
+      # claude-code-action y morir alli en unos segundos sin dejar
+      # execution_file -- que es exactamente como se presento el fallo de
+      # growth-director-v2 en el run 31961151666 y lo que hizo falta
+      # descartar a mano. El prompt de Growth es el mayor de la pasada
+      # (agrega los cuatro especialistas), asi que es el unico sitio donde
+      # el limite de 1 MB de un output de step podria llegar a importar.
       - name: "[GROWTH] Leer prompt"
         id: growth_prompt
         continue-on-error: true
         if: steps.growth_prep.outputs.claudeRequired == 'true'
         run: |
+          set -euo pipefail
+          if [ ! -s "$PROMPT_FILE_PATH" ]; then
+            echo "::error::El prompt de growth-director-v2 no existe o esta vacio: $PROMPT_FILE_PATH"
+            exit 1
+          fi
+          PROMPT_BYTES=$(wc -c < "$PROMPT_FILE_PATH")
+          echo "Prompt de growth-director-v2: ${PROMPT_BYTES} bytes ($PROMPT_FILE_PATH)."
+          if [ "$PROMPT_BYTES" -gt 900000 ]; then
+            echo "::error::El prompt de growth-director-v2 ocupa ${PROMPT_BYTES} bytes y no cabe con garantias en un output de step (limite practico 900 KB). No se invoca a Claude con un prompt truncado."
+            exit 1
+          fi
           delim="PROMPT_EOF_${RANDOM}${RANDOM}"
           {
             echo "content<<$delim"
