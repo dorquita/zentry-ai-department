@@ -1,5 +1,6 @@
 import * as assert from "node:assert/strict";
 import {
+  auditSemSpecialistOutput,
   auditSemSpecialistOutputForUnsupportedClaims,
   SemFinding,
   SemSpecialistOutput,
@@ -189,14 +190,18 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "presupuesto: cifra REAL del catalogo (44) pero SIN evidenceRefs => violacion (falta paper trail)",
+      name: "presupuesto: cifra REAL del catalogo (44) pero SIN evidenceRefs => AVISO de citacion, nunca fabricacion",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({
           budgetObservations: [emptyFinding({ description: "El presupuesto es de 44 € al dia si se activaran todas las campanas.", evidenceRefs: [] })],
         });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0, "una cifra real sin evidenceRefs verificada sigue siendo una violacion -- hace falta el paper trail explicito");
+        // CONTRATO NUEVO (ver SemClaimAudit): una cifra REAL del catalogo
+        // mal citada es un AVISO, no un rechazo. Solo una cifra que no
+        // existe en NINGUNA entrada del catalogo descarta la salida.
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "la cifra existe en el catalogo: nunca es fabricacion");
+        assert.ok(uncitedClaims.length > 0, "una cifra real sin evidenceRefs verificada sigue siendo una violacion -- hace falta el paper trail explicito");
       },
     },
     {
@@ -255,15 +260,19 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "evidenceRefs apunta a un id INEXISTENTE (ni en evidence[] ni en el catalogo) => la afirmacion se trata como sin respaldo",
+      name: "evidenceRefs apunta a un id INEXISTENTE (ni en evidence[] ni en el catalogo) => aviso de citacion (la cifra es real)",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({
           budgetObservations: [emptyFinding({ description: "Presupuesto de 44 € al dia.", evidenceRefs: ["id-que-no-existe"] })],
           evidence: [],
         });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0);
+        // CONTRATO NUEVO (ver SemClaimAudit): una cifra REAL del catalogo
+        // mal citada es un AVISO, no un rechazo. Solo una cifra que no
+        // existe en NINGUNA entrada del catalogo descarta la salida.
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "la cifra existe en el catalogo: nunca es fabricacion");
+        assert.ok(uncitedClaims.length > 0);
       },
     },
     {
@@ -371,15 +380,19 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "cifra SIN evidenceRef alguno (array vacio) => invalida, aunque el numero sea real",
+      name: "cifra SIN evidenceRef alguno (array vacio) => aviso de citacion, porque el numero SI es real",
       fn: () => {
         const context = baseContext();
         const budgetItem = catalogItem(context, "sem-budget-monthly-total");
         const output = baseOutput({
           budgetObservations: [emptyFinding({ description: `El presupuesto es de ${budgetItem.value} € al mes si se activaran todas las campanas.`, evidenceRefs: [] })],
         });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0);
+        // CONTRATO NUEVO (ver SemClaimAudit): una cifra REAL del catalogo
+        // mal citada es un AVISO, no un rechazo. Solo una cifra que no
+        // existe en NINGUNA entrada del catalogo descarta la salida.
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "la cifra existe en el catalogo: nunca es fabricacion");
+        assert.ok(uncitedClaims.length > 0);
       },
     },
     {
@@ -502,7 +515,7 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "REGRESION: 'gasto' cerca de una cifra ajena (other), MISMA frase (sin punto), SIN citarla => sigue siendo violacion (no basta con que exista en el catalogo en algun sitio de una finding)",
+      name: "REGRESION: 'gasto' cerca de una cifra ajena (other), MISMA frase (sin punto), SIN citarla => sigue exigiendo cita (aviso), no basta con que exista en el catalogo",
       fn: () => {
         const context = baseContext();
         // A proposito SIN punto entre "gasto" y "7" (a diferencia del texto
@@ -515,8 +528,12 @@ export function runSemSpecialistOutputTests(): TestCase[] {
             emptyFinding({ description: "Sin gasto real registrado, si se activaran las 7 campañas.", evidenceRefs: [] }),
           ],
         });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0, "un finding SIN evidenceRefs sigue exigiendo cita explicita, aunque la cifra sea real en el catalogo");
+        // CONTRATO NUEVO (ver SemClaimAudit): una cifra REAL del catalogo
+        // mal citada es un AVISO, no un rechazo. Solo una cifra que no
+        // existe en NINGUNA entrada del catalogo descarta la salida.
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "la cifra existe en el catalogo: nunca es fabricacion");
+        assert.ok(uncitedClaims.length > 0, "un finding SIN evidenceRefs sigue exigiendo cita explicita, aunque la cifra sea real en el catalogo");
       },
     },
     {
@@ -580,18 +597,22 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "REGRESION run 31890170949: 'gasto de 7 €' SIN evidencia de gasto=7 => sigue siendo violacion",
+      name: "REGRESION run 31890170949: 'gasto de 7 €' SIN evidencia de gasto=7 => sigue exigiendo cita (aviso)",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({
           budgetObservations: [emptyFinding({ description: "El gasto de la campana es de 7 €, una cifra sin respaldo real.", evidenceRefs: [] })],
         });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.some((v) => /gasto/i.test(v)), "un gasto de 7 EUR sin ninguna evidencia (real o no) sigue siendo un fallo duro");
+        // CONTRATO NUEVO (ver SemClaimAudit): una cifra REAL del catalogo
+        // mal citada es un AVISO, no un rechazo. Solo una cifra que no
+        // existe en NINGUNA entrada del catalogo descarta la salida.
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "la cifra existe en el catalogo: nunca es fabricacion");
+        assert.ok(uncitedClaims.some((v) => /gasto/i.test(v)), "un gasto de 7 EUR sin ninguna evidencia (real o no) sigue siendo un fallo duro");
       },
     },
     {
-      name: "REGRESION run 31890663140 (frase EXACTA 'presupuesto diario total de 44') SIN evidenceRefs de sem-budget-daily-total => sigue siendo violacion",
+      name: "REGRESION run 31890663140 (frase EXACTA 'presupuesto diario total de 44') SIN evidenceRefs de sem-budget-daily-total => sigue exigiendo cita (aviso)",
       fn: () => {
         const context = baseContext();
         const budgetItem = catalogItem(context, "sem-budget-daily-total");
@@ -605,10 +626,14 @@ export function runSemSpecialistOutputTests(): TestCase[] {
             }),
           ],
         });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        // CONTRATO NUEVO (ver SemClaimAudit): una cifra REAL del catalogo
+        // mal citada es un AVISO, no un rechazo. Solo una cifra que no
+        // existe en NINGUNA entrada del catalogo descarta la salida.
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "la cifra existe en el catalogo: nunca es fabricacion");
         assert.ok(
-          violations.some((v) => /presupuesto/i.test(v)),
-          "una cifra real (44) sin su evidenceRef especifico (sem-budget-daily-total) sigue siendo un fallo duro"
+          uncitedClaims.some((v: string) => /presupuesto/i.test(v)),
+          "una cifra real (44) sin su evidenceRef especifico (sem-budget-daily-total) sigue exigiendo su cita, ahora como aviso"
         );
       },
     },
@@ -684,7 +709,7 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "REGRESION run 31890935474: la exencion es SOLO para unidades de tiempo -- '7 campanas' sin citar sigue siendo violacion",
+      name: "REGRESION run 31890935474: la exencion es SOLO para unidades de tiempo -- '7 campanas' sin citar sigue exigiendo cita (aviso)",
       fn: () => {
         const context = baseContext();
         // "7" SI tiene entrada en el catalogo (sem-total-campaigns), asi
@@ -693,8 +718,12 @@ export function runSemSpecialistOutputTests(): TestCase[] {
         const output = baseOutput({
           budgetObservations: [emptyFinding({ description: "Sin gasto real registrado, si se activaran las 7 campanas.", evidenceRefs: [] })],
         });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.length > 0, "un recuento SI citable sigue exigiendo cita explicita");
+        // CONTRATO NUEVO (ver SemClaimAudit): una cifra REAL del catalogo
+        // mal citada es un AVISO, no un rechazo. Solo una cifra que no
+        // existe en NINGUNA entrada del catalogo descarta la salida.
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "la cifra existe en el catalogo: nunca es fabricacion");
+        assert.ok(uncitedClaims.length > 0, "un recuento SI citable sigue exigiendo cita explicita");
       },
     },
     {
@@ -754,6 +783,73 @@ export function runSemSpecialistOutputTests(): TestCase[] {
         assert.deepEqual(violations, [], `un CPC REAL citado correctamente no debe rechazarse: ${JSON.stringify(violations)}`);
       },
     },
+    // --- Dos severidades: fabricacion (dura) vs cita que falta (aviso) ---
+    //
+    // POR QUE (fallo real, pasada 31962578324): sem-specialist era el
+    // UNICO especialista cuya salida entera se descartaba por una sola
+    // cifra sin citar. Con el mismo codigo y la misma cuenta, la pasada
+    // 31961151666 salio con 0 y la 31962578324 con 1 -- o sea, el
+    // departamento perdia SEM de forma intermitente por higiene de
+    // citacion, no por fabricacion. SEO/Content/Analytics emiten avisos y
+    // siguen contando como `executed`; SEM ahora tambien, PERO solo para
+    // cifras que existen de verdad en el catalogo.
+    {
+      name: "SEVERIDAD: una cifra que NO existe en el catalogo es FABRICACION -- fallo duro, nunca un aviso",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: "El gasto acumulado es de 12345 € en la ventana.", evidenceRefs: [] })],
+        });
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.ok(fabricatedClaims.some((v) => /gasto/i.test(v)), "12345 no existe en el catalogo: es fabricacion");
+        assert.deepEqual(uncitedClaims, [], "una cifra inventada nunca puede degradarse a aviso");
+        // Y la funcion de compatibilidad sigue devolviendo SOLO las duras.
+        assert.deepEqual(auditSemSpecialistOutputForUnsupportedClaims(context, output), fabricatedClaims);
+      },
+    },
+    {
+      name: "SEVERIDAD: una cifra REAL del catalogo sin citar es un AVISO, y el aviso dice QUE entrada citar",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: `El presupuesto diario total es de ${budgetItem.value} €.`, evidenceRefs: [] })],
+        });
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, []);
+        assert.equal(uncitedClaims.length, 1);
+        assert.ok(uncitedClaims[0].includes(budgetItem.id), "el aviso debe nombrar la entrada exacta que falta por citar");
+        assert.ok(/no es fabricacion/i.test(uncitedClaims[0]), "el aviso debe dejar claro que la cifra es real");
+      },
+    },
+    {
+      name: "SEVERIDAD: para CPC/ROAS la excepcion se mantiene -- una cifra de CPC sin entrada de esa categoria sigue siendo FABRICACION",
+      fn: () => {
+        const context = baseContext();
+        // 7 existe en el catalogo, pero como sem-total-campaigns (categoria
+        // "other"). Para CPC solo valen entradas de categoria cpc, y aqui
+        // no hay ninguna numerica -- asi que sigue siendo fallo duro.
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El CPC medio es de 7 €.", evidenceRefs: [] })],
+        });
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.ok(fabricatedClaims.some((v) => /CPC/i.test(v)), "una cifra de CPC nunca puede degradarse a aviso mientras el catalogo solo tenga la centinela");
+        assert.deepEqual(uncitedClaims, []);
+      },
+    },
+    {
+      name: "SEVERIDAD: una salida sin cifras problematicas no genera ni violaciones ni avisos",
+      fn: () => {
+        const context = baseContext();
+        const budgetItem = catalogItem(context, "sem-budget-daily-total");
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: `El presupuesto diario total es de ${budgetItem.value} €.`, evidenceRefs: [budgetItem.id] })],
+          evidence: [evidenceFromCatalog(budgetItem)],
+        });
+        assert.deepEqual(auditSemSpecialistOutput(context, output), { fabricatedClaims: [], uncitedClaims: [] });
+      },
+    },
+
     // --- REGRESION run 31960785519: recuentos de listas citables ---
     //
     // El catalogo prometia que "cada numero real del contexto tiene ya su
@@ -809,14 +905,18 @@ export function runSemSpecialistOutputTests(): TestCase[] {
       },
     },
     {
-      name: "REGRESION run 31960785519: la exencion es SOLO para 'primaria/principal' -- '3 conversiones registradas' sin citar sigue siendo violacion",
+      name: "REGRESION run 31960785519: la exencion es SOLO para 'primaria/principal' -- '3 conversiones registradas' sin citar sigue exigiendo cita (aviso)",
       fn: () => {
         const context = baseContext();
         const output = baseOutput({
           conversionRiskFindings: [emptyFinding({ description: "Se han registrado 3 conversiones registradas en la ventana.", evidenceRefs: [] })],
         });
-        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
-        assert.ok(violations.some((v) => /conversiones/i.test(v)), "una conversion MEDIDA sin respaldo sigue siendo un fallo duro");
+        // CONTRATO NUEVO (ver SemClaimAudit): una cifra REAL del catalogo
+        // mal citada es un AVISO, no un rechazo. Solo una cifra que no
+        // existe en NINGUNA entrada del catalogo descarta la salida.
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "la cifra existe en el catalogo: nunca es fabricacion");
+        assert.ok(uncitedClaims.some((v) => /conversiones/i.test(v)), "una conversion MEDIDA sin respaldo sigue siendo un fallo duro");
       },
     },
     {

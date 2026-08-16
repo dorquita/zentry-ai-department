@@ -333,11 +333,21 @@ Toda afirmacion cuantitativa sobre CUALQUIERA de estas categorias --
 clics, porcentajes, importes (en EUR o cualquier moneda) y
 volumenes/cantidades** -- DEBE tener al menos un `id` de `evidence[]` en
 su `evidenceRefs` que apunte a una entrada de `evidenceCatalog` de la
-categoria correcta y con ese numero exacto. Se audita de forma
-automatica, estricta y fail-closed: una sola cifra sin ese respaldo
-rechaza la salida ENTERA (`status: "invalid_output"`), no solo esa frase
--- este chequeo NO se relaja nunca, ni aunque la cifra "parezca
-razonable" o "casi seguro" venga del contexto.
+categoria correcta y con ese numero exacto.
+
+La auditoria automatica distingue DOS casos, y la diferencia importa:
+
+- **Cifra que NO existe en `evidenceCatalog` = fabricacion.** Fallo DURO:
+  rechaza la salida ENTERA (`status: "invalid_output"`), no solo esa
+  frase. Esto NO se relaja nunca, ni aunque la cifra "parezca razonable"
+  o "casi seguro" venga del contexto. Cualquier cifra de CPC o de ROAS
+  cuando el catalogo solo trae su centinela `not_available` cae SIEMPRE
+  aqui.
+- **Cifra que SI existe en el catalogo pero que esa afirmacion no cito en
+  su `evidenceRefs` = cita que falta.** Se reporta como AVISO y queda
+  registrada en el artifact para que se corrija, sin descartar el
+  analisis. Que no descarte la salida NO la convierte en aceptable: sigue
+  siendo un defecto tuyo y el objetivo es cero avisos.
 
 Antes de devolver tu respuesta, repasa CADA numero que hayas escrito en
 `summary`, en cualquier `title`/`description` de los 7 arrays de

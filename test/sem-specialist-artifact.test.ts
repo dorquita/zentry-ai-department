@@ -91,7 +91,7 @@ export function runSemSpecialistArtifactTests(): TestCase[] {
       name: "buildSemRunnerResultSummary (executed): unsupportedClaimCount siempre 0 (una violacion fuerza invalid_output, nunca executed)",
       fn: () => {
         const context = baseContext();
-        const result: SemResult = { status: "executed", output: emptyOutput() };
+        const result: SemResult = { status: "executed", output: emptyOutput(), uncitedClaims: [] };
         const summary = buildSemRunnerResultSummary(context, PATHS, result);
         assert.equal(summary.status, "executed");
         assert.equal(summary.unsupportedClaimCount, 0);
@@ -142,7 +142,7 @@ export function runSemSpecialistArtifactTests(): TestCase[] {
         const context = baseContext();
         const output = emptyOutput();
         output.campaignFindings = [{ title: "Hallazgo", description: "Detalle.", evidenceRefs: [], severity: "high" }];
-        const artifact = buildSemSpecialistArtifact(context, { status: "executed", output });
+        const artifact = buildSemSpecialistArtifact(context, { status: "executed", output, uncitedClaims: [] });
         const md = renderSemSpecialistMarkdown(artifact);
         assert.ok(md.includes(output.summary));
         assert.ok(md.includes("sin dato suficiente para X"));
@@ -167,7 +167,7 @@ export function runSemSpecialistArtifactTests(): TestCase[] {
       name: "renderSemSpecialistMarkdown siempre incluye la nota de solo lectura/propuesta (ninguna escritura a Google Ads)",
       fn: () => {
         const mdNoData = renderSemSpecialistMarkdown(buildSemSpecialistArtifact(null, { status: "no_data" }));
-        const mdExecuted = renderSemSpecialistMarkdown(buildSemSpecialistArtifact(baseContext(), { status: "executed", output: emptyOutput() }));
+        const mdExecuted = renderSemSpecialistMarkdown(buildSemSpecialistArtifact(baseContext(), { status: "executed", output: emptyOutput(), uncitedClaims: [] }));
         for (const md of [mdNoData, mdExecuted]) {
           assert.match(md, /NUNCA modifica campanas, presupuestos, keywords ni anuncios/);
         }

@@ -410,14 +410,45 @@ function collectClaimTexts(output: SemSpecialistOutput): ClaimText[] {
 }
 
 /**
- * Auditoria FAIL-CLOSED de afirmaciones cuantitativas sin respaldo. Un
- * array vacio significa "sin violaciones" -- cualquier entrada devuelta
- * aqui debe tratarse como un fallo DURO por quien la llama (nunca un
- * simple aviso), ver cabecera de esta seccion.
+ * Resultado de la auditoria, separado en dos severidades DISTINTAS.
+ *
+ * POR QUE SE SEPARAN (diferencia estructural real frente a SEO/Analytics/
+ * Content, y causa de que SEM fuera el unico especialista que perdia
+ * pasadas enteras): hasta ahora CUALQUIER hallazgo de esta auditoria
+ * tiraba la salida COMPLETA a `invalid_output`. Los otros tres
+ * especialistas emiten `auditWarnings` y siguen contando como
+ * `executed` -- en la pasada 31961151666, analytics emitio 5 avisos y
+ * content 1, y ambos entregaron su analisis.
+ *
+ * Pero "SEM no inventa cifras" y "SEM cito mal una cifra REAL" no son el
+ * mismo problema:
+ *
+ * - `fabricatedClaims`: la cifra NO existe en el evidenceCatalog. Es
+ *   exactamente lo que la mision del empleado prohibe ("NO inventa CPC,
+ *   conversiones, ROAS ni gasto"). Sigue siendo un fallo DURO: la salida
+ *   entera se descarta, sin excepciones.
+ * - `uncitedClaims`: la cifra SI existe en el catalogo -- es un dato real
+ *   de la cuenta -- pero la afirmacion concreta no listo su `id` en su
+ *   propio `evidenceRefs`. Eso es higiene de citacion, no fabricacion:
+ *   tirar por eso un analisis con decenas de hallazgos correctos hacia
+ *   que el departamento perdiera SEM de forma intermitente (2026-08-16:
+ *   la pasada 31961151666 salio con 0 y la 31962578324 con 1, con el
+ *   mismo codigo y la misma cuenta). Se reporta como AVISO, visible en
+ *   el artifact y en el brief, y no descarta nada.
  */
-export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecialistContext, output: SemSpecialistOutput): string[] {
+export interface SemClaimAudit {
+  fabricatedClaims: string[];
+  uncitedClaims: string[];
+}
+
+/**
+ * Auditoria completa. Ver SemClaimAudit para la diferencia entre las dos
+ * severidades y por que existe.
+ */
+export function auditSemSpecialistOutput(context: SemSpecialistContext, output: SemSpecialistOutput): SemClaimAudit {
   const catalog = context.evidenceCatalog;
   const violations: string[] = [];
+  const uncited: string[] = [];
 
   // Cada entrada de evidence[] debe coincidir EXACTAMENTE (id+contextField+value)
   // con una entrada del evidenceCatalog determinista -- nunca una
@@ -476,16 +507,36 @@ export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecial
         const candidates = resolveClaimCandidateEntries(category.id, pool);
         if (findMatchingCatalogEntry(numberRaw, candidates)) continue;
 
+        // La cifra no esta respaldada por lo que ESTA afirmacion cita.
+        // Antes de tratarlo como fabricacion hay que mirar el catalogo
+        // COMPLETO (con la misma restriccion de categoria para cpc/roas):
+        // si la cifra existe ahi, es un dato REAL de la cuenta mal citado,
+        // no un numero inventado. Ver SemClaimAudit.
+        const existsInCatalog = findMatchingCatalogEntry(numberRaw, resolveClaimCandidateEntries(category.id, catalog));
+
+        if (existsInCatalog) {
+          uncited.push(
+            `Afirmacion cuantitativa (${category.label}) "${match[0].trim()}" en "${claim.field}": la cifra es REAL (coincide con "${existsInCatalog.id}" del evidenceCatalog) pero esa entrada NO aparece en el evidenceRefs de esta afirmacion. No es fabricacion -- es una cita que falta. Anade "${existsInCatalog.id}" a evidenceRefs (y copia la entrada a evidence[]) para que la trazabilidad quede completa.`
+          );
+          continue;
+        }
+
         violations.push(
-          claim.canCiteEvidence
-            ? `Afirmacion cuantitativa (${category.label}) "${match[0].trim()}" en "${claim.field}" no tiene ninguna evidenceRefs citada cuyo value coincida con esa cifra -- toda cifra de CPC/conversiones/ROAS/gasto/presupuesto necesita una entrada exacta del evidenceCatalog, referenciada explicitamente en evidenceRefs (para CPC/ROAS, ademas, esa entrada debe ser realmente de esa categoria -- hoy el catalogo solo tiene la entrada "not_available" para cada una).`
-            : `Afirmacion cuantitativa sin respaldo (${category.label}): "${match[0].trim()}" en "${claim.field}" -- ese numero no aparece en el evidenceCatalog del snapshot suministrado. Prohibido inventar CPC/conversiones/ROAS/gasto/presupuesto (para CPC/ROAS, hoy el catalogo solo tiene la entrada "not_available" -- ninguna cifra numerica de esas 2 categorias puede tener respaldo real todavia).`
+          `Afirmacion cuantitativa SIN RESPALDO (${category.label}): "${match[0].trim()}" en "${claim.field}" -- ese numero no aparece en NINGUNA entrada del evidenceCatalog del snapshot suministrado. Prohibido inventar CPC/conversiones/ROAS/gasto/presupuesto (para CPC/ROAS, cuando el catalogo solo trae la entrada "not_available", ninguna cifra numerica de esas categorias puede tener respaldo).`
         );
       }
     }
   }
 
-  return violations;
+  return { fabricatedClaims: violations, uncitedClaims: uncited };
+}
+
+/**
+ * Compatibilidad: solo las violaciones DURAS (cifras fabricadas). Las
+ * citas que faltan se obtienen con `auditSemSpecialistOutput()`.
+ */
+export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecialistContext, output: SemSpecialistOutput): string[] {
+  return auditSemSpecialistOutput(context, output).fabricatedClaims;
 }
 
 // --- Resultado del runner + artefacto -------------------------------------
@@ -496,7 +547,7 @@ export type SemResult =
   | { status: "no_data" }
   | { status: "pending_execution"; promptFilePath: string }
   | { status: "invalid_output"; error: string; rawOutputPath: string; violations: string[] }
-  | { status: "executed"; output: SemSpecialistOutput };
+  | { status: "executed"; output: SemSpecialistOutput; uncitedClaims: string[] };
 
 /**
  * Contrato machine-readable que imprime el runner al final de cada
@@ -513,8 +564,14 @@ export interface SemRunnerResultSummary {
   expectedOutputPath: string;
   artifactJsonPath: string;
   artifactMdPath: string;
-  /** null salvo que status sea "executed" (siempre 0 en ese caso -- una violacion fuerza invalid_output) o "invalid_output" (numero real de violaciones). */
+  /** null salvo que status sea "executed" (siempre 0 en ese caso -- una cifra FABRICADA fuerza invalid_output) o "invalid_output" (numero real de cifras fabricadas). */
   unsupportedClaimCount: number | null;
+  /**
+   * Citas que faltan: cifras REALES del catalogo que su afirmacion no
+   * referencio en evidenceRefs. Son AVISOS, nunca descartan la salida
+   * (ver SemClaimAudit). null salvo en "executed"/"invalid_output".
+   */
+  uncitedClaimCount: number | null;
 }
 
 export function buildSemRunnerResultSummary(
@@ -532,6 +589,7 @@ export function buildSemRunnerResultSummary(
     artifactJsonPath: paths.artifactJsonPath,
     artifactMdPath: paths.artifactMdPath,
     unsupportedClaimCount: result.status === "invalid_output" ? result.violations.length : result.status === "executed" ? 0 : null,
+    uncitedClaimCount: result.status === "executed" ? result.uncitedClaims.length : result.status === "invalid_output" ? 0 : null,
   };
 }
 
@@ -605,6 +663,14 @@ export function renderSemSpecialistMarkdown(artifact: SemSpecialistArtifact): st
     lines.push("");
   } else if (artifact.result.status === "executed") {
     const o = artifact.result.output;
+    if (artifact.result.uncitedClaims.length > 0) {
+      // Avisos, NO un rechazo: la cifra es real, solo falta su cita. Se
+      // muestran arriba del todo para que se corrijan, sin tirar el
+      // analisis (ver SemClaimAudit).
+      lines.push(`**Avisos de citacion (${artifact.result.uncitedClaims.length}) -- cifras REALES del snapshot que su afirmacion no cito en evidenceRefs. Ninguna es una cifra inventada:**`);
+      for (const w of artifact.result.uncitedClaims) lines.push(`- ${w}`);
+      lines.push("");
+    }
     lines.push("## Resumen");
     lines.push("");
     lines.push(o.summary);
