@@ -1,0 +1,7 @@
+{
+  "authorizedBy": "pau",
+  "authorization": "Aprobacion humana para UN E2E reversible sobre STAGING del fallback execute-php. No autoriza produccion.",
+  "mode": "list",
+  "postId": 0,
+  "note": "mode=list solo LEE y lista paginas candidatas de staging. Para ejecutar el E2E: poner mode=run y el postId elegido, y volver a commitear. Cada cambio de este fichero es la autorizacion auditable de esa ejecucion concreta."
+}

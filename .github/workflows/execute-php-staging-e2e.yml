@@ -1,0 +1,132 @@
+name: execute-php -- E2E reversible en STAGING
+
+# E2E del fallback controlado `novamira/execute-php`. Ver
+# docs/execute-php-fallback.md.
+#
+# QUE HACE: sobre UNA pagina publicada de staging, cambia una frase
+# (post_excerpt), lo valida releyendo por un camino distinto al de la
+# escritura, y lo REVIERTE dejando la pagina byte a byte como estaba.
+#
+# ESCRITURAS: 2 en staging (el cambio y su reversion). 0 en produccion.
+# El guard bloquea produccion de forma incondicional y el executor no
+# tiene ninguna via para alcanzarla.
+#
+# QUE SE EJECUTA lo decide reports/execute-php-e2e/e2e-request.json, que
+# esta commiteado: `mode: list` solo lee; `mode: run` + `postId` ejecuta
+# el E2E sobre esa pagina. Cada modificacion de ese fichero queda en el
+# historial de git, asi que la autorizacion de cada ejecucion concreta es
+# auditable y no depende de quien pulse un boton.
+#
+# SOBRE EL TRIGGER `push`: GitHub solo permite `workflow_dispatch` para
+# workflows que YA existen en la rama por defecto. Mientras esta rama no
+# este mergeada, `push` es la unica forma de ejecutarlo. Esta acotado a
+# ESTA rama y a ESE unico fichero de peticion. Al mergear a main,
+# `workflow_dispatch` pasa a funcionar y este bloque `push` debe
+# eliminarse.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "list (solo lectura) | run (E2E completo)"
+        required: true
+        default: "list"
+        type: choice
+        options: ["list", "run"]
+      postId:
+        description: "ID de la pagina de staging (solo para mode=run)"
+        required: false
+        type: string
+  push:
+    branches: ["claude/daily-brief-decisions-7jf47i"]
+    paths: ["reports/execute-php-e2e/e2e-request.json"]
+
+concurrency:
+  group: execute-php-staging-e2e
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: E2E reversible en staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolver la peticion (fichero commiteado o inputs del dispatch)
+        id: request
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.mode }}" ]; then
+            MODE="${{ inputs.mode }}"
+            POST_ID="${{ inputs.postId }}"
+          else
+            MODE=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").mode)')
+            POST_ID=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").postId)')
+          fi
+          if [ "$MODE" != "list" ] && [ "$MODE" != "run" ]; then
+            echo "mode=\"$MODE\" desconocido. Fail-closed: no se ejecuta nada."
+            exit 1
+          fi
+          if [ "$MODE" = "run" ] && { [ -z "$POST_ID" ] || [ "$POST_ID" = "0" ]; }; then
+            echo "mode=run sin postId. Fail-closed: no se escribe en una pagina que nadie ha elegido."
+            exit 1
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "postId=$POST_ID" >> "$GITHUB_OUTPUT"
+          echo "Modo resuelto: $MODE (postId=$POST_ID)."
+
+      - name: E2E
+        run: |
+          set -o pipefail
+          if [ "$MODE" = "list" ]; then
+            npx ts-node scripts/o47-execute-php-e2e.ts --mode list
+          else
+            npx ts-node scripts/o47-execute-php-e2e.ts --mode run --postId "$POST_ID"
+          fi
+        env:
+          MODE: ${{ steps.request.outputs.mode }}
+          POST_ID: ${{ steps.request.outputs.postId }}
+          # Entorno: STAGING y nada mas. Ninguna variable de produccion se
+          # expone a este job, ni siquiera apagada.
+          WORDPRESS_ENV: staging
+          # Los DOS interruptores del fallback. Apagar cualquiera lo desactiva.
+          NOVAMIRA_STAGING_WRITES_ENABLED: "true"
+          NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED: "true"
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
+          WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+
+      - name: Subir el informe del E2E
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: execute-php-e2e
+          path: reports/execute-php-e2e/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Resumen
+        if: always()
+        run: |
+          {
+            echo "## execute-php -- E2E en STAGING"
+            echo ""
+            echo "- **Modo:** \`${{ steps.request.outputs.mode }}\`"
+            echo "- **postId:** \`${{ steps.request.outputs.postId }}\`"
+            echo "- **Escrituras en produccion:** 0 (el guard bloquea produccion de forma incondicional)"
+            echo ""
+            echo "El detalle (BEFORE, cambio temporal, AFTER, reversion y read-back final) esta en el log del step \"E2E\" y en el artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
