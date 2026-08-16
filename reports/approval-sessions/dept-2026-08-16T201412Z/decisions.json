@@ -1,0 +1,9 @@
+[
+  { "number": 1, "action": "approve", "target": "staging" },
+  { "number": 2, "action": "defer" },
+  { "number": 3, "action": "approve", "target": "staging" },
+  { "number": 4, "action": "defer" },
+  { "number": 5, "action": "approve", "target": "staging" },
+  { "number": 6, "action": "approve", "target": "staging" },
+  { "number": 7, "action": "approve", "target": "staging" }
+]

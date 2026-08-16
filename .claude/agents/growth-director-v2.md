@@ -206,6 +206,65 @@ cumple el proposito de este agente, aunque el JSON sea valido. Usa
 de otra prioridad, o una condicion externa (p.ej. "aprobacion humana de
 la work order X").
 
+## Toda prioridad que EDITA algo declara su puerta de aprobacion
+
+Correccion exigida por `qa-reviewer` en la pasada
+`dept-2026-08-16T201412Z`, que dejo dos prioridades en `BLOCKED` por
+este motivo exacto: "Anadir explicitamente en las recomendaciones
+'Ejecutar los 6 quick wins SEO en posiciones 17-29' y 'Auditar y
+reescribir meta titles/descriptions ante el patron sistemico de CTR 0%'
+que su ejecucion sobre paginas de produccion requiere pasar por el
+pipeline de change-pack/aprobacion humana existente."
+
+La regla, a partir de aqui: si la ejecucion real de una prioridad
+implica **tocar una pagina** (editar, reescribir, optimizar on-page,
+cambiar meta title/description, redirigir, publicar), su `dependsOn`
+DEBE incluir una entrada que nombre explicitamente esa puerta -- el
+pipeline de change-pack y la aprobacion humana explicita. Por ejemplo:
+
+```json
+"dependsOn": [
+  "aprobacion humana explicita (pipeline de change-pack) antes de editar ninguna pagina"
+]
+```
+
+No es una formula magica ni hace falta copiarla literal: basta con que
+la entrada nombre la aprobacion humana y/o el change pack. Lo que NO
+vale es dejarlo implicito. Que el departamento entero sea
+READ/ANALYZE/PROPOSE no exime a la prioridad de decirlo: quien lee el
+Daily Brief lee la prioridad, no la arquitectura.
+
+Una prioridad de solo investigar/medir/validar (sin escritura) no
+necesita declararlo. `auditGrowthDirectorV2Output` (fuera de tu
+alcance) emite un aviso cuando una prioridad suena a escritura y no
+declara la puerta -- ese aviso viaja al Daily Brief.
+
+## Cifras y decisiones humanas: cita siempre de donde salen
+
+Tres correcciones mas exigidas por `qa-reviewer` en la misma pasada,
+las tres sobre lo mismo -- afirmar algo sin dejar rastro de su origen:
+
+1. **`evidence[]` autocontenido.** Cada `ref` que cites en
+   `currentSignals`, `bottlenecks`, `opportunities`, `experiments`,
+   `recommendedPriorities` y `risks` debe tener su entrada en TU
+   `evidence[]`. Si el ref viene del `evidenceCatalog` del contexto,
+   copia ahi su descripcion: quien lee tu salida no tiene delante el
+   contexto. Un `evidence[]` con una entrada y decenas de refs
+   distintos es exactamente el hallazgo que QA marco.
+2. **Cifras del backlog operativo con fuente.** Cuando cites numeros de
+   acciones vivas, work orders, change packs, approval requests o jobs,
+   di de que resumen del contexto salen (`actionsSummary`,
+   `workOrdersSummary`, `changePacksSummary`, `approvalRequestsSummary`,
+   `jobsSummary`) y anade el `evidenceRef` correspondiente. Sin eso es
+   una cifra sin trazabilidad, aunque sea correcta.
+3. **Decisiones humanas previas: cita el registro.** Si te apoyas en una
+   decision humana anterior (un rechazo, una aprobacion), su evidencia
+   es el registro append-only de decisiones del departamento
+   (`data/department-human-decisions.jsonl`), que llega a tu prompt como
+   feedback humano previo. Cita esa procedencia en la entrada de
+   `evidence[]`. No reconstruyas de memoria una cita textual ni un
+   timestamp que no tengas delante.
+
 ## Dependencias ausentes: declaralas, no las rellenes
 
 Revisa `knownDependencies` del contexto. Para CADA dependencia con

@@ -182,6 +182,86 @@ export function runGrowthDirectorV2DomainTests(): TestCase[] {
       },
     },
 
+    // --- auditGrowthDirectorV2Output: toda prioridad que ESCRIBE declara su puerta de aprobacion ---
+    // Correccion exigida por qa-reviewer en dept-2026-08-16T201412Z, donde
+    // las dos prioridades que no lo declaraban quedaron BLOCKED y la que si
+    // lo declaraba (en dependsOn) paso.
+    {
+      name: "auditGrowthDirectorV2Output marca una prioridad que edita paginas y no declara la puerta de aprobacion",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          recommendedPriorities: [
+            {
+              title: "Auditar y reescribir meta titles/descriptions ante el patron sistemico de CTR 0%",
+              rationale: "17 de 18 actionItems muestran CTR 0% incluso cerca de top 10.",
+              impact: "medium",
+              confidence: "medium",
+              effort: "medium",
+              dependsOn: [],
+              evidenceRefs: ["actions-live"],
+            },
+          ],
+        });
+        const warnings = auditGrowthDirectorV2Output(context, output);
+        assert.ok(
+          warnings.some((w) => /pipeline de change-pack \/ aprobacion humana explicita/.test(w)),
+          `deberia avisar de la puerta de aprobacion no declarada: ${JSON.stringify(warnings)}`
+        );
+      },
+    },
+    {
+      name: "auditGrowthDirectorV2Output NO marca nada si la prioridad que escribe declara la puerta en dependsOn",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          recommendedPriorities: [
+            {
+              title: "Ejecutar los 6 quick wins SEO en posiciones 17-29",
+              rationale: "Seis keywords a poca distancia de top 10 segun Search Console.",
+              impact: "high",
+              confidence: "high",
+              effort: "medium",
+              dependsOn: ["aprobacion humana explicita (pipeline de change-pack) antes de editar ninguna pagina"],
+              evidenceRefs: ["actions-live"],
+            },
+          ],
+        });
+        const warnings = auditGrowthDirectorV2Output(context, output);
+        assert.deepEqual(warnings, []);
+      },
+    },
+    {
+      name: "auditGrowthDirectorV2Output NO marca la puerta de aprobacion en una prioridad de solo investigar/medir",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          recommendedPriorities: [
+            {
+              title: "Validar el evento click_phone y confirmar la publicacion real del contenedor GTM",
+              rationale: "Es el unico evento clave con 0 ocurrencias pese a tag y trigger activos.",
+              impact: "high",
+              confidence: "medium",
+              effort: "low",
+              dependsOn: [],
+              evidenceRefs: ["actions-live"],
+            },
+            {
+              title: "Investigar cobertura de keywords de alta prioridad sin cluster",
+              rationale: "Dos keywords comerciales de prioridad alta sin ningun cluster que las cubra.",
+              impact: "medium",
+              confidence: "medium",
+              effort: "low",
+              dependsOn: [],
+              evidenceRefs: ["actions-live"],
+            },
+          ],
+        });
+        const warnings = auditGrowthDirectorV2Output(context, output);
+        assert.deepEqual(warnings, []);
+      },
+    },
+
     // --- auditGrowthDirectorV2Output: anti-fabricacion de dependencias ausentes ---
     {
       name: "auditGrowthDirectorV2Output marca una dependencia ausente conocida que la salida no reconoce",

@@ -1,0 +1,616 @@
+{
+  "contractVersion": "department-apply/v2",
+  "departmentRunId": "dept-2026-08-16T201412Z",
+  "generatedAt": "2026-08-16T20:35:05.581Z",
+  "items": [
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-16T201412Z#apply-1",
+      "recommendationId": "dept-2026-08-16T201412Z#rec-1",
+      "recommendationRank": 1,
+      "departmentRunId": "dept-2026-08-16T201412Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Corregir enrutado y canibalizacion SEO antes de invertir mas esfuerzo",
+      "target": "https://staging.zentrylockers.com/cerraduras-para-taquillas/ | https://staging.zentrylockers.com/cerraduras-inteligentes-taquillas/ | https://staging.zentrylockers.com/taquillas-melamina/ | https://staging.zentrylockers.com/taquillas-melamina-fenolico/ | https://staging.zentrylockers.com/taquillas-metalicas/ | pagina de taquillas para universidades (identificador/slug sin confirmar, no aparece en el inventario de staging de esta pasada) | https://staging.zentrylockers.com/taquillas-para-gimnasios/ | pagina o articulo para la keyword lockers inteligentes (sin pagina confirmada; posible candidata no confirmada: https://staging.zentrylockers.com/taquillas-inteligentes/) | articulo nuevo propuesto sobre fenolicas con perfil (slug sin definir, pendiente decision de marca) | meta title y meta description (Yoast SEO) | contenido principal de la pagina (secciones/encabezados descriptivos) | sistema de redirecciones del sitio | contenedor de Google Tag Manager | evento de analitica click_phone / CTA de telefono | checklist de calidad visual y de contenido de paginas en staging | brief editorial para articulo de blog nuevo",
+      "proposedChange": "seo-specialist identifica 2 keywords apuntando a una URL retirada (/cerraduras/, redirigida 301) y 2 keywords de melamina mal enrutadas a taquillas-melamina-fenolico en contra de una decision de arquitectura ya documentada; resolverlo es de bajo esfuerzo y evita desperdiciar trabajo de optimizacion en URLs que no serviran al usuario.",
+      "evidenceRefs": [
+        "dept-seo-action-1"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "A partir de las recomendaciones aprobadas por Growth+QA en esta pasada coordinada, la especificacion cubre tres frentes: (1) corregir el enrutado SEO de 4 keywords -- 2 apuntando a la URL retirada /cerraduras/ y 2 de melamina mal enrutadas a /taquillas-melamina-fenolico/ -- alineandolas con paginas vigentes; (2) validar, sin modificar nada aun, la fiabilidad del tracking de conversion (evento click_phone y estado real de publicacion del contenedor GTM) antes de apoyar en el cualquier metrica de negocio; y (3) mantener explicitamente en espera la publicacion a produccion de las paginas de staging de taquillas metalicas y de universidades, respetando la decision humana previa que la rechazo por falta de iteracion visual y de contenido. Se anaden ademas dos tareas de investigacion/evaluacion (cobertura de keywords sin cluster y brief de contenido mixto) que requieren decision humana antes de cualquier produccion. Ningun cambio se ejecuta en esta fase: todo queda como especificacion pendiente de aprobacion.",
+        "proposedChanges": [
+          {
+            "description": "Auditar y corregir el enrutado de las 2 keywords que actualmente resuelven contra la URL retirada /cerraduras/ (con redireccion 301 existente), redirigiendolas o reasignando su contenido objetivo a una pagina vigente de cerraduras.",
+            "rationale": "Responde a la recomendacion aprobada 'Corregir enrutado y canibalizacion SEO antes de invertir mas esfuerzo': evita invertir esfuerzo de optimizacion sobre una URL que ya no sirve al usuario.",
+            "targetPageOrComponent": "https://staging.zentrylockers.com/cerraduras-para-taquillas/ y/o https://staging.zentrylockers.com/cerraduras-inteligentes-taquillas/ (candidatas, pendientes de confirmar cual es la correcta segun el mapping real de seo-specialist)"
+          },
+          {
+            "description": "Evaluar y, si procede, realinear el contenido/meta de las 2 keywords de melamina actualmente mal enrutadas a /taquillas-melamina-fenolico/, decidiendo si deben apuntar en su lugar a /taquillas-melamina/ para eliminar la canibalizacion detectada.",
+            "rationale": "Responde a la misma recomendacion aprobada 'Corregir enrutado y canibalizacion SEO antes de invertir mas esfuerzo', que cita explicitamente estas 2 keywords de melamina mal enrutadas.",
+            "targetPageOrComponent": "https://staging.zentrylockers.com/taquillas-melamina-fenolico/ y https://staging.zentrylockers.com/taquillas-melamina/"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Las 2 keywords que hoy apuntan a la URL retirada /cerraduras/ quedan reasignadas o redirigidas a una pagina vigente confirmada del catalogo, sin nuevos errores 404 ni bucles de redireccion.",
+          "Las 2 keywords de melamina mal enrutadas dejan de generar canibalizacion sobre /taquillas-melamina-fenolico/ y quedan alineadas con la pagina correcta segun la arquitectura de contenido aprobada.",
+          "Un clic de prueba en el CTA de telefono registra al menos una ocurrencia del evento click_phone en GA4 DebugView.",
+          "Una persona con acceso real a GTM confirma por escrito si la version live del contenedor esta publicada o pendiente de aprobacion.",
+          "Ninguna de las paginas de staging de metalicas o universidades se publica en produccion sin evidencia documentada de una segunda iteracion visual/de contenido y sin aprobacion humana explicita posterior a esa iteracion.",
+          "Queda documentado el resultado de la investigacion de cobertura para 'taquillas para gimnasios' y 'lockers inteligentes' (hueco real confirmado o cobertura ya suficiente).",
+          "Existe una decision humana registrada sobre el targetBrand del brief 'fenolicas con perfil' antes de asignar su produccion."
+        ],
+        "validationPlan": [
+          "Esta pasada coordinada no incluye stagingQaResult ni existingPageAudit (ver noConfirmedPageInventoryNotice): cualquier cambio de enrutado/contenido derivado de esta especificacion debe pasar primero por una revision de Staging QA formal antes de considerarse validado, ya que no hay un resultado previo que referenciar.",
+          "Verificar manualmente en el inventario de staging (ya usado aqui como fuente) que la pagina candidata de destino para cada keyword reasignada existe con el slug y contenido esperados antes de tocar nada.",
+          "Ejecutar la prueba de clic controlado en el CTA de telefono y confirmar en GA4 DebugView que click_phone se registra correctamente.",
+          "Solicitar a la persona responsable de GTM (referenciada como 'Pau' en el nombre de la version live) confirmacion explicita del estado de publicacion del contenedor.",
+          "Revisar visualmente las paginas de staging de metalicas y universidades contra un checklist de imagenes/fotografias antes de volver a proponer su publicacion, dado que ese fue el motivo textual del rechazo humano previo.",
+          "Revisar con seo-specialist si la investigacion de cobertura de 'taquillas para gimnasios' y 'lockers inteligentes' confirma o descarta el hueco antes de planificar contenido nuevo.",
+          "Obtener y documentar la decision humana sobre targetBrand para el brief de fenolicas con perfil antes de iniciar cualquier trabajo de redaccion."
+        ],
+        "rollbackPlan": [
+          "Antes de aplicar cualquier cambio de enrutado o de contenido en fase APPLY futura, conservar copia del contenido, meta y configuracion de redireccion actuales de cada pagina afectada para poder restaurarlos si el cambio degrada trafico o posiciones.",
+          "No se propone ninguna publicacion de las paginas de staging de metalicas/universidades en esta especificacion, por lo que no aplica rollback de produccion sobre ellas en este alcance.",
+          "No se propone ninguna modificacion del contenedor GTM en esta especificacion (solo verificacion), por lo que no hay cambio que revertir en GTM en esta fase.",
+          "Si en una fase APPLY futura se llegara a modificar el contenedor GTM, debe hacerse mediante una nueva version del contenedor para poder revertir a la version anterior sin perdida de configuracion existente."
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-16T20:35:05.581Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #1 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-16T20:35:05.581Z",
+      "updatedAt": "2026-08-16T20:35:05.581Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-16T201412Z#apply-2",
+      "recommendationId": "dept-2026-08-16T201412Z#rec-2",
+      "recommendationRank": 2,
+      "departmentRunId": "dept-2026-08-16T201412Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Ejecutar los 6 quick wins SEO en posiciones 17-29",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "Seis keywords estan a poca distancia de top 10 segun datos live de Search Console de esta misma pasada; optimizar on-page estas paginas tiene alta probabilidad de impacto medible en trafico organico en el corto plazo, una vez resuelto el enrutado previo.",
+      "evidenceRefs": [
+        "dept-seo-action-2",
+        "dept-seo-opportunity-1"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-16T20:35:05.581Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #2 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-16T20:35:05.581Z",
+      "updatedAt": "2026-08-16T20:35:05.581Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-16T201412Z#apply-3",
+      "recommendationId": "dept-2026-08-16T201412Z#rec-3",
+      "recommendationRank": 3,
+      "departmentRunId": "dept-2026-08-16T201412Z",
+      "sourceAgents": [
+        "analytics-specialist"
+      ],
+      "title": "Validar el evento click_phone y confirmar la publicacion real del contenedor GTM",
+      "target": "https://staging.zentrylockers.com/cerraduras-para-taquillas/ | https://staging.zentrylockers.com/cerraduras-inteligentes-taquillas/ | https://staging.zentrylockers.com/taquillas-melamina/ | https://staging.zentrylockers.com/taquillas-melamina-fenolico/ | https://staging.zentrylockers.com/taquillas-metalicas/ | pagina de taquillas para universidades (identificador/slug sin confirmar, no aparece en el inventario de staging de esta pasada) | https://staging.zentrylockers.com/taquillas-para-gimnasios/ | pagina o articulo para la keyword lockers inteligentes (sin pagina confirmada; posible candidata no confirmada: https://staging.zentrylockers.com/taquillas-inteligentes/) | articulo nuevo propuesto sobre fenolicas con perfil (slug sin definir, pendiente decision de marca) | meta title y meta description (Yoast SEO) | contenido principal de la pagina (secciones/encabezados descriptivos) | sistema de redirecciones del sitio | contenedor de Google Tag Manager | evento de analitica click_phone / CTA de telefono | checklist de calidad visual y de contenido de paginas en staging | brief editorial para articulo de blog nuevo",
+      "proposedChange": "analytics-specialist marca ambas acciones como prioridad alta: click_phone es el unico evento clave del catalogo con 0 ocurrencias pese a tag y trigger activos, y el nombre de la version live de GTM sugiere cambios sin publicar; ambos problemas afectan la fiabilidad de cualquier metrica de conversion usada para evaluar el resto de prioridades del departamento.",
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-3"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "A partir de las recomendaciones aprobadas por Growth+QA en esta pasada coordinada, la especificacion cubre tres frentes: (1) corregir el enrutado SEO de 4 keywords -- 2 apuntando a la URL retirada /cerraduras/ y 2 de melamina mal enrutadas a /taquillas-melamina-fenolico/ -- alineandolas con paginas vigentes; (2) validar, sin modificar nada aun, la fiabilidad del tracking de conversion (evento click_phone y estado real de publicacion del contenedor GTM) antes de apoyar en el cualquier metrica de negocio; y (3) mantener explicitamente en espera la publicacion a produccion de las paginas de staging de taquillas metalicas y de universidades, respetando la decision humana previa que la rechazo por falta de iteracion visual y de contenido. Se anaden ademas dos tareas de investigacion/evaluacion (cobertura de keywords sin cluster y brief de contenido mixto) que requieren decision humana antes de cualquier produccion. Ningun cambio se ejecuta en esta fase: todo queda como especificacion pendiente de aprobacion.",
+        "proposedChanges": [
+          {
+            "description": "Disenar el procedimiento de prueba para validar en GA4 DebugView que el tag click_phone se dispara correctamente con un clic de prueba en el CTA de telefono.",
+            "rationale": "Responde a la recomendacion aprobada 'Validar el evento click_phone y confirmar la publicacion real del contenedor GTM': es el unico evento clave del catalogo con 0 ocurrencias pese a tag/trigger activos.",
+            "targetPageOrComponent": "evento de analitica click_phone / CTA de telefono"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Las 2 keywords que hoy apuntan a la URL retirada /cerraduras/ quedan reasignadas o redirigidas a una pagina vigente confirmada del catalogo, sin nuevos errores 404 ni bucles de redireccion.",
+          "Las 2 keywords de melamina mal enrutadas dejan de generar canibalizacion sobre /taquillas-melamina-fenolico/ y quedan alineadas con la pagina correcta segun la arquitectura de contenido aprobada.",
+          "Un clic de prueba en el CTA de telefono registra al menos una ocurrencia del evento click_phone en GA4 DebugView.",
+          "Una persona con acceso real a GTM confirma por escrito si la version live del contenedor esta publicada o pendiente de aprobacion.",
+          "Ninguna de las paginas de staging de metalicas o universidades se publica en produccion sin evidencia documentada de una segunda iteracion visual/de contenido y sin aprobacion humana explicita posterior a esa iteracion.",
+          "Queda documentado el resultado de la investigacion de cobertura para 'taquillas para gimnasios' y 'lockers inteligentes' (hueco real confirmado o cobertura ya suficiente).",
+          "Existe una decision humana registrada sobre el targetBrand del brief 'fenolicas con perfil' antes de asignar su produccion."
+        ],
+        "validationPlan": [
+          "Esta pasada coordinada no incluye stagingQaResult ni existingPageAudit (ver noConfirmedPageInventoryNotice): cualquier cambio de enrutado/contenido derivado de esta especificacion debe pasar primero por una revision de Staging QA formal antes de considerarse validado, ya que no hay un resultado previo que referenciar.",
+          "Verificar manualmente en el inventario de staging (ya usado aqui como fuente) que la pagina candidata de destino para cada keyword reasignada existe con el slug y contenido esperados antes de tocar nada.",
+          "Ejecutar la prueba de clic controlado en el CTA de telefono y confirmar en GA4 DebugView que click_phone se registra correctamente.",
+          "Solicitar a la persona responsable de GTM (referenciada como 'Pau' en el nombre de la version live) confirmacion explicita del estado de publicacion del contenedor.",
+          "Revisar visualmente las paginas de staging de metalicas y universidades contra un checklist de imagenes/fotografias antes de volver a proponer su publicacion, dado que ese fue el motivo textual del rechazo humano previo.",
+          "Revisar con seo-specialist si la investigacion de cobertura de 'taquillas para gimnasios' y 'lockers inteligentes' confirma o descarta el hueco antes de planificar contenido nuevo.",
+          "Obtener y documentar la decision humana sobre targetBrand para el brief de fenolicas con perfil antes de iniciar cualquier trabajo de redaccion."
+        ],
+        "rollbackPlan": [
+          "Antes de aplicar cualquier cambio de enrutado o de contenido en fase APPLY futura, conservar copia del contenido, meta y configuracion de redireccion actuales de cada pagina afectada para poder restaurarlos si el cambio degrada trafico o posiciones.",
+          "No se propone ninguna publicacion de las paginas de staging de metalicas/universidades en esta especificacion, por lo que no aplica rollback de produccion sobre ellas en este alcance.",
+          "No se propone ninguna modificacion del contenedor GTM en esta especificacion (solo verificacion), por lo que no hay cambio que revertir en GTM en esta fase.",
+          "Si en una fase APPLY futura se llegara a modificar el contenedor GTM, debe hacerse mediante una nueva version del contenedor para poder revertir a la version anterior sin perdida de configuracion existente."
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-16T20:35:05.581Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #3 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-16T20:35:05.581Z",
+      "updatedAt": "2026-08-16T20:35:05.581Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-16T201412Z#apply-4",
+      "recommendationId": "dept-2026-08-16T201412Z#rec-4",
+      "recommendationRank": 4,
+      "departmentRunId": "dept-2026-08-16T201412Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Auditar y reescribir meta titles/descriptions ante el patron sistemico de CTR 0%",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "17 de 18 actionItems del run muestran CTR 0% incluso en posiciones cercanas a top 10, lo que apunta a un problema de mensajeria mas alla de casos aislados; corregirlo puede aumentar clics sin esperar a mover posiciones.",
+      "evidenceRefs": [
+        "dept-seo-action-3"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-16T20:35:05.581Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #4 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-16T20:35:05.581Z",
+      "updatedAt": "2026-08-16T20:35:05.581Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-16T201412Z#apply-5",
+      "recommendationId": "dept-2026-08-16T201412Z#rec-5",
+      "recommendationRank": 5,
+      "departmentRunId": "dept-2026-08-16T201412Z",
+      "sourceAgents": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "No publicar aun a produccion las paginas de staging de metalicas y universidades sin resolver la iteracion visual pendiente",
+      "target": "https://staging.zentrylockers.com/cerraduras-para-taquillas/ | https://staging.zentrylockers.com/cerraduras-inteligentes-taquillas/ | https://staging.zentrylockers.com/taquillas-melamina/ | https://staging.zentrylockers.com/taquillas-melamina-fenolico/ | https://staging.zentrylockers.com/taquillas-metalicas/ | pagina de taquillas para universidades (identificador/slug sin confirmar, no aparece en el inventario de staging de esta pasada) | https://staging.zentrylockers.com/taquillas-para-gimnasios/ | pagina o articulo para la keyword lockers inteligentes (sin pagina confirmada; posible candidata no confirmada: https://staging.zentrylockers.com/taquillas-inteligentes/) | articulo nuevo propuesto sobre fenolicas con perfil (slug sin definir, pendiente decision de marca) | meta title y meta description (Yoast SEO) | contenido principal de la pagina (secciones/encabezados descriptivos) | sistema de redirecciones del sitio | contenedor de Google Tag Manager | evento de analitica click_phone / CTA de telefono | checklist de calidad visual y de contenido de paginas en staging | brief editorial para articulo de blog nuevo",
+      "proposedChange": "seo-specialist propone publicar a produccion 2 huecos de contenido con staging aprobado visualmente, pero una decision humana previa (registrada el 2026-08-16T09:32:20.630Z) rechazo explicitamente esa misma propuesta de publicacion, indicando que las paginas se ven demasiado basicas y sin suficientes imagenes/fotografias y necesitan una segunda iteracion visual y de contenido antes de publicarse; repetir la propuesta sin abordar ese motivo arriesga otro rechazo y desperdicia el trabajo de revision.",
+      "evidenceRefs": [
+        "dept-seo-action-4",
+        "human-decision-staging-reject-v1"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "medium",
+      "confidence": "low",
+      "effort": "medium",
+      "webEngineerSpecification": {
+        "implementationSummary": "A partir de las recomendaciones aprobadas por Growth+QA en esta pasada coordinada, la especificacion cubre tres frentes: (1) corregir el enrutado SEO de 4 keywords -- 2 apuntando a la URL retirada /cerraduras/ y 2 de melamina mal enrutadas a /taquillas-melamina-fenolico/ -- alineandolas con paginas vigentes; (2) validar, sin modificar nada aun, la fiabilidad del tracking de conversion (evento click_phone y estado real de publicacion del contenedor GTM) antes de apoyar en el cualquier metrica de negocio; y (3) mantener explicitamente en espera la publicacion a produccion de las paginas de staging de taquillas metalicas y de universidades, respetando la decision humana previa que la rechazo por falta de iteracion visual y de contenido. Se anaden ademas dos tareas de investigacion/evaluacion (cobertura de keywords sin cluster y brief de contenido mixto) que requieren decision humana antes de cualquier produccion. Ningun cambio se ejecuta en esta fase: todo queda como especificacion pendiente de aprobacion.",
+        "proposedChanges": [
+          {
+            "description": "Mantener explicitamente en estado de NO publicacion a produccion las paginas de staging de taquillas metalicas y de taquillas para universidades hasta que exista evidencia de una segunda iteracion visual y de contenido, y documentar el criterio de aceptacion visual pendiente antes de volver a proponer su publicacion.",
+            "rationale": "Responde a la recomendacion aprobada 'No publicar aun a produccion las paginas de staging de metalicas y universidades sin resolver la iteracion visual pendiente', que cita directamente la decision humana previa (rechazada el 2026-08-16T09:32:20.630Z) por falta de imagenes/fotografias suficientes.",
+            "targetPageOrComponent": "https://staging.zentrylockers.com/taquillas-metalicas/ y pagina de taquillas para universidades (sin confirmar su existencia en el inventario)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Las 2 keywords que hoy apuntan a la URL retirada /cerraduras/ quedan reasignadas o redirigidas a una pagina vigente confirmada del catalogo, sin nuevos errores 404 ni bucles de redireccion.",
+          "Las 2 keywords de melamina mal enrutadas dejan de generar canibalizacion sobre /taquillas-melamina-fenolico/ y quedan alineadas con la pagina correcta segun la arquitectura de contenido aprobada.",
+          "Un clic de prueba en el CTA de telefono registra al menos una ocurrencia del evento click_phone en GA4 DebugView.",
+          "Una persona con acceso real a GTM confirma por escrito si la version live del contenedor esta publicada o pendiente de aprobacion.",
+          "Ninguna de las paginas de staging de metalicas o universidades se publica en produccion sin evidencia documentada de una segunda iteracion visual/de contenido y sin aprobacion humana explicita posterior a esa iteracion.",
+          "Queda documentado el resultado de la investigacion de cobertura para 'taquillas para gimnasios' y 'lockers inteligentes' (hueco real confirmado o cobertura ya suficiente).",
+          "Existe una decision humana registrada sobre el targetBrand del brief 'fenolicas con perfil' antes de asignar su produccion."
+        ],
+        "validationPlan": [
+          "Esta pasada coordinada no incluye stagingQaResult ni existingPageAudit (ver noConfirmedPageInventoryNotice): cualquier cambio de enrutado/contenido derivado de esta especificacion debe pasar primero por una revision de Staging QA formal antes de considerarse validado, ya que no hay un resultado previo que referenciar.",
+          "Verificar manualmente en el inventario de staging (ya usado aqui como fuente) que la pagina candidata de destino para cada keyword reasignada existe con el slug y contenido esperados antes de tocar nada.",
+          "Ejecutar la prueba de clic controlado en el CTA de telefono y confirmar en GA4 DebugView que click_phone se registra correctamente.",
+          "Solicitar a la persona responsable de GTM (referenciada como 'Pau' en el nombre de la version live) confirmacion explicita del estado de publicacion del contenedor.",
+          "Revisar visualmente las paginas de staging de metalicas y universidades contra un checklist de imagenes/fotografias antes de volver a proponer su publicacion, dado que ese fue el motivo textual del rechazo humano previo.",
+          "Revisar con seo-specialist si la investigacion de cobertura de 'taquillas para gimnasios' y 'lockers inteligentes' confirma o descarta el hueco antes de planificar contenido nuevo.",
+          "Obtener y documentar la decision humana sobre targetBrand para el brief de fenolicas con perfil antes de iniciar cualquier trabajo de redaccion."
+        ],
+        "rollbackPlan": [
+          "Antes de aplicar cualquier cambio de enrutado o de contenido en fase APPLY futura, conservar copia del contenido, meta y configuracion de redireccion actuales de cada pagina afectada para poder restaurarlos si el cambio degrada trafico o posiciones.",
+          "No se propone ninguna publicacion de las paginas de staging de metalicas/universidades en esta especificacion, por lo que no aplica rollback de produccion sobre ellas en este alcance.",
+          "No se propone ninguna modificacion del contenedor GTM en esta especificacion (solo verificacion), por lo que no hay cambio que revertir en GTM en esta fase.",
+          "Si en una fase APPLY futura se llegara a modificar el contenedor GTM, debe hacerse mediante una nueva version del contenedor para poder revertir a la version anterior sin perdida de configuracion existente."
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-16T20:35:05.581Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #5 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-16T20:35:05.581Z",
+      "updatedAt": "2026-08-16T20:35:05.581Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-16T201412Z#apply-6",
+      "recommendationId": "dept-2026-08-16T201412Z#rec-6",
+      "recommendationRank": 6,
+      "departmentRunId": "dept-2026-08-16T201412Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Investigar cobertura de keywords de alta prioridad sin cluster: taquillas para gimnasios y lockers inteligentes",
+      "target": "https://staging.zentrylockers.com/cerraduras-para-taquillas/ | https://staging.zentrylockers.com/cerraduras-inteligentes-taquillas/ | https://staging.zentrylockers.com/taquillas-melamina/ | https://staging.zentrylockers.com/taquillas-melamina-fenolico/ | https://staging.zentrylockers.com/taquillas-metalicas/ | pagina de taquillas para universidades (identificador/slug sin confirmar, no aparece en el inventario de staging de esta pasada) | https://staging.zentrylockers.com/taquillas-para-gimnasios/ | pagina o articulo para la keyword lockers inteligentes (sin pagina confirmada; posible candidata no confirmada: https://staging.zentrylockers.com/taquillas-inteligentes/) | articulo nuevo propuesto sobre fenolicas con perfil (slug sin definir, pendiente decision de marca) | meta title y meta description (Yoast SEO) | contenido principal de la pagina (secciones/encabezados descriptivos) | sistema de redirecciones del sitio | contenedor de Google Tag Manager | evento de analitica click_phone / CTA de telefono | checklist de calidad visual y de contenido de paginas en staging | brief editorial para articulo de blog nuevo",
+      "proposedChange": "Ambas son keywords objetivo comerciales de prioridad alta en el catalogo estatico sin ningun cluster ni actionItem que las cubra en este run; es un esfuerzo bajo (investigacion) con impacto potencial medio si revela un hueco real de cobertura.",
+      "evidenceRefs": [
+        "dept-seo-action-6"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "A partir de las recomendaciones aprobadas por Growth+QA en esta pasada coordinada, la especificacion cubre tres frentes: (1) corregir el enrutado SEO de 4 keywords -- 2 apuntando a la URL retirada /cerraduras/ y 2 de melamina mal enrutadas a /taquillas-melamina-fenolico/ -- alineandolas con paginas vigentes; (2) validar, sin modificar nada aun, la fiabilidad del tracking de conversion (evento click_phone y estado real de publicacion del contenedor GTM) antes de apoyar en el cualquier metrica de negocio; y (3) mantener explicitamente en espera la publicacion a produccion de las paginas de staging de taquillas metalicas y de universidades, respetando la decision humana previa que la rechazo por falta de iteracion visual y de contenido. Se anaden ademas dos tareas de investigacion/evaluacion (cobertura de keywords sin cluster y brief de contenido mixto) que requieren decision humana antes de cualquier produccion. Ningun cambio se ejecuta en esta fase: todo queda como especificacion pendiente de aprobacion.",
+        "proposedChanges": [
+          {
+            "description": "Investigar si existe contenido/pagina que cubra realmente las keywords de alta prioridad 'taquillas para gimnasios' (revisando la cobertura de la pagina existente) y 'lockers inteligentes' (sin pagina confirmada), documentando si hay un hueco real de cobertura.",
+            "rationale": "Responde a la recomendacion aprobada 'Investigar cobertura de keywords de alta prioridad sin cluster: taquillas para gimnasios y lockers inteligentes'.",
+            "targetPageOrComponent": "https://staging.zentrylockers.com/taquillas-para-gimnasios/ y keyword lockers inteligentes (sin pagina confirmada)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Las 2 keywords que hoy apuntan a la URL retirada /cerraduras/ quedan reasignadas o redirigidas a una pagina vigente confirmada del catalogo, sin nuevos errores 404 ni bucles de redireccion.",
+          "Las 2 keywords de melamina mal enrutadas dejan de generar canibalizacion sobre /taquillas-melamina-fenolico/ y quedan alineadas con la pagina correcta segun la arquitectura de contenido aprobada.",
+          "Un clic de prueba en el CTA de telefono registra al menos una ocurrencia del evento click_phone en GA4 DebugView.",
+          "Una persona con acceso real a GTM confirma por escrito si la version live del contenedor esta publicada o pendiente de aprobacion.",
+          "Ninguna de las paginas de staging de metalicas o universidades se publica en produccion sin evidencia documentada de una segunda iteracion visual/de contenido y sin aprobacion humana explicita posterior a esa iteracion.",
+          "Queda documentado el resultado de la investigacion de cobertura para 'taquillas para gimnasios' y 'lockers inteligentes' (hueco real confirmado o cobertura ya suficiente).",
+          "Existe una decision humana registrada sobre el targetBrand del brief 'fenolicas con perfil' antes de asignar su produccion."
+        ],
+        "validationPlan": [
+          "Esta pasada coordinada no incluye stagingQaResult ni existingPageAudit (ver noConfirmedPageInventoryNotice): cualquier cambio de enrutado/contenido derivado de esta especificacion debe pasar primero por una revision de Staging QA formal antes de considerarse validado, ya que no hay un resultado previo que referenciar.",
+          "Verificar manualmente en el inventario de staging (ya usado aqui como fuente) que la pagina candidata de destino para cada keyword reasignada existe con el slug y contenido esperados antes de tocar nada.",
+          "Ejecutar la prueba de clic controlado en el CTA de telefono y confirmar en GA4 DebugView que click_phone se registra correctamente.",
+          "Solicitar a la persona responsable de GTM (referenciada como 'Pau' en el nombre de la version live) confirmacion explicita del estado de publicacion del contenedor.",
+          "Revisar visualmente las paginas de staging de metalicas y universidades contra un checklist de imagenes/fotografias antes de volver a proponer su publicacion, dado que ese fue el motivo textual del rechazo humano previo.",
+          "Revisar con seo-specialist si la investigacion de cobertura de 'taquillas para gimnasios' y 'lockers inteligentes' confirma o descarta el hueco antes de planificar contenido nuevo.",
+          "Obtener y documentar la decision humana sobre targetBrand para el brief de fenolicas con perfil antes de iniciar cualquier trabajo de redaccion."
+        ],
+        "rollbackPlan": [
+          "Antes de aplicar cualquier cambio de enrutado o de contenido en fase APPLY futura, conservar copia del contenido, meta y configuracion de redireccion actuales de cada pagina afectada para poder restaurarlos si el cambio degrada trafico o posiciones.",
+          "No se propone ninguna publicacion de las paginas de staging de metalicas/universidades en esta especificacion, por lo que no aplica rollback de produccion sobre ellas en este alcance.",
+          "No se propone ninguna modificacion del contenedor GTM en esta especificacion (solo verificacion), por lo que no hay cambio que revertir en GTM en esta fase.",
+          "Si en una fase APPLY futura se llegara a modificar el contenedor GTM, debe hacerse mediante una nueva version del contenedor para poder revertir a la version anterior sin perdida de configuracion existente."
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-16T20:35:05.581Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #6 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-16T20:35:05.581Z",
+      "updatedAt": "2026-08-16T20:35:05.581Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-16T201412Z#apply-7",
+      "recommendationId": "dept-2026-08-16T201412Z#rec-7",
+      "recommendationRank": 7,
+      "departmentRunId": "dept-2026-08-16T201412Z",
+      "sourceAgents": [
+        "content-strategist"
+      ],
+      "title": "Evaluar el brief de contenido mixto sobre fenolicas con perfil antes de producirlo",
+      "target": "https://staging.zentrylockers.com/cerraduras-para-taquillas/ | https://staging.zentrylockers.com/cerraduras-inteligentes-taquillas/ | https://staging.zentrylockers.com/taquillas-melamina/ | https://staging.zentrylockers.com/taquillas-melamina-fenolico/ | https://staging.zentrylockers.com/taquillas-metalicas/ | pagina de taquillas para universidades (identificador/slug sin confirmar, no aparece en el inventario de staging de esta pasada) | https://staging.zentrylockers.com/taquillas-para-gimnasios/ | pagina o articulo para la keyword lockers inteligentes (sin pagina confirmada; posible candidata no confirmada: https://staging.zentrylockers.com/taquillas-inteligentes/) | articulo nuevo propuesto sobre fenolicas con perfil (slug sin definir, pendiente decision de marca) | meta title y meta description (Yoast SEO) | contenido principal de la pagina (secciones/encabezados descriptivos) | sistema de redirecciones del sitio | contenedor de Google Tag Manager | evento de analitica click_phone / CTA de telefono | checklist de calidad visual y de contenido de paginas en staging | brief editorial para articulo de blog nuevo",
+      "proposedChange": "content-strategist propone un articulo mixed-brand pero senala explicitamente que requiere revision manual para decidir entre Zentry y Tukandado y que no hay keywords secundarias que validen el volumen de busqueda del termino perfil; conviene una decision humana antes de invertir en la produccion del contenido.",
+      "evidenceRefs": [
+        "dept-content-summary",
+        "dept-content-risks"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "low",
+      "confidence": "low",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "A partir de las recomendaciones aprobadas por Growth+QA en esta pasada coordinada, la especificacion cubre tres frentes: (1) corregir el enrutado SEO de 4 keywords -- 2 apuntando a la URL retirada /cerraduras/ y 2 de melamina mal enrutadas a /taquillas-melamina-fenolico/ -- alineandolas con paginas vigentes; (2) validar, sin modificar nada aun, la fiabilidad del tracking de conversion (evento click_phone y estado real de publicacion del contenedor GTM) antes de apoyar en el cualquier metrica de negocio; y (3) mantener explicitamente en espera la publicacion a produccion de las paginas de staging de taquillas metalicas y de universidades, respetando la decision humana previa que la rechazo por falta de iteracion visual y de contenido. Se anaden ademas dos tareas de investigacion/evaluacion (cobertura de keywords sin cluster y brief de contenido mixto) que requieren decision humana antes de cualquier produccion. Ningun cambio se ejecuta en esta fase: todo queda como especificacion pendiente de aprobacion.",
+        "proposedChanges": [
+          {
+            "description": "Preparar el punto de decision humana (targetBrand Zentry vs Tukandado vs mixto, y confirmacion de volumen de busqueda del termino perfil) antes de encargar la produccion del brief de contenido 'Fenolicas con perfil'.",
+            "rationale": "Responde a la recomendacion aprobada 'Evaluar el brief de contenido mixto sobre fenolicas con perfil antes de producirlo', que depende explicitamente de una decision humana sobre marca.",
+            "targetPageOrComponent": "articulo nuevo propuesto sobre fenolicas con perfil (sin pagina existente)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Las 2 keywords que hoy apuntan a la URL retirada /cerraduras/ quedan reasignadas o redirigidas a una pagina vigente confirmada del catalogo, sin nuevos errores 404 ni bucles de redireccion.",
+          "Las 2 keywords de melamina mal enrutadas dejan de generar canibalizacion sobre /taquillas-melamina-fenolico/ y quedan alineadas con la pagina correcta segun la arquitectura de contenido aprobada.",
+          "Un clic de prueba en el CTA de telefono registra al menos una ocurrencia del evento click_phone en GA4 DebugView.",
+          "Una persona con acceso real a GTM confirma por escrito si la version live del contenedor esta publicada o pendiente de aprobacion.",
+          "Ninguna de las paginas de staging de metalicas o universidades se publica en produccion sin evidencia documentada de una segunda iteracion visual/de contenido y sin aprobacion humana explicita posterior a esa iteracion.",
+          "Queda documentado el resultado de la investigacion de cobertura para 'taquillas para gimnasios' y 'lockers inteligentes' (hueco real confirmado o cobertura ya suficiente).",
+          "Existe una decision humana registrada sobre el targetBrand del brief 'fenolicas con perfil' antes de asignar su produccion."
+        ],
+        "validationPlan": [
+          "Esta pasada coordinada no incluye stagingQaResult ni existingPageAudit (ver noConfirmedPageInventoryNotice): cualquier cambio de enrutado/contenido derivado de esta especificacion debe pasar primero por una revision de Staging QA formal antes de considerarse validado, ya que no hay un resultado previo que referenciar.",
+          "Verificar manualmente en el inventario de staging (ya usado aqui como fuente) que la pagina candidata de destino para cada keyword reasignada existe con el slug y contenido esperados antes de tocar nada.",
+          "Ejecutar la prueba de clic controlado en el CTA de telefono y confirmar en GA4 DebugView que click_phone se registra correctamente.",
+          "Solicitar a la persona responsable de GTM (referenciada como 'Pau' en el nombre de la version live) confirmacion explicita del estado de publicacion del contenedor.",
+          "Revisar visualmente las paginas de staging de metalicas y universidades contra un checklist de imagenes/fotografias antes de volver a proponer su publicacion, dado que ese fue el motivo textual del rechazo humano previo.",
+          "Revisar con seo-specialist si la investigacion de cobertura de 'taquillas para gimnasios' y 'lockers inteligentes' confirma o descarta el hueco antes de planificar contenido nuevo.",
+          "Obtener y documentar la decision humana sobre targetBrand para el brief de fenolicas con perfil antes de iniciar cualquier trabajo de redaccion."
+        ],
+        "rollbackPlan": [
+          "Antes de aplicar cualquier cambio de enrutado o de contenido en fase APPLY futura, conservar copia del contenido, meta y configuracion de redireccion actuales de cada pagina afectada para poder restaurarlos si el cambio degrada trafico o posiciones.",
+          "No se propone ninguna publicacion de las paginas de staging de metalicas/universidades en esta especificacion, por lo que no aplica rollback de produccion sobre ellas en este alcance.",
+          "No se propone ninguna modificacion del contenedor GTM en esta especificacion (solo verificacion), por lo que no hay cambio que revertir en GTM en esta fase.",
+          "Si en una fase APPLY futura se llegara a modificar el contenedor GTM, debe hacerse mediante una nueva version del contenedor para poder revertir a la version anterior sin perdida de configuracion existente."
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-16T20:35:05.581Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #7 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-16T20:35:05.581Z",
+      "updatedAt": "2026-08-16T20:35:05.581Z"
+    }
+  ],
+  "counts": {
+    "proposed": 0,
+    "staging_applying": 0,
+    "staging_applied": 0,
+    "staging_validation_failed": 0,
+    "staging_rolled_back": 0,
+    "awaiting_approval": 0,
+    "awaiting_rejection_reason": 0,
+    "rejected": 0,
+    "approved": 0,
+    "approval_stale": 0,
+    "production_queued": 0,
+    "production_applying": 0,
+    "production_applied": 0,
+    "production_validation_failed": 0,
+    "production_rolled_back": 0,
+    "blocked": 2,
+    "requires_manual_staging_implementation": 5
+  },
+  "externalWritesPerformed": false,
+  "productionWritesPerformed": false,
+  "applyNotAttemptedReason": "Fase de planificacion: no se ha aplicado nada todavia. El apply real en staging es la fase \"stage\"."
+}

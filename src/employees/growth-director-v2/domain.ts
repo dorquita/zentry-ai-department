@@ -183,6 +183,110 @@ function dependencyNamesMatch(outputName: string, knownName: string): boolean {
 }
 
 /**
+ * PRIORIDADES QUE ESCRIBEN: una prioridad cuya ejecucion real edita una
+ * pagina debe declarar en `dependsOn` que antes pasa por el pipeline de
+ * change-pack / aprobacion humana explicita.
+ *
+ * De donde sale esta regla: `qa-reviewer` bloqueo dos prioridades de la
+ * pasada `dept-2026-08-16T201412Z` ("Ejecutar los 6 quick wins SEO en
+ * posiciones 17-29" y "Auditar y reescribir meta titles/descriptions
+ * ante el patron sistemico de CTR 0%") con esta correccion exigida:
+ * anadir explicitamente que su ejecucion sobre paginas requiere pasar
+ * por el pipeline de change-pack/aprobacion humana existente. Una
+ * tercera prioridad de la MISMA pasada si lo declaraba en su
+ * `dependsOn` y no fue bloqueada: la diferencia entre bloquear y no
+ * bloquear estaba en una frase, asi que la frase se comprueba aqui.
+ *
+ * DELIBERADAMENTE CONSERVADORA en las dos direcciones:
+ *
+ *   - Solo se considera "prioridad que escribe" si aparece un verbo de
+ *     escritura Y un objeto web sobre el que escribir. "Investigar la
+ *     cobertura de keywords" o "validar el evento click_phone" no
+ *     disparan nada: no escriben.
+ *   - Basta con que la declaracion aparezca en `dependsOn` o en el
+ *     `rationale`: no se exige ninguna formula literal, solo que la
+ *     puerta este dicha.
+ *
+ * Como todo lo de este auditor: devuelve un AVISO para revision humana.
+ * No lanza y no bloquea nada por si sola -- quien bloquea es QA.
+ */
+const WRITE_VERB_KEYS = [
+  "ejecutar",
+  "aplicar",
+  "editar",
+  "reescribir",
+  "rescribir",
+  "escribir",
+  "actualizar",
+  "modificar",
+  "cambiar",
+  "corregir",
+  "optimizar",
+  "publicar",
+  "despublicar",
+  "redirigir",
+  "migrar",
+  "implementar",
+  "desplegar",
+];
+
+const WEB_OBJECT_KEYS = [
+  "pagina",
+  "paginas",
+  "landing",
+  "url",
+  "urls",
+  "slug",
+  "metatitle",
+  "metatitles",
+  "metadescription",
+  "metadescriptions",
+  "metas",
+  "title",
+  "titles",
+  "titulo",
+  "titulos",
+  "onpage",
+  "contenido",
+  "redireccion",
+  "redirecciones",
+  "enrutado",
+  "menu",
+  "producto",
+  "productos",
+  "articulo",
+  "articulos",
+];
+
+const APPROVAL_GATE_KEYS = [
+  "aprobacionhumana",
+  "aprobacionexplicita",
+  "aprobaciondepau",
+  "changepack",
+  "changepacks",
+  "pipelinedeaprobacion",
+  "puertadeaprobacion",
+  "decisionhumana",
+  "revisionhumana",
+];
+
+function mentionsAny(normalizedText: string, keys: string[]): boolean {
+  return keys.some((key) => normalizedText.includes(key));
+}
+
+/** `true` si la prioridad, leida literalmente, implica escribir sobre una pagina. */
+function looksLikeWritePriority(title: string, rationale: string): boolean {
+  const normalized = normalizeKey(`${title} ${rationale}`);
+  return mentionsAny(normalized, WRITE_VERB_KEYS) && mentionsAny(normalized, WEB_OBJECT_KEYS);
+}
+
+/** `true` si la prioridad declara, en `dependsOn` o en el `rationale`, que pasa por aprobacion humana / change pack. */
+function declaresApprovalGate(dependsOn: string[], rationale: string): boolean {
+  const normalized = normalizeKey([...dependsOn, rationale].join(" "));
+  return mentionsAny(normalized, APPROVAL_GATE_KEYS);
+}
+
+/**
  * Auditoria de negocio (NO estructural -- eso ya lo hizo
  * `validateGrowthDirectorV2Output`). Dos ejes, ambos derivados
  * directamente de la mision del empleado (ver
@@ -194,6 +298,13 @@ function dependencyNamesMatch(outputName: string, knownName: string): boolean {
  *      evidenceCatalog del contexto o el propio `evidence[]` de la
  *      salida). Se aplica la misma comprobacion de evidenceRefs a
  *      currentSignals/bottlenecks/opportunities/experiments/risks.
+ *   1b. "toda prioridad que escribe declara su puerta": una prioridad
+ *      cuya ejecucion real edita paginas debe declarar en `dependsOn`
+ *      (o, como minimo, en su `rationale`) que antes pasa por el
+ *      pipeline de change-pack / aprobacion humana explicita. Es la
+ *      correccion que QA exigio en `dept-2026-08-16T201412Z`, donde dos
+ *      prioridades quedaron BLOCKED justamente por no decirlo -- ver
+ *      `looksLikeWritePriority`/`declaresApprovalGate`.
  *   2. anti-fabricacion de huecos: cualquier dependencia que el CONTEXTO
  *      ya marco como `missing` (ver `context.knownDependencies`) debe
  *      aparecer reconocida (`status !== "available"`) en el
@@ -231,6 +342,11 @@ export function auditGrowthDirectorV2Output(context: GrowthDirectorV2Context, ou
       warnings.push(`${label}: evidenceRefs vacio -- toda prioridad debe citar al menos una senal o dependencia real del contexto.`);
     }
     checkRefs(label, p.evidenceRefs);
+    if (looksLikeWritePriority(p.title, p.rationale) && !declaresApprovalGate(p.dependsOn, p.rationale)) {
+      warnings.push(
+        `${label}: su ejecucion real implica editar paginas y NO declara en dependsOn (ni en rationale) que antes tiene que pasar por el pipeline de change-pack / aprobacion humana explicita. QA bloquea las prioridades que no lo dicen -- ver .claude/agents/growth-director-v2.md, "Toda prioridad que EDITA algo declara su puerta de aprobacion".`
+      );
+    }
   });
 
   const missingDependencies = context.knownDependencies.filter((d) => d.status === "missing");

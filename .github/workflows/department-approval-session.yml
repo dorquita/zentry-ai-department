@@ -151,9 +151,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: approval-session-${{ inputs.departmentRunId }}
+          # El registro de decisiones humanas se llama
+          # `department-human-decisions.jsonl` (ver FILE_NAME en
+          # src/approvals/manual/decision-store.ts). Aqui ponia
+          # `human-decisions.jsonl`, un fichero que no existe: el artifact
+          # se subia sin la unica prueba de QUE se decidio, y el aviso de
+          # `if-no-files-found: warn` pasaba desapercibido entre los demas
+          # avisos del runner.
           path: |
             reports/department/${{ inputs.departmentRunId }}/approval-session.json
-            data/human-decisions.jsonl
+            data/department-human-decisions.jsonl
             data/execute-php-audit.jsonl
           if-no-files-found: warn
           retention-days: 90
