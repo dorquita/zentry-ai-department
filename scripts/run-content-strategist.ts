@@ -42,6 +42,8 @@ dotenv.config();
 
 import * as fs from "fs";
 import * as path from "path";
+import { renderPreviousHumanFeedback } from "../src/approvals/human-feedback-context";
+import { loadPreviousHumanFeedback } from "../src/approvals/manual/decision-store";
 import { readCurrentChangePacks, findChangePackById } from "../src/core/change-packs";
 import { buildContentStrategistContext, ContentStrategistContext } from "../src/employees/content-strategist/context";
 import { ELIGIBLE_CHANGE_TYPES_FOR_CONTENT_STRATEGY, isContentChangePack, selectRandomEligibleChangePackForContentStrategy } from "../src/employees/content-strategist/selection";
@@ -121,7 +123,20 @@ function buildPromptMarkdown(context: ContentStrategistContext): string {
   lines.push("");
   lines.push("---");
   lines.push("");
-  lines.push("## 3. Contexto estructurado (ContentStrategistContext)");
+
+  // Rechazos humanos anteriores, LITERALES. Van delante del contexto: si
+  // una persona ya dijo por que no le valia una propuesta, eso se lee
+  // antes de volver a redactar sobre lo mismo.
+  const feedbackBlock = renderPreviousHumanFeedback(loadPreviousHumanFeedback());
+  if (feedbackBlock) {
+    lines.push(feedbackBlock.replace(/^## /, "## 3. ").trimEnd());
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+    lines.push("## 4. Contexto estructurado (ContentStrategistContext)");
+  } else {
+    lines.push("## 3. Contexto estructurado (ContentStrategistContext)");
+  }
   lines.push("");
   lines.push("```json");
   lines.push(JSON.stringify(context, null, 2));

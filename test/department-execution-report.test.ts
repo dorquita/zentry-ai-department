@@ -137,6 +137,15 @@ export function runDepartmentExecutionReportTests(): TestCase[] {
         const all = proposals();
         const broken = buildExecutionReportEmail(input({ executed: [work(all[0], { outcome: "failed", outcomeDetail: "WordPress devolvio 500" })] }));
         assert.ok(broken.subject.includes("1 con incidencia"), "un fallo tiene que verse ya en el asunto");
+
+        // Una aprobacion que no llego a escribir NO puede contarse como
+        // ejecutada en el asunto: se cuenta aparte y se dice.
+        const notExecuted = buildExecutionReportEmail(
+          input({ executed: [work(all[0], { outcome: "not_executed", outcomeDetail: "Sin executor determinista para esta propuesta." })] })
+        );
+        assert.ok(notExecuted.subject.includes("0 ejecutada(s)"), "nada se escribio: 0 ejecutadas");
+        assert.ok(notExecuted.subject.includes("1 aprobada(s) sin ejecutar"), "la aprobacion no ejecutada tiene que verse en el asunto");
+        assert.ok(!notExecuted.subject.includes("con incidencia"), "no ejecutar por falta de executor no es una incidencia de escritura");
       },
     },
 

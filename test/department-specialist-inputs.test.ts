@@ -181,6 +181,53 @@ export function runDepartmentSpecialistInputsTests(): TestCase[] {
         for (const rule of GROWTH_COORDINATION_RULES) {
           assert.ok(prompt.includes(rule), `falta la regla de coordinacion: ${rule.slice(0, 60)}`);
         }
+
+        // Sin rechazos previos NO se imprime ninguna seccion de feedback:
+        // un bloque que diga "no hay nada" solo gasta contexto.
+        assert.ok(!prompt.includes("DECISIONES HUMANAS ANTERIORES"), "sin feedback no debe aparecer la seccion");
+        assert.ok(prompt.includes("## 3. Contexto estructurado"), "sin feedback el contexto sigue siendo la seccion 3");
+      },
+    },
+    {
+      name: "Un rechazo humano anterior llega al prompt de Growth LITERAL, delante del contexto",
+      fn: () => {
+        const context = {
+          contextKind: "department_coordination_v1" as const,
+          departmentCoordinationRunId: DEPARTMENT_RUN_ID,
+          departmentRunId: null,
+          hasDepartmentRunData: false,
+          generatedAt: "2026-08-16T00:00:00.000Z",
+          agentActivity: [],
+          warnings: [],
+          actionsSummary: { totalActions: 0, liveActionCount: 0, byStatus: {}, byPriority: {}, topOpenActions: [] },
+          workOrdersSummary: { total: 0, readyForReviewCount: 0, byCategory: {}, byBrand: {} },
+          changePacksSummary: { total: 0, readyForReviewCount: 0, byType: {} },
+          approvalRequestsSummary: { pendingCount: 0, byRiskLevel: {}, topPending: [] },
+          jobsSummary: { totalJobSnapshots: 0, latestRunId: null, latestRunJobCount: 0 },
+          knownDependencies: [],
+          evidenceCatalog: [],
+          specialistInputs: [],
+        } satisfies DepartmentGrowthContext;
+
+        const reason =
+          "Las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias. Necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion.";
+        const prompt = buildDepartmentGrowthPrompt(context, [
+          {
+            recommendationId: "dept-2026-08-15T175321Z#rec-7",
+            recommendationTitle: "Publicar en produccion las paginas nuevas ya aprobadas en staging",
+            version: 1,
+            rejectionReason: reason,
+            rejectedAt: "2026-08-16T09:32:20.630Z",
+          },
+        ]);
+
+        assert.ok(prompt.includes(`"${reason}"`), "el motivo debe viajar literal y entrecomillado");
+        assert.ok(prompt.includes("## 3. DECISIONES HUMANAS ANTERIORES"), "el feedback se numera como seccion 3");
+        assert.ok(prompt.includes("## 4. Contexto estructurado"), "el contexto se desplaza a la seccion 4");
+        assert.ok(
+          prompt.indexOf("DECISIONES HUMANAS ANTERIORES") < prompt.indexOf("Contexto estructurado"),
+          "el rechazo humano debe leerse ANTES del contexto"
+        );
       },
     },
     {

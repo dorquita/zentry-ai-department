@@ -38,6 +38,7 @@ import { GrowthDirectorV2Output } from "../src/employees/growth-director-v2/type
 import { QaReviewerOutput, validateQaReviewerOutput } from "../src/employees/qa-reviewer/output";
 import { auditWebEngineerOutputForUnconfirmedCapabilities, validateWebEngineerOutput } from "../src/employees/web-engineer/validator";
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
+import { loadPreviousHumanFeedback } from "../src/approvals/manual/decision-store";
 import { readApplySummary } from "../src/department/apply/store";
 import { buildDepartmentDailyBrief, DepartmentDailyBrief, PreviousRunSnapshot, renderDepartmentDailyBriefMarkdown, renderDepartmentStepSummary } from "../src/department/daily-brief";
 import { summarizeDepartmentRunCost } from "../src/department/employee-runs";
@@ -228,7 +229,7 @@ function phasePrepareGrowth(args: Record<string, string>): DepartmentRunnerResul
   const manifest = readManifest(departmentRunId);
   const specialists = loadSpecialistInputs(manifest);
   const context = buildDepartmentGrowthContext(departmentRunId, specialists, args.eventBusRunId && args.eventBusRunId !== "true" ? args.eventBusRunId : undefined);
-  const prompt = buildDepartmentGrowthPrompt(context);
+  const prompt = buildDepartmentGrowthPrompt(context, loadPreviousHumanFeedback());
 
   writeStageContext(departmentRunId, "growth-director-v2", context);
   const promptPath = writeStagePrompt(departmentRunId, "growth-director-v2", prompt);
@@ -446,7 +447,7 @@ function phasePrepareWebEngineer(args: Record<string, string>): DepartmentRunner
     evidenceCatalog: [...specialists.evidenceCatalog, ...(growthOutput?.evidence ?? [])],
     specialistInputs: specialists.inputs,
   });
-  const prompt = buildDepartmentWebEngineerPrompt(context);
+  const prompt = buildDepartmentWebEngineerPrompt(context, loadPreviousHumanFeedback());
   writeStageContext(departmentRunId, "web-engineer", context);
   const promptPath = writeStagePrompt(departmentRunId, "web-engineer", prompt);
   const { outputPath } = resolveStageFilePaths(departmentRunId, "web-engineer");

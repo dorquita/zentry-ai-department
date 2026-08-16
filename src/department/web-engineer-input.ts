@@ -1,3 +1,4 @@
+import { PreviousHumanFeedback } from "../approvals/human-feedback-context";
 import { GrowthEvidenceItem } from "../employees/growth-director-v2/types";
 import { NO_PLUGIN_THEME_API_INVENTORY_NOTICE, WebEngineerContext } from "../employees/web-engineer/context";
 import { buildDepartmentPrompt } from "./prompt";
@@ -143,12 +144,13 @@ export function toWebEngineerAuditContext(context: DepartmentWebEngineerContext)
   };
 }
 
-export function buildDepartmentWebEngineerPrompt(context: DepartmentWebEngineerContext): string {
+export function buildDepartmentWebEngineerPrompt(context: DepartmentWebEngineerContext, previousHumanFeedback: PreviousHumanFeedback[] = []): string {
   return buildDepartmentPrompt({
     agentName: "web-engineer",
     departmentRunId: context.departmentRunId,
     contextTitle: "Contexto estructurado (DepartmentWebEngineerContext -- recomendaciones aprobadas por Growth + QA)",
     context,
     coordinationRules: WEB_ENGINEER_COORDINATION_RULES,
+    previousHumanFeedback,
   });
 }

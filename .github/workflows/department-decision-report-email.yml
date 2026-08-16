@@ -1,0 +1,109 @@
+name: Department -- Enviar el informe de decision por email
+
+# SEGUNDO email del flujo de aprobacion manual (ver
+# docs/manual-approval-flow.md): el acta de lo que paso despues de que
+# una persona decidiera sobre las propuestas numeradas del Daily Brief.
+#
+# Existe porque la sesion de aprobacion se resuelve en Claude Code, donde
+# NO hay credenciales SMTP: los secretos viven aqui. Este workflow no
+# decide nada, no ejecuta ninguna propuesta y no vuelve a llamar a ningun
+# empleado -- solo LEE los ficheros ya commiteados de la sesion
+# (reports/approval-sessions/<departmentRunId>/) y envia el correo.
+#
+# SEGURIDAD:
+# - `contents: read`. No commitea nada.
+# - Cero escrituras en WordPress, staging, produccion, Google Ads,
+#   GA4/GTM, Search Console y n8n. La unica salida externa es el correo.
+# - El script aborta antes de enviar si el texto construido contiene el
+#   valor de cualquier variable sensible, y si falta configuracion SMTP
+#   imprime solo los NOMBRES de las variables que faltan, nunca valores.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sessionDir:
+        description: "Directorio de la sesion ya registrada (reports/approval-sessions/<departmentRunId>)"
+        required: true
+        type: string
+      briefRunUrl:
+        description: "URL del run de GitHub Actions que genero el Daily Brief (opcional, para la trazabilidad)"
+        required: false
+        type: string
+      dryRun:
+        description: "Construir el correo y NO enviarlo"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: department-decision-report-email
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    name: Enviar el informe de decision
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Comprobar que la sesion existe (fail-closed)
+        run: |
+          set -euo pipefail
+          for f in session-result.json proposals.json employee-runs.snapshot.json new-recommendations.json; do
+            if [ ! -f "$SESSION_DIR/$f" ]; then
+              echo "No existe $SESSION_DIR/$f. Sin los ficheros de la sesion no hay nada real que contar -- no se envia nada."
+              exit 1
+            fi
+          done
+        env:
+          SESSION_DIR: ${{ inputs.sessionDir }}
+
+      - name: Enviar el informe
+        run: |
+          set -o pipefail
+          ARGS=(--sessionDir "$SESSION_DIR")
+          if [ -n "$BRIEF_RUN_URL" ]; then ARGS+=(--briefRunUrl "$BRIEF_RUN_URL"); fi
+          if [ "$DRY_RUN" = "true" ]; then ARGS+=(--dry-run); fi
+          npx ts-node scripts/o46-send-decision-report-email.ts "${ARGS[@]}"
+        env:
+          SESSION_DIR: ${{ inputs.sessionDir }}
+          BRIEF_RUN_URL: ${{ inputs.briefRunUrl }}
+          DRY_RUN: ${{ inputs.dryRun }}
+          DAILY_BRIEF_EMAIL_TO: ${{ secrets.DAILY_BRIEF_EMAIL_TO }}
+          REPORT_EMAIL_TO: ${{ secrets.REPORT_EMAIL_TO }}
+          REPORT_EMAIL_FROM: ${{ secrets.REPORT_EMAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+
+      - name: Resumen
+        if: always()
+        run: |
+          {
+            echo "## Informe de decision por email"
+            echo ""
+            echo "- **Sesion:** \`${SESSION_DIR}\`"
+            echo "- **Escrituras en staging:** 0"
+            echo "- **Escrituras en produccion:** 0"
+            echo "- **Produccion:** no se ha tocado."
+            echo ""
+            echo "Este workflow solo lee ficheros ya commiteados y envia un correo. No ejecuta ninguna propuesta."
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          SESSION_DIR: ${{ inputs.sessionDir }}
