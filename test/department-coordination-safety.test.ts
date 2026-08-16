@@ -481,5 +481,25 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
         assert.ok(workflow.includes("agent-name: sem-specialist") === false, "sem-specialist NO se ejecuta en esta fase");
       },
     },
+    {
+      name: "Las metricas de fiabilidad del runtime viven en el job que ejecuta Claude, NUNCA en el de persistencia (que borra el working tree)",
+      fn: () => {
+        const workflow = fs.readFileSync(WORKFLOW_PATH, "utf-8");
+
+        // Regresion real observada en el run 31965244763: el step de
+        // metricas acabo en `persist-state`, que borra todo el working
+        // tree (package.json incluido) antes de commitear el estado, asi
+        // que `npm run` moria con ENOENT y tenia el run entero en rojo
+        // pese a que la pasada del departamento habia ido bien.
+        const metricsIndex = workflow.indexOf("[RUNTIME] Metricas de fiabilidad del runtime comun");
+        const persistJobIndex = workflow.indexOf("\n  persist-state:");
+        assert.ok(metricsIndex > 0, "debe existir el step de metricas de fiabilidad");
+        assert.ok(persistJobIndex > 0, "debe existir el job persist-state");
+        assert.ok(metricsIndex < persistJobIndex, "el step de metricas debe estar en el job department-run, ANTES de la definicion del job persist-state");
+
+        const uploadIndex = workflow.indexOf("[RUNTIME] Subir diagnostico de fiabilidad del runtime");
+        assert.ok(uploadIndex > 0 && uploadIndex < persistJobIndex, "la subida del diagnostico tambien debe vivir en el job department-run");
+      },
+    },
   ];
 }

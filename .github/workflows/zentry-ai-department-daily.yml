@@ -1096,6 +1096,30 @@ jobs:
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
 
+
+      # --- [RUNTIME] Fiabilidad del runtime comun: agrega los
+      # diagnosticos por invocacion (claude-runtime-health.json) de esta
+      # pasada y los sube como artifact.
+      #
+      # `always()`: una pasada que FALLO es justo la que mas interesa
+      # poder auditar despues. El agregador es fail-soft a proposito (no
+      # puede tumbar el job): la autoridad sobre si el empleado fallo
+      # sigue siendo el step del runtime, no esta metrica. ---
+      - name: "[RUNTIME] Metricas de fiabilidad del runtime comun"
+        if: always()
+        run: npm run claude-runtime:metrics-for-ci -- "$HEALTH_DIR" "$HEALTH_DIR/claude-runtime-metrics.json" "Fiabilidad del runtime -- departamento"
+        env:
+          HEALTH_DIR: ${{ github.workspace }}/reports/claude-runtime-health
+
+      - name: "[RUNTIME] Subir diagnostico de fiabilidad del runtime"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-runtime-health-departamento-${{ github.run_id }}
+          path: reports/claude-runtime-health/
+          if-no-files-found: warn
+          retention-days: 30
+
   # =======================================================================
   # JOB 2 -- PERSISTIR EL ESTADO EN LA RAMA `department-state` (Fase O55)
   #
@@ -1197,26 +1221,3 @@ jobs:
         env:
           STATE_BRANCH: department-state
           DEPARTMENT_RUN_ID: ${{ needs.department-run.outputs.departmentRunId }}
-
-      # --- [RUNTIME] Fiabilidad del runtime comun: agrega los
-      # diagnosticos por invocacion (claude-runtime-health.json) de esta
-      # pasada y los sube como artifact.
-      #
-      # `always()`: una pasada que FALLO es justo la que mas interesa
-      # poder auditar despues. El agregador es fail-soft a proposito (no
-      # puede tumbar el job): la autoridad sobre si el empleado fallo
-      # sigue siendo el step del runtime, no esta metrica. ---
-      - name: "[RUNTIME] Metricas de fiabilidad del runtime comun"
-        if: always()
-        run: npm run claude-runtime:metrics-for-ci -- "$HEALTH_DIR" "$HEALTH_DIR/claude-runtime-metrics.json" "Fiabilidad del runtime -- departamento"
-        env:
-          HEALTH_DIR: ${{ github.workspace }}/reports/claude-runtime-health
-
-      - name: "[RUNTIME] Subir diagnostico de fiabilidad del runtime"
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: claude-runtime-health-departamento-${{ github.run_id }}
-          path: reports/claude-runtime-health/
-          if-no-files-found: warn
-          retention-days: 30
