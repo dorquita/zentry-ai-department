@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { PreviousHumanFeedback, renderPreviousHumanFeedback } from "../approvals/human-feedback-context";
 
 /**
  * Ensamblado del prompt de una etapa coordinada. Mismo patron EXACTO
@@ -26,6 +27,14 @@ export interface DepartmentPromptInput {
   context: unknown;
   /** Reglas de coordinacion especificas de ESTA fase -- se listan literalmente antes del contexto. */
   coordinationRules: string[];
+  /**
+   * Rechazos humanos anteriores sobre estas mismas recomendaciones. Van
+   * ANTES del contexto y con el motivo LITERAL, nunca reescrito (ver
+   * src/approvals/human-feedback-context.ts). Vacio u omitido = no se
+   * imprime ninguna seccion: un bloque que diga "no hay feedback" solo
+   * gasta contexto.
+   */
+  previousHumanFeedback?: PreviousHumanFeedback[];
 }
 
 export function buildDepartmentPrompt(input: DepartmentPromptInput): string {
@@ -56,7 +65,20 @@ export function buildDepartmentPrompt(input: DepartmentPromptInput): string {
   lines.push("");
   lines.push("---");
   lines.push("");
-  lines.push(`## 3. ${input.contextTitle}`);
+
+  // Va DELANTE del contexto a proposito: es una decision humana ya
+  // tomada sobre estas mismas propuestas, y quien lea el prompt tiene
+  // que verla antes de volver a proponer lo mismo.
+  const feedbackBlock = renderPreviousHumanFeedback(input.previousHumanFeedback ?? []);
+  if (feedbackBlock) {
+    lines.push(feedbackBlock.replace(/^## /, "## 3. ").trimEnd());
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+    lines.push(`## 4. ${input.contextTitle}`);
+  } else {
+    lines.push(`## 3. ${input.contextTitle}`);
+  }
   lines.push("");
   lines.push("```json");
   lines.push(JSON.stringify(input.context, null, 2));

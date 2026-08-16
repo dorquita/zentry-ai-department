@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { resolveActiveClientPaths } from "../../core/client-paths";
+import { PreviousHumanFeedback, selectPreviousHumanFeedbackByRecommendation } from "../human-feedback-context";
 import { HumanFeedbackEntry } from "../store";
 
 /**
@@ -93,6 +94,20 @@ export function listHumanFeedbackFor(recommendationId: string, filePath: string 
     rejectionReason: record.rejectionReason,
     rejectedAt: record.decidedAt,
   }));
+}
+
+/**
+ * Feedback humano YA SELECCIONADO y listo para inyectar en el prompt de
+ * un empleado. Es el unico punto de este flujo que hace I/O: la seleccion
+ * y el render siguen siendo puros (`human-feedback-context.ts`).
+ *
+ * Esto es lo que cierra el bucle: un rechazo con motivo que se registro
+ * hoy llega manana al prompt de Content / Web Engineer / Growth, LITERAL
+ * y sin reinterpretar. Sin esta funcion el motivo se guardaba pero no lo
+ * leia nadie.
+ */
+export function loadPreviousHumanFeedback(filePath: string = getHumanDecisionsFilePath()): PreviousHumanFeedback[] {
+  return selectPreviousHumanFeedbackByRecommendation(listAllHumanFeedback(filePath));
 }
 
 /** Todo el feedback humano registrado, para construir el contexto de una pasada nueva. */

@@ -299,7 +299,16 @@ Lo que se hace con él (`src/approvals/manual/decision-store.ts` +
    borra ni se reescribe una línea.
 2. **Entra en `previousHumanFeedback[]`** como contexto de las siguientes
    pasadas: los empleados lo leen en su prompt como evidencia de una
-   decisión humana anterior, no como una orden.
+   decisión humana anterior, no como una orden. La cadena completa es
+   `loadPreviousHumanFeedback()` (lee el log) →
+   `selectPreviousHumanFeedbackByRecommendation()` (recorta, **por
+   recomendación**, no por total) → `renderPreviousHumanFeedback()`
+   (bloque de texto) → prompt. Hoy lo reciben **Growth Director**,
+   **Web Engineer** (vía `buildDepartmentPrompt`, sección 3 del prompt,
+   **delante** del contexto) y **Content Strategist** (vía
+   `scripts/run-content-strategist.ts`). Sin rechazos previos no se
+   imprime ninguna sección: un bloque que diga "no hay nada" solo gasta
+   contexto.
 3. **No se convierte en una regla global.** Si escribes "el H1 es
    demasiado genérico", el empleado lee exactamente eso — no una regla
    inventada como "preferir H1 específicos".
@@ -328,17 +337,36 @@ distinto del Daily Brief de la mañana, con:
   separado y de forma explícita (cero es un dato, y se dice).
 - **Costes** de la pasada y **run IDs** de GitHub Actions implicados.
 
-> **Pendiente.** La sesión de aprobación ya deja todo lo que ese correo
-> necesita en `approval-session.json`, dentro del directorio de la pasada:
-> `outcomes[]` (número, id, título, acción, destino, estado, before/after,
-> validación, rollback, motivo de rechazo), `pending[]` y la
-> `interpretation` con la que se ejecutó. Lo que **no** existe todavía es
-> el render y el envío de ese segundo correo: hoy el único script de
-> correo del departamento es
-> [`scripts/send-department-daily-brief-email.ts`](../scripts/send-department-daily-brief-email.ts)
-> (`npm run department:email`), que renderiza el **Daily Brief**.
-> Reutilizará el mismo mailer y la misma resolución fail-closed de
-> configuración, pero es trabajo pendiente.
+El render vive en
+[`src/department/execution-report.ts`](../src/department/execution-report.ts)
+(módulo puro, testeable sin red) y lo envía la propia sesión de aprobación
+al terminar, con el mismo mailer y la misma resolución fail-closed de
+configuración que el Daily Brief.
+
+En el asunto, **"ejecutada" significa que se escribió**. Una aprobación
+que no llegó a escribir (sin executor, sin credenciales, `approval_stale`)
+se cuenta aparte como `N aprobada(s) sin ejecutar`: el asunto es lo único
+que mucha gente lee, y no puede decir que se hizo algo que no se hizo.
+
+### Cuando la sesión no puede correr en Claude Code
+
+Dos casos reales, y ninguno se resuelve relajando un guard:
+
+- **El `apply-summary.json` de esa pasada usa una versión de contrato
+  antigua.** `readApplySummary` falla-cerrado a propósito, así que
+  `approvals:session` no puede leerlo. Para esos casos está
+  [`scripts/o46-record-daily-brief-decisions.ts`](../scripts/o46-record-daily-brief-decisions.ts):
+  resuelve los números contra un snapshot auditable del Daily Brief real,
+  valida con **el mismo** `resolveHumanDecisions` y registra en **el
+  mismo** log append-only. No escribe en ningún sistema externo, y si
+  alguna propuesta aprobada *sí* fuese ejecutable **aborta** y remite a
+  `approvals:session` — registrar una aprobación ejecutable sin
+  ejecutarla dejaría el sistema mintiendo.
+- **No hay credenciales SMTP donde se toma la decisión.** El correo se
+  manda desde Actions, donde viven los secretos, con
+  [`.github/workflows/department-decision-report-email.yml`](../.github/workflows/department-decision-report-email.yml)
+  (`workflow_dispatch`, entrada `sessionDir`). Ese workflow solo lee
+  ficheros ya commiteados y envía: no decide ni ejecuta nada.
 
 ---
 

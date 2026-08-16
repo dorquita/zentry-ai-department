@@ -56,6 +56,28 @@ export function selectPreviousHumanFeedback(entries: HumanFeedbackEntry[]): Prev
 }
 
 /**
+ * Igual que `selectPreviousHumanFeedback`, pero sobre el feedback de
+ * VARIAS recomendaciones a la vez (lo que hace falta para el prompt de
+ * una pasada del departamento, que no habla de una sola recomendacion).
+ *
+ * El recorte de `MAX_FEEDBACK_ENTRIES_PER_RECOMMENDATION` se aplica POR
+ * RECOMENDACION, no al total: si una recomendacion se rechazo 6 veces,
+ * eso no puede dejar sin voz a las otras cinco. El orden de salida es
+ * determinista (recomendacion alfabetica, y dentro de cada una lo mas
+ * reciente primero) para que dos ejecuciones con los mismos datos
+ * produzcan exactamente el mismo prompt.
+ */
+export function selectPreviousHumanFeedbackByRecommendation(entries: HumanFeedbackEntry[]): PreviousHumanFeedback[] {
+  const byRecommendation = new Map<string, HumanFeedbackEntry[]>();
+  for (const entry of entries) {
+    const existing = byRecommendation.get(entry.recommendationId) ?? [];
+    existing.push(entry);
+    byRecommendation.set(entry.recommendationId, existing);
+  }
+  return [...byRecommendation.keys()].sort().flatMap((recommendationId) => selectPreviousHumanFeedback(byRecommendation.get(recommendationId) ?? []));
+}
+
+/**
  * Bloque de texto para el prompt. Devuelve cadena vacia si no hay
  * feedback: nunca se mete en el prompt una seccion que diga "no hay
  * nada", porque eso solo gasta contexto.

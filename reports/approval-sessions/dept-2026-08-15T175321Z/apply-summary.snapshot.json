@@ -1,0 +1,580 @@
+{
+  "contractVersion": "department-apply/v1",
+  "departmentRunId": "dept-2026-08-15T175321Z",
+  "generatedAt": "2026-08-15T18:08:54.564Z",
+  "items": [
+    {
+      "contractVersion": "department-apply/v1",
+      "applyItemId": "dept-2026-08-15T175321Z#apply-1",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-1",
+      "recommendationRank": 1,
+      "departmentRunId": "dept-2026-08-15T175321Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Resolver el enrutado roto de /cerraduras/ antes de invertir esfuerzo SEO sobre esa URL",
+      "target": "https://zentrylockers.com/cerraduras/ (citada en evidencia como en papelera con 301 activo -- existencia/estado real sin confirmar por este empleado) | /cerraduras-para-taquillas/ (destino alternativo propuesto, sin confirmar si existe) | https://zentrylockers.com/taquillas-melamina-fenolico/ (citada en evidencia -- existencia real sin confirmar) | /taquillas-melamina/ (destino alternativo segun decision O29.1 citada -- sin confirmar si existe) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (citada en evidencia con datos de posicion -- existencia real sin confirmar) | Paginas relacionadas con 'colegios' y 'taquillas fenolicas' con CTR 0% (URLs exactas no especificadas en el contexto) | Candidata de contenido 'Taquillas Inteligentes' / cluster taquillas_inteligentes_general (sin URL confirmada, referenciada como staging 2103) | 4 candidatas a pagina nueva citadas por seo-specialist como aprobadas en staging: universidades, metalicas, vestuarios, taquillas inteligentes general (sin URLs ni confirmacion de existencia en este contexto) | regla de redireccion / enrutado de URL | encabezados H1/H2 y cuerpo de texto on-page | enlazado interno | meta title y meta description | trigger y tag 'click_phone' en el contenedor de Google Tag Manager | bloque de contenido tipo landing (categoria 'Taquillas Inteligentes') | flujo de publicacion staging -> produccion",
+      "proposedChange": "seo-specialist identifica con basis=evidence que dos actionItems del backlog actual apuntan a una URL en papelera con redireccion 301 activa, desperdiciando esfuerzo si se ejecutan tal cual. Impacto alto porque afecta la coherencia de dos acciones y del cluster asociado; esfuerzo bajo porque es una decision de enrutado, no produccion de contenido nuevo; confianza alta por venir de evidencia directa del catalogo de clusters.",
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-opportunity-2"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta especificacion cubre 7 recomendaciones aprobadas por Growth+QA en la pasada dept-2026-08-15T175321Z: (1) corregir el enrutado roto de la URL /cerraduras/ antes de invertir esfuerzo SEO sobre ella, (2) cerrar actionItems mal enrutados sobre 'taquillas melamina' y revisar su posible relacion con una aprobacion critica pendiente, (3) reforzar el on-page de /cerraduras-inteligentes-taquillas/, (4) reescribir metadatos en 7 paginas con CTR 0%, (5) validar por que el evento click_phone no registra ocurrencias en GA4 pese a estar activo en GTM, (6) coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente en staging antes de publicar, y (7) publicar en produccion 4 paginas ya aprobadas en staging. Ninguna de estas paginas, plugins ni el estado real de staging/GTM esta confirmado en este contexto (noConfirmedPageInventoryNotice / noPluginThemeApiInventoryNotice), por lo que la especificacion se apoya en decisiones humanas pendientes antes de cualquier ejecucion.",
+        "proposedChanges": [
+          {
+            "description": "Auditar la cadena de redireccion 301 actual de /cerraduras/ y, tras decision humana, fijar como destino canonico bien /cerraduras-para-taquillas/, bien el cluster indicado, actualizando enlazado interno que apunte a la URL correcta; pausar cualquier accion SEO adicional sobre /cerraduras/ hasta resolver esto.",
+            "rationale": "Recomendacion aprobada 'Resolver el enrutado roto de /cerraduras/ antes de invertir esfuerzo SEO sobre esa URL' (rank 1): dos actionItems del backlog apuntan a una URL en papelera con 301 activo.",
+            "targetPageOrComponent": "https://zentrylockers.com/cerraduras/ y su regla de redireccion"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Existe una decision documentada de Pau sobre el destino canonico real de la keyword/URL de /cerraduras/ antes de tocar contenido o SEO en esa URL",
+          "Los actionItems de 'taquillas melamina'/'taquillas de melamina' mal enrutados quedan cerrados con referencia explicita a la decision O29.1, y se ha revisado si coinciden con la aprobacion critica pendiente antes de cerrarlos",
+          "El H1/H2, la profundidad de texto, el enlazado interno y los metadatos de /cerraduras-inteligentes-taquillas/ quedan actualizados y revisados por un humano antes de cualquier publicacion",
+          "Las 7 paginas con CTR 0% tienen meta title/description nuevos, revisados por un humano, sin duplicar contenido entre si",
+          "Se documenta explicitamente si el tag/trigger click_phone dispara correctamente en GTM Preview/GA4 DebugView, y si la version live de GTM esta realmente publicada",
+          "Existe una decision documentada sobre la diferenciacion entre el bloque de contenido 'Taquillas Inteligentes' y el cluster SEO taquillas_inteligentes_general antes de cualquier publicacion",
+          "Se confirma humanamente que el staging citado para universidades/metalicas/vestuarios/taquillas inteligentes general existe y esta aprobado antes de proceder a cualquier publicacion"
+        ],
+        "validationPlan": [
+          "Este contexto no incluye stagingQaResult ni existingPageAudit (noConfirmedPageInventoryNotice): no se puede confirmar el estado de QA de ninguna de estas paginas; debe ejecutarse una revision de QA en staging especifica para cada cambio antes de considerar avanzar",
+          "Revision manual por un humano con acceso real al sitio de la decision de enrutado de /cerraduras/ antes de aplicar cualquier redireccion",
+          "Revision de contenido y metadatos por SEO/Content humano antes de publicar cualquier cambio en /cerraduras-inteligentes-taquillas/ y en las 7 paginas con CTR 0%",
+          "Validacion tecnica manual en GTM Preview y GA4 DebugView del evento click_phone, y confirmacion del estado real de publicacion del contenedor GTM live",
+          "Reunion o decision documentada entre responsables de contenido y SEO para resolver la superposicion entre el bloque 'Taquillas Inteligentes' y el cluster taquillas_inteligentes_general antes de publicar",
+          "Confirmacion humana directa en WordPress/staging de que las 4 paginas citadas (universidades, metalicas, vestuarios, taquillas inteligentes general) existen, tienen el contenido esperado y estan realmente aprobadas antes de cualquier publicacion"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de enrutado o redireccion, documentar la configuracion de redireccion actual de /cerraduras/ para poder restaurarla si la decision de Pau cambia",
+          "Antes de modificar contenido/metadatos de cualquier pagina, guardar una copia del contenido y metadatos actuales (titulo, descripcion, H1/H2, cuerpo) para poder revertir manualmente",
+          "Antes de cualquier cambio en GTM, exportar/documentar la version actual del contenedor para poder revertir a la version anterior si la validacion revela un problema",
+          "No publicar el bloque 'Taquillas Inteligentes' hasta resolver la coordinacion con el cluster SEO; si ya se hubiera publicado por error, el plan de reversion consiste en despublicar/revertir a borrador y notificar a ambos especialistas",
+          "Para las 4 paginas candidatas a publicacion, mantener capacidad de despublicar o volver a borrador si tras la publicacion se detecta un problema de QA o de duplicidad de contenido"
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-1\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "applyStatus": "requires_manual_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "snapshot": null,
+      "auditTrail": [
+        {
+          "at": "2026-08-15T18:08:54.564Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #1 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.). Aprobacion humana: none (No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-1\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.)"
+        }
+      ],
+      "createdAt": "2026-08-15T18:08:54.564Z",
+      "updatedAt": "2026-08-15T18:08:54.564Z"
+    },
+    {
+      "contractVersion": "department-apply/v1",
+      "applyItemId": "dept-2026-08-15T175321Z#apply-2",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-2",
+      "recommendationRank": 2,
+      "departmentRunId": "dept-2026-08-15T175321Z",
+      "sourceAgents": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "Cerrar los actionItems de canibalizacion de 'taquillas melamina' y revisar la aprobacion critica pendiente relacionada",
+      "target": "https://zentrylockers.com/cerraduras/ (citada en evidencia como en papelera con 301 activo -- existencia/estado real sin confirmar por este empleado) | /cerraduras-para-taquillas/ (destino alternativo propuesto, sin confirmar si existe) | https://zentrylockers.com/taquillas-melamina-fenolico/ (citada en evidencia -- existencia real sin confirmar) | /taquillas-melamina/ (destino alternativo segun decision O29.1 citada -- sin confirmar si existe) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (citada en evidencia con datos de posicion -- existencia real sin confirmar) | Paginas relacionadas con 'colegios' y 'taquillas fenolicas' con CTR 0% (URLs exactas no especificadas en el contexto) | Candidata de contenido 'Taquillas Inteligentes' / cluster taquillas_inteligentes_general (sin URL confirmada, referenciada como staging 2103) | 4 candidatas a pagina nueva citadas por seo-specialist como aprobadas en staging: universidades, metalicas, vestuarios, taquillas inteligentes general (sin URLs ni confirmacion de existencia en este contexto) | regla de redireccion / enrutado de URL | encabezados H1/H2 y cuerpo de texto on-page | enlazado interno | meta title y meta description | trigger y tag 'click_phone' en el contenedor de Google Tag Manager | bloque de contenido tipo landing (categoria 'Taquillas Inteligentes') | flujo de publicacion staging -> produccion",
+      "proposedChange": "seo-specialist marca estos actionItems como mal enrutados segun una decision O29.1 ya documentada, con esfuerzo bajo de cierre. Ademas, la unica solicitud de aprobacion pendiente del departamento (riesgo critico) se titula 'taquillas melamina', lo que sugiere una relacion directa aunque el contexto no la confirma explicitamente -- por eso la confianza es media y se declara en unknowns.",
+      "evidenceRefs": [
+        "dept-seo-action-2",
+        "dept-seo-opportunity-3",
+        "dept-seo-opportunity-4",
+        "approvals-pending"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta especificacion cubre 7 recomendaciones aprobadas por Growth+QA en la pasada dept-2026-08-15T175321Z: (1) corregir el enrutado roto de la URL /cerraduras/ antes de invertir esfuerzo SEO sobre ella, (2) cerrar actionItems mal enrutados sobre 'taquillas melamina' y revisar su posible relacion con una aprobacion critica pendiente, (3) reforzar el on-page de /cerraduras-inteligentes-taquillas/, (4) reescribir metadatos en 7 paginas con CTR 0%, (5) validar por que el evento click_phone no registra ocurrencias en GA4 pese a estar activo en GTM, (6) coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente en staging antes de publicar, y (7) publicar en produccion 4 paginas ya aprobadas en staging. Ninguna de estas paginas, plugins ni el estado real de staging/GTM esta confirmado en este contexto (noConfirmedPageInventoryNotice / noPluginThemeApiInventoryNotice), por lo que la especificacion se apoya en decisiones humanas pendientes antes de cualquier ejecucion.",
+        "proposedChanges": [
+          {
+            "description": "Cerrar (sin ejecutar) los actionItems de 'taquillas melamina'/'taquillas de melamina' mal enrutados hacia /taquillas-melamina-fenolico/, y si se decide capturar la keyword generica, redirigir el esfuerzo hacia /taquillas-melamina/ segun la decision O29.1 referenciada; antes de cerrar, revisar si esta accion se solapa con la unica aprobacion critica pendiente del departamento sobre 'taquillas melamina'.",
+            "rationale": "Recomendacion aprobada 'Cerrar los actionItems de canibalizacion de taquillas melamina y revisar la aprobacion critica pendiente relacionada' (rank 2); confianza declarada como media porque la relacion con la aprobacion pendiente no esta confirmada explicitamente en el contexto.",
+            "targetPageOrComponent": "https://zentrylockers.com/taquillas-melamina-fenolico/ y /taquillas-melamina/ (propuesta)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Existe una decision documentada de Pau sobre el destino canonico real de la keyword/URL de /cerraduras/ antes de tocar contenido o SEO en esa URL",
+          "Los actionItems de 'taquillas melamina'/'taquillas de melamina' mal enrutados quedan cerrados con referencia explicita a la decision O29.1, y se ha revisado si coinciden con la aprobacion critica pendiente antes de cerrarlos",
+          "El H1/H2, la profundidad de texto, el enlazado interno y los metadatos de /cerraduras-inteligentes-taquillas/ quedan actualizados y revisados por un humano antes de cualquier publicacion",
+          "Las 7 paginas con CTR 0% tienen meta title/description nuevos, revisados por un humano, sin duplicar contenido entre si",
+          "Se documenta explicitamente si el tag/trigger click_phone dispara correctamente en GTM Preview/GA4 DebugView, y si la version live de GTM esta realmente publicada",
+          "Existe una decision documentada sobre la diferenciacion entre el bloque de contenido 'Taquillas Inteligentes' y el cluster SEO taquillas_inteligentes_general antes de cualquier publicacion",
+          "Se confirma humanamente que el staging citado para universidades/metalicas/vestuarios/taquillas inteligentes general existe y esta aprobado antes de proceder a cualquier publicacion"
+        ],
+        "validationPlan": [
+          "Este contexto no incluye stagingQaResult ni existingPageAudit (noConfirmedPageInventoryNotice): no se puede confirmar el estado de QA de ninguna de estas paginas; debe ejecutarse una revision de QA en staging especifica para cada cambio antes de considerar avanzar",
+          "Revision manual por un humano con acceso real al sitio de la decision de enrutado de /cerraduras/ antes de aplicar cualquier redireccion",
+          "Revision de contenido y metadatos por SEO/Content humano antes de publicar cualquier cambio en /cerraduras-inteligentes-taquillas/ y en las 7 paginas con CTR 0%",
+          "Validacion tecnica manual en GTM Preview y GA4 DebugView del evento click_phone, y confirmacion del estado real de publicacion del contenedor GTM live",
+          "Reunion o decision documentada entre responsables de contenido y SEO para resolver la superposicion entre el bloque 'Taquillas Inteligentes' y el cluster taquillas_inteligentes_general antes de publicar",
+          "Confirmacion humana directa en WordPress/staging de que las 4 paginas citadas (universidades, metalicas, vestuarios, taquillas inteligentes general) existen, tienen el contenido esperado y estan realmente aprobadas antes de cualquier publicacion"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de enrutado o redireccion, documentar la configuracion de redireccion actual de /cerraduras/ para poder restaurarla si la decision de Pau cambia",
+          "Antes de modificar contenido/metadatos de cualquier pagina, guardar una copia del contenido y metadatos actuales (titulo, descripcion, H1/H2, cuerpo) para poder revertir manualmente",
+          "Antes de cualquier cambio en GTM, exportar/documentar la version actual del contenedor para poder revertir a la version anterior si la validacion revela un problema",
+          "No publicar el bloque 'Taquillas Inteligentes' hasta resolver la coordinacion con el cluster SEO; si ya se hubiera publicado por error, el plan de reversion consiste en despublicar/revertir a borrador y notificar a ambos especialistas",
+          "Para las 4 paginas candidatas a publicacion, mantener capacidad de despublicar o volver a borrador si tras la publicacion se detecta un problema de QA o de duplicidad de contenido"
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-2\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "applyStatus": "requires_manual_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "snapshot": null,
+      "auditTrail": [
+        {
+          "at": "2026-08-15T18:08:54.564Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #2 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.). Aprobacion humana: none (No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-2\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.)"
+        }
+      ],
+      "createdAt": "2026-08-15T18:08:54.564Z",
+      "updatedAt": "2026-08-15T18:08:54.564Z"
+    },
+    {
+      "contractVersion": "department-apply/v1",
+      "applyItemId": "dept-2026-08-15T175321Z#apply-3",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-3",
+      "recommendationRank": 3,
+      "departmentRunId": "dept-2026-08-15T175321Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Ejecutar el quick win de mayor impacto: on-page de 'cerraduras inteligentes para taquillas'",
+      "target": "https://zentrylockers.com/cerraduras/ (citada en evidencia como en papelera con 301 activo -- existencia/estado real sin confirmar por este empleado) | /cerraduras-para-taquillas/ (destino alternativo propuesto, sin confirmar si existe) | https://zentrylockers.com/taquillas-melamina-fenolico/ (citada en evidencia -- existencia real sin confirmar) | /taquillas-melamina/ (destino alternativo segun decision O29.1 citada -- sin confirmar si existe) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (citada en evidencia con datos de posicion -- existencia real sin confirmar) | Paginas relacionadas con 'colegios' y 'taquillas fenolicas' con CTR 0% (URLs exactas no especificadas en el contexto) | Candidata de contenido 'Taquillas Inteligentes' / cluster taquillas_inteligentes_general (sin URL confirmada, referenciada como staging 2103) | 4 candidatas a pagina nueva citadas por seo-specialist como aprobadas en staging: universidades, metalicas, vestuarios, taquillas inteligentes general (sin URLs ni confirmacion de existencia en este contexto) | regla de redireccion / enrutado de URL | encabezados H1/H2 y cuerpo de texto on-page | enlazado interno | meta title y meta description | trigger y tag 'click_phone' en el contenedor de Google Tag Manager | bloque de contenido tipo landing (categoria 'Taquillas Inteligentes') | flujo de publicacion staging -> produccion",
+      "proposedChange": "Es la accion priorizada #3 de seo-specialist, con evidencia directa de posicion (20.5) e impresiones (44); impacto medio y esfuerzo medio segun la propia priorizacion del especialista.",
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-1"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta especificacion cubre 7 recomendaciones aprobadas por Growth+QA en la pasada dept-2026-08-15T175321Z: (1) corregir el enrutado roto de la URL /cerraduras/ antes de invertir esfuerzo SEO sobre ella, (2) cerrar actionItems mal enrutados sobre 'taquillas melamina' y revisar su posible relacion con una aprobacion critica pendiente, (3) reforzar el on-page de /cerraduras-inteligentes-taquillas/, (4) reescribir metadatos en 7 paginas con CTR 0%, (5) validar por que el evento click_phone no registra ocurrencias en GA4 pese a estar activo en GTM, (6) coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente en staging antes de publicar, y (7) publicar en produccion 4 paginas ya aprobadas en staging. Ninguna de estas paginas, plugins ni el estado real de staging/GTM esta confirmado en este contexto (noConfirmedPageInventoryNotice / noPluginThemeApiInventoryNotice), por lo que la especificacion se apoya en decisiones humanas pendientes antes de cualquier ejecucion.",
+        "proposedChanges": [
+          {
+            "description": "Revisar y reforzar el contenido on-page de /cerraduras-inteligentes-taquillas/: ampliar profundidad de texto, ajustar H1/H2, mejorar enlazado interno hacia/desde la pagina, y actualizar meta title y meta description para mejorar la posicion actual (20.5).",
+            "rationale": "Recomendacion aprobada 'Ejecutar el quick win de mayor impacto: on-page de cerraduras inteligentes para taquillas' (rank 3), con evidencia directa de posicion e impresiones.",
+            "targetPageOrComponent": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Existe una decision documentada de Pau sobre el destino canonico real de la keyword/URL de /cerraduras/ antes de tocar contenido o SEO en esa URL",
+          "Los actionItems de 'taquillas melamina'/'taquillas de melamina' mal enrutados quedan cerrados con referencia explicita a la decision O29.1, y se ha revisado si coinciden con la aprobacion critica pendiente antes de cerrarlos",
+          "El H1/H2, la profundidad de texto, el enlazado interno y los metadatos de /cerraduras-inteligentes-taquillas/ quedan actualizados y revisados por un humano antes de cualquier publicacion",
+          "Las 7 paginas con CTR 0% tienen meta title/description nuevos, revisados por un humano, sin duplicar contenido entre si",
+          "Se documenta explicitamente si el tag/trigger click_phone dispara correctamente en GTM Preview/GA4 DebugView, y si la version live de GTM esta realmente publicada",
+          "Existe una decision documentada sobre la diferenciacion entre el bloque de contenido 'Taquillas Inteligentes' y el cluster SEO taquillas_inteligentes_general antes de cualquier publicacion",
+          "Se confirma humanamente que el staging citado para universidades/metalicas/vestuarios/taquillas inteligentes general existe y esta aprobado antes de proceder a cualquier publicacion"
+        ],
+        "validationPlan": [
+          "Este contexto no incluye stagingQaResult ni existingPageAudit (noConfirmedPageInventoryNotice): no se puede confirmar el estado de QA de ninguna de estas paginas; debe ejecutarse una revision de QA en staging especifica para cada cambio antes de considerar avanzar",
+          "Revision manual por un humano con acceso real al sitio de la decision de enrutado de /cerraduras/ antes de aplicar cualquier redireccion",
+          "Revision de contenido y metadatos por SEO/Content humano antes de publicar cualquier cambio en /cerraduras-inteligentes-taquillas/ y en las 7 paginas con CTR 0%",
+          "Validacion tecnica manual en GTM Preview y GA4 DebugView del evento click_phone, y confirmacion del estado real de publicacion del contenedor GTM live",
+          "Reunion o decision documentada entre responsables de contenido y SEO para resolver la superposicion entre el bloque 'Taquillas Inteligentes' y el cluster taquillas_inteligentes_general antes de publicar",
+          "Confirmacion humana directa en WordPress/staging de que las 4 paginas citadas (universidades, metalicas, vestuarios, taquillas inteligentes general) existen, tienen el contenido esperado y estan realmente aprobadas antes de cualquier publicacion"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de enrutado o redireccion, documentar la configuracion de redireccion actual de /cerraduras/ para poder restaurarla si la decision de Pau cambia",
+          "Antes de modificar contenido/metadatos de cualquier pagina, guardar una copia del contenido y metadatos actuales (titulo, descripcion, H1/H2, cuerpo) para poder revertir manualmente",
+          "Antes de cualquier cambio en GTM, exportar/documentar la version actual del contenedor para poder revertir a la version anterior si la validacion revela un problema",
+          "No publicar el bloque 'Taquillas Inteligentes' hasta resolver la coordinacion con el cluster SEO; si ya se hubiera publicado por error, el plan de reversion consiste en despublicar/revertir a borrador y notificar a ambos especialistas",
+          "Para las 4 paginas candidatas a publicacion, mantener capacidad de despublicar o volver a borrador si tras la publicacion se detecta un problema de QA o de duplicidad de contenido"
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-3\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "applyStatus": "requires_manual_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "snapshot": null,
+      "auditTrail": [
+        {
+          "at": "2026-08-15T18:08:54.564Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #3 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.). Aprobacion humana: none (No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-3\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.)"
+        }
+      ],
+      "createdAt": "2026-08-15T18:08:54.564Z",
+      "updatedAt": "2026-08-15T18:08:54.564Z"
+    },
+    {
+      "contractVersion": "department-apply/v1",
+      "applyItemId": "dept-2026-08-15T175321Z#apply-4",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-4",
+      "recommendationRank": 4,
+      "departmentRunId": "dept-2026-08-15T175321Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Reescribir meta title/description en las 7 paginas con CTR 0% e impresiones reales",
+      "target": "https://zentrylockers.com/cerraduras/ (citada en evidencia como en papelera con 301 activo -- existencia/estado real sin confirmar por este empleado) | /cerraduras-para-taquillas/ (destino alternativo propuesto, sin confirmar si existe) | https://zentrylockers.com/taquillas-melamina-fenolico/ (citada en evidencia -- existencia real sin confirmar) | /taquillas-melamina/ (destino alternativo segun decision O29.1 citada -- sin confirmar si existe) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (citada en evidencia con datos de posicion -- existencia real sin confirmar) | Paginas relacionadas con 'colegios' y 'taquillas fenolicas' con CTR 0% (URLs exactas no especificadas en el contexto) | Candidata de contenido 'Taquillas Inteligentes' / cluster taquillas_inteligentes_general (sin URL confirmada, referenciada como staging 2103) | 4 candidatas a pagina nueva citadas por seo-specialist como aprobadas en staging: universidades, metalicas, vestuarios, taquillas inteligentes general (sin URLs ni confirmacion de existencia en este contexto) | regla de redireccion / enrutado de URL | encabezados H1/H2 y cuerpo de texto on-page | enlazado interno | meta title y meta description | trigger y tag 'click_phone' en el contenedor de Google Tag Manager | bloque de contenido tipo landing (categoria 'Taquillas Inteligentes') | flujo de publicacion staging -> produccion",
+      "proposedChange": "seo-specialist identifica un patron sistemico (14 de 16 actionItems con CTR 0%) que abarca 7 paginas; esfuerzo bajo (solo cambios de metadatos) e impacto medio en recuperar clics sobre impresiones ya existentes.",
+      "evidenceRefs": [
+        "dept-seo-action-4"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta especificacion cubre 7 recomendaciones aprobadas por Growth+QA en la pasada dept-2026-08-15T175321Z: (1) corregir el enrutado roto de la URL /cerraduras/ antes de invertir esfuerzo SEO sobre ella, (2) cerrar actionItems mal enrutados sobre 'taquillas melamina' y revisar su posible relacion con una aprobacion critica pendiente, (3) reforzar el on-page de /cerraduras-inteligentes-taquillas/, (4) reescribir metadatos en 7 paginas con CTR 0%, (5) validar por que el evento click_phone no registra ocurrencias en GA4 pese a estar activo en GTM, (6) coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente en staging antes de publicar, y (7) publicar en produccion 4 paginas ya aprobadas en staging. Ninguna de estas paginas, plugins ni el estado real de staging/GTM esta confirmado en este contexto (noConfirmedPageInventoryNotice / noPluginThemeApiInventoryNotice), por lo que la especificacion se apoya en decisiones humanas pendientes antes de cualquier ejecucion.",
+        "proposedChanges": [
+          {
+            "description": "Reescribir meta title y meta description en las 7 paginas identificadas con CTR 0% pese a tener impresiones reales (melamina, colegios, fenolicas, cerraduras inteligentes), priorizando claridad y relevancia de la consulta sobre la impresion registrada.",
+            "rationale": "Recomendacion aprobada 'Reescribir meta title/description en las 7 paginas con CTR 0% e impresiones reales' (rank 4), patron sistemico detectado en 14 de 16 actionItems.",
+            "targetPageOrComponent": "Conjunto de 7 paginas con CTR 0% (URLs exactas no confirmadas en este contexto salvo /taquillas-melamina-fenolico/ y /cerraduras-inteligentes-taquillas/)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Existe una decision documentada de Pau sobre el destino canonico real de la keyword/URL de /cerraduras/ antes de tocar contenido o SEO en esa URL",
+          "Los actionItems de 'taquillas melamina'/'taquillas de melamina' mal enrutados quedan cerrados con referencia explicita a la decision O29.1, y se ha revisado si coinciden con la aprobacion critica pendiente antes de cerrarlos",
+          "El H1/H2, la profundidad de texto, el enlazado interno y los metadatos de /cerraduras-inteligentes-taquillas/ quedan actualizados y revisados por un humano antes de cualquier publicacion",
+          "Las 7 paginas con CTR 0% tienen meta title/description nuevos, revisados por un humano, sin duplicar contenido entre si",
+          "Se documenta explicitamente si el tag/trigger click_phone dispara correctamente en GTM Preview/GA4 DebugView, y si la version live de GTM esta realmente publicada",
+          "Existe una decision documentada sobre la diferenciacion entre el bloque de contenido 'Taquillas Inteligentes' y el cluster SEO taquillas_inteligentes_general antes de cualquier publicacion",
+          "Se confirma humanamente que el staging citado para universidades/metalicas/vestuarios/taquillas inteligentes general existe y esta aprobado antes de proceder a cualquier publicacion"
+        ],
+        "validationPlan": [
+          "Este contexto no incluye stagingQaResult ni existingPageAudit (noConfirmedPageInventoryNotice): no se puede confirmar el estado de QA de ninguna de estas paginas; debe ejecutarse una revision de QA en staging especifica para cada cambio antes de considerar avanzar",
+          "Revision manual por un humano con acceso real al sitio de la decision de enrutado de /cerraduras/ antes de aplicar cualquier redireccion",
+          "Revision de contenido y metadatos por SEO/Content humano antes de publicar cualquier cambio en /cerraduras-inteligentes-taquillas/ y en las 7 paginas con CTR 0%",
+          "Validacion tecnica manual en GTM Preview y GA4 DebugView del evento click_phone, y confirmacion del estado real de publicacion del contenedor GTM live",
+          "Reunion o decision documentada entre responsables de contenido y SEO para resolver la superposicion entre el bloque 'Taquillas Inteligentes' y el cluster taquillas_inteligentes_general antes de publicar",
+          "Confirmacion humana directa en WordPress/staging de que las 4 paginas citadas (universidades, metalicas, vestuarios, taquillas inteligentes general) existen, tienen el contenido esperado y estan realmente aprobadas antes de cualquier publicacion"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de enrutado o redireccion, documentar la configuracion de redireccion actual de /cerraduras/ para poder restaurarla si la decision de Pau cambia",
+          "Antes de modificar contenido/metadatos de cualquier pagina, guardar una copia del contenido y metadatos actuales (titulo, descripcion, H1/H2, cuerpo) para poder revertir manualmente",
+          "Antes de cualquier cambio en GTM, exportar/documentar la version actual del contenedor para poder revertir a la version anterior si la validacion revela un problema",
+          "No publicar el bloque 'Taquillas Inteligentes' hasta resolver la coordinacion con el cluster SEO; si ya se hubiera publicado por error, el plan de reversion consiste en despublicar/revertir a borrador y notificar a ambos especialistas",
+          "Para las 4 paginas candidatas a publicacion, mantener capacidad de despublicar o volver a borrador si tras la publicacion se detecta un problema de QA o de duplicidad de contenido"
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-4\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "applyStatus": "requires_manual_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "snapshot": null,
+      "auditTrail": [
+        {
+          "at": "2026-08-15T18:08:54.564Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #4 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.). Aprobacion humana: none (No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-4\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.)"
+        }
+      ],
+      "createdAt": "2026-08-15T18:08:54.564Z",
+      "updatedAt": "2026-08-15T18:08:54.564Z"
+    },
+    {
+      "contractVersion": "department-apply/v1",
+      "applyItemId": "dept-2026-08-15T175321Z#apply-5",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-5",
+      "recommendationRank": 5,
+      "departmentRunId": "dept-2026-08-15T175321Z",
+      "sourceAgents": [
+        "analytics-specialist"
+      ],
+      "title": "Validar el disparo de click_phone en GTM/GA4 antes de asumir que esa via de conversion esta perdida",
+      "target": "https://zentrylockers.com/cerraduras/ (citada en evidencia como en papelera con 301 activo -- existencia/estado real sin confirmar por este empleado) | /cerraduras-para-taquillas/ (destino alternativo propuesto, sin confirmar si existe) | https://zentrylockers.com/taquillas-melamina-fenolico/ (citada en evidencia -- existencia real sin confirmar) | /taquillas-melamina/ (destino alternativo segun decision O29.1 citada -- sin confirmar si existe) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (citada en evidencia con datos de posicion -- existencia real sin confirmar) | Paginas relacionadas con 'colegios' y 'taquillas fenolicas' con CTR 0% (URLs exactas no especificadas en el contexto) | Candidata de contenido 'Taquillas Inteligentes' / cluster taquillas_inteligentes_general (sin URL confirmada, referenciada como staging 2103) | 4 candidatas a pagina nueva citadas por seo-specialist como aprobadas en staging: universidades, metalicas, vestuarios, taquillas inteligentes general (sin URLs ni confirmacion de existencia en este contexto) | regla de redireccion / enrutado de URL | encabezados H1/H2 y cuerpo de texto on-page | enlazado interno | meta title y meta description | trigger y tag 'click_phone' en el contenedor de Google Tag Manager | bloque de contenido tipo landing (categoria 'Taquillas Inteligentes') | flujo de publicacion staging -> produccion",
+      "proposedChange": "analytics-specialist confirma como FACT que el tag y trigger de click_phone existen y no estan pausados en GTM, pero GA4 registra 0 ocurrencias; la validacion via DebugView/Preview es de esfuerzo bajo y el impacto potencial es alto si se recupera una via de contacto no medida. La confianza es media porque el propio especialista senala que la version live de GTM aparece como pendiente de aprobacion de Pau, lo que podria explicar la ausencia de datos.",
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-2",
+        "dept-analytics-tracking-issue-3"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta especificacion cubre 7 recomendaciones aprobadas por Growth+QA en la pasada dept-2026-08-15T175321Z: (1) corregir el enrutado roto de la URL /cerraduras/ antes de invertir esfuerzo SEO sobre ella, (2) cerrar actionItems mal enrutados sobre 'taquillas melamina' y revisar su posible relacion con una aprobacion critica pendiente, (3) reforzar el on-page de /cerraduras-inteligentes-taquillas/, (4) reescribir metadatos en 7 paginas con CTR 0%, (5) validar por que el evento click_phone no registra ocurrencias en GA4 pese a estar activo en GTM, (6) coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente en staging antes de publicar, y (7) publicar en produccion 4 paginas ya aprobadas en staging. Ninguna de estas paginas, plugins ni el estado real de staging/GTM esta confirmado en este contexto (noConfirmedPageInventoryNotice / noPluginThemeApiInventoryNotice), por lo que la especificacion se apoya en decisiones humanas pendientes antes de cualquier ejecucion.",
+        "proposedChanges": [
+          {
+            "description": "Confirmar el estado de publicacion/aprobacion de la version de GTM referenciada como 'live', y validar mediante GTM Preview y GA4 DebugView si el tag 'GA4 Event - click_phone' y el trigger 'click_phone' (tipo linkClick) disparan correctamente en produccion; documentar el resultado antes de asumir que esta via de conversion esta perdida o recuperada.",
+            "rationale": "Recomendacion aprobada 'Validar el disparo de click_phone en GTM/GA4 antes de asumir que esa via de conversion esta perdida' (rank 5); analytics-specialist confirma el tag/trigger activos en GTM pero con 0 ocurrencias en GA4, condicionado a la publicacion real del contenedor.",
+            "targetPageOrComponent": "Contenedor de Google Tag Manager -- trigger/tag click_phone"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Existe una decision documentada de Pau sobre el destino canonico real de la keyword/URL de /cerraduras/ antes de tocar contenido o SEO en esa URL",
+          "Los actionItems de 'taquillas melamina'/'taquillas de melamina' mal enrutados quedan cerrados con referencia explicita a la decision O29.1, y se ha revisado si coinciden con la aprobacion critica pendiente antes de cerrarlos",
+          "El H1/H2, la profundidad de texto, el enlazado interno y los metadatos de /cerraduras-inteligentes-taquillas/ quedan actualizados y revisados por un humano antes de cualquier publicacion",
+          "Las 7 paginas con CTR 0% tienen meta title/description nuevos, revisados por un humano, sin duplicar contenido entre si",
+          "Se documenta explicitamente si el tag/trigger click_phone dispara correctamente en GTM Preview/GA4 DebugView, y si la version live de GTM esta realmente publicada",
+          "Existe una decision documentada sobre la diferenciacion entre el bloque de contenido 'Taquillas Inteligentes' y el cluster SEO taquillas_inteligentes_general antes de cualquier publicacion",
+          "Se confirma humanamente que el staging citado para universidades/metalicas/vestuarios/taquillas inteligentes general existe y esta aprobado antes de proceder a cualquier publicacion"
+        ],
+        "validationPlan": [
+          "Este contexto no incluye stagingQaResult ni existingPageAudit (noConfirmedPageInventoryNotice): no se puede confirmar el estado de QA de ninguna de estas paginas; debe ejecutarse una revision de QA en staging especifica para cada cambio antes de considerar avanzar",
+          "Revision manual por un humano con acceso real al sitio de la decision de enrutado de /cerraduras/ antes de aplicar cualquier redireccion",
+          "Revision de contenido y metadatos por SEO/Content humano antes de publicar cualquier cambio en /cerraduras-inteligentes-taquillas/ y en las 7 paginas con CTR 0%",
+          "Validacion tecnica manual en GTM Preview y GA4 DebugView del evento click_phone, y confirmacion del estado real de publicacion del contenedor GTM live",
+          "Reunion o decision documentada entre responsables de contenido y SEO para resolver la superposicion entre el bloque 'Taquillas Inteligentes' y el cluster taquillas_inteligentes_general antes de publicar",
+          "Confirmacion humana directa en WordPress/staging de que las 4 paginas citadas (universidades, metalicas, vestuarios, taquillas inteligentes general) existen, tienen el contenido esperado y estan realmente aprobadas antes de cualquier publicacion"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de enrutado o redireccion, documentar la configuracion de redireccion actual de /cerraduras/ para poder restaurarla si la decision de Pau cambia",
+          "Antes de modificar contenido/metadatos de cualquier pagina, guardar una copia del contenido y metadatos actuales (titulo, descripcion, H1/H2, cuerpo) para poder revertir manualmente",
+          "Antes de cualquier cambio en GTM, exportar/documentar la version actual del contenedor para poder revertir a la version anterior si la validacion revela un problema",
+          "No publicar el bloque 'Taquillas Inteligentes' hasta resolver la coordinacion con el cluster SEO; si ya se hubiera publicado por error, el plan de reversion consiste en despublicar/revertir a borrador y notificar a ambos especialistas",
+          "Para las 4 paginas candidatas a publicacion, mantener capacidad de despublicar o volver a borrador si tras la publicacion se detecta un problema de QA o de duplicidad de contenido"
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-5\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "applyStatus": "requires_manual_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "snapshot": null,
+      "auditTrail": [
+        {
+          "at": "2026-08-15T18:08:54.564Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #5 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.). Aprobacion humana: none (No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-5\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.)"
+        }
+      ],
+      "createdAt": "2026-08-15T18:08:54.564Z",
+      "updatedAt": "2026-08-15T18:08:54.564Z"
+    },
+    {
+      "contractVersion": "department-apply/v1",
+      "applyItemId": "dept-2026-08-15T175321Z#apply-6",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-6",
+      "recommendationRank": 6,
+      "departmentRunId": "dept-2026-08-15T175321Z",
+      "sourceAgents": [
+        "content-strategist",
+        "seo-specialist"
+      ],
+      "title": "Coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente antes de publicar",
+      "target": "https://zentrylockers.com/cerraduras/ (citada en evidencia como en papelera con 301 activo -- existencia/estado real sin confirmar por este empleado) | /cerraduras-para-taquillas/ (destino alternativo propuesto, sin confirmar si existe) | https://zentrylockers.com/taquillas-melamina-fenolico/ (citada en evidencia -- existencia real sin confirmar) | /taquillas-melamina/ (destino alternativo segun decision O29.1 citada -- sin confirmar si existe) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (citada en evidencia con datos de posicion -- existencia real sin confirmar) | Paginas relacionadas con 'colegios' y 'taquillas fenolicas' con CTR 0% (URLs exactas no especificadas en el contexto) | Candidata de contenido 'Taquillas Inteligentes' / cluster taquillas_inteligentes_general (sin URL confirmada, referenciada como staging 2103) | 4 candidatas a pagina nueva citadas por seo-specialist como aprobadas en staging: universidades, metalicas, vestuarios, taquillas inteligentes general (sin URLs ni confirmacion de existencia en este contexto) | regla de redireccion / enrutado de URL | encabezados H1/H2 y cuerpo de texto on-page | enlazado interno | meta title y meta description | trigger y tag 'click_phone' en el contenedor de Google Tag Manager | bloque de contenido tipo landing (categoria 'Taquillas Inteligentes') | flujo de publicacion staging -> produccion",
+      "proposedChange": "content-strategist propone un landing_block de alta prioridad para 'taquillas inteligentes' pero declara explicitamente que no tiene URL real ni conoce el estado del cluster asociado; en la misma pasada, seo-specialist documenta que el cluster taquillas_inteligentes_general ya tiene una version en staging (2103) corregida y pendiente de aprobacion visual, ademas de riesgo de canibalizacion con el cluster informativo cerraduras_inteligentes_taquillas. Ambos especialistas trataron el mismo tema sin visibilidad cruzada -- publicar sin coordinar podria duplicar esfuerzo o generar contenido contradictorio, por lo que la confianza de esta prioridad es baja hasta resolver la contradiccion.",
+      "evidenceRefs": [
+        "dept-content-summary",
+        "dept-content-risks",
+        "dept-seo-action-5"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta especificacion cubre 7 recomendaciones aprobadas por Growth+QA en la pasada dept-2026-08-15T175321Z: (1) corregir el enrutado roto de la URL /cerraduras/ antes de invertir esfuerzo SEO sobre ella, (2) cerrar actionItems mal enrutados sobre 'taquillas melamina' y revisar su posible relacion con una aprobacion critica pendiente, (3) reforzar el on-page de /cerraduras-inteligentes-taquillas/, (4) reescribir metadatos en 7 paginas con CTR 0%, (5) validar por que el evento click_phone no registra ocurrencias en GA4 pese a estar activo en GTM, (6) coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente en staging antes de publicar, y (7) publicar en produccion 4 paginas ya aprobadas en staging. Ninguna de estas paginas, plugins ni el estado real de staging/GTM esta confirmado en este contexto (noConfirmedPageInventoryNotice / noPluginThemeApiInventoryNotice), por lo que la especificacion se apoya en decisiones humanas pendientes antes de cualquier ejecucion.",
+        "proposedChanges": [
+          {
+            "description": "Antes de publicar el bloque de contenido tipo landing 'Taquillas Inteligentes' (Zentry + Tukandado) propuesto por content-strategist, coordinar con el estado del cluster SEO taquillas_inteligentes_general (staging 2103 pendiente de aprobacion visual, segun seo-specialist) y resolver el riesgo de canibalizacion con el cluster informativo cerraduras_inteligentes_taquillas, definiendo una unica estructura de URL/contenido de referencia.",
+            "rationale": "Recomendacion aprobada 'Coordinar el bloque de contenido Taquillas Inteligentes de content-strategist con el cluster SEO ya existente antes de publicar' (rank 6); confianza declarada baja por contradiccion no resuelta entre dos especialistas que trataron el mismo tema sin visibilidad cruzada.",
+            "targetPageOrComponent": "Bloque de contenido 'Taquillas Inteligentes' / cluster taquillas_inteligentes_general (staging 2103)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Existe una decision documentada de Pau sobre el destino canonico real de la keyword/URL de /cerraduras/ antes de tocar contenido o SEO en esa URL",
+          "Los actionItems de 'taquillas melamina'/'taquillas de melamina' mal enrutados quedan cerrados con referencia explicita a la decision O29.1, y se ha revisado si coinciden con la aprobacion critica pendiente antes de cerrarlos",
+          "El H1/H2, la profundidad de texto, el enlazado interno y los metadatos de /cerraduras-inteligentes-taquillas/ quedan actualizados y revisados por un humano antes de cualquier publicacion",
+          "Las 7 paginas con CTR 0% tienen meta title/description nuevos, revisados por un humano, sin duplicar contenido entre si",
+          "Se documenta explicitamente si el tag/trigger click_phone dispara correctamente en GTM Preview/GA4 DebugView, y si la version live de GTM esta realmente publicada",
+          "Existe una decision documentada sobre la diferenciacion entre el bloque de contenido 'Taquillas Inteligentes' y el cluster SEO taquillas_inteligentes_general antes de cualquier publicacion",
+          "Se confirma humanamente que el staging citado para universidades/metalicas/vestuarios/taquillas inteligentes general existe y esta aprobado antes de proceder a cualquier publicacion"
+        ],
+        "validationPlan": [
+          "Este contexto no incluye stagingQaResult ni existingPageAudit (noConfirmedPageInventoryNotice): no se puede confirmar el estado de QA de ninguna de estas paginas; debe ejecutarse una revision de QA en staging especifica para cada cambio antes de considerar avanzar",
+          "Revision manual por un humano con acceso real al sitio de la decision de enrutado de /cerraduras/ antes de aplicar cualquier redireccion",
+          "Revision de contenido y metadatos por SEO/Content humano antes de publicar cualquier cambio en /cerraduras-inteligentes-taquillas/ y en las 7 paginas con CTR 0%",
+          "Validacion tecnica manual en GTM Preview y GA4 DebugView del evento click_phone, y confirmacion del estado real de publicacion del contenedor GTM live",
+          "Reunion o decision documentada entre responsables de contenido y SEO para resolver la superposicion entre el bloque 'Taquillas Inteligentes' y el cluster taquillas_inteligentes_general antes de publicar",
+          "Confirmacion humana directa en WordPress/staging de que las 4 paginas citadas (universidades, metalicas, vestuarios, taquillas inteligentes general) existen, tienen el contenido esperado y estan realmente aprobadas antes de cualquier publicacion"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de enrutado o redireccion, documentar la configuracion de redireccion actual de /cerraduras/ para poder restaurarla si la decision de Pau cambia",
+          "Antes de modificar contenido/metadatos de cualquier pagina, guardar una copia del contenido y metadatos actuales (titulo, descripcion, H1/H2, cuerpo) para poder revertir manualmente",
+          "Antes de cualquier cambio en GTM, exportar/documentar la version actual del contenedor para poder revertir a la version anterior si la validacion revela un problema",
+          "No publicar el bloque 'Taquillas Inteligentes' hasta resolver la coordinacion con el cluster SEO; si ya se hubiera publicado por error, el plan de reversion consiste en despublicar/revertir a borrador y notificar a ambos especialistas",
+          "Para las 4 paginas candidatas a publicacion, mantener capacidad de despublicar o volver a borrador si tras la publicacion se detecta un problema de QA o de duplicidad de contenido"
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-6\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "applyStatus": "requires_manual_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "snapshot": null,
+      "auditTrail": [
+        {
+          "at": "2026-08-15T18:08:54.564Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #6 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.). Aprobacion humana: none (No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-6\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.)"
+        }
+      ],
+      "createdAt": "2026-08-15T18:08:54.564Z",
+      "updatedAt": "2026-08-15T18:08:54.564Z"
+    },
+    {
+      "contractVersion": "department-apply/v1",
+      "applyItemId": "dept-2026-08-15T175321Z#apply-7",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-7",
+      "recommendationRank": 7,
+      "departmentRunId": "dept-2026-08-15T175321Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Publicar en produccion las paginas nuevas ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general)",
+      "target": "https://zentrylockers.com/cerraduras/ (citada en evidencia como en papelera con 301 activo -- existencia/estado real sin confirmar por este empleado) | /cerraduras-para-taquillas/ (destino alternativo propuesto, sin confirmar si existe) | https://zentrylockers.com/taquillas-melamina-fenolico/ (citada en evidencia -- existencia real sin confirmar) | /taquillas-melamina/ (destino alternativo segun decision O29.1 citada -- sin confirmar si existe) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (citada en evidencia con datos de posicion -- existencia real sin confirmar) | Paginas relacionadas con 'colegios' y 'taquillas fenolicas' con CTR 0% (URLs exactas no especificadas en el contexto) | Candidata de contenido 'Taquillas Inteligentes' / cluster taquillas_inteligentes_general (sin URL confirmada, referenciada como staging 2103) | 4 candidatas a pagina nueva citadas por seo-specialist como aprobadas en staging: universidades, metalicas, vestuarios, taquillas inteligentes general (sin URLs ni confirmacion de existencia en este contexto) | regla de redireccion / enrutado de URL | encabezados H1/H2 y cuerpo de texto on-page | enlazado interno | meta title y meta description | trigger y tag 'click_phone' en el contenedor de Google Tag Manager | bloque de contenido tipo landing (categoria 'Taquillas Inteligentes') | flujo de publicacion staging -> produccion",
+      "proposedChange": "seo-specialist identifica 4 candidatas con staging ya aprobado, ubicadas en su rank 5 de priorizacion con esfuerzo bajo e impacto medio -- son ganancias rapidas pendientes solo de publicacion, no de creacion de contenido nuevo.",
+      "evidenceRefs": [
+        "dept-seo-action-5"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta especificacion cubre 7 recomendaciones aprobadas por Growth+QA en la pasada dept-2026-08-15T175321Z: (1) corregir el enrutado roto de la URL /cerraduras/ antes de invertir esfuerzo SEO sobre ella, (2) cerrar actionItems mal enrutados sobre 'taquillas melamina' y revisar su posible relacion con una aprobacion critica pendiente, (3) reforzar el on-page de /cerraduras-inteligentes-taquillas/, (4) reescribir metadatos en 7 paginas con CTR 0%, (5) validar por que el evento click_phone no registra ocurrencias en GA4 pese a estar activo en GTM, (6) coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente en staging antes de publicar, y (7) publicar en produccion 4 paginas ya aprobadas en staging. Ninguna de estas paginas, plugins ni el estado real de staging/GTM esta confirmado en este contexto (noConfirmedPageInventoryNotice / noPluginThemeApiInventoryNotice), por lo que la especificacion se apoya en decisiones humanas pendientes antes de cualquier ejecucion.",
+        "proposedChanges": [
+          {
+            "description": "Preparar la publicacion en produccion de las 4 candidatas a pagina nueva citadas como ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general), sujeta a confirmacion final de que dicho staging existe y esta efectivamente aprobado.",
+            "rationale": "Recomendacion aprobada 'Publicar en produccion las paginas nuevas ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general)' (rank 7).",
+            "targetPageOrComponent": "4 candidatas de staging: universidades, metalicas, vestuarios, taquillas inteligentes general"
+          }
+        ],
+        "acceptanceCriteria": [
+          "Existe una decision documentada de Pau sobre el destino canonico real de la keyword/URL de /cerraduras/ antes de tocar contenido o SEO en esa URL",
+          "Los actionItems de 'taquillas melamina'/'taquillas de melamina' mal enrutados quedan cerrados con referencia explicita a la decision O29.1, y se ha revisado si coinciden con la aprobacion critica pendiente antes de cerrarlos",
+          "El H1/H2, la profundidad de texto, el enlazado interno y los metadatos de /cerraduras-inteligentes-taquillas/ quedan actualizados y revisados por un humano antes de cualquier publicacion",
+          "Las 7 paginas con CTR 0% tienen meta title/description nuevos, revisados por un humano, sin duplicar contenido entre si",
+          "Se documenta explicitamente si el tag/trigger click_phone dispara correctamente en GTM Preview/GA4 DebugView, y si la version live de GTM esta realmente publicada",
+          "Existe una decision documentada sobre la diferenciacion entre el bloque de contenido 'Taquillas Inteligentes' y el cluster SEO taquillas_inteligentes_general antes de cualquier publicacion",
+          "Se confirma humanamente que el staging citado para universidades/metalicas/vestuarios/taquillas inteligentes general existe y esta aprobado antes de proceder a cualquier publicacion"
+        ],
+        "validationPlan": [
+          "Este contexto no incluye stagingQaResult ni existingPageAudit (noConfirmedPageInventoryNotice): no se puede confirmar el estado de QA de ninguna de estas paginas; debe ejecutarse una revision de QA en staging especifica para cada cambio antes de considerar avanzar",
+          "Revision manual por un humano con acceso real al sitio de la decision de enrutado de /cerraduras/ antes de aplicar cualquier redireccion",
+          "Revision de contenido y metadatos por SEO/Content humano antes de publicar cualquier cambio en /cerraduras-inteligentes-taquillas/ y en las 7 paginas con CTR 0%",
+          "Validacion tecnica manual en GTM Preview y GA4 DebugView del evento click_phone, y confirmacion del estado real de publicacion del contenedor GTM live",
+          "Reunion o decision documentada entre responsables de contenido y SEO para resolver la superposicion entre el bloque 'Taquillas Inteligentes' y el cluster taquillas_inteligentes_general antes de publicar",
+          "Confirmacion humana directa en WordPress/staging de que las 4 paginas citadas (universidades, metalicas, vestuarios, taquillas inteligentes general) existen, tienen el contenido esperado y estan realmente aprobadas antes de cualquier publicacion"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de enrutado o redireccion, documentar la configuracion de redireccion actual de /cerraduras/ para poder restaurarla si la decision de Pau cambia",
+          "Antes de modificar contenido/metadatos de cualquier pagina, guardar una copia del contenido y metadatos actuales (titulo, descripcion, H1/H2, cuerpo) para poder revertir manualmente",
+          "Antes de cualquier cambio en GTM, exportar/documentar la version actual del contenedor para poder revertir a la version anterior si la validacion revela un problema",
+          "No publicar el bloque 'Taquillas Inteligentes' hasta resolver la coordinacion con el cluster SEO; si ya se hubiera publicado por error, el plan de reversion consiste en despublicar/revertir a borrador y notificar a ambos especialistas",
+          "Para las 4 paginas candidatas a publicacion, mantener capacidad de despublicar o volver a borrador si tras la publicacion se detecta un problema de QA o de duplicidad de contenido"
+        ],
+        "approvalRequired": true
+      },
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-7\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "applyStatus": "requires_manual_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "snapshot": null,
+      "auditTrail": [
+        {
+          "at": "2026-08-15T18:08:54.564Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #7 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.). Aprobacion humana: none (No existe ninguna solicitud de aprobacion humana para \"dept-2026-08-15T175321Z#apply-7\" en el registro de aprobaciones del proyecto. Sin aprobacion explicita no se aplica nada -- que QA diga PASS no es una aprobacion.)"
+        }
+      ],
+      "createdAt": "2026-08-15T18:08:54.564Z",
+      "updatedAt": "2026-08-15T18:08:54.564Z"
+    }
+  ],
+  "counts": {
+    "proposed": 0,
+    "awaiting_approval": 0,
+    "approved": 0,
+    "rejected": 0,
+    "applying": 0,
+    "applied": 0,
+    "validation_failed": 0,
+    "rolled_back": 0,
+    "requires_manual_implementation": 7,
+    "blocked": 0
+  },
+  "externalWritesPerformed": false,
+  "applyNotAttemptedReason": "Fase de planificacion: no se ha aplicado nada. DEPARTMENT_APPLY_APPROVAL_REQUESTS_ENABLED no esta activo, asi que tampoco se han creado solicitudes de aprobacion en este entorno (el registro de aprobaciones vive donde el proyecto es persistente)."
+}

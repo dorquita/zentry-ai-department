@@ -3,6 +3,7 @@ import {
   MAX_FEEDBACK_ENTRIES_PER_RECOMMENDATION,
   renderPreviousHumanFeedback,
   selectPreviousHumanFeedback,
+  selectPreviousHumanFeedbackByRecommendation,
 } from "../src/approvals/human-feedback-context";
 import { HumanFeedbackEntry } from "../src/approvals/store";
 
@@ -72,6 +73,32 @@ export function runApprovalsHumanFeedbackTests(): TestCase[] {
       fn: () => {
         const selected = selectPreviousHumanFeedback([entry({ rejectionReason: "  el CTA no destaca  " })]);
         assert.equal(selected[0].rejectionReason, "el CTA no destaca");
+      },
+    },
+    {
+      name: "El recorte por recomendacion no deja mudas a las demas: una rechazada 6 veces no tapa a las otras",
+      fn: () => {
+        const ruidosa = Array.from({ length: MAX_FEEDBACK_ENTRIES_PER_RECOMMENDATION + 1 }, (_, i) =>
+          entry({ recommendationId: "dept-1#rec-1", version: i + 1, rejectionReason: `motivo ${i + 1}` })
+        );
+        const otra = entry({ recommendationId: "dept-1#rec-7", version: 1, rejectionReason: "las paginas se ven demasiado basicas" });
+        const selected = selectPreviousHumanFeedbackByRecommendation([...ruidosa, otra]);
+
+        assert.equal(selected.filter((f) => f.recommendationId === "dept-1#rec-1").length, MAX_FEEDBACK_ENTRIES_PER_RECOMMENDATION);
+        assert.equal(selected.filter((f) => f.recommendationId === "dept-1#rec-7").length, 1, "la otra recomendacion no puede quedarse fuera por culpa del volumen de la primera");
+      },
+    },
+    {
+      name: "El orden de salida por recomendacion es determinista (mismo input -> mismo prompt)",
+      fn: () => {
+        const entries = [
+          entry({ recommendationId: "dept-1#rec-7", version: 1, rejectionReason: "b" }),
+          entry({ recommendationId: "dept-1#rec-1", version: 1, rejectionReason: "a" }),
+        ];
+        const once = selectPreviousHumanFeedbackByRecommendation(entries).map((f) => f.recommendationId);
+        const twice = selectPreviousHumanFeedbackByRecommendation([...entries].reverse()).map((f) => f.recommendationId);
+        assert.deepEqual(once, ["dept-1#rec-1", "dept-1#rec-7"]);
+        assert.deepEqual(once, twice, "el orden no puede depender del orden de llegada de las entradas");
       },
     },
     {

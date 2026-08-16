@@ -1,0 +1,114 @@
+{
+  "departmentRunId": "dept-2026-08-15T175321Z",
+  "decidedBy": "pau",
+  "decidedAt": "2026-08-16T09:32:20.630Z",
+  "recordedOnly": true,
+  "writes": {
+    "staging": 0,
+    "production": 0,
+    "external": 0
+  },
+  "outcomes": [
+    {
+      "number": 1,
+      "id": "dept-2026-08-15T175321Z#rec-1",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-1",
+      "changeId": null,
+      "title": "Resolver el enrutado roto de /cerraduras/ antes de invertir esfuerzo SEO sobre esa URL",
+      "action": "approve",
+      "target": "staging",
+      "status": "not_executed",
+      "detail": "Aprobada por pau para aplicar en staging. NO ejecutada: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+      "rejectionReason": "",
+      "blockedReason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura."
+    },
+    {
+      "number": 2,
+      "id": "dept-2026-08-15T175321Z#rec-2",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-2",
+      "changeId": null,
+      "title": "Cerrar los actionItems de canibalizacion de 'taquillas melamina' y revisar la aprobacion critica pendiente relacionada",
+      "action": "approve",
+      "target": "staging",
+      "status": "not_executed",
+      "detail": "Aprobada por pau para aplicar en staging. NO ejecutada: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+      "rejectionReason": "",
+      "blockedReason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura."
+    },
+    {
+      "number": 3,
+      "id": "dept-2026-08-15T175321Z#rec-3",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-3",
+      "changeId": null,
+      "title": "Ejecutar el quick win de mayor impacto: on-page de 'cerraduras inteligentes para taquillas'",
+      "action": "approve",
+      "target": "staging",
+      "status": "not_executed",
+      "detail": "Aprobada por pau para aplicar en staging. NO ejecutada: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+      "rejectionReason": "",
+      "blockedReason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura."
+    },
+    {
+      "number": 4,
+      "id": "dept-2026-08-15T175321Z#rec-4",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-4",
+      "changeId": null,
+      "title": "Reescribir meta title/description en las 7 paginas con CTR 0% e impresiones reales",
+      "action": "approve",
+      "target": "staging",
+      "status": "not_executed",
+      "detail": "Aprobada por pau para aplicar en staging. NO ejecutada: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+      "rejectionReason": "",
+      "blockedReason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura."
+    },
+    {
+      "number": 5,
+      "id": "dept-2026-08-15T175321Z#rec-5",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-5",
+      "changeId": null,
+      "title": "Validar el disparo de click_phone en GTM/GA4 antes de asumir que esa via de conversion esta perdida",
+      "action": "approve",
+      "target": "staging",
+      "status": "not_executed",
+      "detail": "Aprobada por pau para aplicar en staging. NO ejecutada: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+      "rejectionReason": "",
+      "blockedReason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura."
+    },
+    {
+      "number": 6,
+      "id": "dept-2026-08-15T175321Z#rec-6",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-6",
+      "changeId": null,
+      "title": "Coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente antes de publicar",
+      "action": "approve",
+      "target": "staging",
+      "status": "not_executed",
+      "detail": "Aprobada por pau para aplicar en staging. NO ejecutada: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+      "rejectionReason": "",
+      "blockedReason": "La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura."
+    },
+    {
+      "number": 7,
+      "id": "dept-2026-08-15T175321Z#rec-7",
+      "recommendationId": "dept-2026-08-15T175321Z#rec-7",
+      "changeId": null,
+      "title": "Publicar en produccion las paginas nuevas ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general)",
+      "action": "reject",
+      "target": "staging",
+      "status": "rejected",
+      "detail": "Rechazada por pau. Motivo guardado literal.",
+      "rejectionReason": "Las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias. Necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion.",
+      "blockedReason": ""
+    }
+  ],
+  "pending": [],
+  "interpretation": [
+    "#1 \"Resolver el enrutado roto de /cerraduras/ antes de invertir esfuerzo SEO sobre esa URL\" (dept-2026-08-15T175321Z#rec-1) -> APROBAR y aplicar en STAGING -- NO SE EJECUTARA: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+    "#2 \"Cerrar los actionItems de canibalizacion de 'taquillas melamina' y revisar la aprobacion critica pendiente relacionada\" (dept-2026-08-15T175321Z#rec-2) -> APROBAR y aplicar en STAGING -- NO SE EJECUTARA: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+    "#3 \"Ejecutar el quick win de mayor impacto: on-page de 'cerraduras inteligentes para taquillas'\" (dept-2026-08-15T175321Z#rec-3) -> APROBAR y aplicar en STAGING -- NO SE EJECUTARA: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+    "#4 \"Reescribir meta title/description en las 7 paginas con CTR 0% e impresiones reales\" (dept-2026-08-15T175321Z#rec-4) -> APROBAR y aplicar en STAGING -- NO SE EJECUTARA: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+    "#5 \"Validar el disparo de click_phone en GTM/GA4 antes de asumir que esa via de conversion esta perdida\" (dept-2026-08-15T175321Z#rec-5) -> APROBAR y aplicar en STAGING -- NO SE EJECUTARA: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+    "#6 \"Coordinar el bloque de contenido 'Taquillas Inteligentes' de content-strategist con el cluster SEO ya existente antes de publicar\" (dept-2026-08-15T175321Z#rec-6) -> APROBAR y aplicar en STAGING -- NO SE EJECUTARA: La especificacion no cita de forma inequivoca ninguna pagina de staging ya existente de este sistema (ni `page_id=<N>` ni la URL exacta del borrador). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+    "#7 \"Publicar en produccion las paginas nuevas ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general)\" (dept-2026-08-15T175321Z#rec-7) -> RECHAZAR. Motivo: \"Las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias. Necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion.\""
+  ]
+}

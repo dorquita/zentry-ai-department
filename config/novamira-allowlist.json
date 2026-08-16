@@ -38,7 +38,7 @@
   "abilities": {
     "novamira/execute-php": {
       "risk": "dangerous_forbidden",
-      "reason": "Ejecuta PHP arbitrario con acceso completo a $wpdb y WordPress. Bloqueada explicitamente por el cliente (Fase O14)."
+      "reason": "Ejecuta PHP arbitrario con acceso completo a $wpdb y WordPress. SIGUE BLOQUEADA aqui, a proposito: esta clasificacion es la que ven isNovamiraAbilityAllowed() e isAbilityAllowedForProfile(), asi que cualquier llamada por la puerta general -- de cualquier especialista, con cualquier perfil, con cualquier flag -- falla. La UNICA via es la puerta estrecha del fallback controlado (src/core/execute-php-guard.ts -> assertExecutePhpAllowed), que ademas de esto exige actor de APPLY, STAGING, QA superado, ChangePlan valido y PHP generado por las plantillas deterministas de src/core/execute-php-builder.ts. Ver docs/execute-php-fallback.md. NO cambiar este risk a nada mas permisivo: eso abriria PHP a todo el mundo, que es justo lo que el fallback existe para evitar."
     },
     "novamira/run-wp-cli": {
       "risk": "dangerous_forbidden",
@@ -161,6 +161,14 @@
       "risk": "safe_write_staging_only",
       "requiresApproval": false,
       "reason": "Cancela un cambio en cola individual, sin tocar contenido en vivo. Reversible por diseno."
+    },
+    "mcp-adapter-discover-abilities": {
+      "risk": "safe_read",
+      "reason": "TOOL de introspeccion del adaptador MCP (no una ability de Novamira): devuelve el censo de abilities disponibles. Solo lectura de metadatos, no ejecuta ninguna ability ni toca WordPress."
+    },
+    "mcp-adapter-get-ability-info": {
+      "risk": "safe_read",
+      "reason": "TOOL de introspeccion del adaptador MCP: devuelve la descripcion y el ESQUEMA DE PARAMETROS de una ability, sin ejecutarla. Necesario para poder llamar a cualquier ability con los parametros correctos en vez de adivinarlos. Solo lectura de metadatos."
     }
   }
 }

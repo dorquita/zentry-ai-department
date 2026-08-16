@@ -1,3 +1,4 @@
+import { PreviousHumanFeedback } from "../approvals/human-feedback-context";
 import { buildGrowthDirectorV2Context, GrowthDirectorV2Context } from "../employees/growth-director-v2/context";
 import { buildDepartmentPrompt } from "./prompt";
 import { DepartmentSpecialistInput, LoadedSpecialistInputs } from "./specialist-inputs";
@@ -55,12 +56,13 @@ export function buildDepartmentGrowthContext(departmentCoordinationRunId: string
   };
 }
 
-export function buildDepartmentGrowthPrompt(context: DepartmentGrowthContext): string {
+export function buildDepartmentGrowthPrompt(context: DepartmentGrowthContext, previousHumanFeedback: PreviousHumanFeedback[] = []): string {
   return buildDepartmentPrompt({
     agentName: "growth-director-v2",
     departmentRunId: context.departmentCoordinationRunId,
     contextTitle: "Contexto estructurado (DepartmentGrowthContext = GrowthDirectorV2Context + specialistInputs de esta pasada)",
     context,
     coordinationRules: GROWTH_COORDINATION_RULES,
+    previousHumanFeedback,
   });
 }

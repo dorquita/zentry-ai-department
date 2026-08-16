@@ -244,9 +244,20 @@ function runIdLines(runIds: ExecutionRunIds): string[] {
 
 export function buildExecutionReportSubject(input: ExecutionReportInput): string {
   const date = input.date ?? input.generatedAt.slice(0, 10);
-  const failures = input.executed.filter((w) => w.outcome !== "applied").length;
-  const suffix = failures > 0 ? `, ${failures} con incidencia` : "";
-  return `Zentry AI Department — Ejecucion — ${date} — ${input.executed.length} ejecutada(s), ${input.rejected.length} rechazada(s), ${input.pending.length} pendiente(s)${suffix}`;
+  // "Ejecutada" es lo que llego a escribirse, no lo que se aprobo. Una
+  // aprobacion que no se pudo ejecutar (sin executor, sin credenciales,
+  // version stale) se cuenta APARTE: contarla como ejecutada en el
+  // asunto -- que es lo unico que mucha gente lee -- diria que se hizo
+  // algo que no se hizo.
+  const attempted = input.executed.filter((w) => w.outcome !== "not_executed");
+  const notExecuted = input.executed.length - attempted.length;
+  const failures = attempted.filter((w) => w.outcome !== "applied").length;
+
+  const parts = [`${attempted.length} ejecutada(s)`];
+  if (notExecuted > 0) parts.push(`${notExecuted} aprobada(s) sin ejecutar`);
+  parts.push(`${input.rejected.length} rechazada(s)`, `${input.pending.length} pendiente(s)`);
+  if (failures > 0) parts.push(`${failures} con incidencia`);
+  return `Zentry AI Department — Ejecucion — ${date} — ${parts.join(", ")}`;
 }
 
 // --- Texto plano -----------------------------------------------------------
