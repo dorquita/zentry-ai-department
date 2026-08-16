@@ -148,3 +148,42 @@ propuesta que ya lleva ChangePlan **no se ejecuta**: el payload del plan
 es el que se validó y contra el que se compara el AFTER, así que aplicarlo
 ignorando la modificación escribiría algo que nadie aprobó. Se para y se
 dice por qué; el cambio pedido vuelve como propuesta nueva.
+
+## E2E final sobre `main`
+
+**Planificación** — run [31949143534](https://github.com/dorquita/zentry-ai-department/actions/runs/31949143534), pasada `dept-2026-08-16T131231Z`, verde:
+Department → Growth → QA → inventario real de staging → Web Engineer →
+plan de apply → Daily Brief → email enviado. **Staging writes: 0.
+Production writes: 0.**
+
+Esa pasada terminó con **0 propuestas ACTIONABLE**, y es el resultado
+correcto: las recomendaciones que sobrevivieron a QA eran enrutado
+técnico, medición en GTM/GA4, una evaluación previa a publicar y un
+cluster on-page sin página exacta. Ninguna es un cambio de
+`post_content`/título/meta sobre una página concreta, así que Web
+Engineer no declaró ningún `changePlan` y los seis elementos quedaron
+`requires_manual_staging_implementation` / `blocked`. El sistema prefiere
+decirlo a inventarse una página.
+
+**Aprobación** — run [31950174194](https://github.com/dorquita/zentry-ai-department/actions/runs/31950174194), dry-run sobre esa misma pasada:
+recuperó el artifact, mapeó `#5` a `dept-2026-08-16T131231Z#rec-5`, y la
+rechazó con su motivo (*"no cita de forma inequívoca ninguna página de
+staging publicada"*). `#1, #2, #3, #4, #6` quedaron **PENDIENTES**: el
+silencio nunca aprueba. **0 escrituras.**
+
+**Escritura** — run [31950323348](https://github.com/dorquita/zentry-ai-department/actions/runs/31950323348), E2E reversible sobre staging 1867:
+
+| paso | H2 | hash |
+| --- | --- | --- |
+| BEFORE | Problemas habituales con taquillas ya instaladas | `6cdc897a5d90` |
+| AFTER | (marcador temporal del E2E) | `8fb4c5d0b3d5` |
+| FINAL | Problemas habituales con taquillas ya instaladas | `6cdc897a5d90` |
+
+Camino derivado: `execute_php_fallback`, citando los 7 tipos de bloque
+(`core/button`, `core/buttons`, `core/heading`, `core/image`, `core/list`,
+`core/paragraph`, `yoast/faq-block`) que `gutenberg-write-content` no
+acepta. Apply validado releyendo, revert validado, `identicalToStart:
+true`. **Staging writes: 2. Production writes: 0.**
+
+Es un cambio puramente técnico, así que se revierte — como debe ser. La
+primera mejora real aprobada no se revertirá.
