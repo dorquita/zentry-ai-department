@@ -1,4 +1,5 @@
 import { APPLY_STATUS_LABEL, DepartmentApplyItem, DepartmentApplyStatus, DepartmentApplySummary } from "../../department/apply/types";
+import { isInternalTechnicalItem } from "../../department/department-health";
 
 /**
  * PROPUESTAS NUMERADAS del Daily Brief.
@@ -15,10 +16,21 @@ import { APPLY_STATUS_LABEL, DepartmentApplyItem, DepartmentApplyStatus, Departm
  *    `recommendationId` si no). El numero es para la persona; el id es
  *    para el sistema. Nunca se ejecuta nada resolviendo solo por numero
  *    sin comprobar que el id sigue siendo el mismo.
- * 3. Se numeran TODAS las propuestas de la pasada, incluidas las que no
- *    se pueden aplicar. Si se numerasen solo las accionables, el "3" del
- *    email y el "3" que la persona dice podrian no ser el mismo, que es
- *    exactamente el fallo que este modulo existe para impedir.
+ * 3. Se numeran TODAS las propuestas de negocio de la pasada, incluidas
+ *    las que no se pueden aplicar. Si se numerasen solo las accionables,
+ *    el "3" del email y el "3" que la persona dice podrian no ser el
+ *    mismo, que es exactamente el fallo que este modulo existe para
+ *    impedir.
+ *
+ *    UNICA exclusion, y no es de negocio: las INCIDENCIAS TECNICAS
+ *    internas del departamento ("el seo-specialist ha fallado"). Esas no
+ *    se aprueban, se reintentan o se arreglan, y van a SALUD DEL
+ *    DEPARTAMENTO -- ver department-health.ts, que es tambien quien las
+ *    reconoce, con un criterio deliberadamente conservador. Se excluyen
+ *    AQUI, en la unica funcion que numera, para que el email y la sesion
+ *    de aprobacion sigan viendo exactamente la misma lista: si se
+ *    filtrasen solo en el render, el "3" del email y el "3" del sistema
+ *    dejarian de ser el mismo.
  *
  * Modulo PURO: sin I/O.
  */
@@ -142,6 +154,7 @@ const ACTIONABLE_STATUSES: DepartmentApplyStatus[] = ["proposed", "staging_appli
 
 export function buildNumberedProposals(summary: DepartmentApplySummary): NumberedProposal[] {
   return [...summary.items]
+    .filter((item) => !isInternalTechnicalItem(item))
     .sort((a, b) => a.recommendationRank - b.recommendationRank)
     .map((item, index) => {
       const executable = item.executableChangePlan ?? null;

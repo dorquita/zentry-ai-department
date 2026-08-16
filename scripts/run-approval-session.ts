@@ -413,6 +413,18 @@ async function executeChangePlan(
   if (decision.target === "production") {
     return { ...base, detail: "PRODUCCION no se toca en esta fase. La aprobacion queda registrada, pero no se escribe nada." };
   }
+  // Una modificacion pedida al aprobar ("cambia el title por X") NO se
+  // puede colar en un plan ya construido: el payload del plan es el que
+  // se valido contra el contrato y contra el que se comparara el AFTER.
+  // Aplicar el plan ignorando la modificacion escribiria algo que la
+  // persona no aprobo, asi que no se ejecuta y se dice por que.
+  const overrideFields = Object.keys(decision.overrides).filter((field) => typeof (decision.overrides as Record<string, unknown>)[field] === "string");
+  if (overrideFields.length > 0) {
+    return {
+      ...base,
+      detail: `La aprobacion pide modificar ${overrideFields.join(", ")}, pero esta propuesta lleva un ChangePlan ya construido y anclado a la version leida de la pagina. No se ejecuta con el valor viejo: pide el cambio como propuesta nueva para que se construya (y se valide) el plan correcto.`,
+    };
+  }
   if (executable.capability.executionPath === "native_ability") {
     return {
       ...base,

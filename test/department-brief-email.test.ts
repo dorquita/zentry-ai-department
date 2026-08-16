@@ -165,7 +165,7 @@ export function runDepartmentBriefEmailTests(): TestCase[] {
           "3. APPROVALS NEEDED",
           "4. ESTADO DE APPLY",
           "5. BLOCKED / UNKNOWN",
-          "6. ESTADO DEL DEPARTAMENTO",
+          "6. SALUD DEL DEPARTAMENTO",
           "7. COSTE DE LA PASADA",
           "8. RUN DE GITHUB",
           "9. SEGURIDAD",

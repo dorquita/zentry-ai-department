@@ -100,3 +100,29 @@ La excepción estrecha sigue exigiendo Web Engineer/APPLY + STAGING +
 ChangePlan válido + guard específico.
 
 **Producción: 0 writes.** Política sin cambios.
+
+## Daily Brief: qué se ve de cada propuesta
+
+Cada propuesta numerada imprime número, `recommendationId` + `changeId`,
+descripción, página, URL de staging, **BEFORE real** (leído del sitio, no
+prometido), AFTER propuesto, operación, `page_id`, camino de ejecución,
+capacidad, QA, riesgo y **ESTADO** (`ACTIONABLE` / `BLOCKED` / `MANUAL` /
+`STALE`).
+
+Cuando no hay ChangePlan, el email lo dice — no imprime una operación ni
+un `page_id` vacíos que parecerían datos.
+
+## Salud del departamento
+
+La sección 6 del email es **SALUD DEL DEPARTAMENTO**. Ahí van los fallos
+técnicos internos (`seo-specialist failed`, inventario de staging
+ilegible, una etapa que no aparece en el manifiesto) con su política real:
+se reintentan en la siguiente pasada o se arreglan en el repositorio.
+
+Un fallo técnico **no es una propuesta de negocio** y no ocupa un número.
+`isInternalTechnicalItem()` (en `src/department/department-health.ts`) los
+reconoce con un criterio deliberadamente conservador — exige que no haya
+plan ejecutable, que no haya página objetivo resuelta *y* que el texto
+nombre un componente interno — y `buildNumberedProposals()` los excluye
+allí mismo, en la única función que numera, para que el email y la sesión
+de aprobación sigan viendo exactamente la misma lista.
