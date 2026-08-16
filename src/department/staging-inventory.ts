@@ -75,6 +75,13 @@ export interface PageResolution {
   matchedBy: PageMatchKind;
   /** `true` cuando la referencia era una URL de otro host (tipicamente produccion) y se caso por slug. */
   crossEnvironment: boolean;
+  /**
+   * Cuantas paginas del inventario casaban con la referencia. `1` cuando
+   * se resolvio; `0` cuando no existe; `>1` cuando es AMBIGUA. Es un dato
+   * estructural a proposito: quien decide entre "no la encuentro" y "hay
+   * varias" no debe tener que leerlo del texto de `reason`.
+   */
+  candidates: number;
 }
 
 /**
@@ -92,7 +99,7 @@ export interface PageResolution {
  * resuelve y se dice por que.
  */
 export function resolveStagingPage(reference: string, inventory: StagingInventory): PageResolution {
-  const unresolved = (reason: string): PageResolution => ({ page: null, reason, matchedBy: null, crossEnvironment: false });
+  const unresolved = (reason: string, candidates = 0): PageResolution => ({ page: null, reason, matchedBy: null, crossEnvironment: false, candidates });
   const raw = String(reference ?? "").trim();
   if (raw.length === 0) return unresolved("La referencia de pagina esta vacia.");
   if (inventory.pages.length === 0) {
@@ -106,15 +113,15 @@ export function resolveStagingPage(reference: string, inventory: StagingInventor
     const id = Number.parseInt(idMatch[1], 10);
     const page = inventory.pages.find((p) => p.wordpressPageId === id);
     return page
-      ? { page, reason: `Resuelta por id explicito (${id}).`, matchedBy: "id", crossEnvironment: false }
+      ? { page, reason: `Resuelta por id explicito (${id}).`, matchedBy: "id", crossEnvironment: false, candidates: 1 }
       : unresolved(`El id ${id} no existe en el inventario real de staging.`);
   }
 
   const byUrl = inventory.pages.filter((p) => normalizeUrl(p.stagingUrl) === normalizeUrl(raw));
   if (byUrl.length === 1) {
-    return { page: byUrl[0], reason: `Resuelta por URL exacta de staging (page ${byUrl[0].wordpressPageId}).`, matchedBy: "staging_url", crossEnvironment: false };
+    return { page: byUrl[0], reason: `Resuelta por URL exacta de staging (page ${byUrl[0].wordpressPageId}).`, matchedBy: "staging_url", crossEnvironment: false, candidates: 1 };
   }
-  if (byUrl.length > 1) return unresolved(`La URL "${raw}" casa con ${byUrl.length} paginas del inventario. Ambiguo: no se resuelve.`);
+  if (byUrl.length > 1) return unresolved(`La URL "${raw}" casa con ${byUrl.length} paginas del inventario. Ambiguo: no se resuelve.`, byUrl.length);
 
   // Path/slug. Cubre tambien el caso "URL de PRODUCCION": staging es un
   // clon del mismo WordPress, asi que el slug identifica la MISMA pagina
@@ -133,9 +140,10 @@ export function resolveStagingPage(reference: string, inventory: StagingInventor
         : `Resuelta por slug exacto "${slug}" (page ${page.wordpressPageId}).`,
       matchedBy: "slug",
       crossEnvironment,
+      candidates: 1,
     };
   }
-  if (bySlug.length > 1) return unresolved(`El slug "${slug}" casa con ${bySlug.length} paginas. Ambiguo: no se resuelve.`);
+  if (bySlug.length > 1) return unresolved(`El slug "${slug}" casa con ${bySlug.length} paginas. Ambiguo: no se resuelve.`, bySlug.length);
 
   return unresolved(
     `"${raw}" no casa con ninguna pagina del inventario real de staging (${inventory.pages.length} paginas leidas). No se adivina el destino de una escritura.`

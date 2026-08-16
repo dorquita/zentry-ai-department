@@ -182,10 +182,9 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
   //    de adivinar.
   const resolution: PageResolution = resolveStagingPage(draft.targetPage ?? "", inventory);
   if (!resolution.page) {
-    const ambiguous = /Ambiguo/i.test(resolution.reason);
     return manual(
       draft,
-      ambiguous ? "ambiguous_target" : "unresolved_target",
+      resolution.candidates > 1 ? "ambiguous_target" : "unresolved_target",
       `No se pudo resolver la pagina objetivo. ${resolution.reason}`
     );
   }

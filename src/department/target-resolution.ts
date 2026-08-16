@@ -138,7 +138,7 @@ export function resolveRecommendationTargets(texts: string[], inventory: Staging
     }
     resolutions.push({
       raw,
-      status: /Ambiguo/i.test(resolution.reason) ? "ambiguous" : "not_in_inventory",
+      status: resolution.candidates > 1 ? "ambiguous" : "not_in_inventory",
       wordpressPageId: null,
       crossEnvironment: false,
       reason: resolution.reason,
