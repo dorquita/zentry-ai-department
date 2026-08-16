@@ -79,9 +79,11 @@ jobs:
     runs-on: ubuntu-latest
     # Seis invocaciones de Claude (SEO, Content, Analytics, Growth, QA,
     # Web Engineer), cada una acotada a 10 min en su propio step del
-    # runtime comun, mas los pasos deterministas de coordinacion. 90 min
-    # es el backstop del JOB completo.
-    timeout-minutes: 90
+    # runtime comun, mas los pasos deterministas de coordinacion y, desde
+    # la Fase O52, el pipeline determinista de 26 agentes que antes solo
+    # corria en el VPS (hasta 30 min propios). 120 min es el backstop del
+    # JOB completo.
+    timeout-minutes: 120
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -171,17 +173,103 @@ jobs:
           GOOGLE_ANALYTICS_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_CLIENT_SECRET }}
           GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN }}
 
+      # Google Ads (Fase O51). La RECOLECCION si se migra aqui: el watcher
+      # lee la cuenta en vivo y deja el snapshot de esta pasada, igual que
+      # SEO y Analytics. Lo que sigue fuera de fase es el AGENTE
+      # sem-specialist dentro de la pasada coordinada, que se mantiene
+      # como `not_available` mas abajo por decision explicita.
+      #
+      # READ-ONLY sin excepciones: el adaptador solo llama a
+      # `googleAds:search` (GAQL de consulta). No existe ni una llamada
+      # `:mutate` en todo el fichero, asi que este step no puede activar,
+      # pausar, crear ni modificar ninguna campana, presupuesto, keyword
+      # ni anuncio. La fase SEM-write no esta habilitada.
+      - name: "[LIVE] Google Ads -> snapshot de esta pasada (solo lectura, 0 mutaciones)"
+        id: live_ads
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run sem:watch -- --departmentRunId "$DEPARTMENT_RUN_ID" --require-live 2>&1 | tee live-ads.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
+          GOOGLE_ADS_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_ADS_OAUTH_CLIENT_ID }}
+          GOOGLE_ADS_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_OAUTH_CLIENT_SECRET }}
+          GOOGLE_ADS_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_OAUTH_REFRESH_TOKEN }}
+
       - name: "[LIVE] Estado real de las fuentes de esta pasada"
         if: always()
         run: |
           echo "Search Console (seo-watcher): $GSC_OUTCOME"
           echo "GA4 + GTM (analytics-watcher): $ANALYTICS_OUTCOME"
-          if [ "$GSC_OUTCOME" != "success" ] || [ "$ANALYTICS_OUTCOME" != "success" ]; then
+          echo "Google Ads (sem-watcher): $ADS_OUTCOME"
+          if [ "$GSC_OUTCOME" != "success" ] || [ "$ANALYTICS_OUTCOME" != "success" ] || [ "$ADS_OUTCOME" != "success" ]; then
             echo "::warning::Al menos una fuente Google NO se leyo en vivo en esta pasada. Los especialistas afectados recibiran el ultimo snapshot conocido ETIQUETADO con su antiguedad real (stale), nunca presentado como dato de hoy. Revisa los logs [LIVE] de arriba: dicen que NOMBRES de variable faltan, nunca sus valores."
           fi
         env:
           GSC_OUTCOME: ${{ steps.live_gsc.outcome }}
           ANALYTICS_OUTCOME: ${{ steps.live_analytics.outcome }}
+          ADS_OUTCOME: ${{ steps.live_ads.outcome }}
+
+      # =====================================================================
+      # FASE 0.6 -- PIPELINE DETERMINISTA + GROWTH DIRECTOR v1 (Fase O52)
+      #
+      # POR QUE EXISTE: la auditoria de la Fase O50 dejo una dependencia
+      # viva del VPS que no cerraba ninguna de las anteriores. Los
+      # informes `reports/daily/executive-<fecha>.md` y
+      # `technical-<fecha>.md` los genera growth-director v1, y v1 solo
+      # corria dentro de `npm run growth:daily`, que solo lanzaba el timer
+      # systemd del VPS. Apagar el VPS hoy significaba quedarse sin esos
+      # dos informes, aunque todo lo demas siguiera funcionando.
+      #
+      # Este step ejecuta el MISMO pase de 26 agentes, aqui dentro y con
+      # el departmentRunId de esta pasada, con tres diferencias:
+      #
+      #   --skip-watchers   Los pasos 1/6/7 ya corrieron en la FASE 0.5,
+      #                     ademas con `--require-live`, que es MAS
+      #                     estricto que este pase. Repetirlos serian
+      #                     llamadas duplicadas a Google.
+      #   --no-email        El correo lo envia el Daily Brief coordinado
+      #                     al final de este mismo workflow. Dos correos
+      #                     por pasada seria una regresion.
+      #   sin flags de escritura  Los agentes que escriben
+      #                     (wordpress-draft-agent, staging-executor,
+      #                     production-draft-executor) son fail-closed por
+      #                     diseno: exigen su variable puesta literalmente
+      #                     a "true". Como este step NO las inyecta, esos
+      #                     pasos se registran como no habilitados y no
+      #                     tocan nada. Las credenciales de WordPress que
+      #                     si se pasan son de LECTURA, para que el estado
+      #                     que reporta el informe sea real y no "sin datos".
+      #
+      # Cada paso esta aislado (runPipelineStep): uno que falle se
+      # registra y el pase continua, en vez de tumbar las 26 etapas.
+      # =====================================================================
+      - name: "[GROWTH-V1] Pipeline determinista + informes diarios de esta pasada"
+        id: growth_v1
+        continue-on-error: true
+        timeout-minutes: 30
+        run: |
+          set -o pipefail
+          npm run growth:daily -- --departmentRunId "$DEPARTMENT_RUN_ID" --skip-watchers --no-email 2>&1 | tee growth-v1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          # Solo lectura: sin WORDPRESS_DRAFTS_ENABLED / STAGING_EXECUTION_ENABLED /
+          # PRODUCTION_* no se intenta ni una escritura.
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+
+      - name: "[GROWTH-V1] Informes diarios generados en esta pasada"
+        if: always()
+        run: |
+          if [ "$GROWTH_OUTCOME" != "success" ]; then
+            echo "::warning::El pipeline determinista / Growth Director v1 no termino bien en esta pasada. Los informes reports/daily/ pueden faltar o estar incompletos. Ver el log del step [GROWTH-V1]."
+          fi
+          echo "Informes diarios presentes tras esta pasada:"
+          ls -l reports/daily/ 2>/dev/null | tail -6 || echo "(sin directorio reports/daily)"
+        env:
+          GROWTH_OUTCOME: ${{ steps.growth_v1.outcome }}
 
       # =====================================================================
       # FASE 1 -- ESPECIALISTAS (SEO, Content, Analytics)

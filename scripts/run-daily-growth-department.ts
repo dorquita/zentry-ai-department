@@ -238,12 +238,48 @@ function buildEmergencyEmailContent(dateLabel: string, failedStepCount: number):
   return { subject, text, html: `<pre style="font-family: monospace; white-space: pre-wrap; font-size: 13px;">${escapeHtml(text)}</pre>` };
 }
 
-async function runRealPass(): Promise<void> {
-  assertRealDataSource();
+/**
+ * Fase O52 — opciones para poder ejecutar este mismo pase DENTRO de la
+ * pasada de GitHub Actions, no solo desde el timer del VPS.
+ *
+ * Sin ellas, este script solo sabia abrir su propio departmentRunId,
+ * releer las tres fuentes Google por su cuenta y enviar su propio email
+ * — tres cosas que en Actions ya hace la pasada coordinada, y que
+ * duplicadas darian dos identificadores de pasada distintos, el doble de
+ * llamadas a la API de Google y dos correos al dia.
+ */
+export interface RealPassOptions {
+  /** Cuelga los 26 pasos de una pasada YA ABIERTA en vez de abrir otra. */
+  departmentRunId?: string;
+  /**
+   * Salta los pasos 1/6/7 (SEO/SEM/Analytics Watcher). En Actions esos
+   * tres ya han corrido en la FASE 0.5 con `--require-live`, que ademas
+   * es MAS estricta que este pase: aqui un watcher sin credenciales cae
+   * a su respaldo documentado, alli falla explicitamente.
+   */
+  skipWatchers?: boolean;
+  /** No envia el email final: en Actions lo manda el Daily Brief coordinado. */
+  noEmail?: boolean;
+}
 
-  const departmentRunId = buildDepartmentRunId();
-  logger.info("Pase diario del departamento Web & Growth: inicio", { departmentRunId });
+async function runRealPass(options: RealPassOptions = {}): Promise<void> {
+  // Con --skip-watchers no se lee Search Console aqui, asi que
+  // SEO_DATA_SOURCE no aplica a este proceso: exigirlo bloquearia el
+  // pase en Actions por una variable que ya valido la FASE 0.5.
+  if (!options.skipWatchers) {
+    assertRealDataSource();
+  }
+
+  const departmentRunId = options.departmentRunId ?? buildDepartmentRunId();
+  logger.info("Pase diario del departamento Web & Growth: inicio", {
+    departmentRunId,
+    skipWatchers: Boolean(options.skipWatchers),
+    noEmail: Boolean(options.noEmail),
+  });
   console.log(`departmentRunId: ${departmentRunId}`);
+  if (options.skipWatchers) {
+    console.log("Pasos 1/6/7 (SEO/SEM/Analytics Watcher) SALTADOS: ya los ejecuto la FASE 0.5 de esta misma pasada, con lectura live exigida.");
+  }
 
   let failedStepCount = 0;
   const step = async <T>(stepNumber: number, agentName: string, label: string, fn: () => Promise<T>): Promise<T | null> => {
@@ -252,13 +288,22 @@ async function runRealPass(): Promise<void> {
     return result;
   };
 
+  /** Igual que `step`, pero se omite entero si se pidio --skip-watchers. */
+  const watcherStep = async <T>(stepNumber: number, agentName: string, label: string, fn: () => Promise<T>): Promise<T | null> => {
+    if (options.skipWatchers) {
+      console.log(`[${stepNumber}/${TOTAL_STEPS}] ${label}: SALTADO (ya ejecutado en la FASE 0.5 de esta pasada).`);
+      return null;
+    }
+    return step(stepNumber, agentName, label, fn);
+  };
+
   // Fase O49 — cada paso 1-24 esta aislado: si uno lanza, se registra
   // (step_failed en el bus + credential-health.jsonl para errores de
   // auth) y el pase CONTINUA con el siguiente paso. Antes de esta fase,
   // un solo fallo (ej. invalid_grant, ver 2026-08-10) tiraba las 26
   // etapas y no se enviaba ningun email ese dia.
 
-  const seoWatcherResult = await step(1, "seo-watcher", "SEO Watcher", () => runSeoWatcher(departmentRunId));
+  const seoWatcherResult = await watcherStep(1, "seo-watcher", "SEO Watcher", () => runSeoWatcher(departmentRunId));
   if (seoWatcherResult) console.log(`  ${seoWatcherResult.jobs.length} oportunidad(es), ${seoWatcherResult.rowsRead} fila(s) leidas.`);
 
   const seoDirectorResult = await step(2, "seo-director", "SEO Director", () => runSeoDirector(departmentRunId));
@@ -276,10 +321,10 @@ async function runRealPass(): Promise<void> {
   const croResult = await step(5, "cro-landing-reviewer", "CRO / Landing Reviewer", () => runCroLandingReviewer(departmentRunId));
   if (croResult) console.log(`  ${croResult.reviews.length} landing(s) revisada(s).`);
 
-  const semResult = await step(6, "sem-watcher", "SEM Watcher", () => runSemWatcher(departmentRunId));
+  const semResult = await watcherStep(6, "sem-watcher", "SEM Watcher", () => runSemWatcher(departmentRunId));
   if (semResult) console.log(`  conectado=${semResult.connected}, campana=${semResult.campaignState.status}.`);
 
-  const analyticsResult = await step(7, "analytics-watcher", "Analytics Watcher", () => runAnalyticsWatcher(departmentRunId));
+  const analyticsResult = await watcherStep(7, "analytics-watcher", "Analytics Watcher", () => runAnalyticsWatcher(departmentRunId));
   if (analyticsResult) console.log(`  GA4 conectado=${analyticsResult.ga4Connected}, GTM conectado=${analyticsResult.gtmConnected}.`);
 
   const approvalQueueResult = await step(8, "approval-queue", "Approval Queue (deduplicando y aplicando la politica de autonomia)", () =>
@@ -417,8 +462,12 @@ async function runRealPass(): Promise<void> {
   );
 
   if (!growthResult) {
-    console.log(`[26/${TOTAL_STEPS}] Growth Director fallo — enviando email de emergencia igualmente...`);
-    await sendReportEmail(buildEmergencyEmailContent(dateLabelForEmergency, failedStepCount));
+    if (options.noEmail) {
+      console.log(`[26/${TOTAL_STEPS}] Growth Director fallo. Email OMITIDO (--no-email): lo reporta el Daily Brief coordinado.`);
+    } else {
+      console.log(`[26/${TOTAL_STEPS}] Growth Director fallo — enviando email de emergencia igualmente...`);
+      await sendReportEmail(buildEmergencyEmailContent(dateLabelForEmergency, failedStepCount));
+    }
     logger.error("Pase diario del departamento Web & Growth: Growth Director fallo, se envio email de emergencia", {
       departmentRunId,
       failedStepCount,
@@ -432,15 +481,19 @@ async function runRealPass(): Promise<void> {
   );
   console.log(`  Informe tecnico: ${growthResult.technicalReportPath}`);
 
-  console.log(`[26/${TOTAL_STEPS}] Enviando email final unico...`);
-  const emailContent = buildEmailContent(
-    departmentRunId,
-    growthResult.emailHtml,
-    growthResult.emailText,
-    growthResult.preparedForReviewCount,
-    growthResult.pendingDecisionCount
-  );
-  await sendReportEmail(emailContent);
+  if (options.noEmail) {
+    console.log(`[26/${TOTAL_STEPS}] Email final OMITIDO (--no-email): en Actions lo envia el Daily Brief coordinado, y dos correos al dia por la misma pasada seria una regresion.`);
+  } else {
+    console.log(`[26/${TOTAL_STEPS}] Enviando email final unico...`);
+    const emailContent = buildEmailContent(
+      departmentRunId,
+      growthResult.emailHtml,
+      growthResult.emailText,
+      growthResult.preparedForReviewCount,
+      growthResult.pendingDecisionCount
+    );
+    await sendReportEmail(emailContent);
+  }
 
   logger.info("Pase diario del departamento Web & Growth: finalizado, email enviado", {
     departmentRunId,
@@ -492,7 +545,17 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  await runRealPass();
+  const departmentRunIdFlagIndex = argv.indexOf("--departmentRunId");
+  const departmentRunIdFlag =
+    departmentRunIdFlagIndex !== -1 && argv[departmentRunIdFlagIndex + 1] && !argv[departmentRunIdFlagIndex + 1].startsWith("--")
+      ? argv[departmentRunIdFlagIndex + 1]
+      : undefined;
+
+  await runRealPass({
+    departmentRunId: departmentRunIdFlag,
+    skipWatchers: argv.includes("--skip-watchers"),
+    noEmail: argv.includes("--no-email"),
+  });
   process.exit(0);
 }
 

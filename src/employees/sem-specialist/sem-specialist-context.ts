@@ -1,4 +1,9 @@
 import { DepartmentEvent } from "../../core/types";
+import {
+  SnapshotFreshness,
+  classifySnapshotFreshness,
+  resolveSnapshotMaxAgeHours,
+} from "../../core/snapshot-freshness";
 
 /**
  * Context builder para el empleado Claude `sem-specialist` (ver
@@ -37,6 +42,25 @@ export interface SemMetricSnapshot {
   costEUR: number;
   conversions: number;
   ctr: number;
+  /**
+   * Fase O51 -- CPC medio en euros. `null` cuando no hubo clics: la API
+   * omite la metrica, y "sin clics" NO es lo mismo que "CPC de 0 €".
+   * Antes de esta fase el catalogo de evidencia declaraba el CPC como
+   * `not_available` de forma fija.
+   */
+  averageCpcEUR: number | null;
+  /** Fase O51 -- valor de conversion acumulado en la ventana. */
+  conversionsValue: number;
+}
+
+/** Fase O51 -- termino de busqueda real que disparo anuncios en la ventana. */
+export interface SemSearchTermSnapshot {
+  searchTerm: string;
+  campaignName: string;
+  impressions: number;
+  clicks: number;
+  costEUR: number;
+  conversions: number;
 }
 
 export interface SemCampaignSummarySnapshot {
@@ -113,7 +137,21 @@ export interface SemSpecialistContext {
   responsiveSearchAds: number;
   semCandidateCount: number;
   metricsWindow: string | null;
+  /** Fase O51 -- limites exactos de la ventana de metricas (YYYY-MM-DD). `null` si el snapshot es anterior a esta fase. */
+  metricsStartDate: string | null;
+  metricsEndDate: string | null;
+  /**
+   * Fase O51 -- procedencia y antigüedad ya clasificadas. `sourceGeneratedAt`
+   * dice CUANDO se leyo Google Ads; esto dice si esa lectura es de la
+   * pasada en curso o de una anterior, y si es lo bastante reciente para
+   * presentarla como estado actual.
+   */
+  freshness: SnapshotFreshness;
   metrics: SemMetricSnapshot[];
+  /** Fase O51 -- terminos de busqueda reales (top 25 por impresiones) de la ventana. */
+  searchTerms: SemSearchTermSnapshot[];
+  /** Fase O51 -- cuantos terminos leyo el watcher en total (searchTerms esta recortado). */
+  searchTermCount: number;
   departmentSummary: SemDepartmentSummarySnapshot | null;
   /**
    * Catalogo COMPLETO y determinista (TOOL, sin LLM) de toda la
@@ -170,6 +208,27 @@ function parseMetrics(v: unknown): SemMetricSnapshot[] {
       costEUR: microsToEurosLocal(r.costMicros),
       conversions: asNumber(r.conversions),
       ctr: asNumber(r.ctr),
+      // `null` a proposito si el campo no viene (snapshot anterior a la
+      // Fase O51) o si la API lo omitio (sin clics): en ninguno de los
+      // dos casos existe un CPC real que citar.
+      averageCpcEUR: r.averageCpcMicros == null ? null : microsToEurosLocal(r.averageCpcMicros),
+      conversionsValue: asNumber(r.conversionsValue),
+    };
+  });
+}
+
+/** Fase O51 -- terminos de busqueda del payload del evento. */
+function parseSearchTerms(v: unknown): SemSearchTermSnapshot[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((raw) => {
+    const r = asRecord(raw);
+    return {
+      searchTerm: asString(r.searchTerm),
+      campaignName: asString(r.campaignName),
+      impressions: asNumber(r.impressions),
+      clicks: asNumber(r.clicks),
+      costEUR: microsToEurosLocal(r.costMicros),
+      conversions: asNumber(r.conversions),
     };
   });
 }
@@ -265,6 +324,22 @@ export function buildSemEvidenceCatalog(ctx: Omit<SemSpecialistContext, "evidenc
     add(`sem-metrics-${i}-ctr`, `metrics[${i}].ctr`, String(m.ctr), "other");
     add(`sem-metrics-${i}-cost`, `metrics[${i}].costEUR`, String(m.costEUR), "gasto");
     add(`sem-metrics-${i}-conversions`, `metrics[${i}].conversions`, String(m.conversions), "conversiones");
+    // Fase O51: el CPC real entra en el catalogo SOLO cuando la API lo
+    // devolvio. Si no hubo clics no hay CPC, y una entrada con valor "0"
+    // habilitaria al subagente a escribir "CPC de 0 €", que es falso.
+    if (m.averageCpcEUR !== null) {
+      add(`sem-metrics-${i}-cpc`, `metrics[${i}].averageCpcEUR`, String(m.averageCpcEUR), "cpc");
+    }
+    add(`sem-metrics-${i}-conversions-value`, `metrics[${i}].conversionsValue`, String(m.conversionsValue), "conversiones");
+  });
+
+  // Fase O51 -- terminos de busqueda reales, citables uno a uno.
+  ctx.searchTerms.forEach((t, i) => {
+    add(`sem-search-term-${i}-text`, `searchTerms[${i}].searchTerm`, t.searchTerm, "other");
+    add(`sem-search-term-${i}-impressions`, `searchTerms[${i}].impressions`, String(t.impressions), "other");
+    add(`sem-search-term-${i}-clicks`, `searchTerms[${i}].clicks`, String(t.clicks), "other");
+    add(`sem-search-term-${i}-cost`, `searchTerms[${i}].costEUR`, String(t.costEUR), "gasto");
+    add(`sem-search-term-${i}-conversions`, `searchTerms[${i}].conversions`, String(t.conversions), "conversiones");
   });
 
   if (ctx.departmentSummary) {
@@ -293,7 +368,15 @@ export function buildSemEvidenceCatalog(ctx: Omit<SemSpecialistContext, "evidenc
     ds.duplicateKeywordWarnings.forEach((w, i) => add(`sem-duplicate-keyword-warning-${i}`, `departmentSummary.duplicateKeywordWarnings[${i}]`, w, "other"));
   }
 
-  add("sem-cpc-not-available", "cpc", "not_available", "cpc");
+  // Fase O51: el CPC ya NO es "no disponible" por definicion -- lo es
+  // solo cuando ninguna campana tuvo clics en la ventana. El ROAS sigue
+  // sin calcularse aqui a proposito: seria valor_de_conversion / gasto, y
+  // derivarlo en el catalogo lo convertiria en "evidencia" cuando en
+  // realidad es un calculo. Si hace falta, se anade como campo propio del
+  // watcher, no como derivada silenciosa.
+  if (ctx.metrics.every((m) => m.averageCpcEUR === null)) {
+    add("sem-cpc-not-available", "cpc", "not_available", "cpc");
+  }
   add("sem-roas-not-available", "roas", "not_available", "roas");
 
   return catalog;
@@ -305,14 +388,45 @@ export function buildSemEvidenceCatalog(ctx: Omit<SemSpecialistContext, "evidenc
  * como un estado terminal "no_data" y NUNCA invoca al subagente sin
  * contexto real.
  */
-export function buildSemSpecialistContext(events: DepartmentEvent[]): SemSpecialistContext | null {
+export interface BuildSemSpecialistContextOptions {
+  /** Inyectable para tests -- por defecto, el ahora real. */
+  now?: string;
+  /** departmentRunId de la pasada EN CURSO; por defecto DEPARTMENT_RUN_ID. */
+  currentDepartmentRunId?: string | null;
+  /** Inyectable para tests; por defecto SNAPSHOT_MAX_AGE_HOURS. */
+  maxAgeHours?: number;
+}
+
+export function buildSemSpecialistContext(
+  events: DepartmentEvent[],
+  options: BuildSemSpecialistContextOptions = {}
+): SemSpecialistContext | null {
   const event = findLatestSemWatcherFinishedEvent(events);
   if (!event) return null;
   const payload = asRecord(event.payload);
+  // Fase O51 -- `adsGeneratedAt` (cuando se hablo con la API de Google
+  // Ads) es mas preciso que `event.createdAt` (cuando se escribio el
+  // evento). Se prefiere el primero; el segundo es el respaldo para
+  // snapshots anteriores a esta fase, que no lo traen.
+  const sourceGeneratedAt =
+    typeof payload.adsGeneratedAt === "string" && payload.adsGeneratedAt.length > 0
+      ? payload.adsGeneratedAt
+      : event.createdAt;
+  const freshness = classifySnapshotFreshness({
+    sourceGeneratedAt,
+    now: options.now ?? new Date().toISOString(),
+    maxAgeHours: options.maxAgeHours ?? resolveSnapshotMaxAgeHours(),
+    currentDepartmentRunId:
+      options.currentDepartmentRunId !== undefined
+        ? options.currentDepartmentRunId
+        : process.env.DEPARTMENT_RUN_ID ?? null,
+    snapshotDepartmentRunId: event.departmentRunId,
+  });
   const baseCtx = {
     sourceEventId: event.eventId,
     sourceDepartmentRunId: event.departmentRunId,
-    sourceGeneratedAt: event.createdAt,
+    sourceGeneratedAt,
+    freshness,
     connectedToGoogleAdsAtSourceTime: asBoolean(payload.connected),
     campaignName: asString(payload.campaignName),
     campaignStatus: asString(payload.campaignStatus),
@@ -322,7 +436,11 @@ export function buildSemSpecialistContext(events: DepartmentEvent[]): SemSpecial
     responsiveSearchAds: asNumber(payload.responsiveSearchAds),
     semCandidateCount: asNumber(payload.semCandidateCount),
     metricsWindow: typeof payload.metricsWindow === "string" ? payload.metricsWindow : null,
+    metricsStartDate: typeof payload.metricsStartDate === "string" ? payload.metricsStartDate : null,
+    metricsEndDate: typeof payload.metricsEndDate === "string" ? payload.metricsEndDate : null,
     metrics: parseMetrics(payload.metrics),
+    searchTerms: parseSearchTerms(payload.searchTerms),
+    searchTermCount: asNumber(payload.searchTermCount),
     departmentSummary: parseDepartmentSummary(payload.departmentSummary),
   };
   return { ...baseCtx, evidenceCatalog: buildSemEvidenceCatalog(baseCtx) };

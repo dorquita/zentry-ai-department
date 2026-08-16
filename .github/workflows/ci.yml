@@ -27,3 +27,13 @@ jobs:
 
       - name: Test
         run: npm test
+
+      # Fase O50: hasta ahora actionlint solo se pasaba a mano en local, asi
+      # que un error de sintaxis o una expresion mal escrita en un workflow
+      # solo se descubria al ejecutarlo. Con la recoleccion de datos ya
+      # dentro de Actions, un workflow roto deja al departamento sin fuentes
+      # live -- merece un check propio.
+      - name: Actionlint
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color

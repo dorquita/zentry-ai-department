@@ -7,6 +7,8 @@ import {
 } from "../src/employees/sem-specialist/sem-specialist-output";
 import { buildSemEvidenceCatalog, SemEvidenceCatalogItem, SemSpecialistContext } from "../src/employees/sem-specialist/sem-specialist-context";
 
+import { classifySnapshotFreshness } from "../src/core/snapshot-freshness";
+
 export interface TestCase {
   name: string;
   fn: () => void;
@@ -33,6 +35,14 @@ function baseContext(overrides: Partial<Omit<SemSpecialistContext, "evidenceCata
     responsiveSearchAds: 11,
     semCandidateCount: 70,
     metricsWindow: "LAST_30_DAYS",
+    metricsStartDate: "2026-07-16",
+    metricsEndDate: "2026-08-14",
+    freshness: classifySnapshotFreshness({
+      sourceGeneratedAt: "2026-08-14T11:13:30.858Z",
+      now: "2026-08-14T11:20:00.000Z",
+    }),
+    searchTerms: [],
+    searchTermCount: 0,
     metrics: [],
     departmentSummary: {
       totalCampaigns: 7,
@@ -259,7 +269,7 @@ export function runSemSpecialistOutputTests(): TestCase[] {
     {
       name: "conversiones: numero real presente en metrics[].conversions con evidence EXACTA del catalogo y referenciada => 0 violaciones",
       fn: () => {
-        const context = baseContext({ metrics: [{ campaignId: "c1", campaignName: "SEM | Marca | Zentry", impressions: 100, clicks: 10, costEUR: 5, conversions: 2, ctr: 0.1 }] });
+        const context = baseContext({ metrics: [{ campaignId: "c1", campaignName: "SEM | Marca | Zentry", impressions: 100, clicks: 10, costEUR: 5, conversions: 2, ctr: 0.1, averageCpcEUR: 0.5, conversionsValue: 120 }] });
         const convItem = catalogItem(context, "sem-metrics-0-conversions");
         const output = baseOutput({
           conversionRiskFindings: [
