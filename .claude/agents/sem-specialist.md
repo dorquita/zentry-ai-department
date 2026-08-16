@@ -13,7 +13,7 @@ description: >
   sobre todo no tiene ningun acceso -- ni directo ni indirecto -- a la API
   de Google Ads. No puede activar, pausar, crear ni modificar ninguna
   campana, presupuesto, keyword ni anuncio bajo ninguna circunstancia.
-tools: []
+tools: [StructuredOutput]
 model: sonnet
 ---
 

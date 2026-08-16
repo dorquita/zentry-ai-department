@@ -11,7 +11,7 @@ description: >
   ningun otro flujo, y no reemplaza al agente determinista
   src/agents/ux-ui-landing-architect.ts (v1) -- conviven en paralelo para
   poder comparar sus resultados.
-tools: []
+tools: [StructuredOutput]
 model: sonnet
 ---
 

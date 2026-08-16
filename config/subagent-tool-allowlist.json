@@ -1,23 +1,43 @@
 {
   "version": "1.0",
   "experiment": "ux-ui-landing-architect-v2",
-  "updatedAt": "2026-08-14",
+  "updatedAt": "2026-08-16",
   "description": "Allowlist de seguridad para las herramientas (tools) de Claude Code que puede usar cada subagente definido en .claude/agents/. Modelo fail-closed: cualquier subagente que no aparezca aqui, o cualquier herramienta que no este en su allowedTools, se trata como DENEGADA por defecto -- nunca 'permitida por no estar prohibida explicitamente'. Este fichero es independiente del campo `tools:` del frontmatter de cada agente (que ya lo restringe a nivel de Claude Code) -- existe como segunda capa, legible/testeable desde codigo, para que un cambio accidental en el frontmatter de un agente no sea la unica proteccion contra que gane herramientas de escritura.",
   "toolCategories": {
+    "no_side_effect": {
+      "label": "Sin efectos secundarios de ningun tipo: no lee, no escribe, no ejecuta, no sale a la red",
+      "examples": [
+        "StructuredOutput"
+      ],
+      "isExternalWrite": false,
+      "note": "StructuredOutput es la herramienta INTERNA de fin-de-turno del Claude Agent SDK: es el unico canal por el que el SDK entrega structured_output cuando se pasa --json-schema. No concede al empleado ninguna capacidad que no tuviera ya -- transporta exactamente el mismo JSON que el modelo habria impreso como texto libre. Sin ella en tools:, el SDK no puede instalar el carrier, --json-schema queda INERTE y el contrato de salida deja de validarse en generacion (incidente P0 del runtime comun, ver docs/claude-runtime-reliability-incident.md)."
+    },
     "read_only": {
       "label": "Solo lectura, sin efectos secundarios",
-      "examples": ["Read", "Grep", "Glob"],
+      "examples": [
+        "Read",
+        "Grep",
+        "Glob"
+      ],
       "isExternalWrite": false
     },
     "local_write": {
       "label": "Escritura local (repositorio/filesystem de este proyecto)",
-      "examples": ["Write", "Edit", "NotebookEdit", "Bash"],
+      "examples": [
+        "Write",
+        "Edit",
+        "NotebookEdit",
+        "Bash"
+      ],
       "isExternalWrite": false,
       "note": "No es 'escritura externa', pero tampoco se concede a subagentes de solo-analisis/propuesta como ux-ui-landing-architect-v2."
     },
     "external_read": {
       "label": "Lectura de sistemas externos (red)",
-      "examples": ["WebFetch", "WebSearch"],
+      "examples": [
+        "WebFetch",
+        "WebSearch"
+      ],
       "isExternalWrite": false
     },
     "external_write": {
@@ -70,66 +90,82 @@
     "ux-ui-landing-architect-v2": {
       "definitionFile": ".claude/agents/ux-ui-landing-architect-v2.md",
       "description": "Subagente experimental Claude (v2) de arquitectura de landing pages. Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-landing-architect-comparison.ts -- cero acceso indiscriminado al repositorio, cero escritura externa.",
-      "allowedTools": [],
+      "allowedTools": [
+        "StructuredOutput"
+      ],
       "externalWriteToolsGranted": [],
-      "maxRiskCategory": "none",
-      "notes": "Fase 1 del experimento: cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt (change pack + skill zentry-brand), construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+      "maxRiskCategory": "no_side_effect",
+      "notes": "Cero herramientas de capacidad: no puede leer el repositorio, ejecutar comandos, salir a la red ni escribir en ningun sistema. La UNICA herramienta concedida es StructuredOutput, el carrier interno de fin-de-turno del Agent SDK, sin efectos secundarios -- necesaria para que --json-schema valide de verdad la salida en generacion. Cualquier otra herramienta debe anadirse explicitamente aqui Y en el frontmatter tools: del .md -- nunca solo en uno de los dos sitios."
     },
     "growth-director-v2": {
       "definitionFile": ".claude/agents/growth-director-v2.md",
       "description": "Subagente experimental Claude que sintetiza y prioriza senales cross-channel del departamento (accion backlog, work orders, change packs, approval requests, jobs, eventos). Solo debe razonar sobre el GrowthDirectorV2Context que le entrega scripts/run-growth-director-v2.ts -- cero acceso indiscriminado al repositorio, cero escritura externa. NO es el agente determinista growth-director (v1, src/agents/growth-director.ts) -- identificador distinto a proposito.",
-      "allowedTools": [],
+      "allowedTools": [
+        "StructuredOutput"
+      ],
       "externalWriteToolsGranted": [],
-      "maxRiskCategory": "none",
-      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita (resumenes deterministas + catalogo de evidencia + dependencias conocidas) se le inyecta ya resuelto en el prompt, construido por el runner (funcion TOOL determinista que reutiliza los mismos lectores que el agente v1). Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+      "maxRiskCategory": "no_side_effect",
+      "notes": "Cero herramientas de capacidad: no puede leer el repositorio, ejecutar comandos, salir a la red ni escribir en ningun sistema. La UNICA herramienta concedida es StructuredOutput, el carrier interno de fin-de-turno del Agent SDK, sin efectos secundarios -- necesaria para que --json-schema valide de verdad la salida en generacion. Cualquier otra herramienta debe anadirse explicitamente aqui Y en el frontmatter tools: del .md -- nunca solo en uno de los dos sitios."
     },
     "sem-specialist": {
       "definitionFile": ".claude/agents/sem-specialist.md",
       "description": "Subagente experimental Claude de Google Ads / SEM (READ/PROPOSE). Solo debe razonar sobre el SemSpecialistContext que le entrega scripts/run-sem-specialist.ts, construido a partir del ultimo snapshot ya persistido de sem-watcher en data/department-events.jsonl -- cero acceso indiscriminado al repositorio, cero escritura externa, y sin ninguna via directa ni indirecta a la API de Google Ads.",
-      "allowedTools": [],
+      "allowedTools": [
+        "StructuredOutput"
+      ],
       "externalWriteToolsGranted": [],
-      "maxRiskCategory": "none",
-      "notes": "Fase 1: cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt (snapshot SEM ya persistido, construido por el runner, una funcion TOOL determinista), nunca leido por el propio modelo ni consultado en vivo a Google Ads. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+      "maxRiskCategory": "no_side_effect",
+      "notes": "Cero herramientas de capacidad: no puede leer el repositorio, ejecutar comandos, salir a la red ni escribir en ningun sistema. La UNICA herramienta concedida es StructuredOutput, el carrier interno de fin-de-turno del Agent SDK, sin efectos secundarios -- necesaria para que --json-schema valide de verdad la salida en generacion. Cualquier otra herramienta debe anadirse explicitamente aqui Y en el frontmatter tools: del .md -- nunca solo en uno de los dos sitios."
     },
     "seo-specialist": {
       "definitionFile": ".claude/agents/seo-specialist.md",
       "description": "Subagente Claude especialista SEO senior. Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-seo-specialist.ts (jobs SEO agregados, catalogo de keywords objetivo, catalogo de clusters) -- cero acceso indiscriminado al repositorio, cero llamada a Search Console/otros sistemas externos en vivo, cero escritura externa.",
-      "allowedTools": [],
+      "allowedTools": [
+        "StructuredOutput"
+      ],
       "externalWriteToolsGranted": [],
-      "maxRiskCategory": "none",
-      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista) a partir de datos ya persistidos localmente. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+      "maxRiskCategory": "no_side_effect",
+      "notes": "Cero herramientas de capacidad: no puede leer el repositorio, ejecutar comandos, salir a la red ni escribir en ningun sistema. La UNICA herramienta concedida es StructuredOutput, el carrier interno de fin-de-turno del Agent SDK, sin efectos secundarios -- necesaria para que --json-schema valide de verdad la salida en generacion. Cualquier otra herramienta debe anadirse explicitamente aqui Y en el frontmatter tools: del .md -- nunca solo en uno de los dos sitios."
     },
     "analytics-specialist": {
       "definitionFile": ".claude/agents/analytics-specialist.md",
       "description": "Subagente experimental Claude de medicion/analitica y CRO measurement (GA4/GTM). Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-analytics-specialist.ts (el ultimo snapshot real ya leido por analytics-watcher) -- cero acceso indiscriminado al repositorio, cero acceso directo a GA4/GTM, cero escritura externa.",
-      "allowedTools": [],
+      "allowedTools": [
+        "StructuredOutput"
+      ],
       "externalWriteToolsGranted": [],
-      "maxRiskCategory": "none",
-      "notes": "Cero herramientas, ni siquiera de lectura. Todo el contexto que necesita (trafico por canal, landing pages, eventos clave vs. catalogo esperado, fuentes/medios, estado de GTM) viene ya resuelto en el prompt, construido por src/employees/analytics-specialist/context.ts a partir de datos ya persistidos localmente (event bus + informe Markdown de analytics-watcher) -- nunca llama a GA4/GTM en vivo."
+      "maxRiskCategory": "no_side_effect",
+      "notes": "Cero herramientas de capacidad: no puede leer el repositorio, ejecutar comandos, salir a la red ni escribir en ningun sistema. La UNICA herramienta concedida es StructuredOutput, el carrier interno de fin-de-turno del Agent SDK, sin efectos secundarios -- necesaria para que --json-schema valide de verdad la salida en generacion. Cualquier otra herramienta debe anadirse explicitamente aqui Y en el frontmatter tools: del .md -- nunca solo en uno de los dos sitios."
     },
     "content-strategist": {
       "definitionFile": ".claude/agents/content-strategist.md",
       "description": "Subagente experimental Claude de estrategia de contenido B2B (briefs, no articulos finales). Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-content-strategist.ts -- cero acceso indiscriminado al repositorio, cero escritura externa.",
-      "allowedTools": [],
+      "allowedTools": [
+        "StructuredOutput"
+      ],
       "externalWriteToolsGranted": [],
-      "maxRiskCategory": "none",
-      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt (change pack de contenido + skill zentry-brand), construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+      "maxRiskCategory": "no_side_effect",
+      "notes": "Cero herramientas de capacidad: no puede leer el repositorio, ejecutar comandos, salir a la red ni escribir en ningun sistema. La UNICA herramienta concedida es StructuredOutput, el carrier interno de fin-de-turno del Agent SDK, sin efectos secundarios -- necesaria para que --json-schema valide de verdad la salida en generacion. Cualquier otra herramienta debe anadirse explicitamente aqui Y en el frontmatter tools: del .md -- nunca solo en uno de los dos sitios."
     },
     "web-engineer": {
       "definitionFile": ".claude/agents/web-engineer.md",
       "description": "Subagente experimental Claude que convierte un ChangePack ya aprobable (UX/SEO/Content/Growth) en una especificacion tecnica implementable. Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-web-engineer.ts -- cero acceso indiscriminado al repositorio, cero escritura externa, cero ejecucion de ningun cambio (fase exclusivamente de especificacion, approvalRequired siempre true).",
-      "allowedTools": [],
+      "allowedTools": [
+        "StructuredOutput"
+      ],
       "externalWriteToolsGranted": [],
-      "maxRiskCategory": "none",
-      "notes": "Fase de solo especificacion: cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita (ChangePack + auditoria real de paginas existentes + resultado real de Staging QA, cuando hay datos) se le inyecta ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. No tiene, ni tendra en esta fase, ninguna capacidad de escritura en WordPress/staging/produccion ni en ningun otro sistema externo."
+      "maxRiskCategory": "no_side_effect",
+      "notes": "Cero herramientas de capacidad: no puede leer el repositorio, ejecutar comandos, salir a la red ni escribir en ningun sistema. La UNICA herramienta concedida es StructuredOutput, el carrier interno de fin-de-turno del Agent SDK, sin efectos secundarios -- necesaria para que --json-schema valide de verdad la salida en generacion. Cualquier otra herramienta debe anadirse explicitamente aqui Y en el frontmatter tools: del .md -- nunca solo en uno de los dos sitios."
     },
     "qa-reviewer": {
       "definitionFile": ".claude/agents/qa-reviewer.md",
       "description": "Revisor independiente de calidad del departamento IA. Solo debe razonar sobre el artifact (de otro empleado o un fixture) que scripts/run-qa-reviewer.ts le entrega ya resuelto en el prompt -- cero acceso indiscriminado al repositorio, cero escritura externa, no vuelve a hacer el trabajo original.",
-      "allowedTools": [],
+      "allowedTools": [
+        "StructuredOutput"
+      ],
       "externalWriteToolsGranted": [],
-      "maxRiskCategory": "none",
-      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita (identidad del artifact + su contenido JSON completo) se le inyecta ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista), nunca leido por el propio modelo. Su salida NUNCA se trata como autoridad para saltarse ningun guard deterministico existente (subagent-tool-guard.ts, json-schema-lite.ts) -- solo evalua calidad de contenido."
+      "maxRiskCategory": "no_side_effect",
+      "notes": "Cero herramientas de capacidad: no puede leer el repositorio, ejecutar comandos, salir a la red ni escribir en ningun sistema. La UNICA herramienta concedida es StructuredOutput, el carrier interno de fin-de-turno del Agent SDK, sin efectos secundarios -- necesaria para que --json-schema valide de verdad la salida en generacion. Cualquier otra herramienta debe anadirse explicitamente aqui Y en el frontmatter tools: del .md -- nunca solo en uno de los dos sitios."
     }
   }
 }

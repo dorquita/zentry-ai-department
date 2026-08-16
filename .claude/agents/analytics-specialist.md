@@ -11,7 +11,7 @@ description: >
   recibe acceso al repositorio ni a ninguna herramienta, y NUNCA puede
   leer ni escribir en GA4/GTM por si mismo -- solo interpreta el
   contexto de solo lectura que ya viene resuelto en el prompt.
-tools: []
+tools: [StructuredOutput]
 model: sonnet
 ---
 

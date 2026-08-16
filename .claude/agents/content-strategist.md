@@ -14,7 +14,7 @@ description: >
   src/agents/content-change-pack-builder.ts) -- consume su salida ya
   preparada como fuente de datos real, nunca la sustituye ni redacta el
   articulo final.
-tools: []
+tools: [StructuredOutput]
 model: sonnet
 ---
 

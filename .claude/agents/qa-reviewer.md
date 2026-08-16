@@ -9,7 +9,7 @@ description: >
   invoca desde ningun otro flujo, no recibe nunca acceso a ficheros, al
   repositorio ni a ningun sistema externo, y no vuelve a hacer el trabajo
   original del empleado que genero el artifact -- solo lo evalua.
-tools: []
+tools: [StructuredOutput]
 model: sonnet
 ---
 

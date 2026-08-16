@@ -72,7 +72,7 @@ jobs:
     # resolucion de salida a 10 min. Este timeout-minutes: 20 de aqui es
     # el limite del JOB completo (incluye los pasos [DOMINIO] antes y
     # despues del runtime).
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -145,10 +145,11 @@ jobs:
         # caller, no un step interno de la composite action) -- limita
         # TODA la composite action (auth + preflights + claude-code-action
         # + resolucion de salida) a 10 min.
-        timeout-minutes: 10
+        timeout-minutes: 22
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: web-engineer
+          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/web-engineer/claude-runtime-health.json
           prompt: ${{ steps.read_prompt.outputs.content }}
           output-schema-path: config/web-engineer-output.schema.json
           expected-output-path: ${{ steps.step1.outputs.expectedOutputPath }}
@@ -225,3 +226,26 @@ jobs:
         run: npm run web-engineer:print-capability-warnings-for-ci -- "$SPEC_JSON_PATH"
         env:
           SPEC_JSON_PATH: ${{ steps.step2.outputs.specJsonPath }}
+
+      # --- [RUNTIME] Fiabilidad del runtime comun: agrega los
+      # diagnosticos por invocacion (claude-runtime-health.json) de esta
+      # pasada y los sube como artifact.
+      #
+      # `always()`: una pasada que FALLO es justo la que mas interesa
+      # poder auditar despues. El agregador es fail-soft a proposito (no
+      # puede tumbar el job): la autoridad sobre si el empleado fallo
+      # sigue siendo el step del runtime, no esta metrica. ---
+      - name: "[RUNTIME] Metricas de fiabilidad del runtime comun"
+        if: always()
+        run: npm run claude-runtime:metrics-for-ci -- "$HEALTH_DIR" "$HEALTH_DIR/claude-runtime-metrics.json" "Fiabilidad del runtime -- web-engineer"
+        env:
+          HEALTH_DIR: ${{ github.workspace }}/reports/claude-runtime-health
+
+      - name: "[RUNTIME] Subir diagnostico de fiabilidad del runtime"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-runtime-health-web-engineer-${{ github.run_id }}
+          path: reports/claude-runtime-health/
+          if-no-files-found: warn
+          retention-days: 30

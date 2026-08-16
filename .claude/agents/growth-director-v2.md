@@ -16,7 +16,7 @@ description: >
   nuevo) para evitar cualquier colision de nombre. v1 sigue siendo el
   unico que genera reports/daily/*.md; v2 sintetiza y prioriza sobre el
   mismo tipo de datos, en un artifact propio separado.
-tools: []
+tools: [StructuredOutput]
 model: sonnet
 ---
 

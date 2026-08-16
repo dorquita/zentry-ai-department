@@ -113,7 +113,9 @@
     "state:snapshot": "ts-node scripts/department-state.ts --mode snapshot",
     "state:verify": "ts-node scripts/department-state.ts --mode verify",
     "staging:inventory": "ts-node scripts/read-staging-inventory.ts",
-    "approvals:record-decisions": "ts-node scripts/o46-record-daily-brief-decisions.ts"
+    "approvals:record-decisions": "ts-node scripts/o46-record-daily-brief-decisions.ts",
+    "claude-runtime:attempt-for-ci": "ts-node scripts/claude-runtime-attempt-for-ci.ts",
+    "claude-runtime:metrics-for-ci": "ts-node scripts/claude-runtime-metrics-for-ci.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

@@ -1,4 +1,5 @@
 import { JsonSchemaLite, validateAgainstSchema } from "./json-schema-lite";
+import { ClaudeRuntimeFailureKind, ClaudeRuntimeFailureClassification, classifyFailure, classifyInvocationFailure, ClaudeInvocationEvidence } from "./claude-runtime-failure-taxonomy";
 
 /**
  * Runtime COMUN reutilizable por cualquier "empleado Claude" (un
@@ -147,4 +148,112 @@ export function resolveClaudeEmployeeOutput(params: { structuredOutput: string |
   }
 
   return { source: "execution_file_fallback", rawText: resultMessage.result, parsed };
+}
+
+/**
+ * Mapeo de los `subtype` de error del mensaje final del Agent SDK a la
+ * taxonomia del runtime. Explicito y exhaustivo a proposito: un subtype
+ * nuevo cae en `unknown_runtime_failure` (no reintentable) en vez de
+ * heredar silenciosamente la politica de otro.
+ *
+ * Ojo con `error_max_structured_output_retries`: significa que el SDK
+ * YA re-pregunto varias veces al modelo y aun asi no consiguio una
+ * salida valida contra el schema. Por eso se clasifica como
+ * `schema_validation_failed` (determinista, NO reintentable): reintentar
+ * desde fuera repetiria un bucle que el SDK ya agoto por dentro.
+ */
+const SDK_ERROR_SUBTYPE_TO_FAILURE_KIND: Record<string, ClaudeRuntimeFailureKind> = {
+  error_max_structured_output_retries: "schema_validation_failed",
+  error_max_turns: "timeout",
+  error_max_budget_usd: "timeout",
+  error_during_execution: "provider_transient_failure",
+};
+
+export type ClaudeEmployeeResolution =
+  | { ok: true; resolved: ResolvedClaudeEmployeeOutput }
+  | { ok: false; classification: ClaudeRuntimeFailureClassification };
+
+/**
+ * Version NO lanzante de `resolveClaudeEmployeeOutput()`: resuelve la
+ * salida igual que ella (mismo contrato, misma validacion, mismo
+ * fail-closed) pero, cuando no puede, devuelve la CLASE de fallo en vez
+ * de una excepcion generica.
+ *
+ * Existe para que la composite action pueda decidir si reintentar sin
+ * tener que adivinar el motivo parseando un mensaje de error. La
+ * validacion es EXACTAMENTE la misma: nunca acepta una salida que
+ * `resolveClaudeEmployeeOutput()` rechazaria, y nunca marca `ok: true`
+ * solo porque exista texto.
+ */
+export function attemptResolveClaudeEmployeeOutput(params: { structuredOutput: string | undefined; executionFileContent: string | undefined; outputSchema: JsonSchemaLite; evidence: ClaudeInvocationEvidence }): ClaudeEmployeeResolution {
+  const { structuredOutput, executionFileContent, outputSchema, evidence } = params;
+  const attempt = evidence.attempt;
+
+  // --- Caso A: structured_output presente (el camino que el SDK
+  // valida contra el mismo schema en generacion). ---
+  if (structuredOutput && structuredOutput.trim().length > 0) {
+    let parsed: unknown;
+    try {
+      parsed = extractJsonFromModelResponse(structuredOutput);
+    } catch (err) {
+      return { ok: false, classification: classifyFailure("result_not_json", `structured_output no es JSON valido: ${errorText(err)}.`, attempt) };
+    }
+    const schemaErrors = validateAgainstSchema(outputSchema, outputSchema, parsed);
+    if (schemaErrors.length > 0) {
+      return { ok: false, classification: classifyFailure("schema_validation_failed", `structured_output no cumple el schema: ${schemaErrors.join("; ")}`, attempt) };
+    }
+    return { ok: true, resolved: { source: "structured_output", rawText: structuredOutput, parsed } };
+  }
+
+  // --- Sin structured_output: decidir si hay algo recuperable. ---
+  if (!executionFileContent) {
+    return { ok: false, classification: classifyInvocationFailure(evidence) };
+  }
+
+  let messages: unknown;
+  try {
+    messages = JSON.parse(executionFileContent);
+  } catch (err) {
+    return { ok: false, classification: classifyFailure("execution_file_invalid", `execution_file no es JSON valido (probable truncado): ${errorText(err)}.`, attempt) };
+  }
+
+  if (!Array.isArray(messages)) {
+    return { ok: false, classification: classifyFailure("execution_file_invalid", "execution_file no contiene un array de mensajes SDK.", attempt) };
+  }
+
+  const resultMessages = messages.filter((m): m is ExecutionFileMessage => typeof m === "object" && m !== null && (m as Record<string, unknown>).type === "result");
+
+  if (resultMessages.length === 0) {
+    return { ok: false, classification: classifyFailure("result_missing", `El execution_file tiene ${messages.length} mensaje(s) SDK pero ninguno de tipo "result": el stream murio antes del mensaje final.`, attempt) };
+  }
+
+  const resultMessage = resultMessages[resultMessages.length - 1];
+
+  if (resultMessage.subtype !== "success" || resultMessage.is_error === true) {
+    const subtype = String(resultMessage.subtype);
+    const kind = SDK_ERROR_SUBTYPE_TO_FAILURE_KIND[subtype] ?? "unknown_runtime_failure";
+    return { ok: false, classification: classifyFailure(kind, `Mensaje final "result" con subtype="${subtype}" is_error=${String(resultMessage.is_error)}.`, attempt) };
+  }
+
+  if (typeof resultMessage.result !== "string" || resultMessage.result.trim().length === 0) {
+    return { ok: false, classification: classifyFailure("result_missing", 'El mensaje final "result" no trae un campo `result` de texto no vacio.', attempt) };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = extractJsonFromModelResponse(resultMessage.result);
+  } catch (err) {
+    return { ok: false, classification: classifyFailure("result_not_json", `El texto final de Claude (${resultMessage.result.length} caracteres) no es JSON valido: ${errorText(err)}.`, attempt) };
+  }
+
+  const schemaErrors = validateAgainstSchema(outputSchema, outputSchema, parsed);
+  if (schemaErrors.length > 0) {
+    return { ok: false, classification: classifyFailure("schema_validation_failed", `El JSON recuperado del execution_file no cumple el schema: ${schemaErrors.join("; ")}`, attempt) };
+  }
+
+  return { ok: true, resolved: { source: "execution_file_fallback", rawText: resultMessage.result, parsed } };
+}
+
+function errorText(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }

@@ -98,12 +98,20 @@ export function runSubagentToolGuardTests(): TestCase[] {
 
     // --- Requisito central del experimento: cero herramientas de escritura externa ---
     {
-      name: `${AGENT} tiene allowedTools vacio en config/subagent-tool-allowlist.json`,
+      name: `${AGENT} no tiene NINGUNA herramienta de capacidad en config/subagent-tool-allowlist.json (solo el carrier StructuredOutput)`,
       fn: () => {
         const allowlist = loadSubagentToolAllowlist();
         const entry = allowlist.agents[AGENT];
         assert.ok(entry, `${AGENT} deberia existir en el allowlist`);
-        assert.deepEqual(entry.allowedTools, []);
+
+        // StructuredOutput es el carrier interno de fin-de-turno del
+        // Agent SDK: no lee, no escribe, no ejecuta y no sale a la red
+        // -- transporta el mismo JSON que el modelo habria impreso como
+        // texto. Es la UNICA herramienta admisible aqui; cualquier otra
+        // (incluida una de solo lectura como Read) es una regresion de
+        // seguridad.
+        const capabilityTools = entry.allowedTools.filter((tool) => tool !== "StructuredOutput");
+        assert.deepEqual(capabilityTools, [], `${AGENT} no puede tener herramientas de capacidad: [${capabilityTools.join(", ")}]`);
         assert.deepEqual(entry.externalWriteToolsGranted, []);
       },
     },
@@ -154,7 +162,7 @@ export function runSubagentToolGuardTests(): TestCase[] {
         const fakeAllowlist = buildFakeAllowlist({ allowedTools: ["Bash", "Read"] });
         const result = checkSubagentIsToolless("fake-agent-with-tools", fakeAllowlist);
         assert.equal(result.ok, false);
-        assert.ok(result.reasons.some((r) => /allowedTools no esta vacio/.test(r)));
+        assert.ok(result.reasons.some((r) => /allowedTools concede herramientas de capacidad/.test(r)));
       },
     },
     {
@@ -177,14 +185,17 @@ export function runSubagentToolGuardTests(): TestCase[] {
         const fakeAllowlist = buildFakeAllowlist({ allowedTools: [] });
         const result = checkSubagentIsToolless("fake-agent-with-tools", fakeAllowlist);
         assert.equal(result.ok, false);
-        assert.ok(result.reasons.some((r) => /frontmatter/i.test(r) && /tools:/.test(r)), `reasons: ${JSON.stringify(result.reasons)}`);
+        assert.ok(
+          result.reasons.some((r) => /frontmatter/i.test(r) && /herramientas de capacidad/.test(r)),
+          `reasons: ${JSON.stringify(result.reasons)}`
+        );
       },
     },
     {
       name: "assertSubagentIsToolless lanza (con el motivo exacto) cuando el fixture inconsistente se usa",
       fn: () => {
         const fakeAllowlist = buildFakeAllowlist({ allowedTools: ["Bash", "Read"] });
-        assert.throws(() => assertSubagentIsToolless("fake-agent-with-tools", fakeAllowlist), /allowedTools no esta vacio/);
+        assert.throws(() => assertSubagentIsToolless("fake-agent-with-tools", fakeAllowlist), /allowedTools concede herramientas de capacidad/);
       },
     },
 

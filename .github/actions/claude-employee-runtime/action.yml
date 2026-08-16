@@ -54,9 +54,38 @@ inputs:
     required: false
     default: "8"
   disallowed-tools:
-    description: 'Patron pasado a --disallowedTools, defensa en profundidad sobre el tools:[] del propio agente.'
+    description: 'Patron pasado a --disallowedTools, defensa en profundidad sobre el tools del propio agente. NO debe cubrir StructuredOutput: es el carrier interno de fin-de-turno del Agent SDK y sin el, --json-schema queda inerte (ver docs/claude-runtime-reliability-incident.md).'
     required: false
     default: "mcp__*"
+  health-record-path:
+    description: >-
+      OPCIONAL. Ruta donde escribir el diagnostico por invocacion
+      (claude-runtime-health.json): intentos, clase de fallo, si se
+      reintento, si se recupero, origen de la salida y estado de
+      validacion. Vacio = se escribe igualmente en una ruta temporal del
+      runner para el log, pero no se deja en el workspace del empleado.
+    required: false
+    default: ""
+  department-run-id:
+    description: 'OPCIONAL. departmentRunId de la pasada coordinada, solo para correlacionar el diagnostico de salud.'
+    required: false
+    default: ""
+  max-retries:
+    description: >-
+      Numero maximo de REINTENTOS (no de intentos) para fallos
+      clasificados como TRANSITORIOS por la taxonomia del runtime
+      (src/core/claude-runtime-failure-taxonomy.ts). Por defecto 1:
+      intento 1 -> fallo transitorio -> backoff -> intento 2 -> si vuelve
+      a fallar, el empleado queda en failed con incidente registrado.
+      Un fallo DETERMINISTA (schema, dominio, auth, politica de
+      herramientas, JSON malformado reproducible) NUNCA se reintenta,
+      valga lo que valga este input. Poner 0 desactiva el reintento.
+    required: false
+    default: "1"
+  retry-backoff-seconds:
+    description: 'Espera entre el intento 1 y el reintento, en segundos.'
+    required: false
+    default: "20"
 
 outputs:
   claude-outcome:
@@ -69,10 +98,25 @@ outputs:
   output-source:
     description: >-
       "structured_output" si la salida vino directa de claude-code-action,
-      "execution_file_fallback" si se recupero del execution_file. Vacio
-      si el runtime fallo por completo (el step del runtime ya habra
-      fallado en ese caso -- este output es solo para Step Summary).
-    value: ${{ steps.resolve.outputs.source }}
+      "execution_file_fallback" si se recupero del execution_file, "none"
+      si no hubo salida valida (el step del runtime ya habra fallado en
+      ese caso -- este output es solo para Step Summary).
+    value: ${{ steps.finalize.outputs.source }}
+  failure-kind:
+    description: 'Clase de fallo FINAL segun la taxonomia del runtime, o vacio si la invocacion acabo aceptada.'
+    value: ${{ steps.finalize.outputs.failure-kind }}
+  attempt-count:
+    description: 'Numero de invocaciones reales de Claude que hizo falta (1 = a la primera).'
+    value: ${{ steps.finalize.outputs.attempt-count }}
+  retried:
+    description: '"true" si hubo un reintento por fallo clasificado como transitorio.'
+    value: ${{ steps.finalize.outputs.retried }}
+  recovered:
+    description: '"true" solo si hubo reintento Y ese reintento salvo la invocacion.'
+    value: ${{ steps.finalize.outputs.recovered }}
+  validation-status:
+    description: '"accepted" o "rejected" -- autoridad final sobre si la salida es utilizable.'
+    value: ${{ steps.finalize.outputs.validation-status }}
 
 runs:
   using: "composite"
@@ -253,6 +297,31 @@ runs:
     # "[RUNTIME] Ejecutar...") y docs/claude-employee-runtime.md, seccion
     # de timeouts -- todo empleado nuevo debe copiar ese
     # timeout-minutes: 10 en su propio caller.
+    # --- Terreno limpio ANTES de invocar: purga del execution_file
+    # compartido + registro de tamano/hash de prompt y schema.
+    #
+    # La purga NO es cosmetica. claude-code-action escribe SIEMPRE en la
+    # misma ruta ($RUNNER_TEMP/claude-execution-output.json) y, cuando
+    # falla, publica esa ruta si el fichero existe -- sin comprobar
+    # quien lo escribio. En la pasada coordinada del departamento (seis
+    # empleados en UN unico job) eso significa que una invocacion que
+    # muriese antes de escribir su fichero heredaria el del empleado
+    # ANTERIOR y lo validaria como propia. Purgar antes de cada
+    # invocacion elimina esa contaminacion cruzada; el driver ademas
+    # compara mtime contra el momento de la purga como segunda barrera.
+    - name: "[RUNTIME] Preparar invocacion (purgar execution_file compartido + registrar hashes)"
+      id: prepare
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: npm run claude-runtime:attempt-for-ci -- prepare "$WORKDIR" "$OUTPUT_SCHEMA_PATH"
+      env:
+        WORKDIR: ${{ runner.temp }}/claude-runtime/${{ inputs.agent-name }}
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+        # El prompt viaja por env, NUNCA por linea de comandos: se usa
+        # solo para registrar su tamano y su hash en el diagnostico
+        # (jamas su contenido). Ver claude-runtime-health.ts.
+        PROMPT_TEXT: ${{ inputs.prompt }}
+
     - name: Ejecutar empleado Claude
       id: claude
       if: steps.claude-auth.outputs.method != 'none'
@@ -288,16 +357,101 @@ runs:
     # generico (JSON Schema), nunca Claude ni la Action; la validacion de
     # FORMA especifica de cada empleado la hace el propio empleado
     # DESPUES de este step, leyendo expected-output-path.
-    - name: Resolver salida del empleado (structured_output o fallback via execution_file)
-      id: resolve
+    # --- Capturar y CLASIFICAR el intento 1 en el borde mismo de la
+    # Action. Persiste una copia propia del execution_file y de la
+    # salida canonica de este intento en una ruta exclusiva del intento,
+    # de modo que ni un reintento ni otro empleado del mismo job puedan
+    # pisar esta evidencia. Publica `resolved` y `retriable` para la
+    # decision de reintento -- que se toma sobre una CLASE de fallo
+    # concreta, nunca sobre "fallo algo".
+    - name: "[RUNTIME] Capturar y clasificar intento 1"
+      id: capture-1
       if: steps.claude-auth.outputs.method != 'none'
       shell: bash
-      run: npm run claude-employee:resolve-output-for-ci -- "$OUTPUT_SCHEMA_PATH" "$EXPECTED_OUTPUT_PATH" "$EXECUTION_FILE_PATH"
+      run: npm run claude-runtime:attempt-for-ci -- capture "$WORKDIR" 1 "$OUTPUT_SCHEMA_PATH"
       env:
+        WORKDIR: ${{ runner.temp }}/claude-runtime/${{ inputs.agent-name }}
         OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
-        EXPECTED_OUTPUT_PATH: ${{ inputs.expected-output-path }}
         EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
         CLAUDE_STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}
+        CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
+
+    # --- REINTENTO ACOTADO, solo para clases TRANSITORIAS.
+    #
+    # La condicion es explicita en los tres ejes a la vez: el intento 1
+    # NO se resolvio, su clase de fallo esta marcada `retriable` por la
+    # taxonomia, y quedan reintentos en el presupuesto. Un fallo
+    # determinista (schema, dominio, auth, politica de herramientas,
+    # JSON malformado) tiene `retriable=false` y no pasa de aqui: sigue
+    # siendo fail-closed, como antes.
+    #
+    # El reintento es IDEMPOTENTE: recibe EXACTAMENTE los mismos
+    # inputs que el intento 1 (mismo prompt, mismo schema, mismo agente,
+    # mismo modelo, mismo max-turns). Los empleados de razonamiento no
+    # escriben en ningun sistema externo, asi que repetir la invocacion
+    # no tiene efectos observables fuera del propio runtime.
+    - name: "[RUNTIME] Backoff antes del reintento (solo fallo transitorio)"
+      id: backoff
+      if: steps.claude-auth.outputs.method != 'none' && steps.capture-1.outputs.resolved == 'false' && steps.capture-1.outputs.retriable == 'true' && inputs.max-retries != '0'
+      shell: bash
+      run: |
+        echo "::warning::Intento 1 de ${AGENT_NAME} fallo con una clase TRANSITORIA (${FAILURE_KIND}). Reintentando una vez tras ${BACKOFF}s con exactamente el mismo input."
+        sleep "$BACKOFF"
+        npm run claude-runtime:attempt-for-ci -- prepare "$WORKDIR" "$OUTPUT_SCHEMA_PATH"
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+        FAILURE_KIND: ${{ steps.capture-1.outputs.failure-kind }}
+        BACKOFF: ${{ inputs.retry-backoff-seconds }}
+        WORKDIR: ${{ runner.temp }}/claude-runtime/${{ inputs.agent-name }}
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+        PROMPT_TEXT: ${{ inputs.prompt }}
+
+    - name: Ejecutar empleado Claude (reintento)
+      id: claude-retry
+      if: steps.backoff.outcome == 'success'
+      continue-on-error: true
+      uses: anthropics/claude-code-action@9d7150bc8a3dae8149739a88019d192b579ad90c # v1.0.193
+      with:
+        prompt: ${{ inputs.prompt }}
+        github_token: ${{ inputs.github-token }}
+        anthropic_api_key: ""
+        claude_code_oauth_token: ${{ inputs.claude-code-oauth-token }}
+        claude_args: |
+          --agent ${{ inputs.agent-name }}
+          --disallowedTools "${{ inputs.disallowed-tools }}"
+          --max-turns ${{ inputs.max-turns }}
+          --json-schema '${{ steps.schema.outputs.json }}'
+
+    - name: "[RUNTIME] Capturar y clasificar intento 2"
+      id: capture-2
+      if: steps.backoff.outcome == 'success'
+      shell: bash
+      run: npm run claude-runtime:attempt-for-ci -- capture "$WORKDIR" 2 "$OUTPUT_SCHEMA_PATH"
+      env:
+        WORKDIR: ${{ runner.temp }}/claude-runtime/${{ inputs.agent-name }}
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+        EXECUTION_FILE_PATH: ${{ steps.claude-retry.outputs.execution_file }}
+        CLAUDE_STRUCTURED_OUTPUT: ${{ steps.claude-retry.outputs.structured_output }}
+        CLAUDE_OUTCOME: ${{ steps.claude-retry.outcome }}
+
+    # --- Autoridad FINAL sobre la validez de la salida. Elige UN unico
+    # intento ganador (nunca fusiona dos), escribe su texto EXACTO en
+    # expected-output-path, deja el diagnostico de salud, y sale != 0 si
+    # ningun intento produjo salida valida -- eso deja este step, y por
+    # tanto el job del caller, en FAILED, igual que antes.
+    - name: "[RUNTIME] Resolver salida canonica + diagnostico de salud (fail-closed)"
+      id: finalize
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: npm run claude-runtime:attempt-for-ci -- finalize "$WORKDIR" "$EXPECTED_OUTPUT_PATH" "$HEALTH_PATH"
+      env:
+        WORKDIR: ${{ runner.temp }}/claude-runtime/${{ inputs.agent-name }}
+        EXPECTED_OUTPUT_PATH: ${{ inputs.expected-output-path }}
+        HEALTH_PATH: ${{ inputs.health-record-path != '' && inputs.health-record-path || format('{0}/claude-runtime/{1}/claude-runtime-health.json', runner.temp, inputs.agent-name) }}
+        AGENT_NAME: ${{ inputs.agent-name }}
+        DEPARTMENT_RUN_ID: ${{ inputs.department-run-id }}
+        AUTH_METHOD: ${{ steps.claude-auth.outputs.method }}
+        MAX_TURNS: ${{ inputs.max-turns }}
 
     # --- Metricas de ESTA invocacion, en una ruta propia de ESTA
     # invocacion (opcional, ver el input `execution-record-path`).
@@ -318,6 +472,10 @@ runs:
       env:
         AGENT_NAME: ${{ inputs.agent-name }}
         RECORD_PATH: ${{ inputs.execution-record-path }}
-        EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
-        OUTPUT_SOURCE: ${{ steps.resolve.outputs.source }}
+        # La copia PROPIA del intento que de verdad conto, no la ruta
+        # compartida de la Action: esa se purga antes de cada intento y
+        # la pisa el reintento, asi que leerla aqui daria el coste
+        # equivocado cuando hubo dos intentos.
+        EXECUTION_FILE_PATH: ${{ steps.capture-2.outcome == 'success' && format('{0}/claude-runtime/{1}/attempt-2/execution.json', runner.temp, inputs.agent-name) || format('{0}/claude-runtime/{1}/attempt-1/execution.json', runner.temp, inputs.agent-name) }}
+        OUTPUT_SOURCE: ${{ steps.finalize.outputs.source }}
         CLAUDE_OUTCOME: ${{ steps.claude.outcome }}

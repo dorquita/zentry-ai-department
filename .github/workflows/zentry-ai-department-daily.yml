@@ -89,7 +89,7 @@ jobs:
     # la Fase O52, el pipeline determinista de 26 agentes que antes solo
     # corria en el VPS (hasta 30 min propios). 120 min es el backstop del
     # JOB completo.
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -358,10 +358,11 @@ jobs:
         id: seo_runtime
         continue-on-error: true
         if: steps.seo_prompt.outcome == 'success' && steps.seo1.outputs.status == 'pending_execution'
-        timeout-minutes: 10
+        timeout-minutes: 22
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: seo-specialist
+          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/seo-specialist/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/seo-specialist/claude-execution.json
           prompt: ${{ steps.seo_prompt.outputs.content }}
           output-schema-path: config/seo-specialist-output.schema.json
@@ -452,10 +453,11 @@ jobs:
         id: content_runtime
         continue-on-error: true
         if: steps.content_prompt.outcome == 'success' && steps.content1.outputs.status == 'pending_execution'
-        timeout-minutes: 10
+        timeout-minutes: 22
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: content-strategist
+          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/content-strategist/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/content-strategist/claude-execution.json
           prompt: ${{ steps.content_prompt.outputs.content }}
           output-schema-path: config/content-strategist-output.schema.json
@@ -554,10 +556,11 @@ jobs:
         id: analytics_runtime
         continue-on-error: true
         if: steps.analytics_prompt.outcome == 'success' && steps.analytics1.outputs.status == 'pending_execution'
-        timeout-minutes: 10
+        timeout-minutes: 22
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: analytics-specialist
+          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/analytics-specialist/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/analytics-specialist/claude-execution.json
           prompt: ${{ steps.analytics_prompt.outputs.content }}
           output-schema-path: config/analytics-specialist-output.schema.json
@@ -670,10 +673,11 @@ jobs:
         id: growth_runtime
         continue-on-error: true
         if: steps.growth_prompt.outcome == 'success' && steps.growth_prep.outputs.claudeRequired == 'true'
-        timeout-minutes: 10
+        timeout-minutes: 22
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: growth-director-v2
+          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/growth-director-v2/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/growth-director-v2/claude-execution.json
           prompt: ${{ steps.growth_prompt.outputs.content }}
           output-schema-path: config/growth-director-v2-output.schema.json
@@ -753,10 +757,11 @@ jobs:
         id: qa_runtime
         continue-on-error: true
         if: steps.qa_prompt.outcome == 'success' && steps.qa1.outputs.qaStatus == 'pending_execution'
-        timeout-minutes: 10
+        timeout-minutes: 22
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: qa-reviewer
+          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/qa-reviewer/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/qa-reviewer/claude-execution.json
           prompt: ${{ steps.qa_prompt.outputs.content }}
           output-schema-path: config/qa-reviewer-output.schema.json
@@ -866,10 +871,11 @@ jobs:
         id: web_runtime
         continue-on-error: true
         if: steps.web_prompt.outcome == 'success' && steps.web_prep.outputs.claudeRequired == 'true'
-        timeout-minutes: 10
+        timeout-minutes: 22
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: web-engineer
+          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/web-engineer/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/web-engineer/claude-execution.json
           prompt: ${{ steps.web_prompt.outputs.content }}
           output-schema-path: config/web-engineer-output.schema.json
@@ -1188,3 +1194,26 @@ jobs:
         env:
           STATE_BRANCH: department-state
           DEPARTMENT_RUN_ID: ${{ needs.department-run.outputs.departmentRunId }}
+
+      # --- [RUNTIME] Fiabilidad del runtime comun: agrega los
+      # diagnosticos por invocacion (claude-runtime-health.json) de esta
+      # pasada y los sube como artifact.
+      #
+      # `always()`: una pasada que FALLO es justo la que mas interesa
+      # poder auditar despues. El agregador es fail-soft a proposito (no
+      # puede tumbar el job): la autoridad sobre si el empleado fallo
+      # sigue siendo el step del runtime, no esta metrica. ---
+      - name: "[RUNTIME] Metricas de fiabilidad del runtime comun"
+        if: always()
+        run: npm run claude-runtime:metrics-for-ci -- "$HEALTH_DIR" "$HEALTH_DIR/claude-runtime-metrics.json" "Fiabilidad del runtime -- departamento"
+        env:
+          HEALTH_DIR: ${{ github.workspace }}/reports/claude-runtime-health
+
+      - name: "[RUNTIME] Subir diagnostico de fiabilidad del runtime"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-runtime-health-departamento-${{ github.run_id }}
+          path: reports/claude-runtime-health/
+          if-no-files-found: warn
+          retention-days: 30

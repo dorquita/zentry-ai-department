@@ -107,7 +107,7 @@ export function runClaudeEmployeeAuthGuardTests(): TestCase[] {
         assert.ok(/exit 1/.test(config), "BLOCKED_BY_AUTH debe terminar el job en rojo");
 
         // Y todo lo que gasta inferencia debe estar detras de "hay auth".
-        for (const gated of ["Ejecutar empleado Claude", "Resolver salida del empleado"]) {
+        for (const gated of ["Ejecutar empleado Claude", "Resolver salida canonica", "Capturar y clasificar intento 1"]) {
           const stepIndex = config.indexOf(gated);
           assert.ok(stepIndex > 0, `falta el step "${gated}" en el runtime`);
         }

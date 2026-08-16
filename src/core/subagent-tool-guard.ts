@@ -201,16 +201,48 @@ export interface ToollessCheckResult {
 }
 
 /**
- * Chequeo estricto "cero herramientas", pensado para agentes como
- * ux-ui-landing-architect-v2 cuyo diseno exige las 4 condiciones a la
- * vez (ver docs/ux-ui-landing-architect-v2-experiment.md):
+ * UNICA herramienta que un empleado Claude puede declarar sin dejar de
+ * considerarse "sin capacidades". No es una excepcion de conveniencia:
+ * `StructuredOutput` es la herramienta INTERNA de fin-de-turno del
+ * Claude Agent SDK, y es el unico canal por el que el SDK entrega
+ * `structured_output` cuando se pasa `--json-schema`.
+ *
+ * No concede al empleado ninguna capacidad nueva -- transporta
+ * exactamente el mismo JSON que el modelo habria impreso como texto
+ * libre. No lee ficheros, no ejecuta nada, no sale a la red, no escribe
+ * en ningun sistema.
+ *
+ * Por que esta excepcion existe (causa raiz del incidente P0 del
+ * runtime comun, ver docs/claude-runtime-reliability-incident.md):
+ * declarar `tools: []` quitaba TODAS las herramientas de la sesion,
+ * incluida esta, asi que el SDK no podia instalar el carrier,
+ * `--json-schema` quedaba INERTE, `structured_output` no llegaba NUNCA
+ * (0 de 8 invocaciones reales medidas) y el contrato de salida dejaba
+ * de validarse en generacion: cada empleado escribia su JSON a mano,
+ * sin red de seguridad, y el runtime solo podia comprobarlo a
+ * posteriori.
+ */
+export const STRUCTURED_OUTPUT_TOOL = "StructuredOutput";
+
+/**
+ * Chequeo estricto "sin herramientas de capacidad" (antes "cero
+ * herramientas"), pensado para todos los empleados Claude, cuyo diseno
+ * exige las 4 condiciones a la vez:
  *   1. el agente esta presente en el allowlist,
- *   2. `allowedTools` esta vacio,
+ *   2. `allowedTools` no contiene NADA fuera de `StructuredOutput`,
  *   3. `externalWriteToolsGranted` esta vacio,
- *   4. el frontmatter `tools:` del propio `.md` tambien esta vacio y
- *      declarado explicitamente (nunca ausente).
- * Cualquier inconsistencia entre estas 4 condiciones se reporta en
- * `reasons` -- `assertSubagentIsToolless()` la convierte en excepcion.
+ *   4. el frontmatter `tools:` del propio `.md` esta declarado
+ *      explicitamente (nunca ausente) y tampoco contiene nada fuera de
+ *      `StructuredOutput`.
+ *
+ * Ademas, allowlist y frontmatter deben coincidir EXACTAMENTE: conceder
+ * la herramienta en un sitio y no en el otro es drift, y se rechaza --
+ * es justo el tipo de inconsistencia silenciosa que causo el incidente.
+ *
+ * Sigue siendo fail-closed en el mismo sentido de antes: cualquier
+ * herramienta que no sea exactamente `StructuredOutput` (conocida o no,
+ * de lectura o de escritura) hace fallar el chequeo. La superficie de
+ * capacidad real del empleado sigue siendo CERO.
  */
 export function checkSubagentIsToolless(agentName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): ToollessCheckResult {
   const entry = allowlist.agents[agentName];
@@ -219,8 +251,9 @@ export function checkSubagentIsToolless(agentName: string, allowlist: SubagentAl
   }
 
   const reasons: string[] = [];
-  if (entry.allowedTools.length !== 0) {
-    reasons.push(`allowedTools no esta vacio: [${entry.allowedTools.join(", ")}].`);
+  const disallowedInAllowlist = entry.allowedTools.filter((tool) => tool !== STRUCTURED_OUTPUT_TOOL);
+  if (disallowedInAllowlist.length !== 0) {
+    reasons.push(`allowedTools concede herramientas de capacidad: [${disallowedInAllowlist.join(", ")}] (la unica permitida es ${STRUCTURED_OUTPUT_TOOL}).`);
   }
   if (entry.externalWriteToolsGranted.length !== 0) {
     reasons.push(`externalWriteToolsGranted no esta vacio: [${entry.externalWriteToolsGranted.join(", ")}].`);
@@ -228,9 +261,22 @@ export function checkSubagentIsToolless(agentName: string, allowlist: SubagentAl
 
   const frontmatterTools = parseAgentFrontmatterTools(agentName, allowlist);
   if (frontmatterTools === undefined) {
-    reasons.push(`El frontmatter de "${entry.definitionFile}" no declara "tools:" explicitamente (deberia declarar tools: []).`);
-  } else if (frontmatterTools.length !== 0) {
-    reasons.push(`El frontmatter de "${entry.definitionFile}" declara tools: [${frontmatterTools.join(", ")}], deberia ser [].`);
+    reasons.push(`El frontmatter de "${entry.definitionFile}" no declara "tools:" explicitamente (deberia declarar tools: [${STRUCTURED_OUTPUT_TOOL}]).`);
+  } else {
+    const disallowedInFrontmatter = frontmatterTools.filter((tool) => tool !== STRUCTURED_OUTPUT_TOOL);
+    if (disallowedInFrontmatter.length !== 0) {
+      reasons.push(`El frontmatter de "${entry.definitionFile}" declara herramientas de capacidad: [${disallowedInFrontmatter.join(", ")}] (la unica permitida es ${STRUCTURED_OUTPUT_TOOL}).`);
+    }
+
+    // Drift entre las dos capas: conceder el carrier en una y no en la
+    // otra deja el contrato de salida a medias sin que nadie se entere.
+    const allowlistHasCarrier = entry.allowedTools.includes(STRUCTURED_OUTPUT_TOOL);
+    const frontmatterHasCarrier = frontmatterTools.includes(STRUCTURED_OUTPUT_TOOL);
+    if (allowlistHasCarrier !== frontmatterHasCarrier) {
+      reasons.push(
+        `Drift entre allowlist y frontmatter sobre ${STRUCTURED_OUTPUT_TOOL}: allowlist=${allowlistHasCarrier ? "concedida" : "no concedida"}, frontmatter de "${entry.definitionFile}"=${frontmatterHasCarrier ? "concedida" : "no concedida"}. Deben coincidir.`
+      );
+    }
   }
 
   return { ok: reasons.length === 0, reasons };

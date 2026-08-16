@@ -54,7 +54,7 @@ jobs:
     # seccion de timeouts): timeout-minutes: 20 aqui es el limite del JOB
     # completo (incluye los pasos de dominio antes y despues del runtime);
     # el step "[RUNTIME]" mas abajo lleva su propio timeout-minutes: 10.
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -121,10 +121,11 @@ jobs:
         # TODA la composite action (auth + preflights + claude-code-action
         # + resolucion de salida) a 10 min. Ver docs/claude-employee-runtime.md,
         # seccion de timeouts.
-        timeout-minutes: 10
+        timeout-minutes: 22
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: seo-specialist
+          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/seo-specialist/claude-runtime-health.json
           prompt: ${{ steps.read_prompt.outputs.content }}
           output-schema-path: config/seo-specialist-output.schema.json
           expected-output-path: ${{ steps.step1.outputs.expectedOutputPath }}
@@ -191,3 +192,26 @@ jobs:
           # .github/actions/claude-employee-runtime/action.yml).
           CLAUDE_OUTCOME: ${{ steps.runtime.outputs.claude-outcome }}
           OUTPUT_SOURCE: ${{ steps.runtime.outputs.output-source == 'structured_output' && 'structured_output directo (caso A)' || (steps.runtime.outputs.output-source == 'execution_file_fallback' && 'fallback via execution_file (caso B)' || 'ninguno (caso C, el workflow ya deberia haber fallado antes de este step)') }}
+
+      # --- [RUNTIME] Fiabilidad del runtime comun: agrega los
+      # diagnosticos por invocacion (claude-runtime-health.json) de esta
+      # pasada y los sube como artifact.
+      #
+      # `always()`: una pasada que FALLO es justo la que mas interesa
+      # poder auditar despues. El agregador es fail-soft a proposito (no
+      # puede tumbar el job): la autoridad sobre si el empleado fallo
+      # sigue siendo el step del runtime, no esta metrica. ---
+      - name: "[RUNTIME] Metricas de fiabilidad del runtime comun"
+        if: always()
+        run: npm run claude-runtime:metrics-for-ci -- "$HEALTH_DIR" "$HEALTH_DIR/claude-runtime-metrics.json" "Fiabilidad del runtime -- seo-specialist"
+        env:
+          HEALTH_DIR: ${{ github.workspace }}/reports/claude-runtime-health
+
+      - name: "[RUNTIME] Subir diagnostico de fiabilidad del runtime"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-runtime-health-seo-specialist-${{ github.run_id }}
+          path: reports/claude-runtime-health/
+          if-no-files-found: warn
+          retention-days: 30

@@ -456,14 +456,28 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       },
     },
     {
-      name: "Cada etapa Claude del workflow usa el runtime comun SIN modificarlo, con timeout-minutes: 10 en el step caller",
+      name: "Cada etapa Claude del workflow usa el runtime comun SIN modificarlo, con un timeout-minutes en el step caller que da cabida al reintento",
       fn: () => {
         const workflow = fs.readFileSync(WORKFLOW_PATH, "utf-8");
         const runtimeUses = workflow.match(/uses:\s*\.\/\.github\/actions\/claude-employee-runtime/g) ?? [];
         // 6 empleados Claude en la pasada: SEO, Content, Analytics, Growth, QA, Web Engineer.
         assert.equal(runtimeUses.length, 6, "cada etapa Claude debe invocar el runtime comun");
-        const timeouts = workflow.match(/timeout-minutes:\s*10/g) ?? [];
-        assert.ok(timeouts.length >= 6, "cada step del runtime comun debe llevar su timeout-minutes: 10");
+
+        // El timeout del step caller cubre AHORA hasta dos invocaciones
+        // de Claude (intento + reintento acotado) mas el backoff. Con
+        // structured_output activo se han medido invocaciones de hasta
+        // ~5,5 min, asi que 10 min ya no daban para dos: un reintento
+        // legitimo habria muerto por timeout a mitad. Se exige un minimo
+        // holgado, no un valor exacto, para que subirlo mas adelante no
+        // rompa este guard -- lo que se protege es que TODO step del
+        // runtime siga teniendo backstop, no el numero concreto.
+        const MIN_TIMEOUT_MINUTES = 22;
+        const callerTimeouts = [...workflow.matchAll(/timeout-minutes:\s*(\d+)\n\s*uses:\s*\.\/\.github\/actions\/claude-employee-runtime/g)].map((match) => Number(match[1]));
+        assert.equal(callerTimeouts.length, 6, "cada step del runtime comun debe llevar su propio timeout-minutes");
+        for (const timeout of callerTimeouts) {
+          assert.ok(timeout >= MIN_TIMEOUT_MINUTES, `timeout-minutes: ${timeout} es insuficiente para intento + reintento (minimo ${MIN_TIMEOUT_MINUTES})`);
+        }
+
         assert.ok(workflow.includes("agent-name: sem-specialist") === false, "sem-specialist NO se ejecuta en esta fase");
       },
     },

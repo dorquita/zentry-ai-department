@@ -10,7 +10,7 @@ description: >
   SEO). No se invoca desde ningun otro flujo, no tiene acceso al
   repositorio ni a ninguna herramienta -- todo lo que necesita razonar
   viene ya incluido en el prompt.
-tools: []
+tools: [StructuredOutput]
 model: sonnet
 ---
 

@@ -14,7 +14,7 @@ description: >
   externo. Esta fase es EXCLUSIVAMENTE de especificacion -- no escribe
   nada, en ningun sistema, bajo ninguna circunstancia. Todo output es una
   propuesta con approvalRequired=true.
-tools: []
+tools: [StructuredOutput]
 model: sonnet
 ---
 
