@@ -89,16 +89,104 @@ Dos cosas que **nunca** habían pasado en este proyecto:
 
 ## 4. Estabilidad aislada del runtime (§15)
 
-<!-- TABLA_ESTABILIDAD_AISLADA -->
+**10 invocaciones consecutivas del runtime comun, todas verdes**, sobre el
+commit `b501f90`, repartidas entre los tres empleados pedidos:
+
+| # | Empleado | run ID | run # | Resultado |
+|---|---|---|---|---|
+| 1 | `content-strategist` | `31964378704` | 2 | success |
+| 2 | `growth-director-v2` | `31964377289` | 3 | success |
+| 3 | `seo-specialist` | `31964372158` | 6 | success |
+| 4 | `content-strategist` | `31964521150` | 3 | success |
+| 5 | `growth-director-v2` | `31964547319` | 4 | success |
+| 6 | `seo-specialist` | `31964882533` | 7 | success |
+| 7 | `growth-director-v2` | `31964883469` | 5 | success |
+| 8 | `content-strategist` | `31964884479` | 4 | success |
+| 9 | `seo-specialist` | `31965242318` | 8 | success |
+| 10 | `content-strategist` | `31965243499` | 5 | success |
+
+- `no_output_at_all`: **0**
+- `execution_file_missing`: **0**
+- fallos de runtime sin explicar: **0**
+- reintentos necesarios: **0** (10/10 al primer intento)
 
 ## 5. Estabilidad del departamento (§16)
 
-<!-- TABLA_ESTABILIDAD_DEPARTAMENTO -->
+### Pasada A (`31965244763`) — ROJA, y por que NO cuenta como fallo de runtime
+
+Se reporta tal cual, sin maquillar. La pasada del departamento
+(`Pasada coordinada del departamento`) termino **success**: las seis
+invocaciones del runtime comun salieron verdes y el estado se persistio
+correctamente en la rama `department-state`.
+
+Lo que puso el run en rojo fue un **error mio de fontaneria del workflow**,
+no del runtime: el step nuevo de metricas se anadio al final del fichero y
+quedo dentro del segundo job (`persist-state`), que borra el working tree
+entero — `package.json` incluido — antes de commitear el estado. `npm run`
+murio con `ENOENT` (exit 254) DESPUES de que el estado ya se hubiera
+persistido.
+
+| Invocacion del runtime en la pasada A | Resultado |
+|---|---|
+| `seo-specialist` | success (5m 09s) |
+| `content-strategist` | success (1m 44s) |
+| `analytics-specialist` | success (2m 22s) |
+| `growth-director-v2` | success |
+| `qa-reviewer` | success |
+| `web-engineer` | success |
+
+Corregido en `51563d9` (step movido al job `department-run`) mas un guard
+de regresion en `test/department-coordination-safety.test.ts` que falla si
+vuelve a colarse en el job de persistencia.
+
+### Pasadas 1-3 sobre el commit corregido
+
+**PENDIENTE.** La pasada `31967138507` (commit `51563d9`) lleva mas de 35
+minutos en estado `pending` de GitHub, sin asignacion de runner. Las
+pasadas anteriores del mismo dia arrancaron tras ~12 min de cola, asi que
+esto apunta a disponibilidad de runners o a cuota de Actions de la cuenta,
+no a nada del runtime.
+
+**Este criterio de cierre (§16) NO esta cumplido todavia.** No se declara
+estable hasta que existan tres pasadas coordinadas consecutivas verdes
+sobre el commit corregido.
 
 ## 6. Métricas de fiabilidad
 
-<!-- TABLA_METRICAS -->
+Ejemplo real, `content-strategist` run `31964378704`:
+
+```
+invocaciones=1 exito_1er_intento=1 recuperadas_por_reintento=0
+fallos_deterministas=0 fallos_transitorios_no_recuperados=0
+success_rate=100% coste_estimado_total=0.249951
+```
+
+Acumulado de las 10 invocaciones aisladas:
+
+| Metrica | Valor |
+|---|---|
+| runtime invocations | 10 |
+| successes first attempt | 10 |
+| recovered by retry | 0 |
+| deterministic failures | 0 |
+| transient failures | 0 |
+| unrecovered runtime failures | 0 |
+| **success rate** | **100% (10/10)** |
+| reintentos ejecutados | 0 |
+
+Antes del fix, sobre las invocaciones reconstruidas del apartado 1: 1 de 3
+aceptada (33%), y el 100% con el step de Claude en `failure`.
+
+**Coste.** El structured output real anade el turno del carrier: de
+`num_turns` 1 a 3, y de ~0,49-0,64 USD a ~0,66-1,03 USD por invocacion de
+`seo-specialist` (estimacion a tarifa de lista, no una factura: con
+suscripcion no corresponde a ningun cargo). Coste adicional de reintentos
+en esta evidencia: **0 USD** — no hizo falta ninguno.
 
 ## 7. CI
 
-<!-- CI -->
+`CI` run `31964370831` sobre la rama: **success** (typecheck + 1.105 tests
++ actionlint).
+
+Tras el fix del workflow (`51563d9`), en local: `npm run typecheck` limpio,
+`npm test` 1.105/1.105, `actionlint` sin hallazgos.
