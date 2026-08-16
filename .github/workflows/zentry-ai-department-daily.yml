@@ -723,7 +723,7 @@ jobs:
             REASON="sem-specialist ejecutado sobre la lectura LIVE de Google Ads de esta misma pasada (evento sem-watcher ${SOURCE_EVENT_ID}). Cifras fabricadas: ${STEP2_CLAIMS}. Avisos de citacion: ${STEP2_UNCITED}."
           elif [ "$STEP2_STATUS" = "invalid_output" ]; then
             STATUS=invalid_output
-            REASON="sem-specialist devolvio una salida que no cumple su contrato o cito cifras sin respaldo trazable (${STEP2_CLAIMS} afirmacion(es)) -- descartada (fail-closed)."
+            REASON="sem-specialist devolvio una salida que no cumple su contrato o cito cifras FABRICADAS (${STEP2_CLAIMS}) -- descartada (fail-closed). Detalle: ${STEP2_CLAIM_TEXT:-no disponible}"
           elif [ "$STEP1_STATUS" = "no_data" ]; then
             STATUS=not_available
             REASON="No hay ningun snapshot de sem-watcher en este repositorio. Sin datos reales de Google Ads en esta pasada."
@@ -752,6 +752,7 @@ jobs:
           STEP2_STATUS: ${{ steps.sem2.outputs.status }}
           STEP2_CLAIMS: ${{ steps.sem2.outputs.unsupportedClaimCount }}
           STEP2_UNCITED: ${{ steps.sem2.outputs.uncitedClaimCount }}
+          STEP2_CLAIM_TEXT: ${{ steps.sem2.outputs.unsupportedClaims }}
           SOURCE_EVENT_ID: ${{ steps.sem1.outputs.sourceEventId }}
           SOURCE_RUN_ID: ${{ steps.sem1.outputs.sourceDepartmentRunId }}
           OUTPUT_PATH: ${{ steps.sem2.outputs.status == 'executed' && steps.sem1.outputs.expectedOutputPath || '' }}

@@ -343,6 +343,17 @@ La auditoria automatica distingue DOS casos, y la diferencia importa:
   o "casi seguro" venga del contexto. Cualquier cifra de CPC o de ROAS
   cuando el catalogo solo trae su centinela `not_available` cae SIEMPRE
   aqui.
+- **Cifra DERIVADA (calculada por ti) = fabricacion.** Un porcentaje, una
+  proporcion, una media, una suma, una resta o cualquier cifra que
+  obtengas operando con otras NO esta en `evidenceCatalog` -- y por tanto
+  se rechaza, aunque tu calculo sea aritmeticamente correcto. Nada de
+  "representa el 23% del presupuesto total", "de media 6,3 € por
+  campana", "el doble que", "3 de las 7". Si quieres expresar una
+  proporcion, hazlo en palabras y cita las cifras BASE por separado ("la
+  campana ARCHIVO tiene el presupuesto diario mas alto de la cuenta",
+  citando su presupuesto y el total). Esta es la causa mas comun de
+  rechazo: el sistema solo puede verificar cifras LEIDAS de la cuenta,
+  nunca cifras calculadas.
 - **Cifra que SI existe en el catalogo pero que esa afirmacion no cito en
   su `evidenceRefs` = cita que falta.** Se reporta como AVISO y queda
   registrada en el artifact para que se corrija, sin descartar el
@@ -405,6 +416,10 @@ auditoria automatica la rechace por ti.
   no toques conversiones. Tu output es una PROPUESTA para revision
   humana, nunca una accion ejecutada ni una instruccion de ejecucion
   automatica.
+- No calcules NI cites ninguna cifra derivada (porcentajes, medias,
+  proporciones, sumas o restas que hagas tu). Solo puedes citar cifras
+  que aparezcan LITERALMENTE en `evidenceCatalog` -- ver "Autocheque
+  obligatorio".
 - No inventes ni aproximes CPC, CPA, ROAS, CTR, gasto, presupuesto,
   conversiones, impresiones, clics, porcentajes, importes ni
   volumenes/cantidades que no tengan una entrada EXACTA (mismo numero) en

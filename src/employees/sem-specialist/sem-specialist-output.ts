@@ -572,6 +572,20 @@ export interface SemRunnerResultSummary {
    * (ver SemClaimAudit). null salvo en "executed"/"invalid_output".
    */
   uncitedClaimCount: number | null;
+  /**
+   * TEXTO de cada cifra fabricada (recortado). Sin esto, un rechazo solo
+   * dejaba el RECUENTO en el log y en el brief, y el detalle vivia
+   * unicamente dentro del artifact -- que no siempre es descargable desde
+   * donde se opera el departamento. Diagnosticar un rechazo obligaba a
+   * repetir la ejecucion entera (caso real: pasada 31964790892).
+   */
+  unsupportedClaims: string[];
+}
+
+/** Recorta cada violacion para que la linea RUNNER_RESULT_JSON siga siendo manejable en un log. */
+function truncateClaim(text: string, max = 300): string {
+  const flat = text.replace(/\s+/g, " ").trim();
+  return flat.length <= max ? flat : `${flat.slice(0, max - 1)}...`;
 }
 
 export function buildSemRunnerResultSummary(
@@ -590,6 +604,7 @@ export function buildSemRunnerResultSummary(
     artifactMdPath: paths.artifactMdPath,
     unsupportedClaimCount: result.status === "invalid_output" ? result.violations.length : result.status === "executed" ? 0 : null,
     uncitedClaimCount: result.status === "executed" ? result.uncitedClaims.length : result.status === "invalid_output" ? 0 : null,
+    unsupportedClaims: result.status === "invalid_output" ? result.violations.map((v) => truncateClaim(v)) : [],
   };
 }
 

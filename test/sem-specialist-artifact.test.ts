@@ -88,6 +88,38 @@ export function runSemSpecialistArtifactTests(): TestCase[] {
       },
     },
     {
+      // Sin esto, un rechazo solo dejaba el RECUENTO fuera del artifact, y
+      // el artifact no siempre es descargable: diagnosticar obligaba a
+      // repetir la ejecucion entera (caso real, pasada 31964790892).
+      name: "buildSemRunnerResultSummary (invalid_output): el TEXTO de cada cifra fabricada viaja en el resultado, no solo el recuento",
+      fn: () => {
+        const context = baseContext();
+        const result: SemResult = {
+          status: "invalid_output",
+          error: "2 cifras fabricadas",
+          rawOutputPath: "/tmp/raw.json",
+          violations: ["Afirmacion cuantitativa SIN RESPALDO (gasto): \"gasto de 999\" en \"budgetObservations: X\"", "Afirmacion cuantitativa SIN RESPALDO (CPC): \"CPC 2,5\" en \"biddingObservations: Y\""],
+        };
+        const summary = buildSemRunnerResultSummary(context, PATHS, result);
+        assert.equal(summary.status, "invalid_output");
+        assert.equal(summary.unsupportedClaimCount, 2);
+        assert.equal(summary.unsupportedClaims.length, 2);
+        assert.ok(summary.unsupportedClaims[0].includes("gasto de 999"));
+        assert.ok(summary.unsupportedClaims[1].includes("CPC 2,5"));
+      },
+    },
+    {
+      name: "buildSemRunnerResultSummary (executed): unsupportedClaims vacio y uncitedClaimCount con los avisos reales",
+      fn: () => {
+        const context = baseContext();
+        const result: SemResult = { status: "executed", output: emptyOutput(), uncitedClaims: ["aviso 1", "aviso 2"] };
+        const summary = buildSemRunnerResultSummary(context, PATHS, result);
+        assert.equal(summary.unsupportedClaimCount, 0, "una salida executed nunca tiene cifras fabricadas");
+        assert.equal(summary.uncitedClaimCount, 2, "los avisos de citacion si se reportan");
+        assert.deepEqual(summary.unsupportedClaims, []);
+      },
+    },
+    {
       name: "buildSemRunnerResultSummary (executed): unsupportedClaimCount siempre 0 (una violacion fuerza invalid_output, nunca executed)",
       fn: () => {
         const context = baseContext();

@@ -56,6 +56,7 @@ function main(): void {
     artifactMdPath: result.artifactMdPath,
     unsupportedClaimCount: result.unsupportedClaimCount === null ? "null" : String(result.unsupportedClaimCount),
     uncitedClaimCount: result.uncitedClaimCount === null || result.uncitedClaimCount === undefined ? "null" : String(result.uncitedClaimCount),
+    unsupportedClaims: Array.isArray(result.unsupportedClaims) ? result.unsupportedClaims.join(" || ") : "",
   });
 
   console.log(`parse-sem-specialist-runner-result-for-ci: status=${result.status} sourceEventId=${result.sourceEventId || "(none)"}`);
