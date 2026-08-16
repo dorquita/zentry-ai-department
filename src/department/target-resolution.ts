@@ -121,6 +121,24 @@ export function extractPageReferences(texts: string[]): string[] {
 export function resolveRecommendationTargets(texts: string[], inventory: StagingInventory): RecommendationTargetResolution {
   const references = extractPageReferences(texts);
 
+  // "No he podido leer staging" NO es lo mismo que "esa pagina no existe
+  // en staging", y confundirlas manda a revisar la pagina equivocada. Si
+  // no hay inventario, el motivo tiene que decir eso y nada mas.
+  if (inventory.pages.length === 0) {
+    return {
+      status: "unresolved_target",
+      references: references.map((raw) => ({
+        raw,
+        status: "not_in_inventory" as const,
+        wordpressPageId: null,
+        crossEnvironment: false,
+        reason: "No hay inventario de staging con el que resolver esta referencia.",
+      })),
+      pages: [],
+      reason: `No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO${inventory.unavailableReason ? `: ${inventory.unavailableReason}` : "."} Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino.`,
+    };
+  }
+
   if (references.length === 0) {
     return {
       status: "no_target_reference",

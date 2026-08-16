@@ -12,6 +12,7 @@ import {
   summarizePageForPrompt,
   TARGET_SNAPSHOT_CONTENT_BUDGET,
 } from "../src/department/staging-inventory";
+import { INVENTORY_RETRY_DELAYS_MS, readStagingInventory } from "../src/adapters/staging-inventory-reader";
 import { extractPageReferences, resolveRecommendationTargets } from "../src/department/target-resolution";
 import { buildChangePlanFromDraft, WebEngineerChangePlanDraft } from "../src/department/web-engineer-changeplan";
 import { buildWebEngineerDiagnostics } from "../src/department/web-engineer-diagnostics";
@@ -105,6 +106,27 @@ function contextFor(promoted: DepartmentRecommendation[], inv: StagingInventory 
     stagingInventoryUnavailableReason: inv.unavailableReason,
     fullStagingInventory: inv,
   });
+}
+
+/**
+ * Credenciales FALSAS solo para poder ejercitar el lector de inventario
+ * sin red: `readStagingInventory()` corta antes de cualquier fetch si no
+ * estan puestas. El `fetchImpl` inyectado nunca sale a internet.
+ */
+async function withFakeWordpressEnv<T>(fn: () => Promise<T>): Promise<T> {
+  const keys = ["WP_API_URL", "WP_API_USERNAME", "WP_API_PASSWORD"] as const;
+  const previous = keys.map((key) => [key, process.env[key]] as const);
+  process.env.WP_API_URL = "https://staging.zentrylockers.com";
+  process.env.WP_API_USERNAME = "usuario-de-test";
+  process.env.WP_API_PASSWORD = "password-de-test";
+  try {
+    return await fn();
+  } finally {
+    for (const [key, value] of previous) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
 }
 
 // --- Tests ---------------------------------------------------------------
@@ -218,6 +240,18 @@ export function runWebEngineerTargetResolutionTests(): TestCase[] {
           inventory: withDraftPage,
         });
         assert.equal(resolved.resolution, "target_not_publishable");
+      },
+    },
+
+    {
+      name: "Inventario VACIO: el motivo dice que no se pudo LEER staging, no que la pagina no exista",
+      fn: () => {
+        const unreadable = inventory([], "Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera.");
+        const resolution = resolveRecommendationTargets([`Mejorar el title de ${PRODUCTION_HOST}/taquillas-fenolicas/.`], unreadable);
+        assert.equal(resolution.status, "unresolved_target");
+        assert.match(resolution.reason, /inventario de staging de esta pasada esta VACIO/);
+        assert.match(resolution.reason, /NO significa que las paginas citadas no existan/);
+        assert.match(resolution.reason, /fetch failed/);
       },
     },
 
@@ -460,6 +494,49 @@ export function runWebEngineerTargetResolutionTests(): TestCase[] {
         assert.match(context.yoastMetaUnavailableNotice, /NO se ha podido leer/);
         assert.match(context.yoastMetaUnavailableNotice, /NO quiere decir que esten vacias/);
         assert.equal(contextFor([recommendation({ rank: 1, title: "sin objetivo" })], INVENTORY).yoastMetaUnavailableNotice, "");
+      },
+    },
+
+    // 5c. LECTURA DEL INVENTARIO: REINTENTOS ---------------------------------
+    {
+      name: "Un corte de red transitorio no cuesta la pasada entera: se reintenta con espera y la tercera lectura vale",
+      fn: async () => {
+        let calls = 0;
+        const waited: number[] = [];
+        const inventoryRead = await withFakeWordpressEnv(() => readStagingInventory({
+          fetchImpl: (async () => {
+            calls += 1;
+            if (calls < 3) throw new Error("fetch failed");
+            return new Response(JSON.stringify([{ id: 1269, status: "publish", slug: "taquillas-melamina-fenolico", link: `${STAGING_HOST}/taquillas-melamina-fenolico/`, title: { raw: "T" }, excerpt: { raw: "E" }, content: { raw: "C" }, meta: {} }]), { status: 200 });
+          }) as unknown as typeof fetch,
+          sleep: async (ms: number) => {
+            waited.push(ms);
+          },
+          now: () => new Date("2026-08-16T16:13:09Z"),
+        }));
+        assert.equal(calls, 3);
+        assert.deepEqual(waited, INVENTORY_RETRY_DELAYS_MS);
+        assert.equal(inventoryRead.unavailableReason, "");
+        assert.equal(inventoryRead.pages.length, 1);
+      },
+    },
+    {
+      name: "Un HTTP de error NO se reintenta: es una respuesta del servidor, no un corte",
+      fn: async () => {
+        let calls = 0;
+        const inventoryRead = await withFakeWordpressEnv(() => readStagingInventory({
+          fetchImpl: (async () => {
+            calls += 1;
+            return new Response("nope", { status: 401 });
+          }) as unknown as typeof fetch,
+          sleep: async () => {
+            throw new Error("no deberia esperarse por un HTTP de error");
+          },
+          now: () => new Date("2026-08-16T16:13:09Z"),
+        }));
+        assert.equal(calls, 1);
+        assert.match(inventoryRead.unavailableReason, /HTTP 401/);
+        assert.equal(inventoryRead.pages.length, 0);
       },
     },
 

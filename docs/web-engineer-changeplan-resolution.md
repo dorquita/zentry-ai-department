@@ -191,6 +191,45 @@ por REST. Las dos correcciones estan arriba. Sin el diagnostico por
 recomendacion, las dos habrian seguido siendo invisibles detras de un
 "0 ChangePlans".
 
+## Tercera iteracion: no confundir "no se pudo leer" con "no existe"
+
+La pasada `dept-2026-08-16T161309Z` (run `31957952033`) promovio 7
+recomendaciones, y la #5 era exactamente el caso bueno: *"Aplicar la
+mejora de title/meta propuesta para taquillas fenolicas"*, citando
+`https://zentrylockers.com/taquillas-fenolicas/`. No produjo ChangePlan
+porque **la lectura del inventario de staging fallo por red**
+(`fetch failed`, dos intentos inmediatos) y la pasada se quedo con 0
+paginas.
+
+El comportamiento era correcto (fail-closed), pero dejaba dos defectos:
+
+- **El motivo mentia por omision.** Decia *"ninguna de las referencias
+  casa con una pagina publicada del inventario"*, que se lee como "esa
+  pagina no existe en staging" cuando la verdad era "no hemos podido
+  leer staging". Ahora, con inventario vacio, el motivo lo dice
+  literalmente -- y dice que eso NO significa que la pagina no exista.
+- **La lectura se rendia demasiado pronto.** Dos intentos seguidos, sin
+  espera. Un corte de red de dos segundos costaba la pasada entera.
+  Ahora son tres intentos con espera (1s, 3s). Sigue siendo solo para
+  fallos de RED: un HTTP de error es una respuesta del servidor y no se
+  reintenta nunca.
+
+## Fiabilidad del runtime: fuera de este alcance, pero medida
+
+De cuatro pasadas reales lanzadas con este fix, **una llego entera**. Las
+otras tres murieron aguas arriba, cada una en un sitio distinto:
+
+| Pasada | Donde murio |
+| --- | --- |
+| `145334Z` | (completa) |
+| `152036Z` | `seo-specialist=failed` (runtime, sin `execution_file` recuperable) + QA `fail` |
+| `155347Z` | `growth-director-v2=failed` (la invocacion de Claude no dejo fichero utilizable) |
+| `161309Z` | `seo-specialist=failed` + inventario de staging caido por red |
+
+Es la misma clase de problema que el arreglado para `seo-specialist`, y
+NO se ha tocado aqui: queda registrado como el siguiente cuello de
+botella real del departamento.
+
 ## Lo que NO se ha tocado
 
 SEM, Telegram, Cloudflare, D1, VPS legacy, produccion, la politica de
