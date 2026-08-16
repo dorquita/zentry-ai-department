@@ -267,7 +267,8 @@ jobs:
             echo "::warning::El pipeline determinista / Growth Director v1 no termino bien en esta pasada. Los informes reports/daily/ pueden faltar o estar incompletos. Ver el log del step [GROWTH-V1]."
           fi
           echo "Informes diarios presentes tras esta pasada:"
-          ls -l reports/daily/ 2>/dev/null | tail -6 || echo "(sin directorio reports/daily)"
+          find reports/daily -maxdepth 1 -name '*.md' -printf '%TY-%Tm-%Td %TH:%TM  %p\n' 2>/dev/null \
+            | sort | tail -6 || echo "(sin directorio reports/daily)"
         env:
           GROWTH_OUTCOME: ${{ steps.growth_v1.outcome }}
 

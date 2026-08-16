@@ -81,9 +81,11 @@ jobs:
             echo "mode=run sin postId. Fail-closed: no se escribe en una pagina que nadie ha elegido."
             exit 1
           fi
-          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
-          echo "postId=$POST_ID" >> "$GITHUB_OUTPUT"
-          echo "ability=${ABILITY:-}" >> "$GITHUB_OUTPUT"
+          {
+            echo "mode=$MODE"
+            echo "postId=$POST_ID"
+            echo "ability=${ABILITY:-}"
+          } >> "$GITHUB_OUTPUT"
           echo "Modo resuelto: $MODE (postId=$POST_ID)."
 
       - name: E2E

@@ -75,6 +75,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           DEPARTMENT_RUN_ID: ${{ inputs.departmentRunId }}
         run: |
+          # Las comillas simples de los `node -e '...'` de abajo son
+          # DELIBERADAS: dentro va JavaScript, y ahi `$` y `${...}` son
+          # sintaxis de JS. Con comillas dobles los expandiria el shell
+          # antes de que Node viera el script. Por eso el CI desactiva
+          # el aviso SC2016 (ver .github/workflows/ci.yml).
           set -euo pipefail
           NAME="zentry-ai-department-${DEPARTMENT_RUN_ID}"
           URL=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
@@ -95,6 +100,8 @@ jobs:
         env:
           DECISIONS: ${{ inputs.decisions }}
         run: |
+          # Igual que arriba: el `node -e '...'` de mas abajo lleva
+          # comillas simples a proposito porque su contenido es JS.
           set -euo pipefail
           # Por variable de entorno, nunca interpolado en el script: el
           # texto lo escribe una persona y no puede acabar siendo shell.
