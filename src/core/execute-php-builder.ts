@@ -39,6 +39,15 @@ import {
  * un JSON con el antes/despues real: la validacion no se fia de que
  * `execute-php` responda "OK".
  *
+ * Dos detalles que impone el servidor real (confirmados leyendo su
+ * `input_schema` con `mcp-adapter-get-ability-info`, no adivinados):
+ *
+ * - La ability hace `eval()` del codigo, asi que NO se incluye la
+ *   etiqueta `<?php`. Incluirla hacia que nada se ejecutara.
+ * - La respuesta viaja anidada dentro del JSON del sobre MCP, asi que el
+ *   resultado se emite en base64: sobrevive a cualquier nivel de escapado
+ *   sin que haya que adivinar cuantas veces se re-serializo.
+ *
  * Modulo PURO: sin I/O, sin red, sin reloj.
  */
 
@@ -82,31 +91,30 @@ function assertAllowedMetaKey(metaKey: string): string {
  */
 function buildPostFieldPhp(postId: number, field: string, encodedValue: string): string {
   return [
-    "<?php",
     `$zentry_post_id = ${assertSafeInteger(postId, "targetId")};`,
     `$zentry_field = '${field}';`,
     `$zentry_value = base64_decode('${encodedValue}');`,
     "$zentry_post = get_post($zentry_post_id);",
     "if (!$zentry_post) {",
-    `  echo '${PHP_RESULT_MARKER}' . json_encode(array('ok' => false, 'error' => 'post_not_found')) . '${PHP_RESULT_MARKER}';`,
+    `  echo '${PHP_RESULT_MARKER}' . base64_encode(json_encode(array('ok' => false, 'error' => 'post_not_found'))) . '${PHP_RESULT_MARKER}';`,
     "  return;",
     "}",
     "$zentry_before = $zentry_post->{$zentry_field};",
     "$zentry_result = wp_update_post(array('ID' => $zentry_post_id, $zentry_field => $zentry_value), true);",
     "if (is_wp_error($zentry_result)) {",
-    `  echo '${PHP_RESULT_MARKER}' . json_encode(array('ok' => false, 'error' => $zentry_result->get_error_code())) . '${PHP_RESULT_MARKER}';`,
+    `  echo '${PHP_RESULT_MARKER}' . base64_encode(json_encode(array('ok' => false, 'error' => $zentry_result->get_error_code()))) . '${PHP_RESULT_MARKER}';`,
     "  return;",
     "}",
     "clean_post_cache($zentry_post_id);",
     "$zentry_after_post = get_post($zentry_post_id);",
-    "echo '" + PHP_RESULT_MARKER + "' . json_encode(array(",
+    "echo '" + PHP_RESULT_MARKER + "' . base64_encode(json_encode(array(",
     "  'ok' => true,",
     "  'postId' => $zentry_post_id,",
     "  'field' => $zentry_field,",
     "  'before' => $zentry_before,",
     "  'after' => $zentry_after_post->{$zentry_field},",
     "  'status' => $zentry_after_post->post_status",
-    ")) . '" + PHP_RESULT_MARKER + "';",
+    "))) . '" + PHP_RESULT_MARKER + "';",
   ].join("\n");
 }
 
@@ -117,20 +125,19 @@ function buildPostFieldPhp(postId: number, field: string, encodedValue: string):
  */
 function buildPostMetaPhp(postId: number, encodedKey: string, encodedValue: string): string {
   return [
-    "<?php",
     `$zentry_post_id = ${assertSafeInteger(postId, "targetId")};`,
     `$zentry_key = base64_decode('${encodedKey}');`,
     `$zentry_value = base64_decode('${encodedValue}');`,
     "$zentry_post = get_post($zentry_post_id);",
     "if (!$zentry_post) {",
-    `  echo '${PHP_RESULT_MARKER}' . json_encode(array('ok' => false, 'error' => 'post_not_found')) . '${PHP_RESULT_MARKER}';`,
+    `  echo '${PHP_RESULT_MARKER}' . base64_encode(json_encode(array('ok' => false, 'error' => 'post_not_found'))) . '${PHP_RESULT_MARKER}';`,
     "  return;",
     "}",
     "$zentry_existed = metadata_exists('post', $zentry_post_id, $zentry_key);",
     "$zentry_before = $zentry_existed ? get_post_meta($zentry_post_id, $zentry_key, true) : '';",
     "update_post_meta($zentry_post_id, $zentry_key, $zentry_value);",
     "clean_post_cache($zentry_post_id);",
-    "echo '" + PHP_RESULT_MARKER + "' . json_encode(array(",
+    "echo '" + PHP_RESULT_MARKER + "' . base64_encode(json_encode(array(",
     "  'ok' => true,",
     "  'postId' => $zentry_post_id,",
     "  'field' => 'post_meta',",
@@ -139,19 +146,18 @@ function buildPostMetaPhp(postId: number, encodedKey: string, encodedValue: stri
     "  'before' => $zentry_before,",
     "  'after' => get_post_meta($zentry_post_id, $zentry_key, true),",
     "  'status' => $zentry_post->post_status",
-    ")) . '" + PHP_RESULT_MARKER + "';",
+    "))) . '" + PHP_RESULT_MARKER + "';",
   ].join("\n");
 }
 
 /** Plantilla de BORRADO de post meta -- solo la usa el rollback cuando la clave no existia antes. */
 function buildDeletePostMetaPhp(postId: number, encodedKey: string): string {
   return [
-    "<?php",
     `$zentry_post_id = ${assertSafeInteger(postId, "targetId")};`,
     `$zentry_key = base64_decode('${encodedKey}');`,
     "delete_post_meta($zentry_post_id, $zentry_key);",
     "clean_post_cache($zentry_post_id);",
-    "echo '" + PHP_RESULT_MARKER + "' . json_encode(array(",
+    "echo '" + PHP_RESULT_MARKER + "' . base64_encode(json_encode(array(",
     "  'ok' => true,",
     "  'postId' => $zentry_post_id,",
     "  'field' => 'post_meta',",
@@ -160,7 +166,7 @@ function buildDeletePostMetaPhp(postId: number, encodedKey: string): string {
     "  'before' => '',",
     "  'after' => get_post_meta($zentry_post_id, $zentry_key, true),",
     "  'status' => ''",
-    ")) . '" + PHP_RESULT_MARKER + "';",
+    "))) . '" + PHP_RESULT_MARKER + "';",
   ].join("\n");
 }
 
@@ -268,9 +274,9 @@ export function parsePhpResult(output: string): PhpExecutionResult | null {
   if (first < 0) return null;
   const second = output.indexOf(PHP_RESULT_MARKER, first + PHP_RESULT_MARKER.length);
   if (second < 0) return null;
-  const json = output.slice(first + PHP_RESULT_MARKER.length, second);
+  const encoded = output.slice(first + PHP_RESULT_MARKER.length, second).trim();
   try {
-    const parsed = JSON.parse(json) as PhpExecutionResult;
+    const parsed = JSON.parse(Buffer.from(encoded, "base64").toString("utf8")) as PhpExecutionResult;
     return typeof parsed === "object" && parsed !== null ? parsed : null;
   } catch {
     return null;
