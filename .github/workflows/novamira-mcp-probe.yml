@@ -1,0 +1,65 @@
+name: Novamira MCP -- probe READ-ONLY
+
+# Diagnostico de conectividad contra el MCP de Novamira en STAGING.
+#
+# Tres llamadas, todas de lectura: initialize, tools/list y el censo de
+# abilities via mcp-adapter/discover-abilities. NO escribe en WordPress,
+# no ejecuta ninguna ability de escritura y no toca produccion.
+#
+# Existe como workflow propio, y no dentro de la pasada diaria, porque su
+# unico proposito es responder una pregunta binaria -- "conecta o no
+# conecta" -- antes de construir nada encima. Cuando el MCP este
+# integrado de verdad, este workflow se queda como sonda de salud.
+#
+# SEGURIDAD: los tres secrets llegan como env de un unico step. El script
+# nunca imprime sus valores y aborta si detecta que la salida los
+# contiene. `contents: read` y nada mas.
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: novamira-mcp-probe
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe read-only del MCP de Novamira (staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Probe (solo lectura)
+        id: probe
+        run: npm run novamira:probe
+        env:
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
+          WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+
+      - name: Resumen
+        if: always()
+        run: |
+          {
+            echo "## Novamira MCP -- probe read-only"
+            echo ""
+            echo "- **Resultado del step:** \`${{ steps.probe.outcome }}\`"
+            echo "- **Escrituras realizadas:** ninguna (initialize + tools/list + discover-abilities)."
+            echo "- **Produccion:** no se ha tocado."
+            echo ""
+            echo "El detalle (tools reales, censo de abilities, transporte, motivo del fallo si lo hubo) esta en el log del step \"Probe (solo lectura)\"."
+          } >> "$GITHUB_STEP_SUMMARY"
