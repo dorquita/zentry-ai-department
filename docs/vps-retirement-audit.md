@@ -30,7 +30,7 @@ departamento que corre en GitHub + Claude?*
 | SMTP / email | `growth:daily` paso 26 | Daily Brief coordinado | SI (previo) | SI | ninguna | ninguna |
 | Crawling de competencia | `competitor-intelligence` | FASE 0.6 | SI (O52) | SI | ninguna | ninguna |
 | SEO (director, work orders, change packs) | pasos 2, 10, 13 | FASE 0.6 | SI (O52) | SI | ninguna | ninguna |
-| SEM (agente) | paso 6 | FASE 0.5 recolecta; agente fuera de fase | parcial | recoleccion SI | decision de negocio, no tecnica | retomar SEM cuando toque |
+| SEM (agente) | paso 6 | FASE 0.5 recolecta; bloque [SEM] razona | SI | recoleccion + agente SI | ninguna | -- |
 | Analytics (agente) | paso 7 | FASE 0.5 + `analytics-specialist` | SI | SI | ninguna | ninguna |
 | Growth (director v1) | paso 25 | FASE 0.6 | SI (O52) | SI | ninguna | ninguna |
 | Informes `reports/daily/*.md` | solo VPS | FASE 0.6 | SI (O52) | SI | no se persisten entre pasadas | ver §3 |

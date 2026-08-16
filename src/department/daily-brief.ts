@@ -4,6 +4,7 @@ import { WebEngineerOutput } from "../employees/web-engineer/types";
 import { SeoSpecialistOutput } from "../employees/seo-specialist/domain";
 import { ContentStrategistOutput } from "../employees/content-strategist/output";
 import { AnalyticsSpecialistOutput } from "../employees/analytics-specialist/types";
+import { SemSpecialistOutput } from "../employees/sem-specialist/sem-specialist-output";
 import { APPLY_STATUS_LABEL, DepartmentApplyStatus, DepartmentApplySummary, emptyApplyCounts } from "./apply/types";
 import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./employee-runs";
 import { DepartmentPromotionResult } from "./promotion";
@@ -110,6 +111,7 @@ export interface DepartmentDailyBrief {
     seo: DailyBriefSection;
     content: DailyBriefSection;
     analytics: DailyBriefSection;
+    sem: DailyBriefSection;
     growth: DailyBriefSection;
     qa: DailyBriefSection;
     webEngineering: DailyBriefSection;
@@ -156,7 +158,7 @@ export interface DailyBriefInput {
 }
 
 const BRIEF_NOTE_BASE =
-  "Este informe contiene PROPUESTAS. Solo las acciones que hayan pasado la puerta de aprobacion humana correspondiente pueden ejecutarse mediante APPLY. El analisis del departamento (SEO, Content, Analytics, Growth, QA, Web Engineer) es READ / ANALYZE / PROPOSE: ningun empleado escribe en ningun sistema. Nada se ha commiteado, no se ha tocado produccion, Google Ads, GA4/GTM, Search Console ni n8n. Todas las cifras de este informe son conteos de elementos realmente producidos en esta pasada -- ninguna es una estimacion de negocio.";
+  "Este informe contiene PROPUESTAS. Solo las acciones que hayan pasado la puerta de aprobacion humana correspondiente pueden ejecutarse mediante APPLY. El analisis del departamento (SEO, Content, Analytics, SEM, Growth, QA, Web Engineer) es READ / ANALYZE / PROPOSE: ningun empleado escribe en ningun sistema. Nada se ha commiteado, no se ha tocado produccion, Google Ads, GA4/GTM, Search Console ni n8n. Google Ads en particular se lee EXCLUSIVAMENTE con `googleAds:search` (solo consulta): ninguna campana, presupuesto, keyword, puja, anuncio ni accion de conversion se ha creado, activado, pausado ni modificado. Todas las cifras de este informe son conteos de elementos realmente producidos en esta pasada -- ninguna es una estimacion de negocio.";
 
 const BRIEF_NOTE_NO_WRITES = `${BRIEF_NOTE_BASE} En esta pasada NO se ha escrito en ningun sistema externo.`;
 
@@ -214,6 +216,36 @@ function buildAnalyticsSection(manifest: DepartmentRunManifest, output?: Analyti
   output.prioritizedActions.slice(0, 3).forEach((a) => bullets.push(`Accion (${a.priority}): ${truncate(a.statement, 160)}`));
   if (output.unknowns.length > 0) bullets.push(`Incognitas declaradas por el propio especialista: ${output.unknowns.length}.`);
   return { employee: "analytics-specialist", status: record?.status ?? "executed", headline: `${output.measurementFindings.length} hallazgo(s) de medicion sobre datos reales ya leidos por analytics-watcher.`, bullets };
+}
+
+/**
+ * SEM/Google Ads. Antes de que sem-specialist entrara en la pasada
+ * coordinada, el brief tenia una linea fija ("SEM: pendiente / fuera de
+ * fase") y ninguna seccion: por muy en vivo que sem-watcher leyera la
+ * cuenta, nada de Google Ads llegaba al informe. Ahora se construye igual
+ * que las demas, a partir de la salida REAL del especialista.
+ */
+function buildSemSection(manifest: DepartmentRunManifest, output?: SemSpecialistOutput): DailyBriefSection {
+  const record = findRecord(manifest, "sem-specialist");
+  if (!output) return unavailableSection("sem-specialist", record);
+  const findingCount =
+    output.campaignFindings.length +
+    output.searchTermOpportunities.length +
+    output.negativeKeywordRecommendations.length +
+    output.budgetObservations.length +
+    output.biddingObservations.length +
+    output.adLandingAlignment.length +
+    output.conversionRiskFindings.length;
+  const bullets: string[] = [
+    `${output.campaignFindings.length} hallazgo(s) de campana, ${output.searchTermOpportunities.length} oportunidad(es) de search term, ${output.negativeKeywordRecommendations.length} recomendacion(es) de negativas, ${output.budgetObservations.length} observacion(es) de presupuesto, ${output.conversionRiskFindings.length} riesgo(s) de conversion.`,
+    `${output.evidence.length} cifra(s)/dato(s) citados contra el catalogo de evidencia determinista de la lectura de Google Ads (ninguna cifra sin respaldo: la auditoria es fail-closed).`,
+  ];
+  output.prioritizedExperiments.slice(0, 3).forEach((e) => bullets.push(`Experimento (${e.priority}): ${truncate(e.title, 160)}`));
+  if (output.unknowns.length > 0) {
+    bullets.push(`Incognitas declaradas por el propio especialista (datos que NO existen o no se pudieron leer en la cuenta): ${output.unknowns.length}.`);
+  }
+  bullets.push("Google Ads es READ-ONLY: nada de esto se ha aplicado a ninguna campana, presupuesto, keyword, puja ni anuncio.");
+  return { employee: "sem-specialist", status: record?.status ?? "executed", headline: truncate(output.summary, 320) || `${findingCount} hallazgo(s) SEM sobre la lectura real de Google Ads.`, bullets };
 }
 
 function buildGrowthSection(input: DailyBriefInput): DailyBriefSection {
@@ -320,10 +352,8 @@ function buildTopPriorities(input: DailyBriefInput): DailyBriefPriority[] {
 
 function buildBlockedOrUnknown(input: DailyBriefInput): string[] {
   const items: string[] = [];
-  items.push("SEM: pendiente / temporalmente no disponible -- sem-specialist queda explicitamente fuera de esta fase y no ha aportado ninguna senal de Google Ads. Su ausencia no bloquea el departamento.");
 
   for (const specialist of input.specialists.inputs) {
-    if (specialist.employee === "sem-specialist") continue;
     if (specialist.status !== "executed") items.push(`${specialist.employee}: ${specialist.status} -- ${specialist.note}`);
   }
   if (input.growth.status !== "executed") items.push(`growth-director-v2: ${input.growth.status} -- ${input.growth.reason}`);
@@ -393,9 +423,8 @@ function buildExecutiveSummary(input: DailyBriefInput, priorities: DailyBriefPri
   if (blockedCount > 0) needsAttention.push(`${blockedCount} prioridad(es) bloqueada(s) por QA -- no pasan a ingenieria hasta que se corrijan o se descarten.`);
   const warned = priorities.filter((p) => p.qaStatus === "PASS_WITH_WARNINGS").length;
   if (warned > 0) needsAttention.push(`${warned} prioridad(es) aprobada(s) CON avisos de QA que conviene leer antes de decidir.`);
-  const missing = input.specialists.inputs.filter((i) => i.status !== "executed" && i.employee !== "sem-specialist");
+  const missing = input.specialists.inputs.filter((i) => i.status !== "executed");
   if (missing.length > 0) needsAttention.push(`${missing.length} especialista(s) sin datos en esta pasada (${missing.map((m) => `${m.employee}=${m.status}`).join(", ")}) -- las conclusiones de hoy no cubren su area.`);
-  needsAttention.push("SEM sigue pendiente y fuera de esta fase: ninguna conclusion de este informe cubre Google Ads.");
   if (input.growth.auditWarnings.length > 0) needsAttention.push(`La auditoria de dominio de Growth emitio ${input.growth.auditWarnings.length} aviso(s) (evidencia no verificable o dependencias no declaradas).`);
   if (priorities.length === 0) needsAttention.push("No hay ninguna prioridad del departamento en esta pasada -- revisar el estado de las etapas antes de asumir que no hay trabajo.");
 
@@ -450,6 +479,7 @@ export function buildDepartmentDailyBrief(input: DailyBriefInput): DepartmentDai
       seo: buildSeoSection(input.manifest, input.specialists.seo),
       content: buildContentSection(input.manifest, input.specialists.content),
       analytics: buildAnalyticsSection(input.manifest, input.specialists.analytics),
+      sem: buildSemSection(input.manifest, input.specialists.sem),
       growth: buildGrowthSection(input),
       qa: buildQaSection(input),
       webEngineering: buildWebEngineeringSection(input),
@@ -543,16 +573,17 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
   lines.push(...renderSection("3. SEO", brief.sections.seo));
   lines.push(...renderSection("4. CONTENT", brief.sections.content));
   lines.push(...renderSection("5. ANALYTICS", brief.sections.analytics));
-  lines.push(...renderSection("6. GROWTH DIRECTOR", brief.sections.growth));
-  lines.push(...renderSection("7. QA", brief.sections.qa));
-  lines.push(...renderSection("8. WEB ENGINEERING", brief.sections.webEngineering));
+  lines.push(...renderSection("6. SEM / GOOGLE ADS", brief.sections.sem));
+  lines.push(...renderSection("7. GROWTH DIRECTOR", brief.sections.growth));
+  lines.push(...renderSection("8. QA", brief.sections.qa));
+  lines.push(...renderSection("9. WEB ENGINEERING", brief.sections.webEngineering));
 
-  lines.push("## 9. BLOCKED / UNKNOWN");
+  lines.push("## 10. BLOCKED / UNKNOWN");
   lines.push("");
   for (const item of brief.blockedOrUnknown) lines.push(`- ${item}`);
   lines.push("");
 
-  lines.push("## 10. APPROVALS NEEDED");
+  lines.push("## 11. APPROVALS NEEDED");
   lines.push("");
   if (brief.approvalsNeeded.length === 0) {
     lines.push("_Ninguna decision pendiente en esta pasada._");
@@ -564,7 +595,7 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
   });
   lines.push("");
 
-  lines.push("## 11. APPLY (que puede ejecutarse de verdad)");
+  lines.push("## 12. APPLY (que puede ejecutarse de verdad)");
   lines.push("");
   if (!brief.apply) {
     lines.push("_Esta pasada no llego a construir el contrato de APPLY. Nada se ha aplicado._");
@@ -600,7 +631,7 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
     }
   }
 
-  lines.push("## 12. COSTE DE LA PASADA");
+  lines.push("## 13. COSTE DE LA PASADA");
   lines.push("");
   if (!brief.cost || brief.cost.runs.length === 0) {
     lines.push("_No hay registros de ejecucion de Claude utilizables en esta pasada: el coste no se reporta y no se estima ninguna cifra._");

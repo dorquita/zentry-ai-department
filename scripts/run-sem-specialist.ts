@@ -38,7 +38,7 @@ import * as path from "path";
 import { readAllEvents } from "../src/core/department-events";
 import { buildSemSpecialistContext, SemSpecialistContext } from "../src/employees/sem-specialist/sem-specialist-context";
 import {
-  auditSemSpecialistOutputForUnsupportedClaims,
+  auditSemSpecialistOutput,
   buildSemRunnerResultSummary,
   buildSemSpecialistArtifact,
   renderSemSpecialistMarkdown,
@@ -153,19 +153,33 @@ function resolveResult(outputArg: string | undefined, outDir: string, promptFile
 
   try {
     const output = validateSemSpecialistOutput(raw);
-    const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+    // Dos severidades DISTINTAS (ver SemClaimAudit): una cifra FABRICADA
+    // descarta la salida entera; una cifra REAL mal citada es un aviso y
+    // no tira el analisis -- mismo trato que reciben SEO/Content/Analytics
+    // con sus propios auditWarnings.
+    const { fabricatedClaims: violations, uncitedClaims } = auditSemSpecialistOutput(context, output);
     if (violations.length > 0) {
       fs.writeFileSync(rawCopyPath, JSON.stringify(raw, null, 2), "utf-8");
-      console.error(`sem-specialist: salida rechazada -- ${violations.length} afirmacion(es) cuantitativa(s) sin respaldo trazable en evidence[].`);
+      console.error(`sem-specialist: salida rechazada -- ${violations.length} cifra(s) FABRICADA(S) (no existen en el evidenceCatalog del snapshot).`);
+      // El texto EXACTO de cada violacion va tambien al log, no solo al
+      // artifact: los artifacts de Actions no siempre son descargables
+      // (politica de red del entorno de diagnostico), y sin esto un fallo
+      // solo dejaba el RECUENTO -- imposible de diagnosticar sin repetir
+      // la ejecucion.
+      violations.forEach((v, i) => console.error(`  [violacion ${i + 1}/${violations.length}] ${v}`));
       return {
         status: "invalid_output",
-        error: `${violations.length} afirmacion(es) cuantitativa(s) sin respaldo en evidence[]: ${violations.join(" | ")}`,
+        error: `${violations.length} cifra(s) fabricada(s), inexistentes en el evidenceCatalog: ${violations.join(" | ")}`,
         rawOutputPath: rawCopyPath,
         violations,
       };
     }
-    console.log("sem-specialist: salida valida. 0 afirmaciones cuantitativas sin respaldo.");
-    return { status: "executed", output };
+    console.log("sem-specialist: salida valida. 0 cifras fabricadas.");
+    if (uncitedClaims.length > 0) {
+      console.log(`sem-specialist: ${uncitedClaims.length} aviso(s) de citacion (cifras REALES del snapshot sin su cita en evidenceRefs). No descartan la salida.`);
+      uncitedClaims.forEach((w, i) => console.log(`  [aviso ${i + 1}/${uncitedClaims.length}] ${w}`));
+    }
+    return { status: "executed", output, uncitedClaims };
   } catch (err) {
     fs.writeFileSync(rawCopyPath, JSON.stringify(raw, null, 2), "utf-8");
     const error = err instanceof Error ? err.message : String(err);

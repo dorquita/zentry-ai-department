@@ -366,7 +366,32 @@ export function buildSemEvidenceCatalog(ctx: Omit<SemSpecialistContext, "evidenc
     ds.primaryConversionActionNames.forEach((name, i) => add(`sem-primary-conversion-${i}`, `departmentSummary.primaryConversionActionNames[${i}]`, name, "other"));
     ds.unexpectedPrimaryConversionActionNames.forEach((name, i) => add(`sem-unexpected-conversion-${i}`, `departmentSummary.unexpectedPrimaryConversionActionNames[${i}]`, name, "other"));
     ds.duplicateKeywordWarnings.forEach((w, i) => add(`sem-duplicate-keyword-warning-${i}`, `departmentSummary.duplicateKeywordWarnings[${i}]`, w, "other"));
+
+    // CUANTAS entradas tiene cada lista, no solo cuales. Sin estas tres
+    // entradas, el catalogo incumplia su propia promesa ("cada numero
+    // real del contexto tiene ya su entrada aqui"): los TAMANOS de lista
+    // eran datos reales, perfectamente citables en prosa, y no existia
+    // ninguna entrada que los respaldara. Fallo real: el run
+    // 31960785519 se rechazo por la frase "3 conversiones primarias"
+    // -- un recuento correcto de `primaryConversionActionNames`, que
+    // era IMPOSIBLE de citar porque el catalogo solo traia los nombres
+    // uno a uno, nunca su total.
+    add("sem-primary-conversion-count", "departmentSummary.primaryConversionActionNames.length", String(ds.primaryConversionActionNames.length), "other");
+    add(
+      "sem-unexpected-conversion-count",
+      "departmentSummary.unexpectedPrimaryConversionActionNames.length",
+      String(ds.unexpectedPrimaryConversionActionNames.length),
+      "other"
+    );
+    add("sem-duplicate-keyword-warning-count", "departmentSummary.duplicateKeywordWarnings.length", String(ds.duplicateKeywordWarnings.length), "other");
   }
+
+  // Mismos recuentos, para las dos listas que no viven en
+  // departmentSummary. `searchTermCount` es el total REAL leido por el
+  // watcher (searchTerms viene recortado a 25), asi que decir "N terminos
+  // de busqueda" solo es citable si ese total esta en el catalogo.
+  add("sem-search-term-count", "searchTermCount", String(ctx.searchTermCount), "other");
+  add("sem-metrics-count", "metrics.length", String(ctx.metrics.length), "other");
 
   // Fase O51: el CPC ya NO es "no disponible" por definicion -- lo es
   // solo cuando ninguna campana tuvo clics en la ventana. El ROAS sigue

@@ -224,12 +224,15 @@ export function runDepartmentApplyTraceabilityTests(): TestCase[] {
       },
     },
     {
-      name: "SEM pendiente no bloquea nada: la pasada planifica apply y el brief sigue completo",
+      name: "SEM sin datos no bloquea nada: la pasada planifica apply y el brief sigue completo",
       fn: () => {
         const summary = plan();
         assert.equal(summary.items.length, 1);
         const report = brief(summary);
-        assert.ok(report.blockedOrUnknown.some((i) => i.startsWith("SEM:")), "el brief siempre declara SEM pendiente");
+        // SEM ya no lleva una linea fija de "pendiente / fuera de fase":
+        // se declara con su estado REAL, como cualquier otro especialista
+        // sin datos, y sigue sin bloquear la pasada.
+        assert.ok(report.blockedOrUnknown.some((i) => i.startsWith("sem-specialist:")), "el brief declara el estado real de SEM");
         assert.equal(report.apply?.counts.proposed, 1);
         assert.equal(report.externalWrites, "none", "planificar apply no escribe en ningun sistema");
       },

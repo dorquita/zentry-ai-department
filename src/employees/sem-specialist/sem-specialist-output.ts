@@ -231,17 +231,90 @@ const GAP = "[^\\d.!?]{0,40}?";
 // runner contra datos locales reales).
 const NUM = "(?<![\\w])(\\d+(?:[.,]\\d+)?)(?![\\w])";
 
+/**
+ * Unidades de TIEMPO que, cuando siguen INMEDIATAMENTE a la cifra
+ * capturada, demuestran que esa cifra es la DURACION de la ventana de
+ * metricas y no una afirmacion de gasto/presupuesto/conversiones/CPC/ROAS.
+ * La ventana de proximidad de QUANT_CLAIM_CATEGORIES mira hacia ATRAS
+ * (que palabra clave precede a la cifra); esto mira hacia DELANTE (que
+ * unidad la sigue).
+ *
+ * Caso real que motiva esta regla (los 8 fallos consecutivos de
+ * sem-specialist.yml del 2026-08-15, el ultimo el run 31890935474, con
+ * unsupportedClaimCount=1): la frase legitima "no se han registrado
+ * conversiones en los ultimos 30 dias" hacia que la ventana de
+ * "conversiones" capturase el "30" de "30 dias" como si fuera un recuento
+ * de conversiones inventado.
+ *
+ * POR QUE SOLO TIEMPO, y no cualquier sustantivo contable ("7 campanas",
+ * "60 keywords"): la regla general de este auditor -- toda cifra de un
+ * finding debe estar CITADA en su evidenceRefs -- solo es exigible cuando
+ * esa cifra PUEDE tener una entrada en evidenceCatalog. Los recuentos de
+ * campanas/keywords/ad groups SI la tienen (sem-total-campaigns,
+ * sem-total-positive-keywords...), asi que exigir su cita es razonable y
+ * se mantiene. La duracion de la ventana NO la tiene ni puede tenerla
+ * (el catalogo no expone `metricsWindow` como cifra, justamente para no
+ * abrir una entrada numerica generica que respaldaria por accidente
+ * cualquier importe que coincidiera), asi que exigir su cita era una
+ * condicion imposible de cumplir: la salida quedaba rechazada dijera lo
+ * que dijera el especialista.
+ *
+ * Deliberadamente NO incluye "conversion/conversiones" ni "€"/"EUR"/
+ * "euros": "12 conversiones" y "44 €" SI son afirmaciones auditables y
+ * siguen exigiendo evidencia citada.
+ */
+const DURATION_UNIT_AFTER_NUMBER = /^\s*(?:d[ií]as?|jornadas?|semanas?|mes(?:es)?|a[ñn]os?|horas?|minutos?)\b/i;
+
+/** Cuantos caracteres se miran tras la cifra para decidir si lleva una unidad de tiempo pegada. */
+const UNIT_LOOKAHEAD_CHARS = 24;
+
+/**
+ * "conversion primaria" / "conversion principal" no es una CONVERSION
+ * medida: es una ACCION DE CONVERSION configurada en la cuenta. Contar
+ * cuantas hay ("las 3 conversiones primarias configuradas") es una
+ * afirmacion sobre la CONFIGURACION, no sobre el rendimiento, y el
+ * catalogo la respalda con `sem-primary-conversion-count` -- nunca con una
+ * entrada de categoria "conversiones".
+ *
+ * Caso real: el run 31960785519 se rechazo por la frase "3 conversiones"
+ * dentro de "Las 3 conversiones primarias configuradas...", que era un
+ * recuento correcto y perfectamente verificable.
+ *
+ * Solo se aplica a la categoria "conversiones": una cifra de gasto o de
+ * presupuesto no cambia de naturaleza por llevar esta palabra al lado.
+ */
+const CONVERSION_ACTION_QUALIFIER = /^\s*(?:primaria|principal|secundaria)/i;
+
+/**
+ * La palabra clave de la categoria NO puede estar pegada a un guion, un
+ * guion bajo u otro caracter de palabra: si lo esta, forma parte de un
+ * IDENTIFICADOR, no de una frase.
+ *
+ * Caso real (run 31966285132, y con toda probabilidad varios de los
+ * rechazos anteriores por "CPC"): el prompt ORDENA al subagente citar la
+ * entrada centinela `sem-cpc-not-available` cuando quiere decir que no
+ * hay CPC. Al escribir "...(sem-cpc-not-available) y 0 clics...", el
+ * patron de la categoria "cpc" enganchaba la subcadena `cpc` DENTRO del
+ * id, saltaba el hueco "-not-available) y " y capturaba el "0" siguiente
+ * como si fuera una cifra de CPC inventada. Es decir: seguir las
+ * instrucciones al pie de la letra garantizaba el rechazo de la salida
+ * entera. Lo mismo aplicaba a `sem-metrics-<i>-conversions`,
+ * `sem-roas-not-available` y cualquier id que contenga una palabra clave.
+ */
+const KW_START = "(?<![\\w-])";
+const KW_END = "(?![\\w-])";
+
 const QUANT_CLAIM_CATEGORIES: QuantClaimCategory[] = [
-  { id: "cpc", label: "CPC", pattern: new RegExp(`cpc${GAP}${NUM}`, "gi") },
+  { id: "cpc", label: "CPC", pattern: new RegExp(`${KW_START}cpc${KW_END}${GAP}${NUM}`, "gi") },
   // Dos ordenes de frase: "12 conversiones" (numero primero, habitual en
   // metricas tabulares) Y "conversiones: 12" / "el numero de conversiones
   // fue de 12" (palabra clave primero) -- solo cubrir el primer orden
   // dejaba sin auditar cualquier afirmacion fabricada con el orden
   // inverso (detectado en code review).
-  { id: "conversiones", label: "conversiones", pattern: new RegExp(`${NUM}\\s*conversion(?:es)?\\b|conversion(?:es)?${GAP}${NUM}`, "gi") },
-  { id: "roas", label: "ROAS", pattern: new RegExp(`roas${GAP}${NUM}`, "gi") },
-  { id: "gasto", label: "gasto/coste", pattern: new RegExp(`(?:gasto|coste)${GAP}${NUM}\\s*€?`, "gi") },
-  { id: "presupuesto", label: "presupuesto", pattern: new RegExp(`presupuesto${GAP}${NUM}\\s*€?`, "gi") },
+  { id: "conversiones", label: "conversiones", pattern: new RegExp(`${NUM}\\s*${KW_START}conversion(?:es)?${KW_END}|${KW_START}conversion(?:es)?${KW_END}${GAP}${NUM}`, "gi") },
+  { id: "roas", label: "ROAS", pattern: new RegExp(`${KW_START}roas${KW_END}${GAP}${NUM}`, "gi") },
+  { id: "gasto", label: "gasto/coste", pattern: new RegExp(`${KW_START}(?:gasto|coste)${KW_END}${GAP}${NUM}\\s*€?`, "gi") },
+  { id: "presupuesto", label: "presupuesto", pattern: new RegExp(`${KW_START}presupuesto${KW_END}${GAP}${NUM}\\s*€?`, "gi") },
 ];
 
 /**
@@ -356,14 +429,45 @@ function collectClaimTexts(output: SemSpecialistOutput): ClaimText[] {
 }
 
 /**
- * Auditoria FAIL-CLOSED de afirmaciones cuantitativas sin respaldo. Un
- * array vacio significa "sin violaciones" -- cualquier entrada devuelta
- * aqui debe tratarse como un fallo DURO por quien la llama (nunca un
- * simple aviso), ver cabecera de esta seccion.
+ * Resultado de la auditoria, separado en dos severidades DISTINTAS.
+ *
+ * POR QUE SE SEPARAN (diferencia estructural real frente a SEO/Analytics/
+ * Content, y causa de que SEM fuera el unico especialista que perdia
+ * pasadas enteras): hasta ahora CUALQUIER hallazgo de esta auditoria
+ * tiraba la salida COMPLETA a `invalid_output`. Los otros tres
+ * especialistas emiten `auditWarnings` y siguen contando como
+ * `executed` -- en la pasada 31961151666, analytics emitio 5 avisos y
+ * content 1, y ambos entregaron su analisis.
+ *
+ * Pero "SEM no inventa cifras" y "SEM cito mal una cifra REAL" no son el
+ * mismo problema:
+ *
+ * - `fabricatedClaims`: la cifra NO existe en el evidenceCatalog. Es
+ *   exactamente lo que la mision del empleado prohibe ("NO inventa CPC,
+ *   conversiones, ROAS ni gasto"). Sigue siendo un fallo DURO: la salida
+ *   entera se descarta, sin excepciones.
+ * - `uncitedClaims`: la cifra SI existe en el catalogo -- es un dato real
+ *   de la cuenta -- pero la afirmacion concreta no listo su `id` en su
+ *   propio `evidenceRefs`. Eso es higiene de citacion, no fabricacion:
+ *   tirar por eso un analisis con decenas de hallazgos correctos hacia
+ *   que el departamento perdiera SEM de forma intermitente (2026-08-16:
+ *   la pasada 31961151666 salio con 0 y la 31962578324 con 1, con el
+ *   mismo codigo y la misma cuenta). Se reporta como AVISO, visible en
+ *   el artifact y en el brief, y no descarta nada.
  */
-export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecialistContext, output: SemSpecialistOutput): string[] {
+export interface SemClaimAudit {
+  fabricatedClaims: string[];
+  uncitedClaims: string[];
+}
+
+/**
+ * Auditoria completa. Ver SemClaimAudit para la diferencia entre las dos
+ * severidades y por que existe.
+ */
+export function auditSemSpecialistOutput(context: SemSpecialistContext, output: SemSpecialistOutput): SemClaimAudit {
   const catalog = context.evidenceCatalog;
   const violations: string[] = [];
+  const uncited: string[] = [];
 
   // Cada entrada de evidence[] debe coincidir EXACTAMENTE (id+contextField+value)
   // con una entrada del evidenceCatalog determinista -- nunca una
@@ -407,19 +511,51 @@ export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecial
         const numberRaw = match[1] ?? match[2];
         if (!numberRaw) continue;
 
+        // La cifra lleva pegada una unidad de tiempo ("30 dias"): es la
+        // duracion de la ventana de metricas, no una afirmacion de esta
+        // categoria -- y no existe ninguna entrada de catalogo que pudiera
+        // respaldarla. Ver DURATION_UNIT_AFTER_NUMBER.
+        const matchEnd = (match.index ?? 0) + match[0].length;
+        const tail = claim.text.slice(matchEnd, matchEnd + UNIT_LOOKAHEAD_CHARS);
+        if (DURATION_UNIT_AFTER_NUMBER.test(tail)) continue;
+
+        // "3 conversiones primarias" cuenta acciones configuradas, no
+        // conversiones medidas. Ver CONVERSION_ACTION_QUALIFIER.
+        if (category.id === "conversiones" && CONVERSION_ACTION_QUALIFIER.test(tail)) continue;
+
         const candidates = resolveClaimCandidateEntries(category.id, pool);
         if (findMatchingCatalogEntry(numberRaw, candidates)) continue;
 
+        // La cifra no esta respaldada por lo que ESTA afirmacion cita.
+        // Antes de tratarlo como fabricacion hay que mirar el catalogo
+        // COMPLETO (con la misma restriccion de categoria para cpc/roas):
+        // si la cifra existe ahi, es un dato REAL de la cuenta mal citado,
+        // no un numero inventado. Ver SemClaimAudit.
+        const existsInCatalog = findMatchingCatalogEntry(numberRaw, resolveClaimCandidateEntries(category.id, catalog));
+
+        if (existsInCatalog) {
+          uncited.push(
+            `Afirmacion cuantitativa (${category.label}) "${match[0].trim()}" en "${claim.field}": la cifra es REAL (coincide con "${existsInCatalog.id}" del evidenceCatalog) pero esa entrada NO aparece en el evidenceRefs de esta afirmacion. No es fabricacion -- es una cita que falta. Anade "${existsInCatalog.id}" a evidenceRefs (y copia la entrada a evidence[]) para que la trazabilidad quede completa.`
+          );
+          continue;
+        }
+
         violations.push(
-          claim.canCiteEvidence
-            ? `Afirmacion cuantitativa (${category.label}) "${match[0].trim()}" en "${claim.field}" no tiene ninguna evidenceRefs citada cuyo value coincida con esa cifra -- toda cifra de CPC/conversiones/ROAS/gasto/presupuesto necesita una entrada exacta del evidenceCatalog, referenciada explicitamente en evidenceRefs (para CPC/ROAS, ademas, esa entrada debe ser realmente de esa categoria -- hoy el catalogo solo tiene la entrada "not_available" para cada una).`
-            : `Afirmacion cuantitativa sin respaldo (${category.label}): "${match[0].trim()}" en "${claim.field}" -- ese numero no aparece en el evidenceCatalog del snapshot suministrado. Prohibido inventar CPC/conversiones/ROAS/gasto/presupuesto (para CPC/ROAS, hoy el catalogo solo tiene la entrada "not_available" -- ninguna cifra numerica de esas 2 categorias puede tener respaldo real todavia).`
+          `Afirmacion cuantitativa SIN RESPALDO (${category.label}): "${match[0].trim()}" en "${claim.field}" -- ese numero no aparece en NINGUNA entrada del evidenceCatalog del snapshot suministrado. Prohibido inventar CPC/conversiones/ROAS/gasto/presupuesto (para CPC/ROAS, cuando el catalogo solo trae la entrada "not_available", ninguna cifra numerica de esas categorias puede tener respaldo).`
         );
       }
     }
   }
 
-  return violations;
+  return { fabricatedClaims: violations, uncitedClaims: uncited };
+}
+
+/**
+ * Compatibilidad: solo las violaciones DURAS (cifras fabricadas). Las
+ * citas que faltan se obtienen con `auditSemSpecialistOutput()`.
+ */
+export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecialistContext, output: SemSpecialistOutput): string[] {
+  return auditSemSpecialistOutput(context, output).fabricatedClaims;
 }
 
 // --- Resultado del runner + artefacto -------------------------------------
@@ -430,7 +566,7 @@ export type SemResult =
   | { status: "no_data" }
   | { status: "pending_execution"; promptFilePath: string }
   | { status: "invalid_output"; error: string; rawOutputPath: string; violations: string[] }
-  | { status: "executed"; output: SemSpecialistOutput };
+  | { status: "executed"; output: SemSpecialistOutput; uncitedClaims: string[] };
 
 /**
  * Contrato machine-readable que imprime el runner al final de cada
@@ -447,8 +583,28 @@ export interface SemRunnerResultSummary {
   expectedOutputPath: string;
   artifactJsonPath: string;
   artifactMdPath: string;
-  /** null salvo que status sea "executed" (siempre 0 en ese caso -- una violacion fuerza invalid_output) o "invalid_output" (numero real de violaciones). */
+  /** null salvo que status sea "executed" (siempre 0 en ese caso -- una cifra FABRICADA fuerza invalid_output) o "invalid_output" (numero real de cifras fabricadas). */
   unsupportedClaimCount: number | null;
+  /**
+   * Citas que faltan: cifras REALES del catalogo que su afirmacion no
+   * referencio en evidenceRefs. Son AVISOS, nunca descartan la salida
+   * (ver SemClaimAudit). null salvo en "executed"/"invalid_output".
+   */
+  uncitedClaimCount: number | null;
+  /**
+   * TEXTO de cada cifra fabricada (recortado). Sin esto, un rechazo solo
+   * dejaba el RECUENTO en el log y en el brief, y el detalle vivia
+   * unicamente dentro del artifact -- que no siempre es descargable desde
+   * donde se opera el departamento. Diagnosticar un rechazo obligaba a
+   * repetir la ejecucion entera (caso real: pasada 31964790892).
+   */
+  unsupportedClaims: string[];
+}
+
+/** Recorta cada violacion para que la linea RUNNER_RESULT_JSON siga siendo manejable en un log. */
+function truncateClaim(text: string, max = 300): string {
+  const flat = text.replace(/\s+/g, " ").trim();
+  return flat.length <= max ? flat : `${flat.slice(0, max - 1)}...`;
 }
 
 export function buildSemRunnerResultSummary(
@@ -466,6 +622,8 @@ export function buildSemRunnerResultSummary(
     artifactJsonPath: paths.artifactJsonPath,
     artifactMdPath: paths.artifactMdPath,
     unsupportedClaimCount: result.status === "invalid_output" ? result.violations.length : result.status === "executed" ? 0 : null,
+    uncitedClaimCount: result.status === "executed" ? result.uncitedClaims.length : result.status === "invalid_output" ? 0 : null,
+    unsupportedClaims: result.status === "invalid_output" ? result.violations.map((v) => truncateClaim(v)) : [],
   };
 }
 
@@ -539,6 +697,14 @@ export function renderSemSpecialistMarkdown(artifact: SemSpecialistArtifact): st
     lines.push("");
   } else if (artifact.result.status === "executed") {
     const o = artifact.result.output;
+    if (artifact.result.uncitedClaims.length > 0) {
+      // Avisos, NO un rechazo: la cifra es real, solo falta su cita. Se
+      // muestran arriba del todo para que se corrijan, sin tirar el
+      // analisis (ver SemClaimAudit).
+      lines.push(`**Avisos de citacion (${artifact.result.uncitedClaims.length}) -- cifras REALES del snapshot que su afirmacion no cito en evidenceRefs. Ninguna es una cifra inventada:**`);
+      for (const w of artifact.result.uncitedClaims) lines.push(`- ${w}`);
+      lines.push("");
+    }
     lines.push("## Resumen");
     lines.push("");
     lines.push(o.summary);

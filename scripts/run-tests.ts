@@ -33,6 +33,7 @@ import { runSemSpecialistOutputTests } from "../test/sem-specialist-output.test"
 import { runSemSpecialistOutputSchemaTests } from "../test/sem-specialist-output-schema.test";
 import { runSemSpecialistRunnerResultParserTests } from "../test/sem-specialist-runner-result-parser.test";
 import { runSemSpecialistArtifactTests } from "../test/sem-specialist-artifact.test";
+import { runSemLiveToGrowthTests } from "../test/sem-live-to-growth.test";
 import { runSeoSpecialistOutputSchemaTests } from "../test/seo-specialist-output-schema.test";
 import { runSeoSpecialistDomainTests } from "../test/seo-specialist-domain.test";
 import { runSeoSpecialistContextTests } from "../test/seo-specialist-context.test";
@@ -120,6 +121,7 @@ async function main(): Promise<void> {
     { suiteName: "sem-specialist-output-schema", cases: runSemSpecialistOutputSchemaTests() },
     { suiteName: "sem-specialist-runner-result-parser", cases: runSemSpecialistRunnerResultParserTests() },
     { suiteName: "sem-specialist-artifact", cases: runSemSpecialistArtifactTests() },
+    { suiteName: "sem-live-to-growth", cases: runSemLiveToGrowthTests() },
     { suiteName: "seo-specialist-output-schema", cases: runSeoSpecialistOutputSchemaTests() },
     { suiteName: "seo-specialist-domain", cases: runSeoSpecialistDomainTests() },
     { suiteName: "seo-specialist-context", cases: runSeoSpecialistContextTests() },

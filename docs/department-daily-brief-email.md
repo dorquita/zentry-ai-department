@@ -17,7 +17,7 @@ informe completo (JSON + Markdown) sigue viajando en el artifact del run.
    `APPROVED / QUEUED FOR APPLY`, `APPLIED SUCCESSFULLY`,
    `VALIDATION FAILED`, `ROLLED BACK`, `REJECTED`, `BLOCKED` y
    `REQUIRES MANUAL IMPLEMENTATION`.
-5. **Blocked / unknown** — incluye siempre `SEM: pendiente`.
+5. **Blocked / unknown** — cualquier etapa sin salida utilizable, con su estado real.
 6. **Estado del departamento** — SEO, Content, Analytics, SEM, Growth, QA,
    Web Engineer.
 7. **Coste de la pasada** — coste, duracion, turnos y modelo por empleado.

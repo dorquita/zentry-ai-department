@@ -113,7 +113,7 @@ Cinco estados explicitos (`DepartmentStageStatus`):
 | Estado | Significado | Tumba la pasada? |
 |---|---|---|
 | `executed` | Corrio y su salida paso la validacion de su propio dominio. | No |
-| `not_available` | No habia insumos reales (o esta fuera de fase, como SEM). | No |
+| `not_available` | No habia insumos reales en esta pasada. | No |
 | `blocked` | No debia correr porque una etapa anterior lo impide (p.ej. QA bloqueo todo). | No |
 | `invalid_output` | Corrio pero su salida NO cumple su contrato. Descartada, nunca reinterpretada. | Si |
 | `failed` | Fallo tecnico real (step muerto, timeout, auth). | Si |
@@ -160,10 +160,11 @@ elementos realmente producidos en la pasada). Diez secciones:
    ha cambiado)
 2. Top priorities -- con accion, motivo, impacto, confianza, esfuerzo,
    evidencia, agente de origen, QA status y "necesita aprobacion"
-3. SEO - 4. Content - 5. Analytics - 6. Growth Director - 7. QA -
-   8. Web Engineering
-9. BLOCKED / UNKNOWN (incluye siempre `SEM: pendiente`)
-10. Approvals needed
+3. SEO - 4. Content - 5. Analytics - 6. SEM / Google Ads -
+   7. Growth Director - 8. QA - 9. Web Engineering
+10. BLOCKED / UNKNOWN (cualquier etapa sin salida utilizable, con su
+    estado real)
+11. Approvals needed
 
 **Trazabilidad:** cada prioridad lleva sus `evidenceRefs` ya resueltas a
 la descripcion real y al empleado del que salen
@@ -196,8 +197,6 @@ npm run department:run -- --phase gate --departmentRunId <id>
 
 ## Pendiente (fuera de esta fase, por decision explicita)
 
-- `sem-specialist` (siempre `not_available` en el informe; nunca
-  bloquea).
 - El puente entre la especificacion de `web-engineer` y el registro de
   capacidades del APPLY: hoy el agente no recibe el catalogo de paginas
   de staging ni se le pide el bloque `TITLE:`/`META:`, asi que sus

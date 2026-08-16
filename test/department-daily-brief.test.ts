@@ -187,11 +187,19 @@ export function runDepartmentDailyBriefTests(): TestCase[] {
       },
     },
     {
-      name: "SEM aparece SIEMPRE en BLOCKED / UNKNOWN como pendiente, y nunca como fallo del departamento",
+      // Contrato NUEVO: SEM ya no lleva una linea fija de "pendiente /
+      // fuera de fase" (que se emitia incluso cuando el especialista
+      // habia corrido). Si no aporto datos, aparece en BLOCKED / UNKNOWN
+      // con su estado REAL, exactamente igual que cualquier otro
+      // especialista ausente -- y su seccion propia lo dice tambien.
+      name: "SEM sin datos: aparece en BLOCKED / UNKNOWN con su estado real y su seccion no se rellena con nada inventado",
       fn: () => {
         const brief = buildDepartmentDailyBrief(briefInput());
-        assert.ok(brief.blockedOrUnknown.some((item) => item.startsWith("SEM: pendiente / temporalmente no disponible")));
-        assert.ok(brief.executiveSummary.needsAttention.some((item) => item.includes("SEM sigue pendiente")));
+        assert.ok(brief.blockedOrUnknown.some((item) => item.startsWith("sem-specialist:")));
+        assert.equal(brief.sections.sem.employee, "sem-specialist");
+        assert.equal(brief.sections.sem.status, "not_available");
+        assert.ok(brief.sections.sem.headline.includes("Sin aportacion utilizable"));
+        assert.ok(brief.executiveSummary.needsAttention.some((item) => item.includes("sin datos en esta pasada")));
       },
     },
     {
@@ -250,7 +258,7 @@ export function runDepartmentDailyBriefTests(): TestCase[] {
       },
     },
     {
-      name: "El markdown contiene las 10 secciones pedidas, en orden, y el resumen de Step Summary es coherente",
+      name: "El markdown contiene las 11 secciones pedidas, en orden (SEM incluida), y el resumen de Step Summary es coherente",
       fn: () => {
         const brief = buildDepartmentDailyBrief(briefInput());
         const markdown = renderDepartmentDailyBriefMarkdown(brief);
@@ -262,11 +270,12 @@ export function runDepartmentDailyBriefTests(): TestCase[] {
           "## 3. SEO",
           "## 4. CONTENT",
           "## 5. ANALYTICS",
-          "## 6. GROWTH DIRECTOR",
-          "## 7. QA",
-          "## 8. WEB ENGINEERING",
-          "## 9. BLOCKED / UNKNOWN",
-          "## 10. APPROVALS NEEDED",
+          "## 6. SEM / GOOGLE ADS",
+          "## 7. GROWTH DIRECTOR",
+          "## 8. QA",
+          "## 9. WEB ENGINEERING",
+          "## 10. BLOCKED / UNKNOWN",
+          "## 11. APPROVALS NEEDED",
         ];
         let cursor = -1;
         for (const section of expectedSections) {
