@@ -44,13 +44,15 @@ import { callMcpTool, extractTextContent } from "../src/adapters/novamira-mcp-tr
 import { NovamiraSession } from "../src/adapters/novamira-mcp-transport";
 import { resolveNovamiraCredentials } from "../src/adapters/novamira-mcp-transport";
 import { applyChangePlanWithPhp, ExecutePhpContext, PhpTargetState } from "../src/department/apply/execute-php-executor";
+import { assessNativeAbilityForPlan } from "../src/core/novamira-ability-capabilities";
+import { parseBlockInventory } from "../src/core/gutenberg-blocks";
 import { computeVersionHash } from "../src/department/apply/version";
 
 const PROJECT_ROOT = path.join(__dirname, "..");
 const REPORT_DIR = path.join(PROJECT_ROOT, "reports", "execute-php-e2e");
 
-/** Operacion del E2E: `post_excerpt`. Ver `chooseOperation()` para el porque. */
-const E2E_OPERATION = "update_post_excerpt" as const;
+/** Operacion del E2E: `post_content` con un H2 (`core/heading`). Ver `chooseOperation()`. */
+const E2E_OPERATION = "update_post_content" as const;
 
 function parseArgs(argv: string[]): Record<string, string> {
   const args: Record<string, string> = {};
@@ -121,31 +123,51 @@ async function listCandidates(restBase: string, authHeader: string): Promise<voi
   const pages = await restGet<RestPage[]>(`${restBase}/pages?per_page=50&status=publish&context=edit&orderby=modified&order=desc`, authHeader);
   console.log(`Paginas PUBLICADAS en staging (${pages.length}). Elige una NO critica para el E2E:\n`);
   for (const page of pages) {
-    const excerpt = (page.excerpt?.raw ?? "").replace(/\s+/g, " ").trim();
+    const contentHtml = page.content?.raw ?? "";
+    const inventory = parseBlockInventory(contentHtml);
+    const hasH2 = /<!--\s*wp:heading[\s\S]*?-->\s*<h2\b/i.test(contentHtml);
     console.log(`  id=${String(page.id).padEnd(6)} slug=${page.slug}`);
-    console.log(`         titulo:  ${(page.title?.raw ?? "").slice(0, 90)}`);
-    console.log(`         excerpt: ${excerpt.length > 0 ? `"${excerpt.slice(0, 90)}"` : "(vacio)"}`);
+    console.log(`         titulo:   ${(page.title?.raw ?? "").slice(0, 80)}`);
+    console.log(`         bloques:  ${inventory.isClassicContent ? "(contenido clasico, sin bloques)" : inventory.blockTypes.join(", ").slice(0, 140)}`);
+    console.log(`         H2 nativo: ${hasH2 ? "SI" : "no"}`);
   }
   console.log("\nCero escrituras. Este modo solo lee.");
 }
 
 /**
- * Por que el E2E usa `post_excerpt` y no un H2.
+ * Por que el E2E cambia un H2 y por que ese H2 va por PHP.
  *
- * La consigna era "un cambio que NO pueda resolverse con una ability
- * especifica actual". Un H2 vive en `post_content`, y para `post_content`
- * SI existe ability nativa (`novamira/gutenberg-write-content`). Bajo la
- * politica de seleccion que este mismo diseño impone, ese cambio se
- * enrutaria a la ability nativa, no al fallback -- y forzarlo a PHP
- * exigiria declarar un motivo falso de "la nativa no sirve".
+ * Un H2 vive en `post_content`, y `post_content` SI tiene ability nativa
+ * declarada: `novamira/gutenberg-write-content`. Pero la existencia
+ * NOMINAL no basta. El servidor dice de esa ability, textualmente:
  *
- * `post_excerpt` (la meta description / frase de resumen de la pagina)
- * no tiene ninguna ability nativa que lo escriba, es una frase visible,
- * y su rollback es exacto. Cumple la consigna real -- demostrar el
- * fallback cuando NO hay alternativa nativa -- sin mentir en el motivo.
+ *   "Directly writes Gutenberg post_content ONLY when every supplied
+ *    block is a registered Novamira-owned dynamic-only block. [...] For
+ *    static/native blocks, this ability REFUSES the write."
+ *
+ * Un `core/heading` es un bloque nativo/estatico, asi que la nativa lo
+ * rechazaria. `selectExecutionPath()` lo deriva del propio contenido
+ * (tipos de bloque reales) y devuelve `execute_php_fallback` con un
+ * motivo verificable -- nadie tiene que declararlo a mano.
  */
 function chooseOperation(): { operation: typeof E2E_OPERATION; nativeAbility: string | null } {
   return { operation: E2E_OPERATION, nativeAbility: NATIVE_ABILITY_FOR_OPERATION[E2E_OPERATION] };
+}
+
+/**
+ * Cambia el texto del PRIMER `core/heading` de nivel 2, dejando intacto
+ * todo lo demas del cuerpo. Devuelve `null` si la pagina no tiene ningun
+ * H2: el E2E se detiene en vez de inventarse un cambio.
+ */
+export function replaceFirstH2Text(contentHtml: string, newText: string): { html: string; previousText: string } | null {
+  // Bloque heading de Gutenberg: su delimitador va seguido de un <h2>.
+  const pattern = /(<!--\s*wp:heading[\s\S]*?-->\s*<h2\b[^>]*>)([\s\S]*?)(<\/h2>)/i;
+  const match = contentHtml.match(pattern);
+  if (!match) return null;
+  return {
+    previousText: match[2],
+    html: contentHtml.replace(pattern, `$1${newText}$3`),
+  };
 }
 
 function planFor(postId: number, expectedBeforeHash: string, value: string): ExecutePhpChangePlan {
@@ -155,7 +177,7 @@ function planFor(postId: number, expectedBeforeHash: string, value: string): Exe
     targetId: postId,
     expectedBeforeHash,
     payload: { value },
-    scopeFields: ["post_excerpt"],
+    scopeFields: ["post_content"],
   };
 }
 
@@ -217,7 +239,7 @@ async function main(): Promise<void> {
     status: before.status,
     slug: before.slug,
     url: before.link,
-    excerptBefore: before.excerpt,
+    h2Before: (before.contentHtml.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i) ?? [])[1] ?? "(sin h2)",
     versionHash: beforeHash,
   });
 
@@ -227,20 +249,29 @@ async function main(): Promise<void> {
 
   // --- 2/3. ChangePlan + demostrar que no hay ability nativa ---
   const { nativeAbility } = chooseOperation();
-  const selection = selectExecutionPath({ operation: E2E_OPERATION });
+
+  const marker = `[E2E execute-php ${new Date().toISOString()}]`;
+  const edited = replaceFirstH2Text(before.contentHtml, `Configurador de bancos ${marker}`);
+  if (!edited) {
+    throw new Error(`La pagina ${postId} no tiene ningun bloque core/heading de nivel 2. El E2E se detiene: no se inventa un cambio.`);
+  }
+  const plan = planFor(postId, beforeHash, edited.html);
+
+  // La seleccion se deriva del PLAN (tipos de bloque reales), no de la
+  // operacion a secas.
+  const selection = selectExecutionPath({ plan });
+  const support = assessNativeAbilityForPlan(plan);
   log("2-capability", {
     operation: E2E_OPERATION,
     nativeAbilityForOperation: nativeAbility,
+    blockTypesInContent: support?.blockTypes ?? [],
+    unsupportedByNative: support?.unsupportedBlockTypes ?? [],
     executionPath: selection.executionPath,
     reason: selection.reason,
   });
   if (selection.executionPath !== "execute_php_fallback") {
     throw new Error("La seleccion de capacidad NO eligio el fallback de PHP. El E2E se detiene: no se fuerza el camino de PHP.");
   }
-
-  const marker = `[E2E execute-php ${new Date().toISOString()}]`;
-  const temporaryExcerpt = `${before.excerpt} ${marker}`.trim();
-  const plan = planFor(postId, beforeHash, temporaryExcerpt);
 
   const context: ExecutePhpContext = {
     departmentRunId: args.departmentRunId && args.departmentRunId !== "true" ? args.departmentRunId : "o47-execute-php-e2e",
@@ -276,7 +307,7 @@ async function main(): Promise<void> {
           php,
           capabilitySelection: selection,
           flags: context.flags,
-          snapshotPreviousValue: before.excerpt,
+          snapshotPreviousValue: before.contentHtml,
           snapshotPreviousExisted: true,
         },
         session ?? undefined
@@ -307,11 +338,14 @@ async function main(): Promise<void> {
 
   // --- 8. Estado intermedio real, leido otra vez ---
   const middle = await getState(postId);
-  log("4-after", { excerptAfter: middle.excerpt, versionHash: computeVersionHash({ status: middle.status, title: middle.title, metaDescription: middle.excerpt, contentHtml: middle.contentHtml }) });
+  log("4-after", {
+    h2After: (middle.contentHtml.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i) ?? [])[1] ?? "(sin h2)",
+    versionHash: computeVersionHash({ status: middle.status, title: middle.title, metaDescription: middle.excerpt, contentHtml: middle.contentHtml }),
+  });
 
   // --- 9/10. REVERTIR: es otro ChangePlan normal, por el mismo guard ---
   const middleHash = computeVersionHash({ status: middle.status, title: middle.title, metaDescription: middle.excerpt, contentHtml: middle.contentHtml });
-  const revertPlan = planFor(postId, middleHash, before.excerpt);
+  const revertPlan = planFor(postId, middleHash, before.contentHtml);
   const revertContext: ExecutePhpContext = { ...context, changeId: `${context.changeId}-revert` };
   const revertDeps = {
     getState,
@@ -330,7 +364,7 @@ async function main(): Promise<void> {
           php,
           capabilitySelection: selection,
           flags: revertContext.flags,
-          snapshotPreviousValue: middle.excerpt,
+          snapshotPreviousValue: middle.contentHtml,
           snapshotPreviousExisted: true,
         },
         session ?? undefined
@@ -344,8 +378,12 @@ async function main(): Promise<void> {
   // --- 11/12. read-back final y comprobacion de identidad exacta ---
   const final = await getState(postId);
   const finalHash = computeVersionHash({ status: final.status, title: final.title, metaDescription: final.excerpt, contentHtml: final.contentHtml });
-  const identical = finalHash === beforeHash && final.excerpt === before.excerpt;
-  log("6-final", { excerptFinal: final.excerpt, versionHash: finalHash, identicalToStart: identical });
+  const identical = finalHash === beforeHash && final.contentHtml === before.contentHtml;
+  log("6-final", {
+    h2Final: (final.contentHtml.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i) ?? [])[1] ?? "(sin h2)",
+    versionHash: finalHash,
+    identicalToStart: identical,
+  });
 
   const stagingWrites = (applyOutcome.stagingWritePerformed ? 1 : 0) + (revertOutcome.stagingWritePerformed ? 1 : 0);
   const summary = {
@@ -354,9 +392,10 @@ async function main(): Promise<void> {
     operation: E2E_OPERATION,
     executionPath: selection.executionPath,
     nativeAbilityForOperation: nativeAbility,
-    beforeExcerpt: before.excerpt,
-    temporaryExcerpt: middle.excerpt,
-    finalExcerpt: final.excerpt,
+    h2Before: edited.previousText,
+    h2Temporary: `Configurador de bancos ${marker}`,
+    blockTypesInContent: support?.blockTypes ?? [],
+    unsupportedByNativeAbility: support?.unsupportedBlockTypes ?? [],
     beforeHash,
     middleHash,
     finalHash,

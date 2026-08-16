@@ -34,6 +34,7 @@ import {
   ExecutePhpOutcome,
   PhpTargetState,
 } from "../src/department/apply/execute-php-executor";
+import { assessGutenbergWriteContentSupport } from "../src/core/novamira-ability-capabilities";
 import { computeVersionHash } from "../src/department/apply/version";
 
 export interface TestCase {
@@ -49,7 +50,17 @@ export interface TestCase {
 // --- Fixtures ------------------------------------------------------------
 
 const TARGET_ID = 2091;
-const NEW_CONTENT = "<p>Taquillas de melamina para vestuarios, con cerradura Tukandado.</p>";
+/** Contenido nuevo por defecto: un parrafo NATIVO de Gutenberg (`core/paragraph`). */
+const NEW_CONTENT = "<!-- wp:paragraph --><p>Taquillas de melamina para vestuarios, con cerradura Tukandado.</p><!-- /wp:paragraph -->";
+
+/** Contenido compuesto SOLO por bloques dinamicos de Novamira: lo unico que `gutenberg-write-content` acepta. */
+const NOVAMIRA_ONLY_CONTENT = '<!-- wp:novamira/hero {"titulo":"Taquillas"} /--><!-- wp:novamira/cta {"texto":"Pedir presupuesto"} /-->';
+
+/** Un H2 nativo: el caso del E2E. */
+const CORE_HEADING_CONTENT = '<!-- wp:heading {"level":2} --><h2>Materiales disponibles</h2><!-- /wp:heading -->';
+
+/** Mezcla de bloques de Novamira y nativos: basta UN nativo para que la ability rechace la escritura. */
+const MIXED_CONTENT = `<!-- wp:novamira/hero /-->${CORE_HEADING_CONTENT}`;
 const RUN_ID = "dept-2026-08-16";
 
 /** Estado real de la pagina en staging ANTES del cambio. */
@@ -78,17 +89,13 @@ function versionHashOfState(state: PhpTargetState): string {
 }
 
 /**
- * Camino de capacidad legitimo: existe `gutenberg-write-content` para
- * `update_post_content`, asi que hay que declarar por que no sirve. Se
- * construye con `selectExecutionPath` a proposito -- si esa politica
- * cambiara, estos tests se enteran.
+ * Camino de capacidad legitimo para el plan por defecto (contenido con
+ * bloques `core/*`, que `gutenberg-write-content` rechaza). Se construye
+ * con `selectExecutionPath` a proposito -- si esa politica cambiara,
+ * estos tests se enteran.
  */
-function fallbackSelection(): CapabilitySelection {
-  return selectExecutionPath({
-    operation: "update_post_content",
-    nativeAbilityUnsuitableReason:
-      "El cuerpo trae shortcodes del theme que gutenberg-write-content reescribe a bloques y rompe el render.",
-  });
+function fallbackSelection(plan: ExecutePhpChangePlan = validPlan()): CapabilitySelection {
+  return selectExecutionPath({ plan });
 }
 
 function validPlan(overrides: Partial<ExecutePhpChangePlan> = {}): ExecutePhpChangePlan {
@@ -622,26 +629,23 @@ export function runExecutePhpGuardTests(): TestCase[] {
     {
       name: "La ability nativa gana al fallback: sin motivo declarado el camino es native_ability y el guard lo rechaza",
       fn: () => {
-        const native = selectExecutionPath({ operation: "update_post_content" });
+        // Contenido 100% novamira/*: la nativa SI lo soporta -> native.
+        const novamiraPlan = validPlan({ payload: { value: NOVAMIRA_ONLY_CONTENT } });
+        const native = selectExecutionPath({ plan: novamiraPlan });
         assert.equal(native.executionPath, "native_ability");
         assert.equal(native.nativeAbility, "novamira/gutenberg-write-content");
         assert.match(native.reason, /PHP no se usa por comodidad/);
 
-        const decision = isExecutePhpAllowed(validRequest({ capabilitySelection: native }));
+        const decision = isExecutePhpAllowed(validRequest({ plan: novamiraPlan, capabilitySelection: native }));
         assert.equal(decision.allowed, false);
-        assert.equal(decision.failedCheck, "execution_path");
-        assert.match(decision.reason, /no el fallback de PHP/);
+        assert.equal(decision.failedCheck, "native_ability_preferred");
+        assert.match(decision.reason, /SI resuelve este cambio/);
 
         // Sin ability nativa que sirva, el fallback es el unico camino.
-        const noNative = selectExecutionPath({ operation: "update_post_title" });
+        const noNative = selectExecutionPath({ plan: validPlan({ operation: "update_post_title", scopeFields: ["post_title"], payload: { value: "Titulo nuevo" } }) });
         assert.equal(noNative.executionPath, "execute_php_fallback");
         assert.equal(noNative.nativeAbility, null);
         assert.match(noNative.reason, /No existe ninguna ability nativa/);
-
-        // Y con motivo declarado, el fallback queda justificado en el audit trail.
-        const justified = fallbackSelection();
-        assert.equal(justified.executionPath, "execute_php_fallback");
-        assert.match(justified.reason, /shortcodes/);
       },
     },
 
@@ -675,6 +679,108 @@ export function runExecutePhpGuardTests(): TestCase[] {
     },
 
     // --- 21. Nombre del tool MCP y capa general ------------------------------
+    // --- 19b. Compatibilidad REAL de la ability nativa ---------------------
+    {
+      name: "post_content compuesto solo de bloques novamira/* -> la nativa lo soporta -> native_ability",
+      fn: () => {
+        const support = assessGutenbergWriteContentSupport(NOVAMIRA_ONLY_CONTENT);
+        assert.equal(support.supported, true);
+        assert.deepEqual(support.blockTypes, ["novamira/cta", "novamira/hero"]);
+        assert.deepEqual(support.unsupportedBlockTypes, []);
+
+        const selection = selectExecutionPath({ plan: validPlan({ payload: { value: NOVAMIRA_ONLY_CONTENT } }) });
+        assert.equal(selection.executionPath, "native_ability");
+      },
+    },
+    {
+      name: "Un H2 core/heading NO lo soporta la nativa -> execute_php_fallback con motivo verificable",
+      fn: () => {
+        const plan = validPlan({ payload: { value: CORE_HEADING_CONTENT } });
+        const selection = selectExecutionPath({ plan });
+
+        assert.equal(selection.executionPath, "execute_php_fallback");
+        assert.equal(selection.nativeAbility, "novamira/gutenberg-write-content");
+        assert.match(selection.nativeAbilityUnsuitableReason, /core\/heading/);
+        assert.match(selection.nativeAbilityUnsuitableReason, /dynamic-only/);
+        // El motivo NO lo escribio nadie: sale del contenido real.
+        assert.ok(
+          selection.nativeAbilityUnsuitableReason.includes("core/heading"),
+          "el motivo tiene que citar el bloque concreto que la nativa rechaza"
+        );
+        assert.equal(isExecutePhpAllowed(validRequest({ plan, capabilitySelection: selection })).allowed, true);
+      },
+    },
+    {
+      name: "Un core/paragraph tampoco lo soporta la nativa -> execute_php_fallback",
+      fn: () => {
+        const support = assessGutenbergWriteContentSupport(NEW_CONTENT);
+        assert.equal(support.supported, false);
+        assert.deepEqual(support.unsupportedBlockTypes, ["core/paragraph"]);
+        assert.equal(selectExecutionPath({ plan: validPlan() }).executionPath, "execute_php_fallback");
+      },
+    },
+    {
+      name: "Mezcla de novamira/* y core/*: UN solo bloque nativo basta para que el camino sea PHP",
+      fn: () => {
+        const support = assessGutenbergWriteContentSupport(MIXED_CONTENT);
+        assert.equal(support.supported, false);
+        assert.deepEqual(support.blockTypes, ["core/heading", "novamira/hero"]);
+        assert.deepEqual(support.unsupportedBlockTypes, ["core/heading"], "solo el nativo es incompatible");
+        assert.equal(selectExecutionPath({ plan: validPlan({ payload: { value: MIXED_CONTENT } }) }).executionPath, "execute_php_fallback");
+      },
+    },
+    {
+      name: "El caller NO puede forzar PHP sobre contenido novamira/* compatible: se recalcula y se prefiere la nativa",
+      fn: () => {
+        const plan = validPlan({ payload: { value: NOVAMIRA_ONLY_CONTENT } });
+        // Seleccion fabricada a mano: dice fallback y se inventa un motivo.
+        const forced: CapabilitySelection = {
+          executionPath: "execute_php_fallback",
+          nativeAbility: "novamira/gutenberg-write-content",
+          nativeAbilityUnsuitableReason: "porque si",
+          reason: "porque si",
+        };
+        const decision = isExecutePhpAllowed(validRequest({ plan, capabilitySelection: forced }));
+        assert.equal(decision.allowed, false);
+        assert.equal(decision.failedCheck, "capability_selection_mismatch");
+        assert.match(decision.reason, /no coincide con la que se deriva del propio ChangePlan/);
+
+        // Y mentir diciendo que no hay nativa tampoco cuela.
+        const lying: CapabilitySelection = { executionPath: "execute_php_fallback", nativeAbility: null, nativeAbilityUnsuitableReason: "", reason: "no hay nativa" };
+        const lied = isExecutePhpAllowed(validRequest({ plan, capabilitySelection: lying }));
+        assert.equal(lied.allowed, false);
+        assert.equal(lied.failedCheck, "capability_selection_mismatch");
+      },
+    },
+    {
+      name: "El caller NO puede forzar la nativa sobre un core/heading que la nativa rechaza",
+      fn: () => {
+        const plan = validPlan({ payload: { value: CORE_HEADING_CONTENT } });
+        const forcedNative: CapabilitySelection = {
+          executionPath: "native_ability",
+          nativeAbility: "novamira/gutenberg-write-content",
+          nativeAbilityUnsuitableReason: "",
+          reason: "la nativa vale",
+        };
+        const decision = isExecutePhpAllowed(validRequest({ plan, capabilitySelection: forcedNative }));
+        assert.equal(decision.allowed, false);
+        assert.equal(decision.failedCheck, "capability_selection_mismatch");
+        // El motivo derivado explica que la nativa NO soporta ese bloque.
+        assert.match(decision.reason, /core\/heading/);
+      },
+    },
+    {
+      name: "Contenido clasico (sin bloques) y contenido vacio tampoco los soporta la nativa",
+      fn: () => {
+        const classic = assessGutenbergWriteContentSupport("<p>HTML plano sin delimitadores</p>");
+        assert.equal(classic.supported, false);
+        assert.match(classic.reason, /contenido clasico/i);
+
+        const empty = assessGutenbergWriteContentSupport("   ");
+        assert.equal(empty.supported, false);
+        assert.match(empty.reason, /vacio/i);
+      },
+    },
     {
       name: "El nombre del tool MCP no se cree: la ability real sale de ability_name, y execute-php sigue prohibida en la capa general",
       fn: () => {

@@ -3,7 +3,7 @@ import {
   CapabilitySelection,
   EXECUTE_PHP_OPERATIONS,
   ExecutePhpChangePlan,
-  NATIVE_ABILITY_FOR_OPERATION,
+  selectExecutionPath,
   validateExecutePhpChangePlan,
 } from "./execute-php-operations";
 import { READ_ONLY_EMPLOYEES } from "./novamira-profiles";
@@ -38,7 +38,9 @@ import { READ_ONLY_EMPLOYEES } from "./novamira-profiles";
  *   4. QA: veredicto permitido.
  *   5. Trazabilidad: departmentRunId + recommendationId + changeId.
  *   6. Plan valido, operacion habilitada, objetivo explicito.
- *   7. Camino de capacidad: si habia ability nativa y no se justifico, no se ejecuta PHP.
+ *   7. Camino de capacidad: se RECALCULA desde el plan. Si la ability
+ *      nativa soporta realmente el cambio, no se ejecuta PHP; y la
+ *      incompatibilidad no se acepta declarada, se deriva.
  *   8. El PHP es EXACTAMENTE el que generan las plantillas deterministas.
  *   9. Escaneo de operaciones prohibidas sobre el PHP final.
  *
@@ -245,29 +247,31 @@ export function isExecutePhpAllowed(request: ExecutePhpRequest): ExecutePhpGuard
     return fail("operation_not_enabled", `La operacion "${request.plan.operation}" no tiene rollback seguro en esta fase. ${spec.reason}`);
   }
 
-  // 8. CAMINO DE CAPACIDAD. PHP nunca por comodidad.
+  // 8. CAMINO DE CAPACIDAD. PHP nunca por comodidad -- y tampoco se
+  //    enruta a una nativa que iba a rechazar la escritura.
   //
-  //    La existencia de ability nativa se RE-DERIVA del catalogo, no se
-  //    lee de lo que declare quien llama: si se aceptara
-  //    `nativeAbility: null` a ciegas, bastaria mentir en ese campo para
-  //    saltarse la politica entera.
-  if (request.capabilitySelection.executionPath !== "execute_php_fallback") {
+  //    La seleccion se RECALCULA aqui desde el plan. No se comprueba que
+  //    "coincida con el catalogo": se comprueba que sea EXACTAMENTE la
+  //    que este sistema habria derivado. Un caller que declare
+  //    `nativeAbility: null`, o que invente un motivo de incompatibilidad
+  //    para colar PHP sobre contenido que la nativa SI soporta, no pasa
+  //    de aqui.
+  const expected = selectExecutionPath({ plan: request.plan });
+  const declared = request.capabilitySelection;
+  if (
+    declared.executionPath !== expected.executionPath ||
+    declared.nativeAbility !== expected.nativeAbility ||
+    declared.nativeAbilityUnsuitableReason.trim() !== expected.nativeAbilityUnsuitableReason.trim()
+  ) {
     return fail(
-      "execution_path",
-      `El camino seleccionado es "${request.capabilitySelection.executionPath}", no el fallback de PHP. ${request.capabilitySelection.reason}`
+      "capability_selection_mismatch",
+      `La seleccion de capacidad declarada no coincide con la que se deriva del propio ChangePlan. Declarada: {path:"${declared.executionPath}", nativa:"${String(declared.nativeAbility)}"}. Derivada: {path:"${expected.executionPath}", nativa:"${String(expected.nativeAbility)}"}. ${expected.reason}`
     );
   }
-  const catalogNativeAbility = NATIVE_ABILITY_FOR_OPERATION[request.plan.operation] ?? null;
-  if (request.capabilitySelection.nativeAbility !== catalogNativeAbility) {
-    return fail(
-      "native_ability_mismatch",
-      `La seleccion declara nativeAbility "${String(request.capabilitySelection.nativeAbility)}" pero el catalogo dice "${String(catalogNativeAbility)}" para la operacion "${request.plan.operation}". No se acepta la palabra de quien llama sobre si existe alternativa nativa.`
-    );
-  }
-  if (catalogNativeAbility !== null && request.capabilitySelection.nativeAbilityUnsuitableReason.trim().length === 0) {
+  if (expected.executionPath !== "execute_php_fallback") {
     return fail(
       "native_ability_preferred",
-      `Existe la ability nativa "${catalogNativeAbility}" para "${request.plan.operation}" y no se ha declarado por que no sirve para este caso. Se usa la nativa: PHP no es un atajo.`
+      `La ability nativa "${String(expected.nativeAbility)}" SI resuelve este cambio, asi que no se ejecuta PHP. ${expected.reason}`
     );
   }
 

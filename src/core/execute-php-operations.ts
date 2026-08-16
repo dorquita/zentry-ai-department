@@ -1,3 +1,5 @@
+import { assessNativeAbilityForPlan } from "./novamira-ability-capabilities";
+
 /**
  * CONTRATO DE OPERACIONES para el fallback `novamira/execute-php`.
  *
@@ -25,8 +27,11 @@
  *      operacion -> se usa esa (`native_ability`).
  *   2. Solo si no existe, o no soporta el caso -> `execute_php_fallback`.
  *
- * PHP no es un atajo por comodidad: `selectExecutionPath()` obliga a
- * declarar que ability nativa se considero y por que no sirve.
+ * Y "resuelve la operacion" no es "existe una ability con ese nombre":
+ * `selectExecutionPath()` comprueba que la nativa soporta REALMENTE el
+ * contenido concreto (ver `novamira-ability-capabilities.ts`). PHP nunca
+ * por comodidad, pero tampoco se enruta a una nativa que va a rechazar
+ * la escritura.
  *
  * Modulo PURO: sin I/O, sin red, sin reloj.
  */
@@ -323,46 +328,65 @@ export const NATIVE_ABILITY_FOR_OPERATION: Record<ExecutePhpOperation, string | 
   update_term_assignment: null,
 };
 
-export interface SelectExecutionPathInput {
-  operation: ExecutePhpOperation;
-  /**
-   * Motivo por el que la ability nativa NO sirve para este caso concreto.
-   * Obligatorio cuando existe una ability nativa: sin el, se usa la
-   * nativa. "Es mas comodo hacerlo en PHP" no es un motivo -- la funcion
-   * no puede juzgar la calidad del texto, pero SI obliga a que exista y
-   * quede en el audit trail para que una persona lo revise.
-   */
-  nativeAbilityUnsuitableReason?: string;
-}
-
 /**
- * Decide el camino de ejecucion. Es la implementacion de la politica
- * "nunca PHP por comodidad": si hay ability nativa y no se declara por
- * que no sirve, devuelve `native_ability`.
+ * Decide el camino de ejecucion A PARTIR DEL PLAN, no de lo que declare
+ * quien llama.
+ *
+ * Tres pasos, en este orden:
+ *
+ *   1. ¿Existe una ability nativa para esta operacion?
+ *   2. Si existe, ¿soporta REALMENTE este target/contenido? La respuesta
+ *      se deriva del ChangePlan (tipos de bloque reales) contra las
+ *      capacidades leidas del servidor -- ver
+ *      `novamira-ability-capabilities.ts`.
+ *   3. Solo si (1) y (2) -> `native_ability`. Si existe pero es
+ *      incompatible -> `execute_php_fallback`, con un motivo
+ *      VERIFICABLE (no una frase que alguien haya escrito a mano).
+ *
+ * Por que ya no se acepta un `nativeAbilityUnsuitableReason` de quien
+ * llama: era exactamente la puerta que esta funcion existe para cerrar.
+ * Si el motivo lo aporta el caller, el caller decide el camino; si se
+ * deriva del contenido, lo decide el contenido.
  */
-export function selectExecutionPath(input: SelectExecutionPathInput): CapabilitySelection {
-  const nativeAbility = NATIVE_ABILITY_FOR_OPERATION[input.operation] ?? null;
+export function selectExecutionPath(input: { plan: ExecutePhpChangePlan }): CapabilitySelection {
+  const operation = input.plan.operation;
+  const nativeAbility = NATIVE_ABILITY_FOR_OPERATION[operation] ?? null;
+
   if (nativeAbility === null) {
     return {
       executionPath: "execute_php_fallback",
       nativeAbility: null,
       nativeAbilityUnsuitableReason: "",
-      reason: `No existe ninguna ability nativa de Novamira que resuelva "${input.operation}". El fallback de PHP es el unico camino.`,
+      reason: `No existe ninguna ability nativa de Novamira que resuelva "${operation}". El fallback de PHP es el unico camino.`,
     };
   }
-  const unsuitable = (input.nativeAbilityUnsuitableReason ?? "").trim();
-  if (unsuitable.length === 0) {
+
+  const support = assessNativeAbilityForPlan(input.plan);
+  if (support === null) {
+    // No deberia ocurrir: hay ability nativa declarada pero nadie sabe
+    // evaluar su aplicabilidad. Fail-closed hacia la nativa, que es la
+    // opcion conservadora (no ejecuta PHP).
     return {
       executionPath: "native_ability",
       nativeAbility,
       nativeAbilityUnsuitableReason: "",
-      reason: `Existe la ability nativa "${nativeAbility}" para "${input.operation}" y no se ha declarado ningun motivo por el que no sirva. Se usa la nativa: PHP no se usa por comodidad.`,
+      reason: `Existe la ability nativa "${nativeAbility}" para "${operation}" y este sistema no sabe evaluar su aplicabilidad. Fail-closed: no se usa PHP.`,
     };
   }
+
+  if (support.supported) {
+    return {
+      executionPath: "native_ability",
+      nativeAbility,
+      nativeAbilityUnsuitableReason: "",
+      reason: `${support.reason} PHP no se usa por comodidad.`,
+    };
+  }
+
   return {
     executionPath: "execute_php_fallback",
     nativeAbility,
-    nativeAbilityUnsuitableReason: unsuitable,
-    reason: `Existe "${nativeAbility}", pero se ha declarado que no resuelve este caso: ${unsuitable}`,
+    nativeAbilityUnsuitableReason: support.reason,
+    reason: `Existe "${nativeAbility}", pero NO soporta este cambio: ${support.reason}`,
   };
 }

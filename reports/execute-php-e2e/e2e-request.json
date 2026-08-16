@@ -1,16 +1,15 @@
 {
   "authorizedBy": "pau",
   "authorization": "Aprobacion humana para UN E2E reversible sobre STAGING del fallback execute-php. No autoriza produccion.",
-  "mode": "ability-info",
+  "mode": "list",
   "postId": 2077,
   "pageChosen": "staging /configurador-bancos/ -- 'Configurador de bancos (prototipo)'. Elegida por ser la pagina MENOS critica del sitio: su propio excerpt la declara prototipo interno (Fase O23.2), no es una landing comercial ni tiene trafico SEO objetivo. Ademas su post_excerpt NO esta vacio, asi que el BEFORE, el cambio y la reversion son todos verificables sobre contenido real.",
   "operation": "update_post_excerpt",
   "whyNotAnAbility": "post_excerpt no tiene ninguna ability nativa de Novamira que lo escriba (NATIVE_ABILITY_FOR_OPERATION.update_post_excerpt === null), asi que selectExecutionPath() elige execute_php_fallback sin necesidad de declarar ningun motivo. Un H2 habria vivido en post_content, que SI tiene ability nativa (gutenberg-write-content) y por tanto se habria enrutado a la nativa bajo esta misma politica.",
-  "note": "mode=ability-info sobre las abilities de Gutenberg: hay que saber que bloques admite REALMENTE gutenberg-write-content antes de decidir si es aplicable a un cambio concreto. Solo lectura de metadatos.",
+  "note": "mode=list ampliado: ahora tambien lista los TIPOS DE BLOQUE de cada pagina y si tiene un H2 nativo. Hace falta para elegir la pagina del E2E de H2 sin adivinar cual lo tiene.",
   "lastRun": {
     "runUrl": "https://github.com/dorquita/zentry-ai-department/actions/runs/31942175626",
     "postId": 2077,
     "result": "OK -- identicalToStart=true, stagingWrites=2, productionWrites=0"
-  },
-  "ability": "novamira/gutenberg-write-content,novamira/gutenberg-get-content,novamira/gutenberg-add-pending-change"
+  }
 }
