@@ -1,7 +1,10 @@
 {
   "authorizedBy": "pau",
   "authorization": "Aprobacion humana para UN E2E reversible sobre STAGING del fallback execute-php. No autoriza produccion.",
-  "mode": "list",
-  "postId": 0,
-  "note": "mode=list solo LEE y lista paginas candidatas de staging. Para ejecutar el E2E: poner mode=run y el postId elegido, y volver a commitear. Cada cambio de este fichero es la autorizacion auditable de esa ejecucion concreta."
+  "mode": "run",
+  "postId": 2077,
+  "pageChosen": "staging /configurador-bancos/ -- 'Configurador de bancos (prototipo)'. Elegida por ser la pagina MENOS critica del sitio: su propio excerpt la declara prototipo interno (Fase O23.2), no es una landing comercial ni tiene trafico SEO objetivo. Ademas su post_excerpt NO esta vacio, asi que el BEFORE, el cambio y la reversion son todos verificables sobre contenido real.",
+  "operation": "update_post_excerpt",
+  "whyNotAnAbility": "post_excerpt no tiene ninguna ability nativa de Novamira que lo escriba (NATIVE_ABILITY_FOR_OPERATION.update_post_excerpt === null), asi que selectExecutionPath() elige execute_php_fallback sin necesidad de declarar ningun motivo. Un H2 habria vivido en post_content, que SI tiene ability nativa (gutenberg-write-content) y por tanto se habria enrutado a la nativa bajo esta misma politica.",
+  "note": "Cada cambio de este fichero es la autorizacion auditable de esa ejecucion concreta. Para volver a solo lectura: mode=list."
 }
