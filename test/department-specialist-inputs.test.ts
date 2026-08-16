@@ -132,14 +132,24 @@ export function runDepartmentSpecialistInputsTests(): TestCase[] {
       },
     },
     {
-      name: "SEM aparece SIEMPRE como not_available/pendiente, incluso si el manifiesto no lo registro, y nunca bloquea",
+      // Contrato NUEVO (antes: SEM estaba cableado a not_available fuera
+      // del bucle de especialistas, con una nota fija de "fuera de esta
+      // fase" -- por eso Google Ads nunca llegaba a Growth por mucho que
+      // sem-watcher leyera la cuenta en vivo). Ahora SEM se degrada con
+      // EXACTAMENTE las mismas reglas que los demas.
+      name: "SEM ausente del manifiesto: se degrada como cualquier otro especialista (not_available + nota que prohibe rellenar el hueco), nunca bloquea",
       fn: () => {
         const loaded = loadSpecialistInputs(manifest([]), readerFor({}));
         const sem = loaded.inputs.find((i) => i.employee === "sem-specialist");
         assert.ok(sem, "sem-specialist debe estar siempre presente en los inputs");
         assert.equal(sem?.status, "not_available");
-        assert.ok(sem?.note.includes("FUERA de esta fase"));
-        assert.ok(sem?.note.includes("NUNCA bloquea"));
+        assert.ok(sem?.note.includes("sem-specialist"));
+        assert.ok(sem?.note.includes("NO hay ningun dato de este especialista en esta pasada"));
+        assert.equal(loaded.sem, undefined, "sin salida real no se expone ningun output de SEM");
+        assert.ok(
+          loaded.evidenceCatalog.some((e) => e.ref === "dept-sem-unavailable"),
+          "la ausencia de SEM sigue siendo una entrada explicita del catalogo de evidencia, no un hueco silencioso"
+        );
       },
     },
     {

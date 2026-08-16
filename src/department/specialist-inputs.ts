@@ -3,6 +3,7 @@ import { SeoSpecialistOutput, validateSeoSpecialistOutput } from "../employees/s
 import { ContentStrategistOutput, validateContentStrategistOutput } from "../employees/content-strategist/output";
 import { AnalyticsSpecialistOutput } from "../employees/analytics-specialist/types";
 import { validateAnalyticsSpecialistOutput } from "../employees/analytics-specialist/validator";
+import { SemSpecialistOutput, validateSemSpecialistOutput } from "../employees/sem-specialist/sem-specialist-output";
 import { DepartmentRunManifest, DepartmentStageName, DepartmentStageStatus } from "./types";
 import { findStageRecord, readStageOutput } from "./run-store";
 
@@ -43,6 +44,7 @@ export interface LoadedSpecialistInputs {
   seo?: SeoSpecialistOutput;
   content?: ContentStrategistOutput;
   analytics?: AnalyticsSpecialistOutput;
+  sem?: SemSpecialistOutput;
   /** Entradas de evidencia derivadas SOLO de salidas reales (mas una entrada explicita por cada especialista ausente). */
   evidenceCatalog: EvidenceCatalogItem[];
   executedCount: number;
@@ -63,11 +65,7 @@ function truncate(text: string, max = 240): string {
   return flat.length <= max ? flat : `${flat.slice(0, max - 1)}...`;
 }
 
-const SEM_PENDING_NOTE =
-  "sem-specialist queda EXPLICITAMENTE FUERA de esta fase (pendiente / temporalmente no disponible). No hay ninguna senal de SEM/Google Ads en esta pasada: no asumas gasto, CPC, impresiones, campanas activas ni ningun otro dato de Ads, y no trates su ausencia como si SEM estuviera sano o vacio. Su ausencia NUNCA bloquea esta pasada.";
-
 function buildUnavailableNote(employee: SpecialistStageName, status: DepartmentStageStatus, reason: string): string {
-  if (employee === "sem-specialist") return SEM_PENDING_NOTE;
   const statusText: Record<DepartmentStageStatus, string> = {
     executed: "ejecutado",
     blocked: "bloqueado por una etapa anterior",
@@ -146,6 +144,73 @@ function buildAnalyticsEvidence(output: AnalyticsSpecialistOutput): EvidenceCata
   return items;
 }
 
+/**
+ * SEM -> Growth. Cada entrada nace de la salida REAL de sem-specialist de
+ * esta misma pasada (que a su vez solo pudo citar cifras del
+ * evidenceCatalog determinista construido sobre la lectura live de Google
+ * Ads -- ver src/employees/sem-specialist/). Growth apunta sus
+ * `evidenceRefs` a estos `dept-sem-*` cuando una prioridad viene de SEM,
+ * igual que ya hacia con SEO/Content/Analytics.
+ */
+function buildSemEvidence(output: SemSpecialistOutput): EvidenceCatalogItem[] {
+  const findingCount =
+    output.campaignFindings.length +
+    output.searchTermOpportunities.length +
+    output.negativeKeywordRecommendations.length +
+    output.budgetObservations.length +
+    output.biddingObservations.length +
+    output.adLandingAlignment.length +
+    output.conversionRiskFindings.length;
+
+  const items: EvidenceCatalogItem[] = [
+    {
+      ref: "dept-sem-summary",
+      description: `sem-specialist (salida real de esta pasada, sobre la lectura de Google Ads): ${truncate(output.summary)} [hallazgos=${findingCount}, experimentos=${output.prioritizedExperiments.length}, evidencias citadas=${output.evidence.length}, incognitas declaradas=${output.unknowns.length}]`,
+    },
+  ];
+
+  // Los 7 arrays de hallazgos comparten forma; se aplanan conservando de
+  // que seccion vienen, para que Growth pueda distinguir un problema de
+  // presupuesto de uno de tracking sin releer la salida entera.
+  const sections: [string, SemSpecialistOutput["campaignFindings"]][] = [
+    ["campaign", output.campaignFindings],
+    ["search-term", output.searchTermOpportunities],
+    ["negative-keyword", output.negativeKeywordRecommendations],
+    ["budget", output.budgetObservations],
+    ["bidding", output.biddingObservations],
+    ["ad-landing", output.adLandingAlignment],
+    ["conversion-risk", output.conversionRiskFindings],
+  ];
+  let index = 0;
+  for (const [section, findings] of sections) {
+    for (const finding of findings.slice(0, MAX_EVIDENCE_ITEMS_PER_LIST)) {
+      index += 1;
+      items.push({
+        ref: `dept-sem-finding-${index}`,
+        description: `sem-specialist, hallazgo ${section} (severity=${finding.severity}): "${truncate(finding.title, 160)}" -- ${truncate(finding.description, 200)} (evidencia SEM citada: ${finding.evidenceRefs.join("/") || "ninguna"}).`,
+      });
+    }
+  }
+
+  output.prioritizedExperiments.slice(0, MAX_EVIDENCE_ITEMS_PER_LIST).forEach((experiment, i) => {
+    items.push({
+      ref: `dept-sem-experiment-${i + 1}`,
+      description: `sem-specialist, experimento priorizado (${experiment.priority}): "${truncate(experiment.title, 160)}" -- hipotesis: ${truncate(experiment.hypothesis, 180)} (evidencia SEM citada: ${experiment.evidenceRefs.join("/") || "ninguna"}).`,
+    });
+  });
+
+  // Las incognitas de SEM son tan citables como sus hallazgos: es lo que
+  // impide que Growth lea "SEM no dijo nada de X" como "X esta bien".
+  if (output.unknowns.length > 0) {
+    items.push({
+      ref: "dept-sem-unknowns",
+      description: `sem-specialist declaro ${output.unknowns.length} incognita(s) -- datos que NO estaban disponibles en la lectura de Google Ads de esta pasada: ${truncate(output.unknowns.join(" | "), 400)}`,
+    });
+  }
+
+  return items;
+}
+
 interface SpecialistLoadPlan {
   employee: SpecialistStageName;
   validate: (raw: unknown) => unknown;
@@ -156,6 +221,13 @@ const LOAD_PLAN: SpecialistLoadPlan[] = [
   { employee: "seo-specialist", validate: validateSeoSpecialistOutput, buildEvidence: buildSeoEvidence as (o: never) => EvidenceCatalogItem[] },
   { employee: "content-strategist", validate: validateContentStrategistOutput, buildEvidence: buildContentEvidence as (o: never) => EvidenceCatalogItem[] },
   { employee: "analytics-specialist", validate: validateAnalyticsSpecialistOutput, buildEvidence: buildAnalyticsEvidence as (o: never) => EvidenceCatalogItem[] },
+  // sem-specialist entra en la pasada coordinada con exactamente el mismo
+  // trato que los otros tres: su salida se lee del manifiesto, se valida
+  // con SU PROPIO validador y, solo si pasa, se convierte en evidencia
+  // citable por Growth. Antes de esto estaba cableado a `not_available`
+  // fuera de este bucle, asi que Google Ads nunca llegaba a Growth por
+  // mucho que el watcher leyera la cuenta en vivo.
+  { employee: "sem-specialist", validate: validateSemSpecialistOutput, buildEvidence: buildSemEvidence as (o: never) => EvidenceCatalogItem[] },
 ];
 
 /**
@@ -174,7 +246,7 @@ export type StageOutputReader = (manifest: DepartmentRunManifest, stage: Departm
 export function loadSpecialistInputs(manifest: DepartmentRunManifest, readOutput: StageOutputReader = readStageOutput): LoadedSpecialistInputs {
   const inputs: DepartmentSpecialistInput[] = [];
   const evidenceCatalog: EvidenceCatalogItem[] = [];
-  const loaded: { seo?: SeoSpecialistOutput; content?: ContentStrategistOutput; analytics?: AnalyticsSpecialistOutput } = {};
+  const loaded: { seo?: SeoSpecialistOutput; content?: ContentStrategistOutput; analytics?: AnalyticsSpecialistOutput; sem?: SemSpecialistOutput } = {};
   let executedCount = 0;
 
   for (const plan of LOAD_PLAN) {
@@ -208,6 +280,7 @@ export function loadSpecialistInputs(manifest: DepartmentRunManifest, readOutput
       if (plan.employee === "seo-specialist") loaded.seo = output as SeoSpecialistOutput;
       if (plan.employee === "content-strategist") loaded.content = output as ContentStrategistOutput;
       if (plan.employee === "analytics-specialist") loaded.analytics = output as AnalyticsSpecialistOutput;
+      if (plan.employee === "sem-specialist") loaded.sem = output as SemSpecialistOutput;
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
       inputs.push({
@@ -222,16 +295,6 @@ export function loadSpecialistInputs(manifest: DepartmentRunManifest, readOutput
       });
     }
   }
-
-  // SEM: SIEMPRE presente y SIEMPRE explicito, nunca bloqueante.
-  const semRecord = findStageRecord(manifest, "sem-specialist");
-  inputs.push({
-    employee: "sem-specialist",
-    status: semRecord?.status ?? "not_available",
-    note: SEM_PENDING_NOTE,
-    sourceRunId: null,
-  });
-  evidenceCatalog.push({ ref: "dept-sem-unavailable", description: `sem-specialist: not_available / pendiente. ${semRecord?.reason ?? "Fuera del alcance de esta fase por decision explicita."}` });
 
   return { inputs, ...loaded, evidenceCatalog, executedCount };
 }

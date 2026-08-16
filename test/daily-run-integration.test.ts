@@ -144,7 +144,7 @@ function brief(overrides: Partial<DepartmentDailyBrief> = {}): DepartmentDailyBr
     generatedAt: NOW.toISOString(),
     executiveSummary: { discovered: ["d1", "d2"], needsAttention: ["a1"], changed: ["c1"] },
     topPriorities: [],
-    sections: { seo: section, content: section, analytics: section, growth: section, qa: section, webEngineering: section },
+    sections: { seo: section, content: section, analytics: section, sem: section, growth: section, qa: section, webEngineering: section },
     blockedOrUnknown: [],
     approvalsNeeded: [],
     stageStatuses: ALL_STAGES_OK,

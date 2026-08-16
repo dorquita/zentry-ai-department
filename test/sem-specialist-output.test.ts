@@ -645,5 +645,144 @@ export function runSemSpecialistOutputTests(): TestCase[] {
         assert.ok(violations.some((v) => /CPC/i.test(v)), "CPC exige una entrada REALMENTE de categoria cpc, nunca un value que coincida por casualidad con otra categoria");
       },
     },
+
+    // --- REGRESION: la duracion de la ventana leida como una cifra ---
+    //
+    // Los 8 fallos consecutivos de sem-specialist.yml del 2026-08-15 (el
+    // ultimo, run 31890935474, con unsupportedClaimCount=1) venian de
+    // aqui: una frase perfectamente legitima sobre la AUSENCIA de
+    // conversiones se rechazaba porque la ventana de proximidad de
+    // "conversiones" capturaba el "30" de "30 dias". Era ademas una
+    // condicion IMPOSIBLE de cumplir: el evidenceCatalog no expone la
+    // duracion de la ventana como cifra, asi que no habia ninguna entrada
+    // que el subagente pudiera citar para respaldarla.
+    {
+      name: "REGRESION run 31890935474: 'sin conversiones en los ultimos 30 dias' (finding sin evidenceRefs) => 0 violaciones -- la duracion de la ventana no es una cifra de conversiones",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          campaignFindings: [
+            emptyFinding({ description: "No se ha registrado ninguna conversion en los ultimos 30 dias.", evidenceRefs: [] }),
+          ],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.deepEqual(violations, [], `una duracion no es una afirmacion cuantitativa auditable: ${JSON.stringify(violations)}`);
+      },
+    },
+    {
+      name: "REGRESION run 31890935474: la misma exencion aplica a gasto/presupuesto ('sin gasto en 30 dias', 'presupuesto de 30 dias')",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [
+            emptyFinding({ description: "No hay gasto registrado en los 30 dias de la ventana.", evidenceRefs: [] }),
+            emptyFinding({ description: "El presupuesto acumulado de 30 dias no se ha consumido.", evidenceRefs: [] }),
+          ],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.deepEqual(violations, [], `ni gasto ni presupuesto deben capturar la duracion de la ventana: ${JSON.stringify(violations)}`);
+      },
+    },
+    {
+      name: "REGRESION run 31890935474: la exencion es SOLO para unidades de tiempo -- '7 campanas' sin citar sigue siendo violacion",
+      fn: () => {
+        const context = baseContext();
+        // "7" SI tiene entrada en el catalogo (sem-total-campaigns), asi
+        // que exigir su cita es una condicion cumplible -- a diferencia
+        // de la duracion de la ventana. La regla estricta se mantiene.
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: "Sin gasto real registrado, si se activaran las 7 campanas.", evidenceRefs: [] })],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.length > 0, "un recuento SI citable sigue exigiendo cita explicita");
+      },
+    },
+    {
+      name: "REGRESION run 31890935474: la exencion NO deja pasar una cifra monetaria inventada pegada a la palabra clave",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          budgetObservations: [emptyFinding({ description: "El gasto de los ultimos dias asciende a 250 € acumulados.", evidenceRefs: [] })],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /gasto/i.test(v)), "250 € no lleva unidad de tiempo pegada: sigue siendo una afirmacion de gasto auditable");
+      },
+    },
+    {
+      name: "REGRESION run 31890935474: '12 conversiones' inventadas siguen rechazandose (la exencion no toca la rama numero-primero)",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          conversionRiskFindings: [emptyFinding({ description: "Se han registrado 12 conversiones en la ventana.", evidenceRefs: [] })],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /conversiones/i.test(v)), "una cifra de conversiones sin respaldo sigue siendo un fallo duro");
+      },
+    },
+
+    // --- Fase O51: CPC real vs centinela ---
+    {
+      name: "O51: con clics reales, el CPC del catalogo es citable y una afirmacion de CPC con esa cifra pasa",
+      fn: () => {
+        const context = baseContext({
+          metrics: [
+            {
+              campaignId: "1",
+              campaignName: "SEM | Marca | Zentry",
+              impressions: 1000,
+              clicks: 40,
+              costEUR: 18,
+              conversions: 2,
+              ctr: 0.04,
+              averageCpcEUR: 0.45,
+              conversionsValue: 0,
+            },
+          ],
+        });
+        const cpcItem = catalogItem(context, "sem-metrics-0-cpc");
+        assert.equal(cpcItem.value, "0.45");
+        assert.equal(cpcItem.category, "cpc");
+        assert.ok(
+          !context.evidenceCatalog.some((c) => c.id === "sem-cpc-not-available"),
+          "con CPC real no debe emitirse la centinela de 'no disponible'"
+        );
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El CPC medio es de 0.45 €.", evidenceRefs: [cpcItem.id] })],
+          evidence: [evidenceFromCatalog(cpcItem)],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.deepEqual(violations, [], `un CPC REAL citado correctamente no debe rechazarse: ${JSON.stringify(violations)}`);
+      },
+    },
+    {
+      name: "O51: averageCpcEUR null (sin clics) NO genera entrada de CPC 0 -- 'CPC de 0 €' se sigue rechazando",
+      fn: () => {
+        const context = baseContext({
+          metrics: [
+            {
+              campaignId: "1",
+              campaignName: "SEM | Marca | Zentry",
+              impressions: 0,
+              clicks: 0,
+              costEUR: 0,
+              conversions: 0,
+              ctr: 0,
+              averageCpcEUR: null,
+              conversionsValue: 0,
+            },
+          ],
+        });
+        assert.ok(
+          !context.evidenceCatalog.some((c) => c.id === "sem-metrics-0-cpc"),
+          "sin clics no puede existir una entrada de CPC: 'sin clics' no es 'CPC de 0 €'"
+        );
+        assert.equal(catalogItem(context, "sem-cpc-not-available").value, "not_available");
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El CPC medio de la cuenta es de 0 €.", evidenceRefs: [] })],
+        });
+        const violations = auditSemSpecialistOutputForUnsupportedClaims(context, output);
+        assert.ok(violations.some((v) => /CPC/i.test(v)), "un CPC de 0 € sin clics es una afirmacion falsa y debe rechazarse");
+      },
+    },
   ];
 }

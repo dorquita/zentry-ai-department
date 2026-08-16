@@ -181,16 +181,22 @@ function loadPromotion(departmentRunId: string): DepartmentPromotionResult | und
 function phaseInit(args: Record<string, string>): DepartmentRunnerResultSummary {
   const departmentRunId = args.departmentRunId && args.departmentRunId !== "true" ? args.departmentRunId : buildDepartmentCoordinationRunId();
   initDepartmentRun(departmentRunId);
-  // SEM queda registrado desde el minuto cero como pendiente: siempre
-  // visible en el informe, nunca capaz de bloquear la pasada.
+  // SEM queda registrado desde el minuto cero, igual que antes, para que
+  // SIEMPRE sea visible en el informe aunque su etapa no llegue a
+  // ejecutarse. Lo que ha cambiado es el motivo: ya NO esta "fuera de
+  // fase" por decision de diseno -- es un especialista mas de la pasada,
+  // y este registro inicial es solo el estado por defecto que la propia
+  // etapa SEM sobrescribe (record-stage --stage sem-specialist) en cuanto
+  // corre. Sin este registro previo, una pasada que abortara antes de la
+  // etapa SEM no dejaria ni rastro de que SEM deberia haber corrido.
   recordStage({
     departmentRunId,
     stage: "sem-specialist",
     status: "not_available",
-    reason: "sem-specialist queda explicitamente FUERA de esta fase (pendiente). No se ejecuta, no se intenta arreglar, y su ausencia nunca bloquea la pasada del departamento.",
+    reason: "Estado inicial: la etapa sem-specialist todavia no ha corrido en esta pasada. Si al final del run sigue asi, es que no llego a ejecutarse -- y entonces NO hay ningun dato de Google Ads en esta pasada.",
   });
   console.log(`Pasada coordinada del departamento iniciada: ${departmentRunId}`);
-  return baseResult("init", departmentRunId, "initialized", "Manifiesto creado. SEM registrado como not_available (pendiente).");
+  return baseResult("init", departmentRunId, "initialized", "Manifiesto creado. Todas las etapas arrancan como not_available hasta que cada una registre su resultado real.");
 }
 
 function phaseRecordStage(args: Record<string, string>): DepartmentRunnerResultSummary {
@@ -239,7 +245,7 @@ function phasePrepareGrowth(args: Record<string, string>): DepartmentRunnerResul
 
   console.log(`growth-director-v2: contexto preparado con ${specialists.executedCount} especialista(s) con salida real y ${context.evidenceCatalog.length} entrada(s) de evidencia.`);
   return {
-    ...baseResult("prepare-growth", departmentRunId, "prepared", `Contexto de Growth listo con ${specialists.executedCount} de 3 especialistas ejecutados en esta pasada.`),
+    ...baseResult("prepare-growth", departmentRunId, "prepared", `Contexto de Growth listo con ${specialists.executedCount} de ${specialists.inputs.length} especialistas ejecutados en esta pasada.`),
     promptFilePath: toRepoRelative(promptPath),
     expectedOutputPath: toRepoRelative(outputPath),
     claudeRequired: true,

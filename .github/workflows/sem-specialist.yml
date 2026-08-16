@@ -26,6 +26,12 @@ name: SEM Specialist (GitHub Actions + Claude)
 
 on:
   workflow_dispatch:
+    inputs:
+      require_live:
+        description: "Exigir lectura LIVE de Google Ads en esta misma ejecucion (fail-closed). Ponlo a false solo para diagnosticar con el ultimo snapshot conocido."
+        type: boolean
+        required: false
+        default: true
 
 # SIN schedule: este empleado se activa unicamente por workflow_dispatch
 # hasta que se valide end-to-end de verdad (mismo criterio que
@@ -69,16 +75,77 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # --- [LIVE] Google Ads -> snapshot de ESTA ejecucion.
+      #
+      # POR QUE EXISTE (fallo real diagnosticado): hasta ahora este
+      # workflow saltaba directo al paso 1 del runner, que solo lee el
+      # ULTIMO evento sem-watcher ya COMMITEADO en
+      # data/department-events.jsonl. Como este job es `contents: read` y
+      # nunca commitea, ese evento era siempre el de la ultima pasada que
+      # SI lo commiteo -- en las 8 ejecuciones fallidas del 2026-08-15,
+      # un snapshot de 27,6 h de antiguedad (freshness=stale), anterior a
+      # la Fase O51, y por tanto SIN searchTerms, SIN CPC medio, SIN
+      # valor de conversion y SIN fechas de ventana. El especialista
+      # razonaba sobre Google Ads sin ver nada de Google Ads de hoy.
+      #
+      # Con este step, sem-specialist recibe una lectura hecha en ESTA
+      # misma ejecucion: freshness=live_this_run, stale=false.
+      #
+      # READ-ONLY sin excepciones: el adaptador solo llama a
+      # `googleAds:search` (GAQL de consulta). No existe ni una llamada
+      # `:mutate` en todo el fichero, asi que este step no puede activar,
+      # pausar, crear ni modificar ninguna campana, presupuesto, keyword,
+      # puja, anuncio ni accion de conversion. ---
+      - name: "[LIVE] departmentRunId de esta ejecucion"
+        id: runid
+        run: echo "departmentRunId=sem-specialist-$(date -u +%Y-%m-%dT%H%M%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: "[LIVE] Google Ads -> snapshot de esta ejecucion (solo lectura, 0 mutaciones)"
+        id: live_ads
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run sem:watch -- --departmentRunId "$DEPARTMENT_RUN_ID" --require-live 2>&1 | tee live-ads.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.runid.outputs.departmentRunId }}
+          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
+          GOOGLE_ADS_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_ADS_OAUTH_CLIENT_ID }}
+          GOOGLE_ADS_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_OAUTH_CLIENT_SECRET }}
+          GOOGLE_ADS_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_OAUTH_REFRESH_TOKEN }}
+
+      - name: "[LIVE] Estado real de la lectura de Google Ads"
+        run: |
+          echo "Google Ads (sem-watcher): $ADS_OUTCOME"
+          if [ "$ADS_OUTCOME" != "success" ] && [ "$REQUIRE_LIVE" = "true" ]; then
+            echo "::error::La lectura LIVE de Google Ads no se completo y require_live=true. Fail-closed: no se razona sobre un snapshot antiguo presentandolo como el estado actual de la cuenta. Revisa el log [LIVE] de arriba -- dice que NOMBRES de variable faltan, nunca sus valores."
+            exit 1
+          fi
+          if [ "$ADS_OUTCOME" != "success" ]; then
+            echo "::warning::La lectura LIVE de Google Ads no se completo, pero require_live=false: se seguira con el ultimo snapshot conocido, ETIQUETADO con su antiguedad real (stale), nunca presentado como dato de hoy."
+          fi
+        env:
+          ADS_OUTCOME: ${{ steps.live_ads.outcome }}
+          REQUIRE_LIVE: ${{ inputs.require_live }}
+
       # --- [DOMINIO] Paso 1 del runner: lee el ULTIMO evento sem-watcher
-      # (agent_finished) del bus de eventos, construye el contexto
-      # SemSpecialistContext y prepara sem-specialist-prompt.md -- o
-      # termina en status=no_data (no-op) si nunca se ha registrado
-      # ningun evento sem-watcher. Nunca llama a Google Ads. ---
+      # (agent_finished) del bus de eventos -- que, tras el step [LIVE] de
+      # arriba, es el de ESTA misma ejecucion -- construye el contexto
+      # SemSpecialistContext y prepara sem-specialist-prompt.md. Este paso
+      # NO llama a Google Ads: solo lee el evento ya persistido. ---
       - name: "[DOMINIO] Runner (paso 1): leer snapshot SEM + preparar contexto/prompt"
         id: prepare
         run: |
           set -o pipefail
           npm run sem-specialist:run -- 2>&1 | tee runner-step1.log
+        env:
+          # Con esto, classifySnapshotFreshness() puede comparar el
+          # departmentRunId del snapshot con el de esta ejecucion y marcar
+          # live_this_run en vez de stale.
+          DEPARTMENT_RUN_ID: ${{ steps.runid.outputs.departmentRunId }}
+          # Fail-closed: sin una lectura de Google Ads hecha en ESTA
+          # ejecucion, el paso 1 aborta con un error explicito en vez de
+          # razonar sobre el ultimo snapshot conocido.
+          REQUIRE_LIVE_SOURCES: ${{ inputs.require_live }}
 
       - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 1)"
         id: step1
@@ -158,6 +225,11 @@ jobs:
           npm run sem-specialist:run -- --sem-specialist-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee runner-step2.log
         env:
           EXPECTED_OUTPUT_PATH: ${{ steps.step1.outputs.expectedOutputPath }}
+          # Mismas dos variables que el paso 1: el paso 2 reconstruye el
+          # contexto, asi que sin ellas el artefacto final registraria una
+          # procedencia distinta de la que realmente tuvo el especialista.
+          DEPARTMENT_RUN_ID: ${{ steps.runid.outputs.departmentRunId }}
+          REQUIRE_LIVE_SOURCES: ${{ inputs.require_live }}
 
       - name: "[DOMINIO] Parsear RUNNER_RESULT_JSON (paso 2)"
         id: step2
@@ -179,7 +251,12 @@ jobs:
       # salida invalida nunca deja rastro descargable del texto exacto de
       # las violaciones -- solo el recuento, via RUNNER_RESULT_JSON. ---
       - name: "[DOMINIO] Subir artifact (sem-specialist-result.json, sem-specialist-result.md)"
-        if: always()
+        # `always()` porque el paso 2 termina en rojo ante una salida
+        # invalida y el artifact ya esta escrito en disco; `!= 'skipped'`
+        # porque si el gate [LIVE] aborto la ejecucion, el paso 1 nunca
+        # corrio y no hay ningun fichero que subir (el motivo real ya esta
+        # en el log del gate, no hace falta un segundo step en rojo).
+        if: always() && steps.prepare.conclusion != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: sem-specialist-${{ github.run_id }}

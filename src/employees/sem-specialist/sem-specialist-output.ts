@@ -231,6 +231,43 @@ const GAP = "[^\\d.!?]{0,40}?";
 // runner contra datos locales reales).
 const NUM = "(?<![\\w])(\\d+(?:[.,]\\d+)?)(?![\\w])";
 
+/**
+ * Unidades de TIEMPO que, cuando siguen INMEDIATAMENTE a la cifra
+ * capturada, demuestran que esa cifra es la DURACION de la ventana de
+ * metricas y no una afirmacion de gasto/presupuesto/conversiones/CPC/ROAS.
+ * La ventana de proximidad de QUANT_CLAIM_CATEGORIES mira hacia ATRAS
+ * (que palabra clave precede a la cifra); esto mira hacia DELANTE (que
+ * unidad la sigue).
+ *
+ * Caso real que motiva esta regla (los 8 fallos consecutivos de
+ * sem-specialist.yml del 2026-08-15, el ultimo el run 31890935474, con
+ * unsupportedClaimCount=1): la frase legitima "no se han registrado
+ * conversiones en los ultimos 30 dias" hacia que la ventana de
+ * "conversiones" capturase el "30" de "30 dias" como si fuera un recuento
+ * de conversiones inventado.
+ *
+ * POR QUE SOLO TIEMPO, y no cualquier sustantivo contable ("7 campanas",
+ * "60 keywords"): la regla general de este auditor -- toda cifra de un
+ * finding debe estar CITADA en su evidenceRefs -- solo es exigible cuando
+ * esa cifra PUEDE tener una entrada en evidenceCatalog. Los recuentos de
+ * campanas/keywords/ad groups SI la tienen (sem-total-campaigns,
+ * sem-total-positive-keywords...), asi que exigir su cita es razonable y
+ * se mantiene. La duracion de la ventana NO la tiene ni puede tenerla
+ * (el catalogo no expone `metricsWindow` como cifra, justamente para no
+ * abrir una entrada numerica generica que respaldaria por accidente
+ * cualquier importe que coincidiera), asi que exigir su cita era una
+ * condicion imposible de cumplir: la salida quedaba rechazada dijera lo
+ * que dijera el especialista.
+ *
+ * Deliberadamente NO incluye "conversion/conversiones" ni "€"/"EUR"/
+ * "euros": "12 conversiones" y "44 €" SI son afirmaciones auditables y
+ * siguen exigiendo evidencia citada.
+ */
+const DURATION_UNIT_AFTER_NUMBER = /^\s*(?:d[ií]as?|jornadas?|semanas?|mes(?:es)?|a[ñn]os?|horas?|minutos?)\b/i;
+
+/** Cuantos caracteres se miran tras la cifra para decidir si lleva una unidad de tiempo pegada. */
+const UNIT_LOOKAHEAD_CHARS = 24;
+
 const QUANT_CLAIM_CATEGORIES: QuantClaimCategory[] = [
   { id: "cpc", label: "CPC", pattern: new RegExp(`cpc${GAP}${NUM}`, "gi") },
   // Dos ordenes de frase: "12 conversiones" (numero primero, habitual en
@@ -406,6 +443,13 @@ export function auditSemSpecialistOutputForUnsupportedClaims(context: SemSpecial
         // dos ordenes de frase -- ver QUANT_CLAIM_CATEGORIES).
         const numberRaw = match[1] ?? match[2];
         if (!numberRaw) continue;
+
+        // La cifra lleva pegada una unidad de tiempo ("30 dias"): es la
+        // duracion de la ventana de metricas, no una afirmacion de esta
+        // categoria -- y no existe ninguna entrada de catalogo que pudiera
+        // respaldarla. Ver DURATION_UNIT_AFTER_NUMBER.
+        const matchEnd = (match.index ?? 0) + match[0].length;
+        if (DURATION_UNIT_AFTER_NUMBER.test(claim.text.slice(matchEnd, matchEnd + UNIT_LOOKAHEAD_CHARS))) continue;
 
         const candidates = resolveClaimCandidateEntries(category.id, pool);
         if (findMatchingCatalogEntry(numberRaw, candidates)) continue;

@@ -445,9 +445,9 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       fn: () => {
         const workflow = fs.readFileSync(WORKFLOW_PATH, "utf-8");
         const recordPaths = [...workflow.matchAll(/execution-record-path:\s*(.+)/g)].map((m) => m[1].trim());
-        assert.equal(recordPaths.length, 6, "los seis empleados deben registrar su propio coste");
-        assert.equal(new Set(recordPaths).size, 6, "las seis rutas de registro deben ser DISTINTAS entre si");
-        for (const agent of ["seo-specialist", "content-strategist", "analytics-specialist", "growth-director-v2", "qa-reviewer", "web-engineer"]) {
+        assert.equal(recordPaths.length, 7, "los siete empleados deben registrar su propio coste");
+        assert.equal(new Set(recordPaths).size, 7, "las siete rutas de registro deben ser DISTINTAS entre si");
+        for (const agent of ["seo-specialist", "content-strategist", "analytics-specialist", "sem-specialist", "growth-director-v2", "qa-reviewer", "web-engineer"]) {
           assert.ok(
             recordPaths.some((p) => p.includes(`/stages/${agent}/claude-execution.json`)),
             `falta el registro de coste propio de ${agent}`
@@ -460,11 +460,18 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       fn: () => {
         const workflow = fs.readFileSync(WORKFLOW_PATH, "utf-8");
         const runtimeUses = workflow.match(/uses:\s*\.\/\.github\/actions\/claude-employee-runtime/g) ?? [];
-        // 6 empleados Claude en la pasada: SEO, Content, Analytics, Growth, QA, Web Engineer.
-        assert.equal(runtimeUses.length, 6, "cada etapa Claude debe invocar el runtime comun");
+        // 7 empleados Claude en la pasada: SEO, Content, Analytics, SEM,
+        // Growth, QA, Web Engineer. SEM se incorporo al dejar de estar
+        // cableado a `not_available` -- ver el bloque [SEM] del workflow.
+        assert.equal(runtimeUses.length, 7, "cada etapa Claude debe invocar el runtime comun");
         const timeouts = workflow.match(/timeout-minutes:\s*10/g) ?? [];
-        assert.ok(timeouts.length >= 6, "cada step del runtime comun debe llevar su timeout-minutes: 10");
-        assert.ok(workflow.includes("agent-name: sem-specialist") === false, "sem-specialist NO se ejecuta en esta fase");
+        assert.ok(timeouts.length >= 7, "cada step del runtime comun debe llevar su timeout-minutes: 10");
+        // INVERSION DELIBERADA respecto al contrato anterior. Antes se
+        // exigia que `agent-name: sem-specialist` NO apareciera ("SEM
+        // fuera de fase"): esa era exactamente la causa de que Google Ads
+        // se leyera en vivo cada dia sin llegar nunca ni a Growth ni al
+        // brief. Ahora se exige lo contrario -- que SI corra en la pasada.
+        assert.ok(workflow.includes("agent-name: sem-specialist"), "sem-specialist debe ejecutarse dentro de la pasada coordinada");
       },
     },
   ];

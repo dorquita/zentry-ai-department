@@ -30,8 +30,11 @@ name: Zentry AI Department -- Daily Brief (coordinacion real)
 #   escriben en WordPress, staging, produccion, Google Ads, GA4/GTM,
 #   Search Console ni n8n.
 # - Sin MCP, sin bypassPermissions, sin `id-token: write`.
-# - sem-specialist queda FUERA de esta fase: se registra siempre como
-#   not_available (pendiente) y nunca bloquea la pasada.
+# - sem-specialist YA NO queda fuera de la pasada: lee la cuenta de
+#   Google Ads en vivo (fase 0.5) y razona sobre ESA lectura, en la misma
+#   pasada y con el mismo departmentRunId. Sigue siendo READ/PROPOSE puro:
+#   `googleAds:search` y nada mas. Si su etapa no puede correr, se registra
+#   con su estado real y nunca bloquea la pasada.
 # - APPLY: esta pasada NO escribe en ningun sistema externo. Solo
 #   PLANIFICA el contrato de apply (que recomendaciones tienen un executor
 #   determinista detras) y lo publica numerado en el Daily Brief.
@@ -180,9 +183,9 @@ jobs:
       # accounts/containers/workspaces .list/.get/.live. Ni un solo metodo
       # de escritura existe en los adaptadores que usan.
       #
-      # SEM/Google Ads queda FUERA a proposito (sigue fuera de fase): aqui
-      # solo se ha identificado su infraestructura de datos, no se
-      # reactiva. Ver docs/external-dependencies-audit.md.
+      # SEM/Google Ads se lee aqui como una fuente live mas, y su
+      # especialista corre mas abajo sobre esta misma lectura. Ver
+      # docs/external-dependencies-audit.md.
       # =====================================================================
       - name: "[LIVE] Search Console -> snapshot de esta pasada (solo lectura)"
         id: live_gsc
@@ -214,11 +217,11 @@ jobs:
           GOOGLE_ANALYTICS_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_CLIENT_SECRET }}
           GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN }}
 
-      # Google Ads (Fase O51). La RECOLECCION si se migra aqui: el watcher
-      # lee la cuenta en vivo y deja el snapshot de esta pasada, igual que
-      # SEO y Analytics. Lo que sigue fuera de fase es el AGENTE
-      # sem-specialist dentro de la pasada coordinada, que se mantiene
-      # como `not_available` mas abajo por decision explicita.
+      # Google Ads. El watcher lee la cuenta en vivo y deja el snapshot de
+      # esta pasada, igual que SEO y Analytics; el especialista SEM corre
+      # mas abajo (bloque [SEM]) sobre ESTE mismo snapshot, con el mismo
+      # departmentRunId, de modo que su contexto queda marcado
+      # `live_this_run` y no `stale`.
       #
       # READ-ONLY sin excepciones: el adaptador solo llama a
       # `googleAds:search` (GAQL de consulta). No existe ni una llamada
@@ -620,6 +623,137 @@ jobs:
           SOURCE_RUN_ID: ${{ steps.analytics2.outputs.departmentRunId }}
           OUTPUT_PATH: ${{ steps.analytics2.outputs.status == 'executed' && steps.analytics1.outputs.expectedOutputPath || '' }}
           ARTIFACT_PATH: ${{ steps.analytics2.outputs.artifactJsonPath }}
+
+      # --- SEM / GOOGLE ADS ---
+      #
+      # El watcher ya leyo la cuenta EN VIVO en la FASE 0.5, con este mismo
+      # departmentRunId. Estos steps son la otra mitad que faltaba: hacer
+      # que el ESPECIALISTA razone sobre esa lectura y que su salida entre
+      # en la pasada coordinada como la de cualquier otro especialista.
+      # Hasta ahora sem-specialist estaba cableado a `not_available` en
+      # scripts/run-department-coordination.ts (fase init), asi que Google
+      # Ads se leia en vivo cada dia y no llegaba a Growth ni al brief.
+      #
+      # DEPARTMENT_RUN_ID hace que classifySnapshotFreshness() marque el
+      # snapshot como `live_this_run` (no `stale`), y REQUIRE_LIVE_SOURCES
+      # hace que la etapa falle en vez de razonar sobre historico si la
+      # lectura live de la FASE 0.5 no salio.
+      #
+      # READ-ONLY: sem-specialist no tiene herramientas y no puede llamar a
+      # Google Ads ni directa ni indirectamente; el unico modulo que habla
+      # con la API (src/adapters/google-ads.ts) solo usa `googleAds:search`.
+      - name: "[SEM] Runner (paso 1): leer snapshot LIVE de Google Ads + preparar contexto"
+        id: sem1_run
+        continue-on-error: true
+        # Si la lectura live de la fase 0.5 no salio, NO se invoca a Claude:
+        # razonar sobre el ultimo snapshot conocido y presentarlo como el
+        # estado de hoy es justo lo que este departamento no puede hacer.
+        # La etapa se registra mas abajo como not_available con su motivo.
+        if: steps.live_ads.outcome == 'success'
+        run: |
+          set -o pipefail
+          npm run sem-specialist:run 2>&1 | tee sem-step1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          REQUIRE_LIVE_SOURCES: ${{ steps.live_ads.outcome == 'success' }}
+
+      - name: "[SEM] Parsear RUNNER_RESULT_JSON (paso 1)"
+        id: sem1
+        continue-on-error: true
+        if: steps.sem1_run.outcome == 'success'
+        run: npm run sem-specialist:parse-runner-result-for-ci -- sem-step1.log
+
+      - name: "[SEM] Leer prompt"
+        id: sem_prompt
+        continue-on-error: true
+        if: steps.sem1.outputs.status == 'pending_execution'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.sem1.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Ejecutar sem-specialist (Claude Employee Runtime)"
+        id: sem_runtime
+        continue-on-error: true
+        if: steps.sem_prompt.outcome == 'success' && steps.sem1.outputs.status == 'pending_execution'
+        timeout-minutes: 10
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: sem-specialist
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/sem-specialist/claude-execution.json
+          prompt: ${{ steps.sem_prompt.outputs.content }}
+          output-schema-path: config/sem-specialist-output.schema.json
+          expected-output-path: ${{ steps.sem1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[SEM] Runner (paso 2): validar salida + auditar afirmaciones cuantitativas"
+        id: sem2_run
+        continue-on-error: true
+        if: steps.sem_runtime.outcome == 'success'
+        run: |
+          set -o pipefail
+          npm run sem-specialist:run -- --sem-specialist-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee sem-step2.log
+        env:
+          EXPECTED_OUTPUT_PATH: ${{ steps.sem1.outputs.expectedOutputPath }}
+          # Mismas dos variables que el paso 1: el paso 2 reconstruye el
+          # contexto, asi que sin ellas el artefacto final registraria una
+          # procedencia distinta (fresh) de la que realmente tuvo el
+          # especialista al razonar (live_this_run).
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          REQUIRE_LIVE_SOURCES: ${{ steps.live_ads.outcome == 'success' }}
+
+      - name: "[SEM] Parsear RUNNER_RESULT_JSON (paso 2)"
+        id: sem2
+        continue-on-error: true
+        if: steps.sem2_run.outcome == 'success' || steps.sem2_run.outcome == 'failure'
+        run: npm run sem-specialist:parse-runner-result-for-ci -- sem-step2.log
+
+      - name: "[COORD] Registrar etapa sem-specialist"
+        if: always()
+        run: |
+          set -o pipefail
+          if [ "$STEP2_STATUS" = "executed" ]; then
+            STATUS=executed
+            REASON="sem-specialist ejecutado sobre la lectura LIVE de Google Ads de esta misma pasada (evento sem-watcher ${SOURCE_EVENT_ID}). Afirmaciones cuantitativas sin respaldo: ${STEP2_CLAIMS}."
+          elif [ "$STEP2_STATUS" = "invalid_output" ]; then
+            STATUS=invalid_output
+            REASON="sem-specialist devolvio una salida que no cumple su contrato o cito cifras sin respaldo trazable (${STEP2_CLAIMS} afirmacion(es)) -- descartada (fail-closed)."
+          elif [ "$STEP1_STATUS" = "no_data" ]; then
+            STATUS=not_available
+            REASON="No hay ningun snapshot de sem-watcher en este repositorio. Sin datos reales de Google Ads en esta pasada."
+          elif [ "$ADS_OUTCOME" != "success" ]; then
+            STATUS=not_available
+            REASON="La lectura LIVE de Google Ads de esta pasada no se completo (fase 0.5 = ${ADS_OUTCOME}), asi que sem-specialist no razona sobre historico presentandolo como actual (fail-closed). No hay datos de Google Ads en esta pasada."
+          else
+            STATUS=failed
+            REASON="sem-specialist no completo su ejecucion (paso1=${STEP1_OUTCOME}, runtime=${RUNTIME_OUTCOME}, claude=${CLAUDE_OUTCOME:-n/a}, origen de salida=${OUTPUT_SOURCE:-ninguno}, paso2=${STEP2_OUTCOME}). No hay datos de Google Ads en esta pasada."
+          fi
+          ARGS=(--phase record-stage --departmentRunId "$DEPARTMENT_RUN_ID" --stage sem-specialist --status "$STATUS" --reason "$REASON")
+          if [ -n "$OUTPUT_PATH" ]; then ARGS+=(--output "$OUTPUT_PATH"); fi
+          if [ -n "$ARTIFACT_PATH" ]; then ARGS+=(--artifact "$ARTIFACT_PATH"); fi
+          if [ -n "$SOURCE_RUN_ID" ]; then ARGS+=(--source-run-id "$SOURCE_RUN_ID"); fi
+          npm run department:run -- "${ARGS[@]}" 2>&1 | tee coord-sem.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          ADS_OUTCOME: ${{ steps.live_ads.outcome }}
+          STEP1_OUTCOME: ${{ steps.sem1_run.outcome }}
+          STEP1_STATUS: ${{ steps.sem1.outputs.status }}
+          RUNTIME_OUTCOME: ${{ steps.sem_runtime.outcome }}
+          CLAUDE_OUTCOME: ${{ steps.sem_runtime.outputs.claude-outcome }}
+          OUTPUT_SOURCE: ${{ steps.sem_runtime.outputs.output-source }}
+          STEP2_OUTCOME: ${{ steps.sem2_run.outcome }}
+          STEP2_STATUS: ${{ steps.sem2.outputs.status }}
+          STEP2_CLAIMS: ${{ steps.sem2.outputs.unsupportedClaimCount }}
+          SOURCE_EVENT_ID: ${{ steps.sem1.outputs.sourceEventId }}
+          SOURCE_RUN_ID: ${{ steps.sem1.outputs.sourceDepartmentRunId }}
+          OUTPUT_PATH: ${{ steps.sem2.outputs.status == 'executed' && steps.sem1.outputs.expectedOutputPath || '' }}
+          ARTIFACT_PATH: ${{ steps.sem2.outputs.artifactJsonPath }}
 
       # =====================================================================
       # FASE 2 -- GROWTH DIRECTOR: sintetiza las salidas REALES de los
@@ -1027,12 +1161,14 @@ jobs:
             echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             echo "- **Escrituras en sistemas de contenido:** NINGUNA. Esta pasada solo analiza y propone. Lo que se aplique se decide despues, a mano, sobre el Daily Brief numerado (ver docs/manual-approval-flow.md)."
             echo "- **Email del Daily Brief:** resultado del step [EMAIL] = \`${EMAIL_OUTCOME}\` (si falta configuracion, no se envia nada y el log dice que NOMBRES de variables faltan)."
-            echo "- **SEM:** pendiente / fuera de esta fase por decision explicita."
+            echo "- **SEM / Google Ads:** lectura live = \`${ADS_OUTCOME}\`, especialista = \`${SEM_STATUS:-no ejecutado}\`. Google Ads se ha leido en modo SOLO LECTURA (\`googleAds:search\`): ninguna campana, presupuesto, keyword, puja ni anuncio se ha creado, activado, pausado ni modificado."
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           STEP_SUMMARY_PATH: ${{ steps.brief.outputs.stepSummaryPath }}
           EMAIL_OUTCOME: ${{ steps.email.outcome }}
+          ADS_OUTCOME: ${{ steps.live_ads.outcome }}
+          SEM_STATUS: ${{ steps.sem2.outputs.status || steps.sem1.outputs.status }}
 
       # Volcado al LOG del propio run: manifiesto + puerta + Daily Brief
       # completo, mas el diagnostico real de cada invocacion de Claude

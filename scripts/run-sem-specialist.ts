@@ -157,6 +157,12 @@ function resolveResult(outputArg: string | undefined, outDir: string, promptFile
     if (violations.length > 0) {
       fs.writeFileSync(rawCopyPath, JSON.stringify(raw, null, 2), "utf-8");
       console.error(`sem-specialist: salida rechazada -- ${violations.length} afirmacion(es) cuantitativa(s) sin respaldo trazable en evidence[].`);
+      // El texto EXACTO de cada violacion va tambien al log, no solo al
+      // artifact: los artifacts de Actions no siempre son descargables
+      // (politica de red del entorno de diagnostico), y sin esto un fallo
+      // solo dejaba el RECUENTO -- imposible de diagnosticar sin repetir
+      // la ejecucion.
+      violations.forEach((v, i) => console.error(`  [violacion ${i + 1}/${violations.length}] ${v}`));
       return {
         status: "invalid_output",
         error: `${violations.length} afirmacion(es) cuantitativa(s) sin respaldo en evidence[]: ${violations.join(" | ")}`,

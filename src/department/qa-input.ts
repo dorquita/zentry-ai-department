@@ -34,15 +34,21 @@ export interface DepartmentQaInputBundle {
   stages: QaBundleStageSummary[];
   specialistOutputs: { employee: string; status: DepartmentStageStatus; output?: unknown }[];
   growth: { status: DepartmentStageStatus; note: string; output?: GrowthDirectorV2Output; auditWarnings: string[] };
-  semStatus: { employee: "sem-specialist"; status: "not_available"; note: string };
+  /**
+   * SEM se sigue exponiendo como bloque propio (compatibilidad del
+   * contrato con revisiones anteriores), pero su `status` ya NO esta
+   * cableado a "not_available": es el estado REAL de la etapa en esta
+   * pasada, igual que el de cualquier otro especialista.
+   */
+  semStatus: { employee: "sem-specialist"; status: DepartmentStageStatus; note: string };
 }
 
 export const QA_REVIEW_INSTRUCTIONS: string[] = [
-  "Este artifact es el resultado COMPLETO de una pasada coordinada del departamento: las salidas reales de los especialistas (SEO / Content / Analytics) y la sintesis del Growth Director sobre ellas.",
+  "Este artifact es el resultado COMPLETO de una pasada coordinada del departamento: las salidas reales de los especialistas (SEO / Content / Analytics / SEM) y la sintesis del Growth Director sobre ellas.",
   "Revisa las dos capas: (a) los outputs de los especialistas y (b) la sintesis/priorizacion de growth-director-v2 sobre ellos.",
   "Busca especificamente: afirmaciones sin evidencia que las respalde dentro de este mismo artifact, contradicciones entre especialistas o entre un especialista y Growth, recomendaciones debiles o no accionables, riesgos, problemas de seguridad, y cualquier elemento que exija aprobacion humana antes de tocar nada.",
   "Un especialista con status distinto de `executed` NO aporto datos en esta pasada: si Growth afirma algo que solo podria salir de ese especialista ausente, eso es un hallazgo (fabricacion o claim sin respaldo), no una omision menor.",
-  "sem-specialist esta fuera de esta fase por decision explicita: su ausencia NO es un defecto de calidad de este artifact y no debe reportarse como tal. Si alguna afirmacion del artifact asume datos de SEM, ESO si es un hallazgo.",
+  "sem-specialist (Google Ads) participa en la pasada como un especialista mas: si su status es `executed`, revisa su salida con el mismo rigor que las demas. Si NO lo es, su ausencia por si sola no es un defecto de calidad -- pero cualquier afirmacion del artifact que ASUMA datos de Google Ads sin que SEM los haya aportado SI es un hallazgo.",
   "Se concreto: cuando marques una recomendacion como problematica, cita su titulo EXACTO tal como aparece en `growth.output.recommendedPriorities[].title`. El departamento usa esa coincidencia literal de titulo para decidir, de forma deterministica, que recomendaciones NO se promueven a la fase de ingenieria.",
   "Un hallazgo `critical` o cualquier entrada en `safetyConcerns` BLOQUEA la promocion de la recomendacion citada. No uses `critical` para matices de estilo, ni `info` para un riesgo real.",
   "Ninguna parte de este artifact se ha aplicado a ningun sistema: es una propuesta de solo lectura. No evalues como si ya estuviera publicado.",
@@ -62,9 +68,9 @@ export function buildDepartmentQaInputBundle(
     generatedAt: now.toISOString(),
     reviewInstructionsForQa: QA_REVIEW_INSTRUCTIONS,
     stages: specialists.inputs.map((i) => ({ employee: i.employee, status: i.status, note: i.note, sourceRunId: i.sourceRunId })),
-    specialistOutputs: specialists.inputs
-      .filter((i) => i.employee !== "sem-specialist")
-      .map((i) => (i.status === "executed" ? { employee: i.employee, status: i.status, output: i.output } : { employee: i.employee, status: i.status })),
+    specialistOutputs: specialists.inputs.map((i) =>
+      i.status === "executed" ? { employee: i.employee, status: i.status, output: i.output } : { employee: i.employee, status: i.status }
+    ),
     growth: {
       status: growth.status,
       note:
@@ -76,8 +82,8 @@ export function buildDepartmentQaInputBundle(
     },
     semStatus: {
       employee: "sem-specialist",
-      status: "not_available",
-      note: semInput?.note ?? "sem-specialist queda fuera de esta fase (pendiente). Su ausencia no bloquea la pasada.",
+      status: semInput?.status ?? "not_available",
+      note: semInput?.note ?? "sem-specialist no llego a registrarse en el manifiesto de esta pasada -- no hay ningun dato de Google Ads que revisar.",
     },
   };
 }

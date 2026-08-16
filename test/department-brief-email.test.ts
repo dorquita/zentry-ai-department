@@ -44,7 +44,7 @@ function brief(overrides: Partial<DepartmentDailyBrief> = {}): DepartmentDailyBr
     generatedAt: NOW.toISOString(),
     executiveSummary: { discovered: ["Descubrimiento uno", "Descubrimiento dos"], needsAttention: ["Atencion uno"], changed: ["Cambio uno"] },
     topPriorities: [priority(1), priority(2)],
-    sections: { seo: section, content: section, analytics: section, growth: section, qa: section, webEngineering: section },
+    sections: { seo: section, content: section, analytics: section, sem: section, growth: section, qa: section, webEngineering: section },
     blockedOrUnknown: ["SEM: pendiente / temporalmente no disponible -- fuera de esta fase."],
     approvalsNeeded: [{ decision: 'APROBAR o RECHAZAR: "Reescribir metas de familia melamina"', why: "Impacto medium, confianza high, esfuerzo low. 239 impresiones / CTR 0%.", qaStatus: "PASS", origin: "seo-specialist" }],
     stageStatuses: [

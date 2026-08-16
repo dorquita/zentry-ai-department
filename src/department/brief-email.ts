@@ -150,7 +150,7 @@ function departmentStatusRows(brief: DepartmentDailyBrief): { employee: string; 
     { employee: "SEO", status: stageStatus(brief, "seo-specialist") },
     { employee: "Content", status: stageStatus(brief, "content-strategist") },
     { employee: "Analytics", status: stageStatus(brief, "analytics-specialist") },
-    { employee: "SEM", status: `${stageStatus(brief, "sem-specialist")} (pendiente / fuera de fase)` },
+    { employee: "SEM", status: stageStatus(brief, "sem-specialist") },
     { employee: "Growth", status: stageStatus(brief, "growth-director-v2") },
     { employee: "QA", status: `${stageStatus(brief, "qa-reviewer")} -> ${brief.departmentQaStatus}` },
     { employee: "Web Engineer", status: stageStatus(brief, "web-engineer") },
