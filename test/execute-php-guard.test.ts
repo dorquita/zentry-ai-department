@@ -121,6 +121,7 @@ function validRequest(overrides: Partial<ExecutePhpRequest> = {}): ExecutePhpReq
     actor: EXECUTE_PHP_ACTOR,
     abilityName: "novamira/execute-php",
     environment: "staging",
+    phase: "apply",
     qaStatus: "PASS",
     departmentRunId: RUN_ID,
     recommendationId: `${RUN_ID}#rec-1`,

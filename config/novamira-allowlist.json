@@ -161,6 +161,14 @@
       "risk": "safe_write_staging_only",
       "requiresApproval": false,
       "reason": "Cancela un cambio en cola individual, sin tocar contenido en vivo. Reversible por diseno."
+    },
+    "mcp-adapter-discover-abilities": {
+      "risk": "safe_read",
+      "reason": "TOOL de introspeccion del adaptador MCP (no una ability de Novamira): devuelve el censo de abilities disponibles. Solo lectura de metadatos, no ejecuta ninguna ability ni toca WordPress."
+    },
+    "mcp-adapter-get-ability-info": {
+      "risk": "safe_read",
+      "reason": "TOOL de introspeccion del adaptador MCP: devuelve la descripcion y el ESQUEMA DE PARAMETROS de una ability, sin ejecutarla. Necesario para poder llamar a cualquier ability con los parametros correctos en vez de adivinarlos. Solo lectura de metadatos."
     }
   }
 }

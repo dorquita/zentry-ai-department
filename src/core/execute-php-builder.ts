@@ -229,12 +229,16 @@ export function phpMatchesPlan(php: string, plan: ExecutePhpChangePlan): boolean
 }
 
 /**
- * Igual, pero admitiendo tambien el PHP de rollback del mismo plan: el
- * executor usa el mismo guard para las dos escrituras, y el rollback es
- * legitimo.
+ * Igualdad exacta contra la plantilla de ROLLBACK de este plan, con el
+ * valor concreto del snapshot.
+ *
+ * Deliberadamente NO existe un "coincide con el apply O con el
+ * rollback": aceptar cualquiera de las dos dejaba un hueco real -- bastaba
+ * declarar como snapshot el mismo texto que se queria escribir para que
+ * un PHP que no correspondia al plan pasara el guard. Cada fase se
+ * verifica contra UNA sola plantilla.
  */
-export function phpMatchesPlanOrRollback(php: string, plan: ExecutePhpChangePlan, previousValue: string, previousExisted: boolean): boolean {
-  if (phpMatchesPlan(php, plan)) return true;
+export function phpMatchesRollback(php: string, plan: ExecutePhpChangePlan, previousValue: string, previousExisted: boolean): boolean {
   try {
     return php === buildRollbackPhpForPlan(plan, previousValue, previousExisted);
   } catch {

@@ -293,6 +293,14 @@ export interface CapabilitySelection {
   nativeAbility: string | null;
   /** Por que se eligio ese camino. Siempre no vacio. */
   reason: string;
+  /**
+   * Motivo DECLARADO por el que la ability nativa no sirve para este
+   * caso. Campo propio, separado de `reason`, justo para que el guard
+   * pueda exigirlo: si estuviera mezclado en `reason` (que esta funcion
+   * siempre rellena) no habria forma de distinguir "se justifico" de "se
+   * genero un texto". Vacio cuando no hay ability nativa que justificar.
+   */
+  nativeAbilityUnsuitableReason: string;
 }
 
 /**
@@ -338,6 +346,7 @@ export function selectExecutionPath(input: SelectExecutionPathInput): Capability
     return {
       executionPath: "execute_php_fallback",
       nativeAbility: null,
+      nativeAbilityUnsuitableReason: "",
       reason: `No existe ninguna ability nativa de Novamira que resuelva "${input.operation}". El fallback de PHP es el unico camino.`,
     };
   }
@@ -346,12 +355,14 @@ export function selectExecutionPath(input: SelectExecutionPathInput): Capability
     return {
       executionPath: "native_ability",
       nativeAbility,
+      nativeAbilityUnsuitableReason: "",
       reason: `Existe la ability nativa "${nativeAbility}" para "${input.operation}" y no se ha declarado ningun motivo por el que no sirva. Se usa la nativa: PHP no se usa por comodidad.`,
     };
   }
   return {
     executionPath: "execute_php_fallback",
     nativeAbility,
+    nativeAbilityUnsuitableReason: unsuitable,
     reason: `Existe "${nativeAbility}", pero se ha declarado que no resuelve este caso: ${unsuitable}`,
   };
 }

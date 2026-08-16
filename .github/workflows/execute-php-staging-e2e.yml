@@ -31,7 +31,7 @@ on:
         required: true
         default: "list"
         type: choice
-        options: ["list", "run"]
+        options: ["list", "ability-info", "run"]
       postId:
         description: "ID de la pagina de staging (solo para mode=run)"
         required: false
@@ -76,7 +76,7 @@ jobs:
             MODE=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").mode)')
             POST_ID=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").postId)')
           fi
-          if [ "$MODE" != "list" ] && [ "$MODE" != "run" ]; then
+          if [ "$MODE" != "list" ] && [ "$MODE" != "run" ] && [ "$MODE" != "ability-info" ]; then
             echo "mode=\"$MODE\" desconocido. Fail-closed: no se ejecuta nada."
             exit 1
           fi
@@ -91,8 +91,8 @@ jobs:
       - name: E2E
         run: |
           set -o pipefail
-          if [ "$MODE" = "list" ]; then
-            npx ts-node scripts/o47-execute-php-e2e.ts --mode list
+          if [ "$MODE" != "run" ]; then
+            npx ts-node scripts/o47-execute-php-e2e.ts --mode "$MODE"
           else
             npx ts-node scripts/o47-execute-php-e2e.ts --mode run --postId "$POST_ID"
           fi

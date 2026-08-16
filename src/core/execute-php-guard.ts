@@ -1,8 +1,9 @@
-import { phpMatchesPlanOrRollback } from "./execute-php-builder";
+import { phpMatchesPlan, phpMatchesRollback } from "./execute-php-builder";
 import {
   CapabilitySelection,
   EXECUTE_PHP_OPERATIONS,
   ExecutePhpChangePlan,
+  NATIVE_ABILITY_FOR_OPERATION,
   validateExecutePhpChangePlan,
 } from "./execute-php-operations";
 import { READ_ONLY_EMPLOYEES } from "./novamira-profiles";
@@ -76,12 +77,18 @@ export interface ExecutePhpRequest {
   plan: ExecutePhpChangePlan;
   /** El PHP exacto que se enviaria. Se re-deriva del plan y se exige igualdad. */
   php: string;
+  /**
+   * Que escritura es esta. Se exige explicito porque cada fase admite UNA
+   * sola plantilla: el apply solo puede escribir `plan.payload.value`, y
+   * el rollback solo puede escribir el valor del snapshot. Sin este
+   * campo, aceptar "cualquiera de las dos" dejaba un hueco: bastaba
+   * declarar como snapshot el mismo contenido que se queria escribir para
+   * que el guard aprobase un PHP que no correspondia al plan.
+   */
+  phase: "apply" | "rollback";
   capabilitySelection: CapabilitySelection;
   flags: ExecutePhpFlags;
-  /**
-   * Valor previo real leido en el snapshot. Solo se usa para reconocer el
-   * PHP de rollback como legitimo; el apply normal no lo necesita.
-   */
+  /** Valor previo REAL leido en el snapshot. Obligatorio en la fase de rollback. */
   snapshotPreviousValue?: string;
   snapshotPreviousExisted?: boolean;
 }
@@ -239,32 +246,48 @@ export function isExecutePhpAllowed(request: ExecutePhpRequest): ExecutePhpGuard
   }
 
   // 8. CAMINO DE CAPACIDAD. PHP nunca por comodidad.
+  //
+  //    La existencia de ability nativa se RE-DERIVA del catalogo, no se
+  //    lee de lo que declare quien llama: si se aceptara
+  //    `nativeAbility: null` a ciegas, bastaria mentir en ese campo para
+  //    saltarse la politica entera.
   if (request.capabilitySelection.executionPath !== "execute_php_fallback") {
     return fail(
       "execution_path",
       `El camino seleccionado es "${request.capabilitySelection.executionPath}", no el fallback de PHP. ${request.capabilitySelection.reason}`
     );
   }
-  if (request.capabilitySelection.nativeAbility !== null && request.capabilitySelection.reason.trim().length === 0) {
+  const catalogNativeAbility = NATIVE_ABILITY_FOR_OPERATION[request.plan.operation] ?? null;
+  if (request.capabilitySelection.nativeAbility !== catalogNativeAbility) {
+    return fail(
+      "native_ability_mismatch",
+      `La seleccion declara nativeAbility "${String(request.capabilitySelection.nativeAbility)}" pero el catalogo dice "${String(catalogNativeAbility)}" para la operacion "${request.plan.operation}". No se acepta la palabra de quien llama sobre si existe alternativa nativa.`
+    );
+  }
+  if (catalogNativeAbility !== null && request.capabilitySelection.nativeAbilityUnsuitableReason.trim().length === 0) {
     return fail(
       "native_ability_preferred",
-      `Existe la ability nativa "${request.capabilitySelection.nativeAbility}" y no se ha declarado por que no sirve. Se usa la nativa: PHP no es un atajo.`
+      `Existe la ability nativa "${catalogNativeAbility}" para "${request.plan.operation}" y no se ha declarado por que no sirve para este caso. Se usa la nativa: PHP no es un atajo.`
     );
   }
 
-  // 9. EL PHP ES EL NUESTRO. Igualdad exacta contra el generador
-  //    determinista (apply o rollback del mismo plan). Un PHP escrito por
-  //    un modelo no puede coincidir.
-  const matches = phpMatchesPlanOrRollback(
-    request.php,
-    request.plan,
-    request.snapshotPreviousValue ?? "",
-    request.snapshotPreviousExisted ?? false
-  );
+  // 9. EL PHP ES EL NUESTRO, Y ES EL DE ESTA FASE. Igualdad exacta contra
+  //    UNA sola plantilla -- la del apply escribe lo que dice el plan, la
+  //    del rollback escribe lo que dice el snapshot. Un PHP escrito por un
+  //    modelo no puede coincidir con ninguna de las dos.
+  let matches: boolean;
+  if (request.phase === "apply") {
+    matches = phpMatchesPlan(request.php, request.plan);
+  } else {
+    if (typeof request.snapshotPreviousValue !== "string") {
+      return fail("rollback_without_snapshot", "Una fase de rollback sin `snapshotPreviousValue` no se puede verificar: no se ejecuta.");
+    }
+    matches = phpMatchesRollback(request.php, request.plan, request.snapshotPreviousValue, request.snapshotPreviousExisted ?? false);
+  }
   if (!matches) {
     return fail(
       "php_not_deterministic",
-      "El PHP recibido NO coincide con el que generan las plantillas deterministas para este plan. Solo se ejecuta codigo producido por src/core/execute-php-builder.ts -- nunca PHP de otra procedencia."
+      `El PHP recibido NO coincide con la plantilla determinista de la fase "${request.phase}" para este plan. Solo se ejecuta codigo producido por src/core/execute-php-builder.ts -- nunca PHP de otra procedencia, y nunca el de la otra fase.`
     );
   }
 

@@ -39,7 +39,8 @@ import {
   NATIVE_ABILITY_FOR_OPERATION,
   selectExecutionPath,
 } from "../src/core/execute-php-operations";
-import { callNovamiraExecutePhp, openSession } from "../src/adapters/novamira-mcp-client";
+import { assertToolCallAllowed, callNovamiraExecutePhp, openSession } from "../src/adapters/novamira-mcp-client";
+import { callMcpTool, extractTextContent } from "../src/adapters/novamira-mcp-transport";
 import { NovamiraSession } from "../src/adapters/novamira-mcp-transport";
 import { resolveNovamiraCredentials } from "../src/adapters/novamira-mcp-transport";
 import { applyChangePlanWithPhp, ExecutePhpContext, PhpTargetState } from "../src/department/apply/execute-php-executor";
@@ -170,7 +171,24 @@ async function main(): Promise<void> {
     await listCandidates(restBase, authHeader);
     return;
   }
-  if (mode !== "run") throw new Error(`--mode "${mode}" desconocido. Usa "list" o "run".`);
+
+  // Introspeccion SOLO LECTURA: pregunta al servidor que parametros
+  // declara una ability, en vez de adivinarlos. Adivinar el nombre del
+  // parametro fue exactamente lo que hizo que el primer intento de E2E no
+  // escribiera nada.
+  if (mode === "ability-info") {
+    const ability = args.ability && args.ability !== "true" ? args.ability : "novamira/execute-php";
+    const session = await openSession();
+    const tool = "mcp-adapter-get-ability-info";
+    // Pasa por el guard como cualquier otra llamada: es un tool safe_read.
+    assertToolCallAllowed("web_engineer_staging_write", tool, {});
+    const body = await callMcpTool(session, tool, { ability_name: ability });
+    console.log(`Esquema declarado por el servidor para "${ability}":`);
+    console.log(extractTextContent(body).slice(0, 4000));
+    console.log("\nCero escrituras. Este modo solo lee metadatos.");
+    return;
+  }
+  if (mode !== "run") throw new Error(`--mode "${mode}" desconocido. Usa "list", "ability-info" o "run".`);
 
   const postId = Number(args.postId);
   if (!Number.isInteger(postId) || postId <= 0) throw new Error("Falta --postId <N> (entero positivo).");
@@ -244,6 +262,10 @@ async function main(): Promise<void> {
           actor: "web_engineer_apply",
           abilityName: "novamira/execute-php",
           environment: "staging",
+          // El E2E solo emite escrituras de apply: la reversion es otro
+          // ChangePlan normal, tambien en fase "apply". El rollback
+          // automatico del executor construye su propia peticion.
+          phase: "apply",
           qaStatus: context.qaStatus,
           departmentRunId: context.departmentRunId,
           recommendationId: context.recommendationId,
@@ -297,6 +319,7 @@ async function main(): Promise<void> {
           actor: "web_engineer_apply",
           abilityName: "novamira/execute-php",
           environment: "staging",
+          phase: "apply",
           qaStatus: revertContext.qaStatus,
           departmentRunId: revertContext.departmentRunId,
           recommendationId: revertContext.recommendationId,

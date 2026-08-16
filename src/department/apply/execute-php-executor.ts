@@ -150,6 +150,17 @@ function diffFingerprints(before: Record<string, string>, after: Record<string, 
   return changed;
 }
 
+/**
+ * Igualdad de contenido para VERIFICAR una escritura. Solo tolera
+ * diferencias de espacio en blanco (WordPress reflowea), nunca de
+ * etiquetas, atributos ni mayusculas: justo lo contrario de
+ * `normalizeForVersioning`, que existe para otra cosa.
+ */
+export function valuesMatchExactly(a: string, b: string): boolean {
+  const squash = (value: string): string => String(value ?? "").replace(/\s+/g, " ").trim();
+  return squash(a) === squash(b);
+}
+
 function versionHashOf(state: PhpTargetState): string {
   return computeVersionHash({ status: state.status, title: state.title, metaDescription: state.excerpt, contentHtml: state.contentHtml });
 }
@@ -192,12 +203,14 @@ function buildRequest(
   context: ExecutePhpContext,
   plan: ExecutePhpChangePlan,
   php: string,
-  snapshot: { value: string; existed: boolean }
+  snapshot: { value: string; existed: boolean },
+  phase: "apply" | "rollback"
 ): ExecutePhpRequest {
   return {
     actor: EXECUTE_PHP_ACTOR,
     abilityName: "novamira/execute-php",
     environment: "staging",
+    phase,
     qaStatus: context.qaStatus,
     departmentRunId: context.departmentRunId,
     recommendationId: context.recommendationId,
@@ -269,7 +282,7 @@ export async function applyChangePlanWithPhp(
 
   // --- 3. GUARD. Con el PHP ya generado: el guard comprueba que es
   //        exactamente el nuestro, ademas de actor/entorno/QA/flags.
-  const decision = isExecutePhpAllowed(buildRequest(context, plan, php, snapshot));
+  const decision = isExecutePhpAllowed(buildRequest(context, plan, php, snapshot, "apply"));
   if (!decision.allowed) {
     const detail = `Bloqueado por el guard (${decision.failedCheck}): ${decision.reason}`;
     audit.push(auditRecord(context, plan, php, clock().toISOString(), "blocked_by_guard", { beforeHash, afterHash: null, validation: "not_run", rollback: "not_needed", detail }));
@@ -287,9 +300,18 @@ export async function applyChangePlanWithPhp(
   }
 
   const phpResult = parsePhpResult(rawOutput);
-  // "Devolvio OK" no es exito: solo se usa para dar un detalle util. La
-  // verdad se lee de WordPress en el paso siguiente.
-  const phpSaysOk = phpResult?.ok === true;
+  // "Devolvio OK" NO es exito -- la verdad se lee de WordPress despues.
+  // Pero la ausencia de resultado SI es un fallo por si sola: significa
+  // que el codigo no llego a ejecutarse (parametro equivocado, ability
+  // que no corre PHP, error silencioso). Decirlo evita diagnosticar como
+  // "el contenido no coincide" lo que en realidad fue "no se ejecuto
+  // nada".
+  const phpDiagnosis =
+    phpResult === null
+      ? "execute-php no devolvio el marcador de resultado: el PHP NO llego a ejecutarse (revisa el nombre del parametro de la ability o sus permisos)"
+      : phpResult.ok === false
+        ? `execute-php devolvio un error propio: "${String(phpResult.error ?? "sin codigo")}"`
+        : "";
 
   // --- 5. VALIDAR releyendo el estado real.
   let after: PhpTargetState;
@@ -306,8 +328,21 @@ export async function applyChangePlanWithPhp(
   const problems: string[] = [];
 
   const desired = plan.operation === "update_post_meta" ? (plan.payload as PostMetaPayload).value : plan.payload.value;
-  if (normalizeForVersioning(afterScope.value) !== normalizeForVersioning(desired)) {
-    problems.push(`el valor releido del scope no coincide con lo pedido${phpSaysOk ? " (y eso que execute-php respondio ok: por eso no se confia en su respuesta)" : ""}`);
+  // Comparacion EXACTA salvo espacios. A proposito NO se usa
+  // `normalizeForVersioning` aqui: esa funcion quita etiquetas y pasa a
+  // minusculas -- util para detectar deriva (WordPress reformatea por su
+  // cuenta), pero desastrosa como verificacion posterior a la escritura,
+  // porque un cambio que solo toque un `href` o el uso de mayusculas se
+  // daria por "validado" sin haberse escrito.
+  if (!valuesMatchExactly(afterScope.value, desired)) {
+    problems.push(
+      phpDiagnosis.length > 0
+        ? `el valor releido del scope no coincide con lo pedido -- ${phpDiagnosis}`
+        : "el valor releido del scope no coincide con lo pedido (execute-php respondio ok: por eso no se confia en su respuesta, se relee siempre)"
+    );
+  } else if (phpDiagnosis.length > 0) {
+    // El valor coincide pero la ability se quejo: no se tapa.
+    problems.push(phpDiagnosis);
   }
   const changedOutOfScope = diffFingerprints(beforeOutOfScope, outOfScopeFingerprint(after, plan));
   if (changedOutOfScope.length > 0) {
@@ -393,7 +428,7 @@ async function rollback(
 
   // El rollback pasa por el MISMO guard. Que una escritura sea "de
   // vuelta" no la exime de comprobarse.
-  const decision = isExecutePhpAllowed(buildRequest(context, plan, rollbackPhp, snapshot));
+  const decision = isExecutePhpAllowed(buildRequest(context, plan, rollbackPhp, snapshot, "rollback"));
   if (!decision.allowed) {
     const detail = `CRITICO: el guard bloqueo el propio rollback (${decision.failedCheck}): ${decision.reason}. ${cause}`;
     audit.push(auditRecord(context, plan, rollbackPhp, clock().toISOString(), "rollback_failed", { beforeHash, afterHash: null, validation: "failed", rollback: "rollback_failed", detail }));
@@ -421,7 +456,7 @@ async function rollback(
   const restoredScope = scopeValueOf(restored, plan);
   const restoredHash = versionHashOf(restored);
   const mismatch =
-    normalizeForVersioning(restoredScope.value) !== normalizeForVersioning(snapshot.value) ||
+    !valuesMatchExactly(restoredScope.value, snapshot.value) ||
     restoredScope.existed !== snapshot.existed ||
     diffFingerprints(beforeOutOfScope, outOfScopeFingerprint(restored, plan)).length > 0;
 
