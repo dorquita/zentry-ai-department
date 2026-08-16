@@ -365,7 +365,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: seo-specialist
-          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/seo-specialist/claude-runtime-health.json
+          health-record-path: ${{ runner.temp }}/claude-runtime-health/seo-specialist/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/seo-specialist/claude-execution.json
           prompt: ${{ steps.seo_prompt.outputs.content }}
           output-schema-path: config/seo-specialist-output.schema.json
@@ -460,7 +460,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: content-strategist
-          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/content-strategist/claude-runtime-health.json
+          health-record-path: ${{ runner.temp }}/claude-runtime-health/content-strategist/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/content-strategist/claude-execution.json
           prompt: ${{ steps.content_prompt.outputs.content }}
           output-schema-path: config/content-strategist-output.schema.json
@@ -563,7 +563,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: analytics-specialist
-          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/analytics-specialist/claude-runtime-health.json
+          health-record-path: ${{ runner.temp }}/claude-runtime-health/analytics-specialist/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/analytics-specialist/claude-execution.json
           prompt: ${{ steps.analytics_prompt.outputs.content }}
           output-schema-path: config/analytics-specialist-output.schema.json
@@ -680,7 +680,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: growth-director-v2
-          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/growth-director-v2/claude-runtime-health.json
+          health-record-path: ${{ runner.temp }}/claude-runtime-health/growth-director-v2/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/growth-director-v2/claude-execution.json
           prompt: ${{ steps.growth_prompt.outputs.content }}
           output-schema-path: config/growth-director-v2-output.schema.json
@@ -764,7 +764,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: qa-reviewer
-          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/qa-reviewer/claude-runtime-health.json
+          health-record-path: ${{ runner.temp }}/claude-runtime-health/qa-reviewer/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/qa-reviewer/claude-execution.json
           prompt: ${{ steps.qa_prompt.outputs.content }}
           output-schema-path: config/qa-reviewer-output.schema.json
@@ -878,7 +878,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: web-engineer
-          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/web-engineer/claude-runtime-health.json
+          health-record-path: ${{ runner.temp }}/claude-runtime-health/web-engineer/claude-runtime-health.json
           execution-record-path: ${{ steps.run.outputs.runDir }}/stages/web-engineer/claude-execution.json
           prompt: ${{ steps.web_prompt.outputs.content }}
           output-schema-path: config/web-engineer-output.schema.json
@@ -1109,14 +1109,14 @@ jobs:
         if: always()
         run: npm run claude-runtime:metrics-for-ci -- "$HEALTH_DIR" "$HEALTH_DIR/claude-runtime-metrics.json" "Fiabilidad del runtime -- departamento"
         env:
-          HEALTH_DIR: ${{ github.workspace }}/reports/claude-runtime-health
+          HEALTH_DIR: ${{ runner.temp }}/claude-runtime-health
 
       - name: "[RUNTIME] Subir diagnostico de fiabilidad del runtime"
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: claude-runtime-health-departamento-${{ github.run_id }}
-          path: reports/claude-runtime-health/
+          path: ${{ runner.temp }}/claude-runtime-health/
           if-no-files-found: warn
           retention-days: 30
 

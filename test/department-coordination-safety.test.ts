@@ -501,5 +501,29 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
         assert.ok(uploadIndex > 0 && uploadIndex < persistJobIndex, "la subida del diagnostico tambien debe vivir en el job department-run");
       },
     },
+    {
+      name: "El diagnostico de fiabilidad NO se escribe dentro del estado persistido (data/ o reports/)",
+      fn: () => {
+        const workflow = fs.readFileSync(WORKFLOW_PATH, "utf-8");
+
+        // Regresion real observada en el run 31967138507: los
+        // claude-runtime-health.json se escribian en reports/, que ES
+        // estado persistido del departamento. Cada pasada los reescribe
+        // con un contenido distinto, asi que en cuanto uno encogia
+        // respecto a la pasada anterior, "[STATE] Verificar que la pasada
+        // no ha perdido estado" lo denunciaba como perdida de estado --
+        // correctamente, porque ese guard no puede distinguir un fichero
+        // de diagnostico efimero de un dato del departamento.
+        //
+        // El diagnostico es EFIMERO por pasada: vive en runner.temp y se
+        // publica como artifact, nunca en el arbol de estado.
+        const healthPaths = [...workflow.matchAll(/health-record-path:\s*(\S+)/g)].map((match) => match[1]);
+        assert.ok(healthPaths.length >= 6, `deberia haber una ruta de diagnostico por empleado (encontradas ${healthPaths.length})`);
+        for (const healthPath of healthPaths) {
+          assert.ok(!/github\.workspace/.test(healthPath), `el diagnostico no puede vivir en el workspace persistido: ${healthPath}`);
+          assert.ok(/runner\.temp/.test(healthPath), `el diagnostico debe vivir en runner.temp: ${healthPath}`);
+        }
+      },
+    },
   ];
 }

@@ -139,7 +139,7 @@ jobs:
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: qa-reviewer
-          health-record-path: ${{ github.workspace }}/reports/claude-runtime-health/qa-reviewer/claude-runtime-health.json
+          health-record-path: ${{ runner.temp }}/claude-runtime-health/qa-reviewer/claude-runtime-health.json
           prompt: ${{ steps.read_prompt.outputs.content }}
           output-schema-path: config/qa-reviewer-output.schema.json
           expected-output-path: ${{ steps.step1.outputs.expectedOutputPath }}
@@ -220,13 +220,13 @@ jobs:
         if: always()
         run: npm run claude-runtime:metrics-for-ci -- "$HEALTH_DIR" "$HEALTH_DIR/claude-runtime-metrics.json" "Fiabilidad del runtime -- qa-reviewer"
         env:
-          HEALTH_DIR: ${{ github.workspace }}/reports/claude-runtime-health
+          HEALTH_DIR: ${{ runner.temp }}/claude-runtime-health
 
       - name: "[RUNTIME] Subir diagnostico de fiabilidad del runtime"
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: claude-runtime-health-qa-reviewer-${{ github.run_id }}
-          path: reports/claude-runtime-health/
+          path: ${{ runner.temp }}/claude-runtime-health/
           if-no-files-found: warn
           retention-days: 30
