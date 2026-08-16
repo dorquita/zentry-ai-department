@@ -106,7 +106,33 @@ sigue commiteando** ese estado.
 
 Marca: **`VPS_DEPENDENT` (indirecta)**.
 
-### Por que NO se ha habilitado el commit-back en esta fase
+### RESUELTO en la Fase O55 — rama de estado dedicada
+
+La persistencia ya existe. Diseno implementado:
+
+| Requisito | Como se cumple |
+|---|---|
+| Un unico escritor | Solo el job `persist-state` escribe, y el `concurrency` del workflow serializa las pasadas completas |
+| Evitar conflictos | Rama `department-state` separada de `main`; `--force-with-lease` (nunca `--force`) con 3 reintentos |
+| Evitar perdida de datos | `npm run state:verify` compara manifiestos antes/despues; si un `.jsonl` pierde lineas o un fichero desaparece, **no se persiste nada** |
+| Conservar historial | Es una rama de git: un commit por pasada, con enlace al run |
+| Permitir recuperacion | `git checkout department-state@{N}` |
+| No contaminar `main` | Rama huerfana, sin historia comun con `main` |
+| Sin VPS | Todo ocurre dentro de Actions |
+
+Least privilege: el workflow tiene **dos jobs**. El que ejecuta los seis
+empleados Claude sigue en `contents: read` — ningun agente puede escribir
+en el repositorio. `contents: write` vive solo en `persist-state`, que no
+ejecuta Claude, no llama a ninguna API externa y no corre codigo del
+repositorio: descarga el artifact ya verificado y commitea.
+
+La invariante que lo hace seguro: los `data/*.jsonl` son **estrictamente
+append-only** (verificado sobre los 8 modulos que escriben estado: 8 usan
+`appendFileSync`, 0 usan `writeFileSync`, y hay un test que lo fija). Que
+un fichero de estado encoja es imposible en una pasada sana, asi que se
+trata como fallo en vez de tolerarse.
+
+### Por que NO se habilito antes
 
 La solucion tecnica es directa (`contents: write` + un step que commitee
 `data/` y `reports/` al final de la pasada), pero habilitarla **ahora

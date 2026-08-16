@@ -77,6 +77,12 @@ jobs:
   department-run:
     name: Pasada coordinada del departamento
     runs-on: ubuntu-latest
+    # Fase O55: el job de persistencia necesita el identificador de la
+    # pasada para poder nombrar su commit con el mismo runId que todo lo
+    # demas -- si no, el historial de la rama de estado no se podria
+    # cruzar con el de las ejecuciones.
+    outputs:
+      departmentRunId: ${{ steps.run.outputs.departmentRunId }}
     # Seis invocaciones de Claude (SEO, Content, Analytics, Growth, QA,
     # Web Engineer), cada una acotada a 10 min en su propio step del
     # runtime comun, mas los pasos deterministas de coordinacion y, desde
@@ -96,6 +102,41 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # =====================================================================
+      # FASE -1 -- RESTAURAR EL ESTADO DE LA PASADA ANTERIOR (Fase O55)
+      #
+      # Los runners de Actions son efimeros: sin este paso, cada pasada
+      # partia del estado COMMITEADO EN main -- que solo actualizaba el
+      # VPS legacy. Esa era la ultima dependencia real del VPS (ver
+      # docs/vps-retirement-audit.md): el departamento leia en vivo y
+      # generaba informes, pero no ACUMULABA.
+      #
+      # El estado vive ahora en la rama `department-state`, separada de
+      # `main` a proposito: son commits de datos, no de codigo, y no
+      # tienen por que ensuciar el historial del repositorio.
+      #
+      # Si la rama todavia no existe (primera pasada), se sigue con lo
+      # que haya commiteado en main -- es el arranque en frio esperado,
+      # no un fallo.
+      # =====================================================================
+      - name: "[STATE] Restaurar data/ y reports/ desde la rama de estado"
+        id: restore_state
+        run: |
+          set -euo pipefail
+          if git fetch --depth=1 origin "$STATE_BRANCH" 2>/dev/null; then
+            git checkout FETCH_HEAD -- data reports 2>/dev/null || true
+            echo "Estado restaurado desde la rama \"$STATE_BRANCH\" (commit $(git rev-parse --short FETCH_HEAD))."
+            echo "restored=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::La rama \"$STATE_BRANCH\" todavia no existe. Arranque en frio: se parte del estado commiteado en main. Esto es normal en la primera pasada."
+            echo "restored=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          STATE_BRANCH: department-state
+
+      - name: "[STATE] Manifiesto ANTES de la pasada"
+        run: npm run state:snapshot -- --out "$RUNNER_TEMP/state-before.json"
 
       # =====================================================================
       # FASE 0 -- Abrir la pasada: un unico departmentRunId para todo el run
@@ -934,6 +975,41 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+      # =====================================================================
+      # FASE 7 -- PERSISTIR EL ESTADO (Fase O55)
+      #
+      # La verificacion va ANTES de empaquetar nada: si un fichero de
+      # estado ha desaparecido o un .jsonl ha perdido lineas, este step
+      # falla y NO se sube el artifact, asi que el job de persistencia no
+      # tiene nada que commitear y la rama de estado conserva el ultimo
+      # estado bueno. Los .jsonl del departamento son estrictamente
+      # append-only (verificado sobre los 8 modulos que los escriben), asi
+      # que perder lineas no es un caso raro a tolerar: es imposible en
+      # una pasada sana, y por tanto un fallo real.
+      # =====================================================================
+      - name: "[STATE] Verificar que la pasada no ha perdido estado"
+        id: verify_state
+        if: always()
+        run: |
+          set -o pipefail
+          npm run state:verify -- --before "$RUNNER_TEMP/state-before.json" 2>&1 | tee state-verify.log
+          {
+            echo ""
+            sed -n '/^## Verificacion del estado/,/^STATE_VERIFY_JSON=/p' state-verify.log | grep -v '^STATE_VERIFY_JSON='
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "[STATE] Empaquetar el estado para el job de persistencia"
+        if: always() && steps.verify_state.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: department-state-${{ github.run_id }}
+          path: |
+            data
+            reports
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
+
       - name: "[COORD] GitHub Step Summary"
         if: always()
         run: |
@@ -1010,3 +1086,105 @@ jobs:
           npm run department:run -- --phase gate --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-gate.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+
+  # =======================================================================
+  # JOB 2 -- PERSISTIR EL ESTADO EN LA RAMA `department-state` (Fase O55)
+  #
+  # POR QUE UN JOB APARTE, y no un step mas del anterior: es el UNICO
+  # sitio de todo el sistema que necesita `contents: write`. El job de
+  # arriba ejecuta seis sesiones de Claude y se queda en `contents: read`,
+  # como hasta ahora -- ningun empleado Claude puede escribir en el
+  # repositorio, ni por accidente ni a proposito. Aqui no corre Claude, no
+  # se llama a ninguna API externa y no se ejecuta codigo del repositorio:
+  # solo se descarga el artifact ya verificado y se commitea.
+  #
+  # UN UNICO ESCRITOR: la rama `department-state` la escribe solo este
+  # job. El `concurrency` del workflow (grupo zentry-ai-department-daily,
+  # cancel-in-progress: false) serializa las pasadas completas, jobs
+  # incluidos, asi que nunca hay dos de estos a la vez.
+  #
+  # `if: always()` NO se usa a proposito: si el job anterior fallo o la
+  # verificacion detecto perdida de estado, no hay artifact que
+  # descargar y NO se persiste nada. La rama conserva el ultimo estado
+  # bueno, que es exactamente el comportamiento que se quiere.
+  # =======================================================================
+  persist-state:
+    name: Persistir el estado del departamento
+    needs: department-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout (solo para tener el remoto configurado)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Descargar el estado verificado de la pasada
+        uses: actions/download-artifact@v4
+        with:
+          name: department-state-${{ github.run_id }}
+          path: incoming-state
+
+      - name: "Commitear el estado en la rama dedicada"
+        run: |
+          set -euo pipefail
+
+          git config user.name "zentry-department-bot"
+          git config user.email "zentry-department-bot@users.noreply.github.com"
+
+          # Rama huerfana la primera vez: la rama de estado no comparte
+          # historia con main a proposito. Son datos, no codigo.
+          if git ls-remote --exit-code --heads origin "$STATE_BRANCH" >/dev/null 2>&1; then
+            git fetch --depth=1 origin "$STATE_BRANCH"
+            git checkout -B "$STATE_BRANCH" FETCH_HEAD
+            echo "Rama de estado existente: partiendo de $(git rev-parse --short HEAD)."
+          else
+            git checkout --orphan "$STATE_BRANCH"
+            git rm -rq --cached . 2>/dev/null || true
+            echo "Creando la rama de estado \"$STATE_BRANCH\" por primera vez."
+          fi
+
+          # El working tree puede traer restos del checkout de main:
+          # solo deben quedar los directorios de estado.
+          find . -mindepth 1 -maxdepth 1 \
+            -not -name '.git' -not -name 'incoming-state' \
+            -exec rm -rf {} +
+          mv incoming-state/data ./data
+          mv incoming-state/reports ./reports
+          rmdir incoming-state 2>/dev/null || true
+
+          git add -A data reports
+          if git diff --cached --quiet; then
+            echo "El estado no ha cambiado en esta pasada: no se crea ningun commit vacio."
+            exit 0
+          fi
+
+          # Varios -m en vez de una cadena multilinea: dentro de un
+          # bloque YAML, una linea sin indentar cerraria el bloque.
+          git commit -q \
+            -m "Estado del departamento tras la pasada ${DEPARTMENT_RUN_ID:-$GITHUB_RUN_ID}" \
+            -m "Escrito por el job persist-state del workflow zentry-ai-department-daily." \
+            -m "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            -m "Los .jsonl de data/ son append-only y esta pasada ya ha superado la verificacion de no-perdida (npm run state:verify) antes de llegar aqui."
+
+          # --force-with-lease en vez de --force: si otro escritor hubiera
+          # tocado la rama entre el fetch y el push, el push se rechaza en
+          # vez de pisarlo. No deberia ocurrir nunca (un unico escritor,
+          # serializado por concurrency), y justo por eso interesa
+          # enterarse si ocurre.
+          for attempt in 1 2 3; do
+            if git push --force-with-lease origin "HEAD:$STATE_BRANCH"; then
+              echo "Estado persistido en \"$STATE_BRANCH\"."
+              exit 0
+            fi
+            echo "Push rechazado (intento $attempt/3). Refrescando la rama y reintentando..."
+            sleep $((attempt * 5))
+            git fetch --depth=1 origin "$STATE_BRANCH" || true
+          done
+          echo "::error::No se pudo persistir el estado tras 3 intentos. La rama conserva el ultimo estado bueno; esta pasada NO se ha guardado."
+          exit 1
+        env:
+          STATE_BRANCH: department-state
+          DEPARTMENT_RUN_ID: ${{ needs.department-run.outputs.departmentRunId }}

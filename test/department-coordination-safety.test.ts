@@ -318,7 +318,19 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
 
         assert.ok(withoutComments.includes("workflow_dispatch:"), "el disparo manual NUNCA se quita");
         assert.ok(/permissions:\s*\n\s*contents:\s*read/.test(withoutComments), "el workflow debe declarar contents: read y nada mas");
-        assert.ok(!withoutComments.includes("contents: write"));
+        // Fase O55: el workflow tiene ahora DOS jobs. El que ejecuta a
+        // los seis empleados Claude sigue en `contents: read` y eso no se
+        // negocia; el segundo (persist-state) necesita `contents: write`
+        // para guardar el estado en su rama dedicada, no ejecuta Claude,
+        // no llama a ninguna API externa y no corre codigo del
+        // repositorio. Por eso el guard pasa de "el fichero no contiene
+        // contents: write" a "el job de Claude no lo tiene": lo primero
+        // dejaria de distinguir quien escribe.
+        const claudeJobConfig = withoutComments.slice(0, withoutComments.indexOf("persist-state:"));
+        assert.ok(
+          !/^\s*contents:\s*write\s*$/m.test(claudeJobConfig),
+          "el job que ejecuta a los empleados Claude NUNCA puede tener permiso de escritura"
+        );
         assert.ok(!withoutComments.includes("id-token: write"));
       },
     },
@@ -347,9 +359,30 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
         // workflow mencionan estas palabras precisamente para documentar
         // que NO se usan (p.ej. "sin bypassPermissions").
         const configLines = readWorkflowConfigLines();
-        for (const forbidden of ["bypassPermissions", "--mcp", "mcp-config", "git push", "git commit", "wp-json", "googleads"]) {
+        // Estos nunca pueden aparecer, en ningun job.
+        for (const forbidden of ["bypassPermissions", "--mcp", "mcp-config", "wp-json", "googleads"]) {
           assert.ok(!configLines.includes(forbidden), `el workflow contiene "${forbidden}" fuera de un comentario`);
         }
+        // `git commit`/`git push` SI existen desde la Fase O55, pero
+        // unicamente dentro del job persist-state y unicamente contra la
+        // rama de estado. Lo que se sigue prohibiendo -- y es lo que de
+        // verdad importaba -- es que el job donde corre Claude commitee
+        // algo, y que cualquiera de los dos empuje a main.
+        const claudeJobConfig = configLines.slice(0, configLines.indexOf("persist-state:"));
+        for (const forbidden of ["git push", "git commit"]) {
+          assert.ok(
+            !claudeJobConfig.includes(forbidden),
+            `el job que ejecuta a los empleados Claude contiene "${forbidden}": no puede escribir en el repositorio`
+          );
+        }
+        assert.ok(
+          !/git push[^\n]*(origin main|HEAD:main|:main\b)/.test(configLines),
+          "ningun job de la pasada diaria puede empujar a main"
+        );
+        assert.ok(
+          configLines.includes('git push --force-with-lease origin "HEAD:$STATE_BRANCH"'),
+          "el unico push permitido es el de la rama de estado, y con --force-with-lease"
+        );
       },
     },
     {
