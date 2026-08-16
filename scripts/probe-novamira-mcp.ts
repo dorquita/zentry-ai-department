@@ -42,6 +42,21 @@ const CORE_AUTH_PATH = "/wp-json/wp/v2/users/me?context=edit";
 
 const REQUIRED_VARS = ["WP_API_URL", "WP_API_USERNAME", "WP_API_PASSWORD"] as const;
 
+/**
+ * Abilities cuya ficha completa hace falta para decidir si se puede
+ * editar contenido Gutenberg ya existente de forma segura y reversible.
+ * Se consultan con `get-ability-info`, que DESCRIBE la ability: no la
+ * ejecuta y no escribe nada.
+ */
+const ABILITIES_TO_INSPECT = [
+  "novamira/gutenberg-get-content",
+  "novamira/gutenberg-write-content",
+  "novamira/gutenberg-create-pending-batch",
+  "novamira/gutenberg-add-pending-change",
+  "novamira/gutenberg-get-pending-batch",
+  "novamira/gutenberg-enable-batch-finalization",
+];
+
 export interface CoreAuthProbe {
   result: "OK" | "FAIL";
   httpStatus: number | null;
@@ -69,6 +84,8 @@ export interface McpProbe {
   abilities: string[];
   /** Forma cruda (truncada) de la respuesta del censo, solo si no se reconocio ningun nombre. */
   rawCensusShape: string;
+  /** Ficha completa (descripcion + inputSchema + anotaciones) de las abilities inspeccionadas. */
+  abilityInfo: Record<string, unknown>;
   note: string;
 }
 
@@ -329,6 +346,40 @@ function extractAbilityNames(body: Record<string, unknown> | null): string[] {
   return [...names].sort();
 }
 
+/**
+ * Ficha de una ability tal cual la devuelve el servidor. El dispatcher
+ * envuelve el resultado en bloques de contenido y a veces en
+ * `{ success, data }`, asi que se desenvuelve sin forzar una sola forma:
+ * si no se reconoce, se devuelve la forma cruda truncada en vez de un
+ * objeto vacio que parezca "esta ability no declara nada".
+ */
+export function extractAbilityInfo(body: Record<string, unknown> | null): unknown {
+  const result = (body?.result ?? {}) as Record<string, unknown>;
+  const unwrap = (value: unknown): unknown => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      const record = value as Record<string, unknown>;
+      if ("success" in record && "data" in record) return record.data;
+    }
+    return value;
+  };
+
+  if (result.structuredContent !== undefined) return unwrap(result.structuredContent);
+
+  const content = Array.isArray(result.content) ? result.content : [];
+  for (const block of content) {
+    const record = block as Record<string, unknown>;
+    if (typeof record.text === "string") {
+      try {
+        return unwrap(JSON.parse(record.text));
+      } catch {
+        return { rawText: record.text.slice(0, 2000) };
+      }
+    }
+  }
+  if (body?.error) return { error: body.error };
+  return { rawShape: JSON.stringify(body ?? {}).slice(0, 2000) };
+}
+
 async function probeNovamiraMcp(endpoint: string, authHeader: string, routeSegment: string): Promise<McpProbe> {
   const probe: McpProbe = {
     result: "FAIL",
@@ -343,6 +394,7 @@ async function probeNovamiraMcp(endpoint: string, authHeader: string, routeSegme
     toolSchemas: {},
     abilities: [],
     rawCensusShape: "",
+    abilityInfo: {},
     note: "",
   };
 
@@ -390,6 +442,27 @@ async function probeNovamiraMcp(endpoint: string, authHeader: string, routeSegme
       }
     } else {
       probe.note = `${probe.note} No se encontro ningun tool cuyo nombre acabe en "discover-abilities" entre: ${probe.tools.join(", ")}.`;
+    }
+
+    // Ficha completa de las abilities que interesan para editar contenido
+    // Gutenberg. Es LECTURA: get-ability-info describe la ability, no la
+    // ejecuta. El nombre se resuelve contra el censo REAL -- si una no
+    // esta, se dice, en vez de dar por hecho que existe.
+    const infoTool = findToolBySuffix(probe.tools, "get-ability-info");
+    if (infoTool && probe.abilities.length > 0) {
+      let requestId = 100;
+      for (const wanted of ABILITIES_TO_INSPECT) {
+        const real = probe.abilities.find((name) => name.toLowerCase() === wanted.toLowerCase());
+        if (!real) {
+          probe.abilityInfo[wanted] = { error: "no aparece en el censo real de este servidor" };
+          continue;
+        }
+        const response = await jsonRpc(endpoint, authHeader, init.sessionId, "tools/call", ++requestId, {
+          name: infoTool,
+          arguments: { ability_name: real },
+        });
+        probe.abilityInfo[real] = extractAbilityInfo(response.body);
+      }
     }
   } catch (err) {
     probe.note = `No se pudo completar la peticion: ${err instanceof Error ? err.message : String(err)}`;
@@ -464,6 +537,7 @@ async function main(): Promise<void> {
     MCP_TOOL_SCHEMAS: mcp.toolSchemas,
     MCP_RAW_CENSUS_SHAPE: mcp.rawCensusShape,
     MCP_ABILITIES: mcp.abilities,
+    MCP_ABILITY_INFO: mcp.abilityInfo,
     MCP_NOTE: mcp.note,
     INTERPRETACION: interpret(core, mcp),
     escrituras: { staging: 0, produccion: 0 },
