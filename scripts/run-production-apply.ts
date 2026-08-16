@@ -46,6 +46,7 @@ import {
   updateProductionPublishedPageContent,
 } from "../src/adapters/wordpress-production";
 import { createHttpApprovalStoreFromEnv } from "../src/approvals/http-store";
+import { isServerlessApprovalsEnabled, serverlessDisabledReason } from "../src/approvals/feature-flag";
 import { Approval, ApprovalPatch, ApprovalStore } from "../src/approvals/store";
 import { flushRecordedTransitions, recordingTransitionPort, RecordedTransition, RecordingPort } from "../src/approvals/executor-bridge";
 import { DepartmentChangeRequest } from "../src/department/apply/change-types";

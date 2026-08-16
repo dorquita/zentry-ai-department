@@ -1,4 +1,5 @@
 import * as assert from "node:assert/strict";
+import { buildNumberedProposals } from "../src/approvals/manual/proposal";
 import { buildApplyPlan } from "../src/department/apply/plan";
 import { DepartmentApplySummary } from "../src/department/apply/types";
 import { buildDailyBriefEmail, buildDailyBriefSubject, buildExecutiveLines, escapeHtml, MAX_EMAIL_PRIORITIES } from "../src/department/brief-email";
@@ -82,6 +83,31 @@ const SPEC: WebEngineerOutput = {
   approvalRequired: true,
   unknowns: [],
 };
+
+function promoted(rank: number, title: string): DepartmentPromotionResult["promoted"][number] {
+  return { rank, title, rationale: "r", impact: "medium", confidence: "high", effort: "low", dependsOn: [], evidenceRefs: [], decision: "promoted", blockedBy: [], qaWarnings: [] };
+}
+
+/** Pasada con MAS propuestas que `MAX_EMAIL_PRIORITIES`, para comprobar que la lista numerada no se corta. */
+function applySummaryWith(count: number, titleOf: (rank: number) => string = (rank) => `Prioridad numero ${rank}`): DepartmentApplySummary {
+  const promotion: DepartmentPromotionResult = {
+    departmentRunId: RUN_ID,
+    departmentQaStatus: "PASS",
+    qaReviewStatus: "pass",
+    globalBlockReason: null,
+    promoted: Array.from({ length: count }, (_, i) => promoted(i + 1, titleOf(i + 1))),
+    blocked: [],
+    unattributedBlockingSignals: [],
+    qaSummary: null,
+  };
+  return buildApplyPlan({
+    departmentRunId: RUN_ID,
+    promotion,
+    webEngineer: { status: "executed", output: SPEC },
+    ownedStagingPages: [{ wordpressPageId: 2091, stagingUrl: "https://staging.zentrylockers.com/taquillas-melamina/" }],
+    now: NOW,
+  });
+}
 
 function applySummary(): DepartmentApplySummary {
   const promotion: DepartmentPromotionResult = {
@@ -246,6 +272,129 @@ export function runDepartmentBriefEmailTests(): TestCase[] {
           runUrl: "",
         });
         assert.ok(published.some((l) => /PRODUCCION/.test(l) && /aprobacion humana explicita/i.test(l)));
+      },
+    },
+
+    // --- PROPUESTAS NUMERADAS (la referencia para aprobar despues) ---
+    {
+      name: "Cada propuesta sale con su NUMERO visible y con su ID real: el numero es para la persona, el id para el sistema",
+      fn: () => {
+        const summary = applySummary();
+        const proposals = buildNumberedProposals(summary);
+        assert.ok(proposals.length > 0, "el fixture debe producir propuestas");
+        const email = buildDailyBriefEmail({ brief: brief(), apply: summary, cost: COST, runUrl: "" });
+        for (const proposal of proposals) {
+          assert.ok(email.text.includes(`[ ${proposal.number} ]`), `falta el numero ${proposal.number} en el texto`);
+          assert.ok(email.text.includes(`id: ${proposal.id}`), `falta el id ${proposal.id} en el texto`);
+          assert.ok(email.text.includes(`recommendationId: ${proposal.recommendationId}`), `falta el recommendationId de #${proposal.number}`);
+          assert.ok(email.html.includes(escapeHtml(proposal.id)), `falta el id ${proposal.id} en el HTML`);
+          assert.ok(email.html.includes(`>${proposal.number}</span>`), `falta el badge del numero ${proposal.number} en el HTML`);
+        }
+      },
+    },
+    {
+      name: "La numeracion del email es EXACTAMENTE la de buildNumberedProposals (no se renumera por el camino)",
+      fn: () => {
+        const summary = applySummary();
+        const proposals = buildNumberedProposals(summary);
+        const { text } = buildDailyBriefEmail({ brief: brief(), apply: summary, cost: COST, runUrl: "" });
+        for (const proposal of proposals) {
+          // El numero y el titulo tienen que aparecer en la MISMA linea:
+          // si el email numerase por su cuenta, el "2" del email podria
+          // apuntar a otra propuesta que el "2" del sistema.
+          assert.ok(text.includes(`[ ${proposal.number} ]  ${proposal.title}`), `el numero ${proposal.number} no acompana a "${proposal.title}"`);
+        }
+        // Y no aparece ningun numero por encima del total de propuestas.
+        assert.ok(!text.includes(`[ ${proposals.length + 1} ]`), "el email numera mas propuestas de las que hay");
+      },
+    },
+    {
+      name: "La lista numerada NO se corta en MAX_EMAIL_PRIORITIES: es la referencia para aprobar y tiene que estar completa",
+      fn: () => {
+        const many = applySummaryWith(MAX_EMAIL_PRIORITIES + 4);
+        const proposals = buildNumberedProposals(many);
+        assert.equal(proposals.length, MAX_EMAIL_PRIORITIES + 4);
+        const email = buildDailyBriefEmail({ brief: brief(), apply: many, cost: COST, runUrl: "" });
+        const last = proposals[proposals.length - 1];
+        assert.ok(email.text.includes(`[ ${last.number} ]`), `la propuesta ${last.number} tiene que seguir en el email`);
+        assert.ok(email.text.includes(`id: ${last.id}`));
+        assert.ok(email.html.includes(`>${last.number}</span>`));
+      },
+    },
+    {
+      name: "Una propuesta NO accionable dice por que no lo es, en vez de aparecer como si se pudiera aprobar y ya",
+      fn: () => {
+        const summary = applySummary();
+        const proposals = buildNumberedProposals(summary);
+        const blocked = proposals.find((p) => !p.actionable);
+        assert.ok(blocked, "el fixture debe traer una propuesta sin executor");
+        const email = buildDailyBriefEmail({ brief: brief(), apply: summary, cost: COST, runUrl: "" });
+        assert.ok(email.text.includes("NO ACCIONABLE HOY:"));
+        assert.ok(email.text.includes(blocked.notActionableReason), "el motivo se muestra literal, no reescrito");
+        assert.ok(email.html.includes(escapeHtml(blocked.notActionableReason)));
+      },
+    },
+    {
+      name: "El before que todavia no se ha leido se muestra tal cual: el email no inventa el valor actual de la pagina",
+      fn: () => {
+        const summary = applySummary();
+        const withChanges = buildNumberedProposals(summary).find((p) => p.changes.length > 0);
+        assert.ok(withChanges, "el fixture debe traer una propuesta con before/after");
+        const email = buildDailyBriefEmail({ brief: brief(), apply: summary, cost: COST, runUrl: "" });
+        for (const change of withChanges.changes) {
+          assert.ok(email.text.includes(`antes "${change.before}"`), `el before de ${change.field} no se muestra literal`);
+          assert.ok(email.text.includes(`despues "${change.after}"`), `el after de ${change.field} no se muestra literal`);
+        }
+        assert.ok(withChanges.changes.some((c) => /se lee antes de aplicar/.test(c.before)), "el fixture cubre el caso del before todavia desconocido");
+      },
+    },
+    {
+      name: "Cada propuesta trae origen, prioridad, paginas, staging, capacidad, QA, riesgo y estado",
+      fn: () => {
+        const summary = applySummary();
+        const first = buildNumberedProposals(summary)[0];
+        const email = buildDailyBriefEmail({ brief: brief(), apply: summary, cost: COST, runUrl: "" });
+        assert.ok(email.text.includes(`Origen (empleados): ${first.sourceAgents.join(", ")}`));
+        assert.ok(email.text.includes(`Prioridad: impacto ${first.impact} | confianza ${first.confidence} | esfuerzo ${first.effort}`));
+        assert.ok(email.text.includes(`Paginas afectadas: ${first.targets}`));
+        assert.ok(email.text.includes(first.stagingUrl), "la URL de staging tiene que poder abrirse desde el email");
+        assert.ok(email.text.includes(`Capacidad de apply: ${first.capability}`));
+        assert.ok(email.text.includes(`QA: ${first.qaStatus}`));
+        assert.ok(email.text.includes(`Riesgo: ${first.risk}`));
+        assert.ok(email.text.includes(`Estado actual: ${first.statusLabel}`));
+        for (const fragment of ["Origen (empleados)", "Capacidad de apply", "Riesgo", "Estado actual"]) {
+          assert.ok(email.html.includes(escapeHtml(fragment)), `falta "${fragment}" en el HTML`);
+        }
+      },
+    },
+    {
+      name: "Las instrucciones dicen como responder y dejan claro que el silencio NUNCA aprueba",
+      fn: () => {
+        const email = buildDailyBriefEmail({ brief: brief(), apply: applySummary(), cost: COST, runUrl: "" });
+        for (const body of [email.text, email.html]) {
+          assert.ok(/COMO RESPONDER/.test(body), "faltan las instrucciones de respuesta");
+          assert.ok(/aprueba 1, 2 y 4/.test(body) || /aprueba 1, 2 y 4/.test(escapeHtml(body)), "falta el ejemplo de respuesta");
+          assert.ok(/silencio NUNCA se interpreta como aprobacion/.test(body), "el email tiene que decir que no responder deja PENDIENTE");
+          assert.ok(/queda PENDIENTE/.test(body));
+        }
+      },
+    },
+    {
+      name: "Sin contrato de APPLY se dice que no hay nada que aprobar, en vez de callar la seccion",
+      fn: () => {
+        const email = buildDailyBriefEmail({ brief: brief(), apply: null, cost: null, runUrl: "" });
+        assert.ok(email.text.includes("PROPUESTAS NUMERADAS"));
+        assert.ok(email.text.includes("no hay nada que aprobar hoy"));
+        assert.ok(email.html.includes("no hay nada que aprobar hoy"));
+      },
+    },
+    {
+      name: "El HTML de la seccion numerada escapa el contenido: un titulo de propuesta con markup no inyecta nada",
+      fn: () => {
+        const dirty = applySummaryWith(1, () => '<script>alert("x")</script>');
+        const email = buildDailyBriefEmail({ brief: brief({ topPriorities: [] }), apply: dirty, cost: null, runUrl: "" });
+        assert.ok(!email.html.includes("<script>"), "el HTML no puede contener el script sin escapar");
+        assert.ok(email.html.includes("&lt;script&gt;"));
       },
     },
 

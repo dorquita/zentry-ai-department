@@ -1,3 +1,4 @@
+import { buildNumberedProposals, NumberedProposal } from "../approvals/manual/proposal";
 import { APPLY_STATUS_LABEL, APPLY_STATUS_REPORT_ORDER, DepartmentApplyItem, DepartmentApplyStatus, DepartmentApplySummary } from "./apply/types";
 import { DepartmentDailyBrief } from "./daily-brief";
 import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./employee-runs";
@@ -21,6 +22,14 @@ import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./emp
  *   se dice cuantas quedaron fuera (nunca una lista de 40 tareas).
  * - Lo que necesita decision humana va PRIMERO y muy visible.
  * - Nunca aparece ningun valor de configuracion ni de credencial.
+ *
+ * EXCEPCION DELIBERADA al recorte: la seccion de PROPUESTAS NUMERADAS se
+ * imprime COMPLETA, sin `MAX_EMAIL_PRIORITIES`. Es la referencia con la
+ * que mas tarde una persona dice "aprueba 1, 2 y 4" en Claude Code; si el
+ * email cortase la lista en 8, el "9" que la persona no ve seguiria
+ * existiendo en el sistema y cualquier numero podria significar otra cosa.
+ * Un email largo es un problema de lectura; una lista incompleta es un
+ * problema de seguridad.
  */
 
 /** Maximo de prioridades que entran en el cuerpo del email (el informe completo viaja en el artifact). */
@@ -156,6 +165,165 @@ function costLines(cost: DepartmentRunCostSummary | null): string[] {
   return lines;
 }
 
+// --- Propuestas numeradas --------------------------------------------------
+
+/**
+ * Titulo de la seccion. Va sin numero de seccion a proposito: se coloca
+ * entre el resumen ejecutivo y el resto del informe SIN renumerar las
+ * secciones ya existentes (1..9), que estan referenciadas en la
+ * documentacion del proyecto y en los tests del email.
+ */
+const NUMBERED_PROPOSALS_TITLE = "PROPUESTAS NUMERADAS -- ESTO ES LO QUE PUEDES APROBAR HOY";
+
+/**
+ * Instrucciones de respuesta. Se escriben una sola vez y se usan tal cual
+ * en texto y en HTML: si las dos versiones divergieran, una de las dos
+ * estaria explicando un flujo que no existe.
+ */
+const HOW_TO_ANSWER_LINES: string[] = [
+  'Responde en Claude Code, en lenguaje natural, citando los numeros de esta lista. Por ejemplo: "aprueba 1, 2 y 4; rechaza 3 porque el copy no me gusta; deja 5 pendiente".',
+  "El numero es tu referencia; el id es la del sistema. Antes de ejecutar nada se comprueba que el numero sigue apuntando al mismo id, para que un informe viejo no ejecute lo que no es.",
+  "Un rechazo necesita motivo: se guarda LITERAL y es lo que alimenta las siguientes propuestas del departamento.",
+  "Lo que no menciones queda PENDIENTE. El silencio NUNCA se interpreta como aprobacion: ninguna propuesta se ejecuta sola.",
+  "Este email no ha ejecutado nada. Enviarlo no ha escrito en ningun sistema; solo se ejecuta lo que apruebes despues, y entonces recibiras un segundo email con los resultados reales.",
+];
+
+/** Ids de la propuesta, siempre juntos: el numero solo nunca identifica nada. */
+function proposalIdLine(proposal: NumberedProposal): string {
+  const changeId = proposal.changeId ?? "(todavia sin registro de cambio persistente)";
+  return `id: ${proposal.id} | recommendationId: ${proposal.recommendationId} | changeId: ${changeId}`;
+}
+
+function proposalOrigin(proposal: NumberedProposal): string {
+  return proposal.sourceAgents.length > 0 ? proposal.sourceAgents.join(", ") : "no reportado";
+}
+
+function proposalStaging(proposal: NumberedProposal): string {
+  return proposal.stagingUrl ? proposal.stagingUrl : "(sin URL de staging para esta propuesta)";
+}
+
+/**
+ * Cambios campo a campo. El `before` viene tal cual de la propuesta:
+ * cuando dice que se leera antes de aplicar es que TODAVIA NO SE HA LEIDO,
+ * y eso se muestra literal en vez de inventar un valor actual.
+ */
+function proposalChangeLines(proposal: NumberedProposal): string[] {
+  if (proposal.changes.length === 0) return ["(sin before/after concreto todavia: esta propuesta no trae cambio de campos resuelto)"];
+  return proposal.changes.map((change) => `${change.field}: antes "${change.before}" -> despues "${change.after}"`);
+}
+
+function proposalTextBlock(proposal: NumberedProposal): string[] {
+  const lines: string[] = [];
+  lines.push(`[ ${proposal.number} ]  ${proposal.title}`);
+  lines.push(`    ${proposalIdLine(proposal)}`);
+  lines.push(`    Origen (empleados): ${proposalOrigin(proposal)}`);
+  lines.push(`    Prioridad: impacto ${proposal.impact} | confianza ${proposal.confidence} | esfuerzo ${proposal.effort}`);
+  lines.push(`    Que se propone: ${shorten(proposal.description, 600)}`);
+  lines.push(`    Paginas afectadas: ${proposal.targets}`);
+  lines.push(`    Staging: ${proposalStaging(proposal)}`);
+  lines.push("    Cambio propuesto:");
+  for (const change of proposalChangeLines(proposal)) lines.push(`      - ${change}`);
+  lines.push(`    Capacidad de apply: ${proposal.capability} -- ${shorten(proposal.capabilityReason, 260)}`);
+  lines.push(`    QA: ${proposal.qaStatus}`);
+  lines.push(`    Riesgo: ${proposal.risk}`);
+  lines.push(`    Estado actual: ${proposal.statusLabel}`);
+  if (proposal.actionable) {
+    lines.push("    Accionable hoy: SI -- si la apruebas, se ejecuta con un executor determinista.");
+  } else {
+    lines.push(`    NO ACCIONABLE HOY: ${proposal.notActionableReason}`);
+    lines.push("    Aprobarla no la ejecutara: quedara registrada como aprobada pendiente de trabajo manual.");
+  }
+  return lines;
+}
+
+/** Titulo con el numero total, identico en texto y en HTML. */
+export function numberedProposalsHeading(apply: DepartmentApplySummary | null): string {
+  const total = apply ? buildNumberedProposals(apply).length : 0;
+  return `${NUMBERED_PROPOSALS_TITLE} (${total})`;
+}
+
+export function renderNumberedProposalsText(apply: DepartmentApplySummary | null): string[] {
+  const lines: string[] = [];
+  const proposals = apply ? buildNumberedProposals(apply) : [];
+  lines.push(numberedProposalsHeading(apply));
+  lines.push("");
+  if (proposals.length === 0) {
+    lines.push(
+      apply
+        ? "Esta pasada no ha producido ninguna propuesta numerada: no hay nada que aprobar hoy."
+        : "Esta pasada no llego a construir el contrato de APPLY, asi que no hay propuestas numeradas: no hay nada que aprobar hoy."
+    );
+    lines.push("");
+    return lines;
+  }
+  // Lista COMPLETA: ver la nota de cabecera del modulo sobre por que aqui
+  // no se aplica MAX_EMAIL_PRIORITIES.
+  for (const proposal of proposals) {
+    for (const line of proposalTextBlock(proposal)) lines.push(line);
+    lines.push("");
+  }
+  lines.push("COMO RESPONDER");
+  for (const line of HOW_TO_ANSWER_LINES) lines.push(`- ${line}`);
+  lines.push("");
+  return lines;
+}
+
+function proposalHtmlBlock(proposal: NumberedProposal): string {
+  const badgeColor = proposal.actionable ? "#1a4fbf" : "#8a6100";
+  const changes = proposalChangeLines(proposal)
+    .map((change) => `<li style="margin:0 0 4px;"><code style="font-size:12px;">${escapeHtml(change)}</code></li>`)
+    .join("");
+  const actionability = proposal.actionable
+    ? '<p style="margin:8px 0 0;color:#1b6b3a;"><strong>Accionable hoy:</strong> SI &mdash; si la apruebas, se ejecuta con un executor determinista.</p>'
+    : `<p style="margin:8px 0 0;color:#8a6100;"><strong>NO ACCIONABLE HOY:</strong> ${escapeHtml(
+        proposal.notActionableReason
+      )}<br>Aprobarla no la ejecutara: quedara registrada como aprobada pendiente de trabajo manual.</p>`;
+  return `
+    <div style="border:1px solid #d8dce3;border-radius:6px;padding:14px 16px;margin:0 0 14px;">
+      <div>
+        <span style="display:inline-block;min-width:34px;text-align:center;background:${badgeColor};color:#ffffff;font-size:18px;font-weight:700;border-radius:6px;padding:4px 10px;margin-right:10px;">${proposal.number}</span>
+        <span style="font-weight:600;font-size:15px;color:#0b1b33;">${escapeHtml(proposal.title)}</span>
+      </div>
+      <p style="margin:10px 0 6px;color:#54617a;font-size:12px;"><code>${escapeHtml(proposalIdLine(proposal))}</code></p>
+      <p style="margin:6px 0;color:#33415c;"><strong>Origen (empleados):</strong> ${escapeHtml(proposalOrigin(proposal))}</p>
+      <p style="margin:6px 0;color:#33415c;">
+        <strong>Impacto:</strong> ${escapeHtml(proposal.impact)} &nbsp;|&nbsp;
+        <strong>Confianza:</strong> ${escapeHtml(proposal.confidence)} &nbsp;|&nbsp;
+        <strong>Esfuerzo:</strong> ${escapeHtml(proposal.effort)}
+      </p>
+      <p style="margin:6px 0;color:#33415c;"><strong>Que se propone:</strong> ${escapeHtml(shorten(proposal.description, 600))}</p>
+      <p style="margin:6px 0;color:#33415c;"><strong>Paginas afectadas:</strong> ${escapeHtml(proposal.targets)}</p>
+      <p style="margin:6px 0;color:#33415c;"><strong>Staging:</strong> ${escapeHtml(proposalStaging(proposal))}</p>
+      <p style="margin:6px 0 4px;color:#33415c;"><strong>Cambio propuesto:</strong></p>
+      <ul style="margin:0 0 8px;padding-left:20px;">${changes}</ul>
+      <p style="margin:6px 0;color:#33415c;"><strong>Capacidad de apply:</strong> ${escapeHtml(proposal.capability)} &mdash; ${escapeHtml(
+        shorten(proposal.capabilityReason, 260)
+      )}</p>
+      <p style="margin:6px 0;color:#33415c;"><strong>QA:</strong> ${escapeHtml(proposal.qaStatus)}</p>
+      <p style="margin:6px 0;color:#33415c;"><strong>Riesgo:</strong> ${escapeHtml(proposal.risk)}</p>
+      <p style="margin:6px 0;color:#33415c;"><strong>Estado actual:</strong> ${escapeHtml(proposal.statusLabel)}</p>
+      ${actionability}
+    </div>`;
+}
+
+export function renderNumberedProposalsHtml(apply: DepartmentApplySummary | null): string {
+  const proposals = apply ? buildNumberedProposals(apply) : [];
+  if (proposals.length === 0) {
+    return `<p style="margin:0;color:#54617a;">${escapeHtml(
+      apply
+        ? "Esta pasada no ha producido ninguna propuesta numerada: no hay nada que aprobar hoy."
+        : "Esta pasada no llego a construir el contrato de APPLY, asi que no hay propuestas numeradas: no hay nada que aprobar hoy."
+    )}</p>`;
+  }
+  return (
+    proposals.map(proposalHtmlBlock).join("") +
+    `<div style="border-left:4px solid #1a4fbf;background:#f2f6fd;padding:12px 14px;margin:0 0 12px;">
+      <div style="font-weight:700;color:#0b1b33;letter-spacing:0.4px;">COMO RESPONDER</div>
+      <ul style="margin:8px 0 0;padding-left:20px;">${HOW_TO_ANSWER_LINES.map((line) => `<li style="margin:0 0 6px;">${escapeHtml(line)}</li>`).join("")}</ul>
+    </div>`
+  );
+}
+
 // --- Texto plano -----------------------------------------------------------
 
 export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
@@ -171,6 +339,11 @@ export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
   lines.push("");
   for (const line of buildExecutiveLines(input)) lines.push(`- ${line}`);
   lines.push("");
+
+  // Va inmediatamente despues del resumen ejecutivo porque es la unica
+  // seccion sobre la que se pide una RESPUESTA. El resto del email
+  // informa; esta decide.
+  for (const line of renderNumberedProposalsText(apply)) lines.push(line);
 
   lines.push("2. TOP PRIORITIES");
   lines.push("");
@@ -345,6 +518,8 @@ export function renderDailyBriefEmailHtml(input: DailyBriefEmailInput): string {
   <p style="margin:0 0 20px;color:#54617a;font-size:13px;">Pasada <code>${escapeHtml(brief.departmentRunId)}</code> &nbsp;|&nbsp; generado ${escapeHtml(brief.generatedAt)} &nbsp;|&nbsp; QA del departamento: <strong>${escapeHtml(brief.departmentQaStatus)}</strong></p>
 
   ${htmlSection("1. Resumen ejecutivo", htmlList(buildExecutiveLines(input)))}
+
+  ${htmlSection(numberedProposalsHeading(apply), renderNumberedProposalsHtml(apply))}
 
   ${htmlSection(
     "2. Top priorities",

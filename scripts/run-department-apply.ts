@@ -57,10 +57,12 @@ import {
   DepartmentChangeRequest,
 } from "../src/department/apply/change-types";
 import { createHttpApprovalStoreFromEnv } from "../src/approvals/http-store";
+import { isServerlessApprovalsEnabled, serverlessDisabledReason } from "../src/approvals/feature-flag";
 import { Approval, ApprovalStore } from "../src/approvals/store";
 import { flushRecordedTransitions, recordingTransitionPort } from "../src/approvals/executor-bridge";
 import { checkStagingApplyGuards, StagingApplyGuards } from "../src/department/apply/guards";
 import { buildApplyPlan, projectChangesIntoSummary } from "../src/department/apply/plan";
+import { computeVersionHash } from "../src/department/apply/version";
 import { sendChangeApprovalRequest } from "../src/department/apply/telegram-notifier";
 import { applyChangeToStaging } from "../src/department/apply/staging-executor";
 import { readApplySummary, updateApplySummaryItems, writeApplySummary } from "../src/department/apply/store";
@@ -192,13 +194,57 @@ function syncSummaryWith(
 
 // --- FASE plan -------------------------------------------------------------
 
-function phasePlan(args: Record<string, string>): void {
+/**
+ * Ancla de version: lee (SOLO lee) la pagina objetivo de cada propuesta
+ * ejecutable y guarda el hash de como estaba cuando se genero el Daily
+ * Brief.
+ *
+ * Es lo que permite decir mas tarde "esto ha cambiado desde que lo
+ * viste" en vez de aplicar a ciegas. Si no hay credenciales o la lectura
+ * falla, el ancla queda vacia y la sesion de aprobacion se negara a
+ * ejecutar salvo que se le pase --allow-unverified: preferimos no poder
+ * verificar y decirlo, a fingir que verificamos.
+ */
+async function captureVersionAnchors(summary: DepartmentApplySummary): Promise<DepartmentApplySummary> {
+  const items = [];
+  for (const item of summary.items) {
+    const target = item.applyCapability.target;
+    if (!target || item.applyStatus !== "proposed") {
+      items.push(item);
+      continue;
+    }
+    try {
+      const page = await getWordpressPage(target.wordpressPageId);
+      const hash = computeVersionHash({ status: page.status, title: page.title, metaDescription: page.excerpt, contentHtml: page.contentHtml });
+      items.push({
+        ...item,
+        traceability: { ...item.traceability, stagingVersionHash: hash, stagingUrl: page.link || item.traceability.stagingUrl },
+      });
+    } catch (err) {
+      items.push({
+        ...item,
+        auditTrail: [
+          ...item.auditTrail,
+          {
+            at: new Date().toISOString(),
+            event: "version_anchor_unavailable",
+            detail: `No se pudo leer la pagina ${target.wordpressPageId} para anclar su version: ${err instanceof Error ? err.message : String(err)}. La sesion de aprobacion no podra verificar si cambia desde ahora.`,
+          },
+        ],
+      });
+    }
+  }
+  return { ...summary, items };
+}
+
+async function phasePlan(args: Record<string, string>): Promise<void> {
   const departmentRunId = requireDepartmentRunId(args);
   const promotion = loadPromotion(departmentRunId);
   const webEngineer = loadWebEngineer(departmentRunId);
   const ownedStagingPages = loadOwnedStagingPages();
 
   let summary = buildApplyPlan({ departmentRunId, promotion, webEngineer, ownedStagingPages });
+  summary = await captureVersionAnchors(summary);
   summary = updateApplySummaryItems(summary, summary.items, {
     externalWritesPerformed: false,
     productionWritesPerformed: false,
@@ -253,6 +299,9 @@ function buildChangeFromItem(item: DepartmentApplyItem, version: number, previou
 }
 
 async function phaseStage(args: Record<string, string>): Promise<void> {
+  if (!isServerlessApprovalsEnabled()) {
+    throw new Error(serverlessDisabledReason('La fase "stage" de esta pasada (que persiste en el datastore serverless)'));
+  }
   const departmentRunId = requireDepartmentRunId(args);
   const summary = requireSummary(departmentRunId);
   const guards = resolveStagingGuards();
@@ -364,6 +413,9 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
 // --- FASE notify -----------------------------------------------------------
 
 async function phaseNotify(args: Record<string, string>): Promise<void> {
+  if (!isServerlessApprovalsEnabled()) {
+    throw new Error(serverlessDisabledReason('La fase "notify" (solicitud de aprobacion por Telegram)'));
+  }
   const departmentRunId = requireDepartmentRunId(args);
   const store = createHttpApprovalStoreFromEnv();
   const pending = (await store.listByRun(departmentRunId)).filter((c) => c.status === "staging_applied");
