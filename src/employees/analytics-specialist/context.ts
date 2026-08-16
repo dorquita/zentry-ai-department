@@ -4,6 +4,11 @@ import { DepartmentEvent } from "../../core/types";
 import { readAllEvents } from "../../core/department-events";
 import { resolveActiveClientPaths } from "../../core/client-paths";
 import { Ga4ReportData, GtmReportData, parseGa4ReportSection, parseGtmReportSection } from "./report-parser";
+import {
+  SnapshotFreshness,
+  classifySnapshotFreshness,
+  resolveSnapshotMaxAgeHours,
+} from "../../core/snapshot-freshness";
 
 /**
  * Context builder para el empleado `analytics-specialist` -- ver
@@ -55,6 +60,20 @@ export interface AnalyticsSpecialistContextReady {
   gtm: GtmReportData | null;
   /** Resumenes de los eventos "warning_detected" de analytics-watcher para esa misma pasada -- contexto adicional, nunca inventado. */
   watcherWarnings: string[];
+  /**
+   * Fase O50 -- CUANDO se leyeron GA4/GTM de verdad. Es el mismo instante
+   * que `reportGeneratedAt`, con otro nombre a proposito: `reportGeneratedAt`
+   * describe cuando se escribio el informe, `sourceGeneratedAt` describe
+   * cuando se hablo con la API externa. Se separan porque la pregunta que
+   * importa para no mentir en el informe es la segunda.
+   */
+  sourceGeneratedAt: string;
+  /**
+   * Fase O50 -- procedencia y antigüedad ya clasificadas. El runner mete
+   * `freshness.humanSummary` en el prompt para que el especialista NUNCA
+   * pueda tratar un snapshot de hace dias como una lectura de hoy.
+   */
+  freshness: SnapshotFreshness;
 }
 
 export interface AnalyticsSpecialistContextNoData {
@@ -81,6 +100,17 @@ export interface BuildContextOptions {
   events?: DepartmentEvent[];
   /** Inyectable para tests -- por defecto, fs.readFileSync guardado con fs.existsSync. Devuelve undefined si el fichero no existe. */
   readReportFile?: (reportPath: string) => string | undefined;
+  /** Fase O50 -- inyectable para tests. Por defecto, el ahora real. */
+  now?: string;
+  /**
+   * Fase O50 -- departmentRunId de la pasada EN CURSO. Si coincide con el
+   * del snapshot, es que analytics-watcher corrio en esta misma pasada y
+   * los datos son live. Por defecto se lee de DEPARTMENT_RUN_ID, que es
+   * la variable que ya propaga la coordinacion diaria.
+   */
+  currentDepartmentRunId?: string | null;
+  /** Fase O50 -- inyectable para tests; por defecto SNAPSHOT_MAX_AGE_HOURS. */
+  maxAgeHours?: number;
 }
 
 /**
@@ -149,6 +179,17 @@ export function buildAnalyticsSpecialistContext(options: BuildContextOptions = {
   const ga4 = ga4Connected ? parseGa4ReportSection(markdown) : null;
   const gtm = gtmConnected ? parseGtmReportSection(markdown) : null;
 
+  const freshness = classifySnapshotFreshness({
+    sourceGeneratedAt: latest.createdAt,
+    now: options.now ?? new Date().toISOString(),
+    maxAgeHours: options.maxAgeHours ?? resolveSnapshotMaxAgeHours(),
+    currentDepartmentRunId:
+      options.currentDepartmentRunId !== undefined
+        ? options.currentDepartmentRunId
+        : process.env.DEPARTMENT_RUN_ID ?? null,
+    snapshotDepartmentRunId: latest.departmentRunId,
+  });
+
   return {
     status: "ready",
     departmentRunId: latest.departmentRunId,
@@ -159,5 +200,7 @@ export function buildAnalyticsSpecialistContext(options: BuildContextOptions = {
     ga4,
     gtm,
     watcherWarnings: collectWatcherWarnings(events, latest.departmentRunId),
+    sourceGeneratedAt: latest.createdAt,
+    freshness,
   };
 }

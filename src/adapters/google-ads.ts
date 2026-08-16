@@ -160,6 +160,46 @@ async function searchGoogleAds(customerId: string, query: string): Promise<Recor
   return results;
 }
 
+export interface GoogleAdsProbeResult {
+  customerId: string;
+  descriptiveName: string;
+  currencyCode: string;
+  timeZone: string;
+}
+
+/**
+ * Fase O50 — probe MINIMO de solo lectura para verificar desde GitHub
+ * Actions que developer token + OAuth + login-customer-id forman una
+ * combinacion valida. Una unica GAQL `SELECT ... FROM customer LIMIT 1`
+ * a traves de `searchGoogleAds()` — el mismo unico punto de red de este
+ * adaptador, que solo llama a `googleAds:search`. No lee campanas, no
+ * lee keywords, y por construccion no puede activar, pausar, crear ni
+ * modificar nada.
+ */
+export async function probeGoogleAds(): Promise<GoogleAdsProbeResult> {
+  const customerId = resolveCustomerId();
+  try {
+    const rows = await searchGoogleAds(
+      customerId,
+      "SELECT customer.id, customer.descriptive_name, customer.currency_code, customer.time_zone FROM customer LIMIT 1"
+    );
+    const customer = rows[0]?.customer ?? {};
+    const result: GoogleAdsProbeResult = {
+      customerId: String(customer.id ?? normalizeCustomerId(customerId)),
+      descriptiveName: String(customer.descriptiveName ?? ""),
+      currencyCode: String(customer.currencyCode ?? ""),
+      timeZone: String(customer.timeZone ?? ""),
+    };
+    recordCredentialSuccess("google_ads");
+    return result;
+  } catch (err) {
+    const safeMessage = sanitizeError(err);
+    logger.error("Probe de Google Ads fallo", { error: safeMessage });
+    recordCredentialFailure("google_ads", safeMessage);
+    throw new Error(`Probe de Google Ads fallo: ${safeMessage}`);
+  }
+}
+
 export interface AdsCampaignSummary {
   id: string;
   name: string;

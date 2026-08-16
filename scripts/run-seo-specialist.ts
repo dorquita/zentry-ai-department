@@ -41,6 +41,7 @@ import {
 } from "../src/employees/seo-specialist/domain";
 import { extractJsonFromModelResponse } from "../src/core/claude-employee-runtime";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
+import { assertSnapshotUsable, resolveRequireLiveSources } from "../src/core/snapshot-freshness";
 import { resolveActiveClientPaths } from "../src/core/client-paths";
 
 const AGENT_NAME = "seo-specialist";
@@ -84,7 +85,30 @@ function buildPromptMarkdown(context: SeoSpecialistContext, runId: string): stri
   lines.push("");
   lines.push("---");
   lines.push("");
-  lines.push("## 2. Contexto estructurado (SeoSpecialistContext)");
+  // Fase O50 -- la procedencia va ANTES de los datos, no en una nota al
+  // pie: quien lee primero las oportunidades y despues la fecha ya ha
+  // sacado la conclusion equivocada.
+  lines.push("## 2. PROCEDENCIA Y FRESCURA DE ESTOS DATOS (leer antes que las cifras)");
+  lines.push("");
+  lines.push(`- **Estado:** \`${context.freshness.status}\``);
+  lines.push(`- **Fuente de los datos:** \`${context.sourceKind ?? "desconocida"}\`${context.sourceKind === "mock" ? " — DATOS DE EJEMPLO, no rendimiento real del sitio" : ""}`);
+  lines.push(`- **Search Console se leyo de verdad el:** ${context.sourceGeneratedAt ?? "(sin marca de tiempo)"}`);
+  lines.push(
+    `- **Antigüedad:** ${context.freshness.ageHours !== null ? `${context.freshness.ageHours} h` : "desconocida"} (umbral ${context.freshness.maxAgeHours} h)`
+  );
+  lines.push(`- **Generado en esta pasada:** ${context.freshness.producedInThisRun ? "SI" : "NO"}`);
+  lines.push("");
+  lines.push(context.freshness.humanSummary);
+  if (context.sourceKind === "mock") {
+    lines.push("");
+    lines.push(
+      "AVISO ADICIONAL: estos jobs se generaron con el adaptador PLACEHOLDER (SEO_DATA_SOURCE=mock), es decir, con datos de ejemplo de data/sample-search-console-data.json. NO son metricas reales de Search Console. No las cites como rendimiento del sitio bajo ninguna circunstancia."
+    );
+  }
+  lines.push("");
+  lines.push("---");
+  lines.push("");
+  lines.push("## 3. Contexto estructurado (SeoSpecialistContext)");
   lines.push("");
   lines.push("```json");
   lines.push(JSON.stringify(context, null, 2));
@@ -153,6 +177,20 @@ async function main(): Promise<void> {
   console.log(`SEO Specialist — analisis ${runId}`);
 
   const context = buildSeoSpecialistContext();
+
+  // Fase O50 -- fail-closed opcional (REQUIRE_LIVE_SOURCES=true): sin
+  // una lectura de Search Console hecha en ESTA pasada, la etapa falla
+  // de forma explicita en vez de razonar sobre el ultimo snapshot
+  // conocido creyendo que es el estado actual.
+  assertSnapshotUsable("seo-watcher (Search Console)", context.freshness, {
+    requireLive: resolveRequireLiveSources(),
+  });
+  console.log(
+    `Procedencia del snapshot SEO: ${context.freshness.status}, fuente=${context.sourceKind ?? "desconocida"}` +
+      ` (leido el ${context.sourceGeneratedAt ?? "sin marca de tiempo"}` +
+      `${context.freshness.ageHours !== null ? `, hace ${context.freshness.ageHours} h` : ""}).`
+  );
+
   const promptPath = path.join(outDir, "prompt.md");
   const expectedOutputPath = path.join(outDir, "output.json");
 

@@ -34,6 +34,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { extractJsonFromModelResponse } from "../src/core/claude-employee-runtime";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
+import { assertSnapshotUsable, resolveRequireLiveSources } from "../src/core/snapshot-freshness";
 import { resolveActiveClientPaths } from "../src/core/client-paths";
 import { buildAnalyticsSpecialistContext, AnalyticsSpecialistContextReady } from "../src/employees/analytics-specialist/context";
 import { validateAnalyticsSpecialistOutput } from "../src/employees/analytics-specialist/validator";
@@ -76,7 +77,23 @@ function buildPromptMarkdown(context: AnalyticsSpecialistContextReady): string {
   lines.push("");
   lines.push("---");
   lines.push("");
-  lines.push("## 2. Contexto estructurado (AnalyticsSpecialistContext)");
+  // Fase O50 -- antes de cualquier dato. Un especialista que lee primero
+  // las tablas y despues la procedencia ya ha formado la conclusion
+  // equivocada; la etiqueta de frescura va delante, no en una nota al pie.
+  lines.push("## 2. PROCEDENCIA Y FRESCURA DE ESTOS DATOS (leer antes que las cifras)");
+  lines.push("");
+  lines.push(`- **Estado:** \`${context.freshness.status}\``);
+  lines.push(`- **GA4/GTM se leyeron de verdad el:** ${context.sourceGeneratedAt}`);
+  lines.push(
+    `- **Antigüedad:** ${context.freshness.ageHours !== null ? `${context.freshness.ageHours} h` : "desconocida"} (umbral ${context.freshness.maxAgeHours} h)`
+  );
+  lines.push(`- **Generado en esta pasada:** ${context.freshness.producedInThisRun ? "SI" : "NO"}`);
+  lines.push("");
+  lines.push(context.freshness.humanSummary);
+  lines.push("");
+  lines.push("---");
+  lines.push("");
+  lines.push("## 3. Contexto estructurado (AnalyticsSpecialistContext)");
   lines.push("");
   lines.push("```json");
   lines.push(JSON.stringify(context, null, 2));
@@ -158,8 +175,22 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Fase O50 -- fail-closed opcional. Con REQUIRE_LIVE_SOURCES=true, un
+  // snapshot que no sea de esta pasada corta aqui con un error explicito
+  // en vez de dejar que el especialista razone sobre historico creyendo
+  // que es el estado actual. Sin la variable, el snapshot se sigue
+  // usando -- pero SIEMPRE etiquetado con su procedencia real en el
+  // prompt (seccion 2), nunca disfrazado de live.
+  assertSnapshotUsable("analytics-watcher (GA4/GTM)", context.freshness, {
+    requireLive: resolveRequireLiveSources(),
+  });
+
   const outDir = outDirFor(context.departmentRunId);
   console.log(`Analytics Specialist — analizando departmentRunId ${context.departmentRunId} (GA4 conectado=${context.ga4Connected}, GTM conectado=${context.gtmConnected})`);
+  console.log(
+    `Procedencia del snapshot: ${context.freshness.status} (leido el ${context.sourceGeneratedAt}` +
+      `${context.freshness.ageHours !== null ? `, hace ${context.freshness.ageHours} h` : ""}).`
+  );
 
   const result = resolveResult(args["analytics-specialist-output"], context, outDir);
 

@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { auditAnalyticsSpecialistOutput } from "../src/employees/analytics-specialist/audit";
 import { AnalyticsSpecialistContextReady } from "../src/employees/analytics-specialist/context";
+import { classifySnapshotFreshness } from "../src/core/snapshot-freshness";
 import { AnalyticsSpecialistOutput } from "../src/employees/analytics-specialist/types";
 import { validateAnalyticsSpecialistOutput } from "../src/employees/analytics-specialist/validator";
 
@@ -16,6 +17,13 @@ function baseContext(overrides: Partial<AnalyticsSpecialistContextReady> = {}): 
     status: "ready",
     departmentRunId: "growth-department-2026-08-10T090000Z",
     reportGeneratedAt: "2026-08-10T09:00:12.000Z",
+    sourceGeneratedAt: "2026-08-10T09:00:12.000Z",
+    freshness: classifySnapshotFreshness({
+      sourceGeneratedAt: "2026-08-10T09:00:12.000Z",
+      now: "2026-08-10T10:00:12.000Z",
+      currentDepartmentRunId: "growth-department-2026-08-10T090000Z",
+      snapshotDepartmentRunId: "growth-department-2026-08-10T090000Z",
+    }),
     reportPath: "/fake/reports/analytics/analytics-2026-08-10.md",
     ga4Connected: true,
     gtmConnected: true,

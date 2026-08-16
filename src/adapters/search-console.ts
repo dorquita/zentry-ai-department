@@ -222,6 +222,40 @@ export async function listAccessibleSites(): Promise<string[]> {
   }
 }
 
+export interface SearchConsoleProbeResult {
+  authMethod: "service_account" | "oauth2";
+  configuredSiteUrl: string;
+  accessibleSiteCount: number;
+  configuredSiteIsAccessible: boolean;
+}
+
+/**
+ * Fase O50 — probe MINIMO de solo lectura para verificar desde GitHub
+ * Actions que las credenciales de Search Console llegan de verdad a la
+ * API. Solo `sites.list` (nunca `sitemaps.submit`, `sites.add` ni
+ * `sites.delete`): devuelve CUANTOS sitios ve la credencial y si el
+ * sitio configurado esta entre ellos — nunca la lista completa de
+ * dominios, que no aporta nada al probe.
+ */
+export async function probeSearchConsole(): Promise<SearchConsoleProbeResult> {
+  const authMethod = resolveAuthMethod();
+  const configuredSiteUrl = resolveSiteUrl();
+  try {
+    const sites = await listAccessibleSites();
+    recordCredentialSuccess("search_console");
+    return {
+      authMethod,
+      configuredSiteUrl,
+      accessibleSiteCount: sites.length,
+      configuredSiteIsAccessible: sites.includes(configuredSiteUrl),
+    };
+  } catch (err) {
+    const safeMessage = sanitizeError(err);
+    recordCredentialFailure("search_console", safeMessage);
+    throw new Error(`Probe de Search Console fallo: ${safeMessage}`);
+  }
+}
+
 export async function getSearchConsoleData(): Promise<SeoDataResult> {
   const { siteUrl, startDate, endDate, rowLimit } = resolveQueryOptions();
 
