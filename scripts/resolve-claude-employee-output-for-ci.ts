@@ -24,8 +24,45 @@
  *   CLAUDE_STRUCTURED_OUTPUT -- opcional, el output structured_output de claude-code-action
  */
 import * as fs from "fs";
-import { resolveClaudeEmployeeOutput } from "../src/core/claude-employee-runtime";
+import * as path from "path";
+import { buildClaudeEmployeeOutputDiagnostics, describeClaudeEmployeeFailureKind, resolveClaudeEmployeeOutput } from "../src/core/claude-employee-runtime";
 import { JsonSchemaLite } from "../src/core/json-schema-lite";
+
+/**
+ * Imprime el diagnostico estructural de ESTA invocacion (ver
+ * buildClaudeEmployeeOutputDiagnostics en
+ * src/core/claude-employee-runtime.ts) y lo guarda junto a la salida
+ * esperada, tanto si la resolucion fue bien como si fallo. Sin este
+ * bloque, un fallo del runtime solo dejaba rastro como
+ * "runtime=failure / claude=failure", que no distingue "Claude no
+ * respondio" de "Claude respondio pero el JSON no cumple el schema".
+ *
+ * No imprime ni el prompt ni la respuesta del modelo: solo metadatos
+ * (tamanos, hashes truncados, tipos de mensaje, longitudes, errores de
+ * parseo/schema).
+ */
+function reportDiagnostics(params: { structuredOutput: string | undefined; executionFileContent: string | undefined; outputSchema: JsonSchemaLite; executionFilePath: string | undefined; expectedOutputPath: string }): void {
+  const diagnostics = buildClaudeEmployeeOutputDiagnostics({
+    structuredOutput: params.structuredOutput,
+    executionFileContent: params.executionFileContent,
+    outputSchema: params.outputSchema,
+  });
+
+  console.log("===== DIAGNOSTICO DEL RUNTIME COMUN (sin contenido: solo tamanos, hashes y presencia de campos) =====");
+  console.log(`clasificacion: ${diagnostics.failureKind} -- ${describeClaudeEmployeeFailureKind(diagnostics.failureKind)}`);
+  console.log(`execution_file (ruta publicada por la Action): ${params.executionFilePath || "(ninguna)"}`);
+  console.log("CLAUDE_EMPLOYEE_RUNTIME_DIAGNOSTICS=" + JSON.stringify(diagnostics));
+
+  try {
+    const diagnosticsPath = path.join(path.dirname(params.expectedOutputPath), "runtime-diagnostics.json");
+    fs.writeFileSync(diagnosticsPath, JSON.stringify(diagnostics, null, 2), "utf-8");
+    console.log(`diagnostico guardado en ${diagnosticsPath}.`);
+  } catch (err) {
+    // Fail-soft a proposito: no poder guardar el diagnostico nunca puede
+    // convertirse en el motivo de que una pasada falle.
+    console.log(`aviso: no se pudo guardar el fichero de diagnostico (${err instanceof Error ? err.message : String(err)}).`);
+  }
+}
 
 function main(): void {
   const outputSchemaPath = process.argv[2];
@@ -39,6 +76,8 @@ function main(): void {
   const outputSchema = JSON.parse(fs.readFileSync(outputSchemaPath, "utf-8")) as JsonSchemaLite;
   const structuredOutput = process.env.CLAUDE_STRUCTURED_OUTPUT;
   const executionFileContent = executionFilePath && fs.existsSync(executionFilePath) ? fs.readFileSync(executionFilePath, "utf-8") : undefined;
+
+  reportDiagnostics({ structuredOutput, executionFileContent, outputSchema, executionFilePath, expectedOutputPath });
 
   const resolved = resolveClaudeEmployeeOutput({ structuredOutput, executionFileContent, outputSchema });
 

@@ -79,13 +79,13 @@
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string" },
-        "page": { "type": "string" },
+        "page": { "type": "string", "description": "OPCIONAL: la pagina concreta afectada, citada literalmente del contexto recibido. Se OMITE cuando el problema tecnico no es de una pagina concreta (problema de sitio, o cluster todavia sin targetUrl). Era obligatorio hasta el incidente del run 31949966340: exigirlo obligaba al modelo a elegir entre incumplir el schema o inventarse una URL, cosa que sus propias instrucciones le prohiben -- ver docs/claude-employee-runtime.md." },
         "issue": { "type": "string" },
         "severity": { "$ref": "#/definitions/priority" },
         "basis": { "$ref": "#/definitions/basis" },
         "evidenceRefs": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["id", "page", "issue", "severity", "basis", "evidenceRefs"]
+      "required": ["id", "issue", "severity", "basis", "evidenceRefs"]
     },
     "contentGap": {
       "type": "object",

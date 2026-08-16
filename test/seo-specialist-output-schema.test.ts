@@ -158,5 +158,29 @@ export function runSeoSpecialistOutputSchemaTests(): TestCase[] {
         assert.doesNotThrow(() => validateSeoSpecialistOutput(output));
       },
     },
+    {
+      name: "REGRESION (run 31949966340): technicalIssues[].page ausente es VALIDO en ambas capas -- fue la causa raiz del fallo recurrente de seo-specialist",
+      fn: () => {
+        const output = minimalValidOutput();
+        output.technicalIssues = [{ id: "t1", issue: "Problema de sitio, sin pagina concreta.", severity: "medium", basis: "inference", evidenceRefs: [] }];
+        const schemaErrors = validateAgainstSchema(schema, schema, output);
+        assert.deepEqual(schemaErrors, [], `no deberian ser errores: ${JSON.stringify(schemaErrors)}`);
+        assert.doesNotThrow(() => validateSeoSpecialistOutput(output));
+      },
+    },
+    {
+      name: "technicalIssues[].page sigue siendo el UNICO campo que se ha vuelto opcional: issue/severity/basis/evidenceRefs/id siguen siendo obligatorios en ambas capas",
+      fn: () => {
+        for (const missing of ["id", "issue", "severity", "basis", "evidenceRefs"]) {
+          const output = minimalValidOutput();
+          const issue: Record<string, unknown> = { id: "t1", issue: "x", severity: "medium", basis: "inference", evidenceRefs: [] };
+          delete issue[missing];
+          output.technicalIssues = [issue];
+          const schemaErrors = validateAgainstSchema(schema, schema, output);
+          assert.ok(schemaErrors.length > 0, `el schema deberia exigir technicalIssues[].${missing}`);
+          assert.throws(() => validateSeoSpecialistOutput(output), /technicalIssues/, `validateSeoSpecialistOutput deberia exigir technicalIssues[].${missing}`);
+        }
+      },
+    },
   ];
 }

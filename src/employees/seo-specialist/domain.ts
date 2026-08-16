@@ -46,7 +46,16 @@ export interface SeoOpportunityFinding {
 
 export interface SeoTechnicalIssue {
   id: string;
-  page: string;
+  /**
+   * OPCIONAL a proposito (ver config/seo-specialist-output.schema.json y
+   * docs/claude-employee-runtime.md): un problema tecnico puede no ser de
+   * ninguna pagina concreta (problema de sitio, o cluster todavia sin
+   * `targetUrl`). Exigirlo obligaba al subagente a elegir entre romper el
+   * contrato o inventarse una URL -- justo lo que sus instrucciones le
+   * prohiben. Cuando existe, debe citar literalmente una pagina del
+   * contexto recibido.
+   */
+  page?: string;
   issue: string;
   severity: SeoPriority;
   basis: SeoBasis;
@@ -148,7 +157,7 @@ function isOpportunity(v: unknown): v is SeoOpportunityFinding {
 
 function isTechnicalIssue(v: unknown): v is SeoTechnicalIssue {
   const o = asRecord(v);
-  return !!o && isString(o.id) && isString(o.page) && isString(o.issue) && isOneOf(o.severity, PRIORITY_VALUES) && isOneOf(o.basis, BASIS_VALUES) && isStringArray(o.evidenceRefs);
+  return !!o && isString(o.id) && isOptionalString(o.page) && isString(o.issue) && isOneOf(o.severity, PRIORITY_VALUES) && isOneOf(o.basis, BASIS_VALUES) && isStringArray(o.evidenceRefs);
 }
 
 function isContentGap(v: unknown): v is SeoContentGap {
@@ -464,7 +473,7 @@ export function renderSeoSpecialistArtifactMarkdown(artifact: SeoSpecialistArtif
     lines.push(`### Problemas tecnicos (${output.technicalIssues.length})`);
     lines.push("");
     for (const t of output.technicalIssues) {
-      lines.push(`- [${t.severity}] ${t.page}: ${t.issue}`);
+      lines.push(`- [${t.severity}] ${t.page ?? "(sin pagina concreta)"}: ${t.issue}`);
     }
     lines.push("");
     lines.push(`### Huecos de contenido (${output.contentGaps.length})`);

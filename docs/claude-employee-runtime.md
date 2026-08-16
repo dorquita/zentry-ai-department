@@ -440,6 +440,69 @@ de permisos distintas si su dominio lo requiere de verdad (ninguno lo
 necesita para lo que se ha pedido hasta ahora) -- **este PR no concede
 ninguna** de antemano.
 
+## Diagnóstico: por qué falló EXACTAMENTE una invocación
+
+Hasta el incidente de `seo-specialist` del 16/08/2026, un fallo del
+runtime dejaba como único rastro aguas arriba la etiqueta
+`runtime=failure, claude=failure` de la pasada coordinada. Esa etiqueta
+confunde ocho fallos completamente distintos, con causas y arreglos
+opuestos. Ahora el runtime los distingue explícitamente
+(`buildClaudeEmployeeOutputDiagnostics()` en
+`src/core/claude-employee-runtime.ts`, impreso por
+`scripts/resolve-claude-employee-output-for-ci.ts` en cada invocación,
+falle o no):
+
+| `failureKind` | Qué pasó de verdad |
+| --- | --- |
+| `no_output_at_all` | Claude no dejó nada recuperable: ni `structured_output` ni `execution_file` (caso C). |
+| `execution_file_not_json` | El `execution_file` existe pero no es JSON. |
+| `execution_file_without_result_message` | Es JSON pero no trae ningún mensaje final `type=result`. |
+| `claude_reported_failure` | Claude respondió declarando fallo real (`subtype != success` o `is_error`). |
+| `result_field_missing_or_empty` | Terminó en éxito pero sin `result` de texto. |
+| `result_not_valid_json` | Hay texto en `result` pero no es JSON válido (truncado, con texto alrededor, roto). |
+| `schema_validation_failed` | JSON válido que **no cumple** el JSON Schema versionado -- se descarta en cerrado. |
+| `none` | Salida resuelta y válida (con `source` = `structured_output` o `execution_file_fallback`). |
+
+El diagnóstico se imprime como una línea
+`CLAUDE_EMPLOYEE_RUNTIME_DIAGNOSTICS={...}` y se guarda como
+`runtime-diagnostics.json` junto a la salida esperada. **No contiene
+contenido**: ni prompt, ni respuesta del modelo, ni tokens, ni
+credenciales -- solo tamaños, hashes truncados (12 hex), recuento de
+mensajes SDK por tipo, `subtype`/`is_error`, presencia/ausencia de
+campos, longitudes, y los errores concretos de parseo/schema.
+
+## Contrato de salida en el prompt: generado, nunca escrito a mano
+
+**Incidente que lo motivó (run `31949966340`, reproducción exacta del
+fallo de la pasada `dept-2026-08-16T124753Z`).** Las instrucciones en
+prosa de `.claude/agents/seo-specialist.md` decían que `page` era
+opcional, sin decir en qué objeto; el schema exigía
+`technicalIssues[].page`. Cuando el modelo detectaba un problema técnico
+que no era de ninguna página concreta, sus instrucciones le dejaban dos
+salidas y las dos malas: inventarse una URL (prohibido explícitamente) o
+omitir el campo (rechazado por el schema). Eligió omitirlo, el runtime lo
+rechazó en cerrado, y la pasada se quedó **sin ningún dato SEO**. Como
+solo ocurría cuando el modelo topaba con ese caso, el fallo parecía
+intermitente con el mismo input.
+
+Arreglo estructural: `src/core/schema-contract-summary.ts` **genera** el
+contrato (obligatorios/opcionales, objeto a objeto) desde el propio JSON
+Schema versionado, y el runner lo inserta en el prompt como sección
+autoritativa. El contrato que lee el modelo y el contrato contra el que
+se valida su respuesta salen ya del mismo fichero, así que no pueden
+contradecirse. De momento está cableado en `seo-specialist`; cualquier
+empleado puede adoptarlo llamando a `renderSchemaContractSummary()` desde
+su propio constructor de prompt.
+
+Nota sobre `technicalIssues[].page`: pasó a ser **opcional** en el mismo
+commit (schema + interfaz TypeScript + validador de dominio + agente). No
+es relajar la validación para poner algo en verde: un problema técnico de
+sitio, o de un cluster todavía sin `targetUrl`, no tiene página concreta,
+y exigirla empujaba al modelo a fabricar datos, que es justamente lo que
+el resto del contrato prohíbe. Todo lo demás del contrato sigue igual de
+estricto (ver `test/seo-specialist-output-schema.test.ts`, que verifica
+campo a campo que `page` es el único que se volvió opcional).
+
 ## Limitaciones conocidas
 
 - **Sin `timeout-minutes` por step INDIVIDUAL dentro de la composite

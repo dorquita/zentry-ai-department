@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import { JsonSchemaLite, validateAgainstSchema } from "./json-schema-lite";
 
 /**
@@ -147,4 +148,241 @@ export function resolveClaudeEmployeeOutput(params: { structuredOutput: string |
   }
 
   return { source: "execution_file_fallback", rawText: resultMessage.result, parsed };
+}
+
+/**
+ * DIAGNOSTICO de una invocacion del runtime comun -- ver
+ * docs/claude-employee-runtime.md, seccion "Diagnostico".
+ *
+ * Motivo por el que existe (incidente real de seo-specialist en la
+ * pasada dept-2026-08-16T124753Z): cuando `resolveClaudeEmployeeOutput()`
+ * lanzaba, lo unico que quedaba registrado aguas arriba era
+ * "runtime=failure / claude=failure", que confunde ocho fallos
+ * COMPLETAMENTE distintos en una sola etiqueta inutil. Esta funcion
+ * clasifica cual de esos ocho fallos ocurrio de verdad, sin volver a
+ * ejecutar nada y sin cambiar el veredicto (la autoridad sigue siendo
+ * `resolveClaudeEmployeeOutput()`, que es quien falla en cerrado).
+ *
+ * NUNCA LANZA: un diagnostico que se rompiera al diagnosticar dejaria el
+ * incidente exactamente igual de ciego que antes.
+ *
+ * PRIVACIDAD -- este objeto se imprime en el log de GitHub Actions y se
+ * guarda como fichero, asi que deliberadamente NO contiene contenido:
+ * ni el prompt, ni la respuesta de Claude, ni tokens, ni credenciales.
+ * Solo metadatos estructurales (tamanos, hashes truncados, tipos de
+ * mensaje, presencia/ausencia de campos, longitudes, y los mensajes de
+ * error de parseo/schema, que citan rutas de campo y valores de enum
+ * cortos, nunca texto libre del modelo).
+ */
+export type ClaudeEmployeeFailureKind =
+  | "none"
+  | "no_output_at_all"
+  | "execution_file_not_json"
+  | "execution_file_without_result_message"
+  | "claude_reported_failure"
+  | "result_field_missing_or_empty"
+  | "result_not_valid_json"
+  | "schema_validation_failed";
+
+/** Cuantos errores de schema se conservan en el diagnostico (el resto se cuenta pero no se imprime, para no volcar miles de lineas). */
+const MAX_REPORTED_SCHEMA_ERRORS = 20;
+/** Longitud maxima de cada mensaje de error conservado. */
+const MAX_ERROR_MESSAGE_LENGTH = 300;
+
+export interface ClaudeEmployeeOutputDiagnostics {
+  contractVersion: "claude-employee-runtime-diagnostics/v1";
+  /** Que fallo exactamente (o "none" si la salida se resolvio bien). */
+  failureKind: ClaudeEmployeeFailureKind;
+  /** Origen resuelto, o null si no se pudo resolver ninguno. */
+  source: ClaudeEmployeeOutputSource | null;
+  structuredOutput: {
+    present: boolean;
+    bytes: number;
+    sha256Prefix: string | null;
+  };
+  executionFile: {
+    provided: boolean;
+    bytes: number;
+    sha256Prefix: string | null;
+    parsedAsJson: boolean | null;
+    messageCount: number | null;
+    messageTypeCounts: Record<string, number>;
+    resultMessageCount: number | null;
+  };
+  finalResultMessage: {
+    present: boolean;
+    subtype: string | null;
+    isError: boolean | null;
+    resultFieldType: string | null;
+    resultLength: number | null;
+    /** Pistas ESTRUCTURALES para distinguir "JSON truncado" de "JSON con forma equivocada" -- nunca contenido. */
+    hasMarkdownFence: boolean | null;
+    lastNonWhitespaceChar: string | null;
+  };
+  jsonParse: { attempted: boolean; ok: boolean; error: string | null };
+  schemaValidation: { attempted: boolean; ok: boolean; errorCount: number; errors: string[] };
+}
+
+function sha256Prefix(text: string): string {
+  return crypto.createHash("sha256").update(text, "utf-8").digest("hex").slice(0, 12);
+}
+
+function truncateMessage(message: string): string {
+  return message.length <= MAX_ERROR_MESSAGE_LENGTH ? message : `${message.slice(0, MAX_ERROR_MESSAGE_LENGTH)}... (truncado)`;
+}
+
+function countMessageTypes(messages: unknown[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const message of messages) {
+    const type = typeof message === "object" && message !== null ? String((message as Record<string, unknown>).type ?? "(sin type)") : `(no-objeto: ${typeof message})`;
+    counts[type] = (counts[type] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export function buildClaudeEmployeeOutputDiagnostics(params: { structuredOutput: string | undefined; executionFileContent: string | undefined; outputSchema: JsonSchemaLite }): ClaudeEmployeeOutputDiagnostics {
+  const { structuredOutput, executionFileContent, outputSchema } = params;
+
+  const diagnostics: ClaudeEmployeeOutputDiagnostics = {
+    contractVersion: "claude-employee-runtime-diagnostics/v1",
+    failureKind: "none",
+    source: null,
+    structuredOutput: {
+      present: !!structuredOutput && structuredOutput.trim().length > 0,
+      bytes: structuredOutput ? Buffer.byteLength(structuredOutput, "utf-8") : 0,
+      sha256Prefix: structuredOutput ? sha256Prefix(structuredOutput) : null,
+    },
+    executionFile: {
+      provided: executionFileContent !== undefined,
+      bytes: executionFileContent ? Buffer.byteLength(executionFileContent, "utf-8") : 0,
+      sha256Prefix: executionFileContent ? sha256Prefix(executionFileContent) : null,
+      parsedAsJson: null,
+      messageCount: null,
+      messageTypeCounts: {},
+      resultMessageCount: null,
+    },
+    finalResultMessage: {
+      present: false,
+      subtype: null,
+      isError: null,
+      resultFieldType: null,
+      resultLength: null,
+      hasMarkdownFence: null,
+      lastNonWhitespaceChar: null,
+    },
+    jsonParse: { attempted: false, ok: false, error: null },
+    schemaValidation: { attempted: false, ok: false, errorCount: 0, errors: [] },
+  };
+
+  /** Parseo + validacion de schema, compartido por el caso A y el caso B (mismo contrato en ambos, igual que en resolveClaudeEmployeeOutput). */
+  const inspectRawText = (rawText: string): void => {
+    diagnostics.jsonParse.attempted = true;
+    let parsed: unknown;
+    try {
+      parsed = extractJsonFromModelResponse(rawText);
+      diagnostics.jsonParse.ok = true;
+    } catch (err) {
+      diagnostics.jsonParse.error = truncateMessage(err instanceof Error ? err.message : String(err));
+      diagnostics.failureKind = "result_not_valid_json";
+      return;
+    }
+    diagnostics.schemaValidation.attempted = true;
+    const errors = validateAgainstSchema(outputSchema, outputSchema, parsed);
+    diagnostics.schemaValidation.errorCount = errors.length;
+    diagnostics.schemaValidation.errors = errors.slice(0, MAX_REPORTED_SCHEMA_ERRORS).map(truncateMessage);
+    diagnostics.schemaValidation.ok = errors.length === 0;
+    if (errors.length > 0) diagnostics.failureKind = "schema_validation_failed";
+  };
+
+  try {
+    if (diagnostics.structuredOutput.present) {
+      diagnostics.source = "structured_output";
+      inspectRawText(structuredOutput as string);
+      return diagnostics;
+    }
+
+    if (!executionFileContent) {
+      diagnostics.failureKind = "no_output_at_all";
+      return diagnostics;
+    }
+
+    let messages: unknown;
+    try {
+      messages = JSON.parse(executionFileContent);
+      diagnostics.executionFile.parsedAsJson = true;
+    } catch {
+      diagnostics.executionFile.parsedAsJson = false;
+      diagnostics.failureKind = "execution_file_not_json";
+      return diagnostics;
+    }
+
+    if (!Array.isArray(messages)) {
+      diagnostics.failureKind = "execution_file_without_result_message";
+      return diagnostics;
+    }
+
+    diagnostics.executionFile.messageCount = messages.length;
+    diagnostics.executionFile.messageTypeCounts = countMessageTypes(messages);
+    diagnostics.executionFile.resultMessageCount = diagnostics.executionFile.messageTypeCounts["result"] ?? 0;
+
+    if (diagnostics.executionFile.resultMessageCount === 0) {
+      diagnostics.failureKind = "execution_file_without_result_message";
+      return diagnostics;
+    }
+
+    const resultMessage = extractFinalResultMessage(messages);
+    diagnostics.finalResultMessage.present = true;
+    diagnostics.finalResultMessage.subtype = resultMessage.subtype === undefined ? null : String(resultMessage.subtype);
+    diagnostics.finalResultMessage.isError = resultMessage.is_error === undefined ? null : resultMessage.is_error === true;
+    diagnostics.finalResultMessage.resultFieldType = resultMessage.result === undefined ? "undefined" : typeof resultMessage.result;
+
+    if (typeof resultMessage.result === "string") {
+      const trimmed = resultMessage.result.trim();
+      diagnostics.finalResultMessage.resultLength = resultMessage.result.length;
+      diagnostics.finalResultMessage.hasMarkdownFence = /^```/.test(trimmed);
+      diagnostics.finalResultMessage.lastNonWhitespaceChar = trimmed.length > 0 ? trimmed[trimmed.length - 1] : null;
+    }
+
+    if (resultMessage.subtype !== "success" || resultMessage.is_error === true) {
+      diagnostics.failureKind = "claude_reported_failure";
+      return diagnostics;
+    }
+
+    if (typeof resultMessage.result !== "string" || resultMessage.result.trim().length === 0) {
+      diagnostics.failureKind = "result_field_missing_or_empty";
+      return diagnostics;
+    }
+
+    diagnostics.source = "execution_file_fallback";
+    inspectRawText(resultMessage.result);
+    return diagnostics;
+  } catch (err) {
+    // Red de seguridad: diagnosticar nunca puede ser el motivo de que
+    // una pasada se caiga -- se registra el fallo del propio
+    // diagnostico y se devuelve lo que se haya podido reunir.
+    diagnostics.jsonParse.error = truncateMessage(`fallo inesperado del propio diagnostico: ${err instanceof Error ? err.message : String(err)}`);
+    return diagnostics;
+  }
+}
+
+/** Frase corta y legible por humanos para cada clasificacion -- lo que antes se resumia como "runtime=failure / claude=failure". */
+export function describeClaudeEmployeeFailureKind(kind: ClaudeEmployeeFailureKind): string {
+  switch (kind) {
+    case "none":
+      return "salida resuelta y valida.";
+    case "no_output_at_all":
+      return "Claude no dejo NADA recuperable: ni structured_output ni execution_file (caso C).";
+    case "execution_file_not_json":
+      return "el execution_file existe pero no es JSON valido -- no se pudo recuperar la salida.";
+    case "execution_file_without_result_message":
+      return 'el execution_file existe y es JSON, pero no contiene ningun mensaje final de tipo "result".';
+    case "claude_reported_failure":
+      return "Claude respondio, pero su mensaje final declara un fallo real (subtype != success o is_error = true).";
+    case "result_field_missing_or_empty":
+      return 'Claude termino en exito pero su mensaje final no trae un campo `result` de texto no vacio -- no hay respuesta que recuperar.';
+    case "result_not_valid_json":
+      return "Claude respondio y hay texto en `result`, pero ese texto no es JSON valido (respuesta truncada, texto alrededor del JSON, o formato roto).";
+    case "schema_validation_failed":
+      return "Claude devolvio JSON valido, pero NO cumple el JSON Schema versionado del empleado -- descartado en cerrado (fail-closed).";
+  }
 }

@@ -144,6 +144,26 @@ export function runSeoSpecialistDomainTests(): TestCase[] {
         assert.doesNotThrow(() => validateSeoSpecialistOutput(raw));
       },
     },
+    {
+      name: "REGRESION (run 31949966340): un technicalIssue SIN page es valido -- un problema de sitio no tiene pagina concreta y exigirla obligaba a inventarse una URL",
+      fn: () => {
+        const raw = makeEmptyOutput({
+          technicalIssues: [{ id: "t1", issue: "Varios clusters compiten por la misma intencion sin pagina destino todavia.", severity: "medium", basis: "inference", evidenceRefs: [] }],
+        });
+        assert.doesNotThrow(() => validateSeoSpecialistOutput(raw));
+      },
+    },
+    {
+      name: "un technicalIssue sigue exigiendo issue/severity/basis (que page sea opcional no relaja el resto del contrato)",
+      fn: () => {
+        const raw = makeEmptyOutput({
+          // `as` deliberado: el objeto es invalido a proposito (le falta
+          // `issue`), asi que no puede tipar como SeoTechnicalIssue.
+          technicalIssues: [{ id: "t1", page: "https://zentrylockers.com/x/", severity: "medium", basis: "inference", evidenceRefs: [] }] as unknown as SeoSpecialistOutput["technicalIssues"],
+        });
+        assert.throws(() => validateSeoSpecialistOutput(raw), /technicalIssues/);
+      },
+    },
 
     // --- auditSeoSpecialistOutputForUnsupportedClaims ---
     {

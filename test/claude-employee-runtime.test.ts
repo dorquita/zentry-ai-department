@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict";
-import { extractFinalResultMessage, extractJsonFromModelResponse, resolveClaudeEmployeeOutput } from "../src/core/claude-employee-runtime";
+import { buildClaudeEmployeeOutputDiagnostics, extractFinalResultMessage, extractJsonFromModelResponse, resolveClaudeEmployeeOutput } from "../src/core/claude-employee-runtime";
 import { JsonSchemaLite } from "../src/core/json-schema-lite";
 
 export interface TestCase {
@@ -287,6 +287,106 @@ export function runClaudeEmployeeRuntimeTests(): TestCase[] {
           () => resolveClaudeEmployeeOutput({ structuredOutput: undefined, executionFileContent, outputSchema: GENERIC_EMPLOYEE_SCHEMA }),
           (err: unknown) => err instanceof Error && /\$\.details/.test(err.message) && /"extra"/.test(err.message)
         );
+      },
+    },
+
+    // --- Diagnostico: los ocho fallos posibles dejan de confundirse en
+    // "runtime=failure / claude=failure" (incidente real de
+    // seo-specialist, pasada dept-2026-08-16T124753Z) ---
+    {
+      name: "diagnostico: sin structured_output y sin execution_file -> no_output_at_all",
+      fn: () => {
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent: undefined, outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.equal(d.failureKind, "no_output_at_all");
+        assert.equal(d.source, null);
+        assert.equal(d.structuredOutput.present, false);
+        assert.equal(d.executionFile.provided, false);
+      },
+    },
+    {
+      name: "diagnostico: execution_file que no es JSON -> execution_file_not_json (y registra sus bytes)",
+      fn: () => {
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent: "esto no es json", outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.equal(d.failureKind, "execution_file_not_json");
+        assert.equal(d.executionFile.parsedAsJson, false);
+        assert.equal(d.executionFile.bytes, "esto no es json".length);
+      },
+    },
+    {
+      name: "diagnostico: execution_file sin mensaje result -> execution_file_without_result_message (con el recuento por tipo de mensaje)",
+      fn: () => {
+        const messages = [{ type: "system", subtype: "init" }, { type: "assistant" }, { type: "assistant" }];
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent: JSON.stringify(messages), outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.equal(d.failureKind, "execution_file_without_result_message");
+        assert.equal(d.executionFile.messageCount, 3);
+        assert.equal(d.executionFile.messageTypeCounts.assistant, 2);
+        assert.equal(d.executionFile.resultMessageCount, 0);
+      },
+    },
+    {
+      name: "diagnostico: Claude declara fallo real (subtype != success) -> claude_reported_failure",
+      fn: () => {
+        const executionFileContent = JSON.stringify(messagesWithResult({ subtype: "error_max_turns", is_error: true, result: undefined }));
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent, outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.equal(d.failureKind, "claude_reported_failure");
+        assert.equal(d.finalResultMessage.subtype, "error_max_turns");
+        assert.equal(d.finalResultMessage.isError, true);
+      },
+    },
+    {
+      name: "diagnostico: result vacio pese a subtype success -> result_field_missing_or_empty",
+      fn: () => {
+        const executionFileContent = JSON.stringify(messagesWithResult({ result: "   " }));
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent, outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.equal(d.failureKind, "result_field_missing_or_empty");
+        assert.equal(d.finalResultMessage.resultFieldType, "string");
+      },
+    },
+    {
+      name: "diagnostico: JSON truncado -> result_not_valid_json, con longitud y ultimo caracter no blanco (distingue truncado de forma equivocada)",
+      fn: () => {
+        const truncated = '{"summary": "abc", "score": 0.9, "tags": ["a", "b"], "details": {"note": "n';
+        const executionFileContent = JSON.stringify(messagesWithResult({ result: truncated }));
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent, outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.equal(d.failureKind, "result_not_valid_json");
+        assert.equal(d.jsonParse.attempted, true);
+        assert.equal(d.jsonParse.ok, false);
+        assert.equal(d.finalResultMessage.resultLength, truncated.length);
+        assert.equal(d.finalResultMessage.lastNonWhitespaceChar, "n");
+        assert.equal(d.schemaValidation.attempted, false);
+      },
+    },
+    {
+      name: "diagnostico: JSON valido que incumple el schema -> schema_validation_failed, con los errores concretos",
+      fn: () => {
+        const incomplete = { ...validGenericOutput() } as Record<string, unknown>;
+        delete incomplete.score;
+        const executionFileContent = JSON.stringify(messagesWithResult({ result: JSON.stringify(incomplete) }));
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent, outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.equal(d.failureKind, "schema_validation_failed");
+        assert.equal(d.jsonParse.ok, true);
+        assert.equal(d.schemaValidation.errorCount, 1);
+        assert.ok(d.schemaValidation.errors[0].includes("score"));
+      },
+    },
+    {
+      name: "diagnostico: salida buena via fallback -> failureKind none y source execution_file_fallback",
+      fn: () => {
+        const executionFileContent = JSON.stringify(messagesWithResult({ result: JSON.stringify(validGenericOutput()) }));
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent, outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.equal(d.failureKind, "none");
+        assert.equal(d.source, "execution_file_fallback");
+        assert.equal(d.schemaValidation.ok, true);
+        assert.equal(d.finalResultMessage.lastNonWhitespaceChar, "}");
+      },
+    },
+    {
+      name: "diagnostico: NUNCA imprime el contenido de la respuesta del modelo (solo metadatos)",
+      fn: () => {
+        const secretish = JSON.stringify({ ...validGenericOutput(), summary: "TEXTO-QUE-NO-DEBE-APARECER-EN-EL-DIAGNOSTICO" });
+        const executionFileContent = JSON.stringify(messagesWithResult({ result: secretish }));
+        const d = buildClaudeEmployeeOutputDiagnostics({ structuredOutput: undefined, executionFileContent, outputSchema: GENERIC_EMPLOYEE_SCHEMA });
+        assert.ok(!JSON.stringify(d).includes("TEXTO-QUE-NO-DEBE-APARECER-EN-EL-DIAGNOSTICO"));
       },
     },
   ];

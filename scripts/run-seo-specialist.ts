@@ -40,10 +40,14 @@ import {
   validateSeoSpecialistOutput,
 } from "../src/employees/seo-specialist/domain";
 import { extractJsonFromModelResponse } from "../src/core/claude-employee-runtime";
+import { renderSchemaContractSummary } from "../src/core/schema-contract-summary";
+import { JsonSchemaLite } from "../src/core/json-schema-lite";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
 import { resolveActiveClientPaths } from "../src/core/client-paths";
 
 const AGENT_NAME = "seo-specialist";
+/** Ruta (relativa al repo) del JSON Schema versionado del empleado -- la MISMA que recibe --json-schema y contra la que valida el runtime comun. */
+const OUTPUT_SCHEMA_RELATIVE_PATH = `config/${AGENT_NAME}-output.schema.json`;
 
 function parseArgs(argv: string[]): Record<string, string> {
   const args: Record<string, string> = {};
@@ -73,7 +77,7 @@ function buildPromptMarkdown(context: SeoSpecialistContext, runId: string): stri
   const lines: string[] = [];
   lines.push(`# Prompt preparado para ${AGENT_NAME} — run ${runId}`);
   lines.push("");
-  lines.push("Este fichero es la union de: (1) instrucciones del subagente, (2) contexto estructurado agregado de datos SEO locales.");
+  lines.push("Este fichero es la union de: (1) instrucciones del subagente, (2) el contrato exacto de salida generado desde su JSON Schema versionado, (3) contexto estructurado agregado de datos SEO locales.");
   lines.push("Pegalo tal cual como prompt del subagente `seo-specialist`. El subagente no tiene herramientas -- todo lo que necesita esta aqui.");
   lines.push("");
   lines.push("---");
@@ -84,13 +88,24 @@ function buildPromptMarkdown(context: SeoSpecialistContext, runId: string): stri
   lines.push("");
   lines.push("---");
   lines.push("");
-  lines.push("## 2. Contexto estructurado (SeoSpecialistContext)");
+  lines.push("## 2. Contrato exacto de salida (generado desde el JSON Schema versionado)");
+  lines.push("");
+  // Generado, nunca escrito a mano: es lo unico que impide que las
+  // instrucciones en prosa del agente y el schema contra el que se valida
+  // su respuesta se contradigan (ver src/core/schema-contract-summary.ts
+  // para el incidente que lo motivo).
+  const outputSchema = JSON.parse(fs.readFileSync(path.join(projectRoot, OUTPUT_SCHEMA_RELATIVE_PATH), "utf-8")) as JsonSchemaLite;
+  lines.push(renderSchemaContractSummary(outputSchema, OUTPUT_SCHEMA_RELATIVE_PATH));
+  lines.push("");
+  lines.push("---");
+  lines.push("");
+  lines.push("## 3. Contexto estructurado (SeoSpecialistContext)");
   lines.push("");
   lines.push("```json");
   lines.push(JSON.stringify(context, null, 2));
   lines.push("```");
   lines.push("");
-  lines.push('Devuelve UNICAMENTE el JSON de salida descrito en las instrucciones del subagente (seccion "Que debes producir"), sin texto adicional.');
+  lines.push('Devuelve UNICAMENTE el JSON de salida descrito en las instrucciones del subagente (seccion "Que debes producir"), respetando el contrato exacto de la seccion 2, sin texto adicional.');
   lines.push("");
   return lines.join("\n");
 }

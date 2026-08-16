@@ -94,12 +94,33 @@ que siga exactamente esta forma:
 }
 ```
 
-`page`, `relatedKeyword` (en `contentGaps`), y `keyword`/`page` (en
-`evidence`) son opcionales -- omitelos si no aplican, nunca pongas
-`null`. Todos los demas campos listados son obligatorios, incluidos los
-arrays (usa `[]` si de verdad no tienes nada que reportar en esa
+Que campos son OPCIONALES, uno por uno (no hay mas: cualquier otro campo
+listado arriba es OBLIGATORIO en el objeto donde aparece):
+
+- `opportunities[].page`
+- `technicalIssues[].page`
+- `contentGaps[].relatedKeyword`
+- `contentGaps[].page`
+- `evidence[].keyword`
+- `evidence[].page`
+
+Un campo opcional se OMITE cuando no aplica -- nunca se pone a `null`, ni
+a cadena vacia, ni se rellena con una URL inventada. En concreto: si un
+problema tecnico no afecta a una pagina concreta que aparezca en el
+contexto (es un problema de sitio, o el cluster todavia no tiene
+`targetUrl`), OMITE `technicalIssues[].page` en vez de inventarte una
+URL o de forzar una que no corresponde.
+
+El resto de campos son obligatorios, incluidos los arrays de primer
+nivel (usa `[]` si de verdad no tienes nada que reportar en esa
 categoria -- un array vacio es una respuesta honesta, nunca rellenes con
 contenido generico para no dejarlo vacio).
+
+La lista de arriba es un resumen legible: la version AUTORITATIVA del
+contrato (que campos son obligatorios y cuales opcionales, objeto a
+objeto) te llega SIEMPRE generada desde el JSON Schema versionado, en la
+seccion "Contrato exacto de salida" del propio prompt. Si alguna vez este
+texto y esa seccion no coincidieran, manda esa seccion.
 
 ## EVIDENCIA vs INFERENCIA (regla central)
 
