@@ -46,6 +46,10 @@ export interface CoreAuthProbe {
   result: "OK" | "FAIL";
   httpStatus: number | null;
   authenticatedUserDetected: "YES" | "NO";
+  /** Campo `code` del error de WordPress, saneado. Es un enum fijo, nunca datos del usuario. */
+  errorCode: string;
+  /** Esquema anunciado en WWW-Authenticate (Basic/Bearer/...), sin el realm. */
+  authChallenge: string;
   note: string;
 }
 
@@ -54,6 +58,8 @@ export interface McpProbe {
   httpStatus: number | null;
   /** Ultimo segmento de la ruta, saneado. Distingue novamira / novamira-oauth / mcp-adapter-default-server. */
   routeSegment: string;
+  errorCode: string;
+  authChallenge: string;
   protocolVersion: string | null;
   serverName: string | null;
   sessionId: "present" | "absent";
@@ -110,6 +116,55 @@ function assertNoSecretLeak(text: string, secrets: string[]): void {
   }
 }
 
+/**
+ * Codigo de error de la respuesta, saneado. WordPress devuelve en `code`
+ * un identificador de un enum fijo (`rest_not_logged_in`,
+ * `incorrect_password`, ...): no lleva datos del usuario ni del sitio.
+ * Aun asi se filtra contra un charset conservador, y el `message` -- que
+ * SI puede llevar texto libre -- no se toca nunca.
+ */
+export function extractErrorCode(body: Record<string, unknown> | null): string {
+  if (!body) return "(sin cuerpo)";
+  const direct = body.code;
+  const nested = ((body.error ?? {}) as Record<string, unknown>).code;
+  const raw = typeof direct === "string" ? direct : typeof nested === "string" ? nested : typeof nested === "number" ? String(nested) : "";
+  if (raw.length === 0) return "(sin code)";
+  return /^[A-Za-z0-9_.:-]{1,64}$/.test(raw) ? raw : "(code no reportable)";
+}
+
+/**
+ * Esquema anunciado en WWW-Authenticate, SIN el realm: el realm puede
+ * llevar el nombre del sitio, el esquema no lleva nada.
+ */
+export function extractAuthChallenge(header: string | null): string {
+  if (!header) return "(sin cabecera WWW-Authenticate)";
+  const scheme = header.trim().split(/[\s,]+/)[0] ?? "";
+  return /^[A-Za-z][A-Za-z0-9-]{0,31}$/.test(scheme) ? scheme : "(esquema no reportable)";
+}
+
+/**
+ * Interpreta el codigo REAL que devolvio WordPress. No se presupone
+ * ninguno: un codigo que no este en esta tabla se reporta como no
+ * reconocido, en vez de forzarlo dentro de una hipotesis.
+ */
+export function interpretErrorCode(code: string): string {
+  const known: Record<string, string> = {
+    rest_not_logged_in:
+      "WordPress no vio NINGUNA credencial en la peticion. Apunta a que la cabecera Authorization se elimina antes de llegar a PHP (proxy, servidor web o WAF), no a que la credencial sea mala.",
+    rest_cannot_view: "La credencial autentico, pero al usuario le falta el permiso para ese recurso. No es un problema de contrasena.",
+    incorrect_password: "La credencial SI llego a WordPress y fue rechazada: la Application Password no es valida para ese usuario.",
+    invalid_username: "La credencial SI llego a WordPress: el usuario indicado no existe.",
+    invalid_email: "La credencial SI llego a WordPress: no hay ninguna cuenta con ese identificador.",
+    application_passwords_disabled: "Las Application Passwords estan DESACTIVADAS en el sitio. Ninguna credencial de este tipo funcionara hasta habilitarlas.",
+    application_passwords_disabled_for_user: "Las Application Passwords estan desactivadas PARA ESE USUARIO concreto.",
+    invalid_application_password: "La Application Password no es valida o fue revocada.",
+    application_password_not_allowed: "El sitio no permite Application Passwords en esta conexion (habitualmente por exigir HTTPS).",
+    rest_no_route: "No hay ninguna ruta REST registrada ahi.",
+    rest_forbidden: "Autenticado, pero sin permiso para esa operacion.",
+  };
+  return known[code] ?? `Codigo "${code}" no reconocido por este probe: NO se interpreta. Hay que mirarlo contra la documentacion de WordPress/Novamira antes de sacar conclusiones.`;
+}
+
 function describeStatus(status: number): string {
   if (status === 401) return "401 Unauthorized: la credencial no ha sido aceptada, o no ha llegado hasta WordPress.";
   if (status === 403) return "403 Forbidden: autenticado, pero sin el permiso que exige ese endpoint.";
@@ -122,7 +177,14 @@ function describeStatus(status: number): string {
 // --- A. WordPress Core -------------------------------------------------------
 
 async function probeWordpressCoreAuth(origin: string, authHeader: string): Promise<CoreAuthProbe> {
-  const probe: CoreAuthProbe = { result: "FAIL", httpStatus: null, authenticatedUserDetected: "NO", note: "" };
+  const probe: CoreAuthProbe = {
+    result: "FAIL",
+    httpStatus: null,
+    authenticatedUserDetected: "NO",
+    errorCode: "(no evaluado)",
+    authChallenge: "(no evaluado)",
+    note: "",
+  };
   try {
     const response = await fetch(`${origin}${CORE_AUTH_PATH}`, {
       method: "GET",
@@ -130,12 +192,18 @@ async function probeWordpressCoreAuth(origin: string, authHeader: string): Promi
     });
     probe.httpStatus = response.status;
     probe.note = describeStatus(response.status);
+    probe.authChallenge = extractAuthChallenge(response.headers.get("www-authenticate"));
 
-    if (!response.ok) return probe;
+    // El cuerpo trae nombre y email del usuario en el caso 2xx, y texto
+    // libre en `message` en el caso de error: se lee para derivar UN
+    // booleano y UN codigo de enum, y se descarta. Nada mas sale de aqui.
+    const body = parseBody(await response.text());
 
-    // El cuerpo trae nombre y email del usuario: se lee para derivar UN
-    // booleano y se descarta. Nada de aqui se imprime ni se guarda.
-    const body = (await response.json()) as Record<string, unknown>;
+    if (!response.ok) {
+      probe.errorCode = extractErrorCode(body);
+      return probe;
+    }
+    probe.errorCode = "(sin error)";
     const id = typeof body?.id === "number" ? body.id : 0;
     probe.authenticatedUserDetected = id > 0 ? "YES" : "NO";
     probe.result = id > 0 ? "OK" : "FAIL";
@@ -170,7 +238,7 @@ async function jsonRpc(
   method: string,
   id: number | null,
   params?: Record<string, unknown>
-): Promise<{ status: number; sessionId: string | null; body: Record<string, unknown> | null }> {
+): Promise<{ status: number; sessionId: string | null; authChallenge: string | null; body: Record<string, unknown> | null }> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json, text/event-stream",
@@ -184,7 +252,12 @@ async function jsonRpc(
   if (id !== null) payload.id = id;
 
   const response = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(payload) });
-  return { status: response.status, sessionId: response.headers.get("mcp-session-id"), body: parseBody(await response.text()) };
+  return {
+    status: response.status,
+    sessionId: response.headers.get("mcp-session-id"),
+    authChallenge: response.headers.get("www-authenticate"),
+    body: parseBody(await response.text()),
+  };
 }
 
 function extractToolNames(body: Record<string, unknown> | null): string[] {
@@ -228,6 +301,8 @@ async function probeNovamiraMcp(endpoint: string, authHeader: string, routeSegme
     result: "FAIL",
     httpStatus: null,
     routeSegment,
+    errorCode: "(no evaluado)",
+    authChallenge: "(no evaluado)",
     protocolVersion: null,
     serverName: null,
     sessionId: "absent",
@@ -244,6 +319,8 @@ async function probeNovamiraMcp(endpoint: string, authHeader: string, routeSegme
     });
     probe.httpStatus = init.status;
     probe.note = describeStatus(init.status);
+    probe.authChallenge = extractAuthChallenge(init.authChallenge);
+    probe.errorCode = init.status >= 400 ? extractErrorCode(init.body) : "(sin error)";
 
     if (init.status >= 400 || !init.body) return probe;
     if (init.body.error) {
@@ -324,10 +401,16 @@ async function main(): Promise<void> {
     WORDPRESS_CORE_AUTH: core.result,
     CORE_HTTP_STATUS: core.httpStatus,
     authenticatedUserDetected: core.authenticatedUserDetected,
+    CORE_ERROR_CODE: core.errorCode,
+    CORE_ERROR_CODE_SIGNIFICADO: core.errorCode.startsWith("(") ? "(sin code que interpretar)" : interpretErrorCode(core.errorCode),
+    CORE_AUTH_CHALLENGE: core.authChallenge,
     CORE_NOTE: core.note,
     NOVAMIRA_MCP_AUTH: mcp.result,
     MCP_HTTP_STATUS: mcp.httpStatus,
     MCP_ROUTE_SEGMENT: mcp.routeSegment,
+    MCP_ERROR_CODE: mcp.errorCode,
+    MCP_ERROR_CODE_SIGNIFICADO: mcp.errorCode.startsWith("(") ? "(sin code que interpretar)" : interpretErrorCode(mcp.errorCode),
+    MCP_AUTH_CHALLENGE: mcp.authChallenge,
     MCP_PROTOCOL_VERSION: mcp.protocolVersion,
     MCP_SERVER_NAME: mcp.serverName,
     MCP_SESSION: mcp.sessionId,
