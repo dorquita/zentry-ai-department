@@ -27,8 +27,9 @@ domain prepare
 │ .github/actions/claude-employee-runtime/action.yml        │
 │ src/core/claude-employee-runtime.ts                       │
 │                                                            │
-│   auth            -- CLAUDE_CODE_OAUTH_TOKEN / ANTHROPIC_API_KEY, │
-│                       sin fallback silencioso, BLOCKED_BY_AUTH    │
+│   auth            -- CLAUDE_CODE_OAUTH_TOKEN y NADA MAS           │
+│                       (solo-suscripcion, sin fallback a API key), │
+│                       si falta o caduca: BLOCKED_BY_AUTH          │
 │   preflight: tool guard -- assertSubagentIsToolless() ANTES de    │
 │                       invocar a Claude (subagent-tool-guard.ts)   │
 │   preflight: schema guard -- assertJsonSchemaLiteSupported()      │
@@ -69,7 +70,7 @@ Solo sabe hablar JSON Schema genérico y el protocolo de
 
 | Genérico (runtime común) | Específico de cada empleado (dominio) |
 |---|---|
-| Autenticación Claude (`CLAUDE_CODE_OAUTH_TOKEN`/`ANTHROPIC_API_KEY`), `BLOCKED_BY_AUTH` | Selección de trabajo (p.ej. change packs) |
+| Autenticación Claude (`CLAUDE_CODE_OAUTH_TOKEN`, solo-suscripción), `BLOCKED_BY_AUTH` | Selección de trabajo (p.ej. change packs) |
 | Preflight: tool guard determinista (`assertSubagentIsToolless()`, autoridad única para todos los empleados) | Preparación de contexto/prompt |
 | Preflight: schema guard determinista (`assertJsonSchemaLiteSupported()`, autoridad única para todos los empleados) | Forma exacta del tipo TypeScript de salida (`validateXOutput`) |
 | `claude-code-action` pinneada a un SHA concreto | Auditoría de dominio (p.ej. fabrication audit, comparación V1/V2) |
@@ -126,6 +127,65 @@ estáticamente -- `actionlint` conoce sus `inputs:` declarados y rechaza
 en CI cualquier workflow de empleado que pase un input inexistente o le
 falte uno requerido. Esto es una defensa real contra que un worktree
 rompa el contrato del runtime por error de tipeo.
+
+## Autenticación: solo suscripción, sin fallback a API key
+
+El runtime acepta **una sola** credencial: `CLAUDE_CODE_OAUTH_TOKEN`, el
+token de larga duración que emite `claude setup-token` contra una
+suscripción Claude (Pro/Max/Team/Enterprise). Si falta, está vacío o ha
+caducado, el runtime corta en `BLOCKED_BY_AUTH` y el job termina en
+rojo. **No cae a `ANTHROPIC_API_KEY`**, ni siquiera si ese secret existe
+en el repositorio.
+
+### Por qué (no es una simplificación, es una decisión de facturación)
+
+Los dos métodos no cuestan lo mismo:
+
+| Credencial | Qué consume | Coste real |
+|---|---|---|
+| `CLAUDE_CODE_OAUTH_TOKEN` | La cuota de la suscripción ya pagada | 0 € adicionales mientras se esté dentro de los límites del plan |
+| `ANTHROPIC_API_KEY` | Consumo de API | Facturable, por token |
+
+Documentación oficial de Claude Code GitHub Actions, literal: *"If you
+authenticate with an OAuth token, runs use your Claude subscription
+instead of API billing."*
+
+El fallback automático que existía antes (OAuth → API key) convertía un
+fallo de credencial —un token caducado, un secret borrado por error— en
+un **cambio silencioso de modelo de facturación**: los seis empleados de
+la pasada diaria habrían seguido ejecutándose, en verde, cobrando por
+API, sin más rastro que una línea de log. Fallar ruidosamente cuesta una
+pasada; seguir en verde cuesta dinero indefinidamente.
+
+### Qué NO implica
+
+- **El secret `ANTHROPIC_API_KEY` puede seguir existiendo** en el
+  repositorio y servir para otras cosas. Lo que se garantiza es que
+  *este* runtime no lo recibe: no hay input para él, ningún workflow se
+  lo pasa, y el step de invocación manda `anthropic_api_key: ""`
+  explícitamente (vacío y literal, para que quede evidencia auditable en
+  el log de cada run: GitHub enmascara como `***` cualquier secret con
+  valor, así que un campo vacío en el log demuestra que no viajó
+  ninguna key).
+- **Las métricas de coste no cambian.** Se sigue registrando
+  `total_cost_usd` por empleado (input `execution-record-path`). Ojo con
+  qué es ese número: una **estimación** que Claude Code calcula en local
+  a tarifa de lista, no una factura. Con autenticación por suscripción no
+  se corresponde con ningún cargo; sirve para conocer el consumo
+  equivalente y detectar pasadas anormalmente caras.
+
+### Guard automático
+
+`test/claude-employee-auth-guard.test.ts` (suite
+`claude-employee-auth-guard`, corre en CI con `npm test`) falla si:
+
+- el runtime vuelve a declarar un input `anthropic-api-key`,
+- aparece una rama de autenticación distinta de `oauth`/`none`,
+- `anthropic_api_key` deja de ser literal-vacío o pasa a interpolar algo,
+- cualquier workflow de empleado pasa una API key al runtime,
+- algún workflow invoca `anthropics/claude-code-action` por su cuenta
+  esquivando el runtime (y por tanto el guard),
+- o desaparece el registro de métricas de coste.
 
 ## Timeouts
 
@@ -221,13 +281,15 @@ de cada empleado, con la forma que tenga sentido para su dominio.
      real justificada explícitamente).
    - Un step `uses: ./.github/actions/claude-employee-runtime` con sus
      propios `agent-name`, `prompt`, `output-schema-path`,
-     `expected-output-path`, y los dos secrets de autenticación pasados
-     tal cual (`${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` /
-     `${{ secrets.ANTHROPIC_API_KEY }}` -- una composite action NO tiene
-     acceso al contexto `secrets` del caller, solo a lo que se le pase
-     explícitamente). **Ese mismo step debe llevar `timeout-minutes: 10`**
-     (ver sección "Timeouts" más arriba) salvo necesidad explícitamente
-     justificada.
+     `expected-output-path`, y **el único secret de autenticación**
+     pasado tal cual (`claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}`
+     -- una composite action NO tiene acceso al contexto `secrets` del
+     caller, solo a lo que se le pase explícitamente). **Ese mismo step
+     debe llevar `timeout-minutes: 10`** (ver sección "Timeouts" más
+     arriba) salvo necesidad explícitamente justificada.
+     **No añadas `anthropic-api-key`**: ese input ya no existe, y
+     `test/claude-employee-auth-guard.test.ts` falla si un workflow lo
+     reintroduce (ver "Autenticación: solo suscripción" más abajo).
 6. **Artifact/summary definition** -- qué ficheros sube
    (`actions/upload-artifact@v4`, nombre propio) y qué campos muestra en
    `$GITHUB_STEP_SUMMARY`. El runtime común expone dos outputs para

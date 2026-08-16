@@ -348,7 +348,7 @@ distinto del Daily Brief de la mañana, con:
 
 | Variable | Para qué |
 |---|---|
-| `CLAUDE_CODE_OAUTH_TOKEN` / `ANTHROPIC_API_KEY` | Invocar a los seis empleados Claude. |
+| `CLAUDE_CODE_OAUTH_TOKEN` | Invocar a los seis empleados Claude. **Único método aceptado**: el runtime es solo-suscripción y no cae a `ANTHROPIC_API_KEY` (ver `docs/claude-employee-runtime.md`, "Autenticación: solo suscripción"). Si el token caduca, la pasada falla con `BLOCKED_BY_AUTH` en vez de facturar por API. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `REPORT_EMAIL_FROM` | Enviar el correo. |
 | `DAILY_BRIEF_EMAIL_TO` (o, como alternativa, `REPORT_EMAIL_TO`) | Destinatario. |
 

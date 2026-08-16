@@ -155,7 +155,6 @@ jobs:
           output-schema-path: config/seo-specialist-output.schema.json
           expected-output-path: ${{ steps.seo1.outputs.expectedOutputPath }}
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ github.token }}
 
       - name: "[SEO] Runner (paso 2): validar salida + auditar"
@@ -250,7 +249,6 @@ jobs:
           output-schema-path: config/content-strategist-output.schema.json
           expected-output-path: ${{ steps.content1.outputs.expectedOutputPath }}
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ github.token }}
 
       - name: "[CONTENT] Runner (paso 2): validar salida + auditar"
@@ -350,7 +348,6 @@ jobs:
           output-schema-path: config/analytics-specialist-output.schema.json
           expected-output-path: ${{ steps.analytics1.outputs.expectedOutputPath }}
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ github.token }}
 
       - name: "[ANALYTICS] Runner (paso 2): validar salida + auditar"
@@ -467,7 +464,6 @@ jobs:
           output-schema-path: config/growth-director-v2-output.schema.json
           expected-output-path: ${{ steps.growth_prep.outputs.expectedOutputPath }}
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ github.token }}
 
       - name: "[COORD] Validar y registrar la sintesis de growth-director-v2"
@@ -551,7 +547,6 @@ jobs:
           output-schema-path: config/qa-reviewer-output.schema.json
           expected-output-path: ${{ steps.qa1.outputs.expectedOutputPath }}
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ github.token }}
 
       - name: "[QA] Runner (paso 2): validar la revision"
@@ -649,7 +644,6 @@ jobs:
           output-schema-path: config/web-engineer-output.schema.json
           expected-output-path: ${{ steps.web_prep.outputs.expectedOutputPath }}
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ github.token }}
 
       - name: "[COORD] Validar y registrar la especificacion tecnica de web-engineer"

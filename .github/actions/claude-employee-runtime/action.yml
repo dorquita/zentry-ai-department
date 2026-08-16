@@ -23,10 +23,13 @@ inputs:
     description: 'Ruta donde este runtime escribira el texto de salida ya resuelto (structured_output o fallback), tal cual, sin reinterpretar. El directorio debe existir ya (lo crea el codigo de preparacion de dominio del empleado).'
     required: true
   claude-code-oauth-token:
-    description: 'Valor de secrets.CLAUDE_CODE_OAUTH_TOKEN del caller (puede ser cadena vacia). Preferido sobre anthropic-api-key.'
-    required: true
-  anthropic-api-key:
-    description: 'Valor de secrets.ANTHROPIC_API_KEY del caller (puede ser cadena vacia). Alternativa si no hay claude-code-oauth-token.'
+    description: >-
+      Valor de secrets.CLAUDE_CODE_OAUTH_TOKEN del caller (puede ser cadena
+      vacia). UNICO metodo de autenticacion aceptado por este runtime -- ver
+      el step "Resolver metodo de autenticacion Claude" mas abajo para el
+      porque. Este runtime NO acepta ninguna API key: deliberadamente no
+      existe un input `anthropic-api-key`, para que ni un caller nuevo ni un
+      despiste puedan encaminar la facturacion a la API por accidente.
     required: true
   github-token:
     description: 'Token de GitHub a pasar EXPLICITAMENTE a claude-code-action (normalmente el valor de github.token del caller) -- ver el porque en el step de invocacion mas abajo. AVISO para quien edite este fichero: no escribas aqui, ni en ningun otro description de este fichero, la secuencia de interpolacion de GitHub Actions (llave-llave-porciento, espacio, llave-llave-porciento cerrando) ni siquiera vacia -- el parser de manifest de una composite action evalua esa secuencia en CUALQUIER string del fichero, incluido texto puramente documental, y el contexto "github" no esta disponible en ese momento de evaluacion (bug real detectado en el primer E2E de PR #6, run 31877237097/31877352330: "Unrecognized named-value: github" y luego "An expression was expected").'
@@ -74,31 +77,48 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # --- Autenticacion Claude: explicita, sin fallback silencioso ---
-    # Preferencia documentada: CLAUDE_CODE_OAUTH_TOKEN. Alternativa:
-    # ANTHROPIC_API_KEY. El metodo elegido se registra en el output
-    # `method` (visible en logs y en el Step Summary si falla) -- nunca
-    # se prueban los dos en silencio ni se combinan. Los valores llegan
-    # como inputs (no via `secrets.*` directo: una composite action NO
-    # tiene acceso al contexto `secrets` del caller, solo a lo que se le
-    # pase explicitamente por `with:` -- ver docs/claude-employee-runtime.md).
+    # --- Autenticacion Claude: SOLO suscripcion (OAuth), sin fallback ---
+    #
+    # UNICO metodo aceptado: CLAUDE_CODE_OAUTH_TOKEN (el token de larga
+    # duracion que emite `claude setup-token` contra una suscripcion
+    # Claude Pro/Max/Team/Enterprise). Si falta, caduca o esta vacio, este
+    # runtime se para en BLOCKED_BY_AUTH -- NUNCA cae a ANTHROPIC_API_KEY.
+    #
+    # Por que se elimino el fallback a API key (decision explicita de
+    # producto, no una simplificacion): los dos metodos NO cuestan lo
+    # mismo. Con el token OAuth, cada pasada consume la cuota de la
+    # suscripcion ya pagada ("If you authenticate with an OAuth token,
+    # runs use your Claude subscription instead of API billing", doc
+    # oficial de Claude Code GitHub Actions). Con una API key, cada pasada
+    # es consumo de API facturable de verdad. Un fallback automatico
+    # convertia un fallo silencioso de credencial (token caducado, secret
+    # borrado) en un cambio silencioso de modelo de facturacion: los seis
+    # empleados de la pasada diaria habrian seguido ejecutandose, en
+    # verde, cobrando por API, sin mas rastro que una linea de log. Fallar
+    # ruidosamente es la opcion barata; seguir en verde no lo es.
+    #
+    # El secret ANTHROPIC_API_KEY puede seguir existiendo en el repo para
+    # otros usos: lo que se garantiza aqui es que ESTE runtime no lo lee
+    # ni lo recibe -- no hay input para el, y el step de invocacion pasa
+    # `anthropic_api_key` explicitamente vacio.
+    #
+    # Los valores llegan como inputs (no via `secrets.*` directo: una
+    # composite action NO tiene acceso al contexto `secrets` del caller,
+    # solo a lo que se le pase explicitamente por `with:` -- ver
+    # docs/claude-employee-runtime.md).
     - name: Resolver metodo de autenticacion Claude
       id: claude-auth
       shell: bash
       run: |
         if [ -n "$HAS_OAUTH" ]; then
           echo "method=oauth" >> "$GITHUB_OUTPUT"
-          echo "Autenticacion Claude resuelta: CLAUDE_CODE_OAUTH_TOKEN (preferido)."
-        elif [ -n "$HAS_API_KEY" ]; then
-          echo "method=api_key" >> "$GITHUB_OUTPUT"
-          echo "Autenticacion Claude resuelta: ANTHROPIC_API_KEY (CLAUDE_CODE_OAUTH_TOKEN no configurado)."
+          echo "Autenticacion Claude resuelta: CLAUDE_CODE_OAUTH_TOKEN (suscripcion). Este runtime no admite ningun otro metodo."
         else
           echo "method=none" >> "$GITHUB_OUTPUT"
-          echo "::warning::Ninguna autenticacion Claude configurada (falta el secret CLAUDE_CODE_OAUTH_TOKEN o ANTHROPIC_API_KEY)."
+          echo "::warning::Ninguna autenticacion Claude valida (falta el secret CLAUDE_CODE_OAUTH_TOKEN o esta vacio). NO se intenta ninguna API key: este runtime es solo-suscripcion."
         fi
       env:
         HAS_OAUTH: ${{ inputs.claude-code-oauth-token != '' && '1' || '' }}
-        HAS_API_KEY: ${{ inputs.anthropic-api-key != '' && '1' || '' }}
 
     - name: Abortar (BLOCKED_BY_AUTH) si falta autenticacion Claude
       if: steps.claude-auth.outputs.method == 'none'
@@ -107,15 +127,18 @@ runs:
         {
           echo "## ${{ inputs.agent-name }} -- BLOCKED_BY_AUTH"
           echo ""
-          echo "Falta configurar autenticacion de Claude para este repositorio. Accion manual (una sola vez):"
+          echo "Falta el token de suscripcion de Claude, o ha caducado. Este runtime es **solo-suscripcion**: no cae a \`ANTHROPIC_API_KEY\` a proposito, para que un token caducado nunca se convierta en consumo de API facturable sin que nadie lo decida."
           echo ""
-          echo "1. Genera un token: \`claude setup-token\` en local (cuentas Claude Pro/Max) para CLAUDE_CODE_OAUTH_TOKEN,"
-          echo "   o una API key en la Consola de Anthropic para ANTHROPIC_API_KEY."
-          echo "2. Anade el secret **CLAUDE_CODE_OAUTH_TOKEN** (preferido) o **ANTHROPIC_API_KEY** en:"
-          echo "   Settings -> Secrets and variables -> Actions -> New repository secret."
+          echo "Accion manual:"
+          echo ""
+          echo "1. En local, con tu cuenta Claude (Pro/Max/Team/Enterprise) ya logueada, ejecuta \`claude setup-token\`."
+          echo "2. Guarda el valor como secret **CLAUDE_CODE_OAUTH_TOKEN** en:"
+          echo "   Settings -> Secrets and variables -> Actions (si ya existe, actualizalo -- el token caduca)."
           echo "3. Vuelve a lanzar este workflow con \`workflow_dispatch\`."
+          echo ""
+          echo "> Anadir \`ANTHROPIC_API_KEY\` NO desbloquea esta pasada: este runtime no lo lee. Ese secret puede existir en el repo para otros usos."
         } >> "$GITHUB_STEP_SUMMARY"
-        echo "::error::BLOCKED_BY_AUTH -- falta CLAUDE_CODE_OAUTH_TOKEN o ANTHROPIC_API_KEY. Ver el Step Summary para la accion manual exacta."
+        echo "::error::BLOCKED_BY_AUTH -- falta CLAUDE_CODE_OAUTH_TOKEN (o esta vacio/caducado). Este runtime es solo-suscripcion y no usa ninguna API key. Ver el Step Summary."
         exit 1
 
     # --- Preflights DETERMINISTICOS (sin usar Claude para nada), ambos
@@ -170,8 +193,8 @@ runs:
     # ES el empleado (--agent ${{ inputs.agent-name }}), nunca una sesion
     # generica que a su vez invoca Agent/Task.
     #
-    # SHA fijado (no el tag movible @v1): este step recibe
-    # CLAUDE_CODE_OAUTH_TOKEN/ANTHROPIC_API_KEY -- @v1 es un tag movible
+    # SHA fijado (no el tag movible @v1): este step recibe el token de
+    # suscripcion CLAUDE_CODE_OAUTH_TOKEN -- @v1 es un tag movible
     # que Anthropic puede reapuntar a otro commit en cualquier momento,
     # asi que se fija el commit exacto auditado (ver
     # docs/ux-ui-landing-architect-v2-experiment.md para la verificacion
@@ -238,8 +261,17 @@ runs:
       with:
         prompt: ${{ inputs.prompt }}
         github_token: ${{ inputs.github-token }}
-        anthropic_api_key: ${{ steps.claude-auth.outputs.method == 'api_key' && inputs.anthropic-api-key || '' }}
-        claude_code_oauth_token: ${{ steps.claude-auth.outputs.method == 'oauth' && inputs.claude-code-oauth-token || '' }}
+        # `anthropic_api_key` se pasa EXPLICITAMENTE vacio, no se omite:
+        # dejarlo escrito y vacio es la forma de que el log del run lo
+        # muestre como vacio (GitHub enmascara como *** cualquier secret
+        # con valor), o sea que queda evidencia auditable en cada pasada
+        # de que no viajo ninguna API key. Verificado que la Action trata
+        # la cadena vacia como "sin valor" (falsy en JS) y autentica con
+        # el OAuth: es el comportamiento con el que ya corrian las
+        # pasadas antes de este cambio (run 31884783034, donde este mismo
+        # input ya llegaba vacio).
+        anthropic_api_key: ""
+        claude_code_oauth_token: ${{ inputs.claude-code-oauth-token }}
         claude_args: |
           --agent ${{ inputs.agent-name }}
           --disallowedTools "${{ inputs.disallowed-tools }}"

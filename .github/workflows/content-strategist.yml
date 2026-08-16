@@ -159,7 +159,6 @@ jobs:
           output-schema-path: config/content-strategist-output.schema.json
           expected-output-path: ${{ steps.step1.outputs.expectedOutputPath }}
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           github-token: ${{ github.token }}
 
       # --- [DOMINIO] Paso 2 del runner: valida contra ContentStrategistOutput

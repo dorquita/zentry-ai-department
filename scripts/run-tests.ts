@@ -19,6 +19,7 @@ import { runLandingArchitectV2OutputSchemaTests } from "../test/landing-architec
 import { runRunnerResultParserTests } from "../test/runner-result-parser.test";
 import { runComparisonArtifactReaderTests } from "../test/comparison-artifact-reader.test";
 import { runClaudeEmployeeRuntimeTests } from "../test/claude-employee-runtime.test";
+import { runClaudeEmployeeAuthGuardTests } from "../test/claude-employee-auth-guard.test";
 import { runJsonSchemaLiteTests } from "../test/json-schema-lite.test";
 import { runGrowthDirectorV2ContextTests } from "../test/growth-director-v2-context.test";
 import { runGrowthDirectorV2DomainTests } from "../test/growth-director-v2-domain.test";
@@ -98,6 +99,7 @@ async function main(): Promise<void> {
     { suiteName: "runner-result-parser", cases: runRunnerResultParserTests() },
     { suiteName: "comparison-artifact-reader", cases: runComparisonArtifactReaderTests() },
     { suiteName: "claude-employee-runtime", cases: runClaudeEmployeeRuntimeTests() },
+    { suiteName: "claude-employee-auth-guard", cases: runClaudeEmployeeAuthGuardTests() },
     { suiteName: "json-schema-lite", cases: runJsonSchemaLiteTests() },
     { suiteName: "growth-director-v2-context", cases: runGrowthDirectorV2ContextTests() },
     { suiteName: "growth-director-v2-domain", cases: runGrowthDirectorV2DomainTests() },
