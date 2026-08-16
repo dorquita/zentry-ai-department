@@ -139,17 +139,43 @@ Corregido en `51563d9` (step movido al job `department-run`) mas un guard
 de regresion en `test/department-coordination-safety.test.ts` que falla si
 vuelve a colarse en el job de persistencia.
 
+### Pasada B (`31967138507`, commit `51563d9`) — ROJA, tampoco por el runtime
+
+Segundo run rojo, reportado igual de crudo. **Las seis invocaciones del
+runtime comun volvieron a salir verdes:**
+
+| Invocacion | Resultado | Duracion |
+|---|---|---|
+| `seo-specialist` | success | 4m 35s |
+| `content-strategist` | success | 1m 18s |
+| `analytics-specialist` | success | 2m 46s |
+| `growth-director-v2` | success | 3m 03s |
+| `qa-reviewer` | success | 3m 30s |
+| `web-engineer` | **skipped** | — (sin recomendaciones aprobadas que especificar: salida legitima de dominio, no fallo de runtime) |
+
+El step que fallo fue el **65, `[STATE] Verificar que la pasada no ha
+perdido estado`** — de nuevo un error mio, no del runtime: yo escribia los
+`claude-runtime-health.json` dentro de `reports/`, que **es estado
+persistido del departamento**. Cada pasada los reescribe con un contenido
+distinto, asi que en cuanto uno encogia respecto a la pasada anterior, el
+guard de perdida de estado lo denunciaba. Y hacia bien: ese guard no puede
+distinguir un diagnostico efimero de un dato real del departamento.
+
+Corregido en `1be90de`: el diagnostico pasa a `runner.temp` (efimero por
+pasada, publicado como artifact) y nunca toca `data/` ni `reports/`. Guard
+de regresion anadido.
+
 ### Pasadas 1-3 sobre el commit corregido
 
-**PENDIENTE.** La pasada `31967138507` (commit `51563d9`) lleva mas de 35
-minutos en estado `pending` de GitHub, sin asignacion de runner. Las
-pasadas anteriores del mismo dia arrancaron tras ~12 min de cola, asi que
-esto apunta a disponibilidad de runners o a cuota de Actions de la cuenta,
-no a nada del runtime.
+**PENDIENTE.** Lanzada la primera sobre `e85856d`.
+
+Ademas, la cola de runners de GitHub para esta cuenta ha ido de ~12 min a
+~48 min a lo largo de la sesion, lo que hace que cada pasada coordinada
+cueste cerca de una hora de reloj entre cola y ejecucion.
 
 **Este criterio de cierre (§16) NO esta cumplido todavia.** No se declara
-estable hasta que existan tres pasadas coordinadas consecutivas verdes
-sobre el commit corregido.
+estable el runtime comun hasta que existan tres pasadas coordinadas
+consecutivas verdes.
 
 ## 6. Métricas de fiabilidad
 
