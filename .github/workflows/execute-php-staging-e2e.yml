@@ -17,17 +17,16 @@ name: execute-php -- E2E reversible en STAGING
 # historial de git, asi que la autorizacion de cada ejecucion concreta es
 # auditable y no depende de quien pulse un boton.
 #
-# SOBRE EL TRIGGER `push`: GitHub solo permite `workflow_dispatch` para
-# workflows que YA existen en la rama por defecto. Mientras esta rama no
-# este mergeada, `push` es la unica forma de ejecutarlo. Esta acotado a
-# ESTA rama y a ESE unico fichero de peticion. Al mergear a main,
-# `workflow_dispatch` pasa a funcionar y este bloque `push` debe
-# eliminarse.
+# SOLO `workflow_dispatch`: este workflow ESCRIBE en staging, asi que
+# nunca debe dispararse solo. Durante el desarrollo hubo un trigger
+# `push` temporal (GitHub no permite `workflow_dispatch` para un workflow
+# que aun no esta en la rama por defecto); se elimino al mergear, que era
+# justo la condicion que lo hacia necesario.
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "list (solo lectura) | run (E2E completo)"
+        description: "list / ability-info (solo lectura) | run (E2E completo, ESCRIBE en staging)"
         required: true
         default: "list"
         type: choice
@@ -36,9 +35,6 @@ on:
         description: "ID de la pagina de staging (solo para mode=run)"
         required: false
         type: string
-  push:
-    branches: ["claude/daily-brief-decisions-7jf47i"]
-    paths: ["reports/execute-php-e2e/e2e-request.json"]
 
 concurrency:
   group: execute-php-staging-e2e
