@@ -1,12 +1,12 @@
 {
   "authorizedBy": "pau",
   "authorization": "Aprobacion humana para UN E2E reversible sobre STAGING del fallback execute-php. No autoriza produccion.",
-  "mode": "list",
-  "postId": 2077,
-  "pageChosen": "staging /configurador-bancos/ -- 'Configurador de bancos (prototipo)'. Elegida por ser la pagina MENOS critica del sitio: su propio excerpt la declara prototipo interno (Fase O23.2), no es una landing comercial ni tiene trafico SEO objetivo. Ademas su post_excerpt NO esta vacio, asi que el BEFORE, el cambio y la reversion son todos verificables sobre contenido real.",
-  "operation": "update_post_excerpt",
-  "whyNotAnAbility": "post_excerpt no tiene ninguna ability nativa de Novamira que lo escriba (NATIVE_ABILITY_FOR_OPERATION.update_post_excerpt === null), asi que selectExecutionPath() elige execute_php_fallback sin necesidad de declarar ningun motivo. Un H2 habria vivido en post_content, que SI tiene ability nativa (gutenberg-write-content) y por tanto se habria enrutado a la nativa bajo esta misma politica.",
-  "note": "mode=list ampliado: ahora tambien lista los TIPOS DE BLOQUE de cada pagina y si tiene un H2 nativo. Hace falta para elegir la pagina del E2E de H2 sin adivinar cual lo tiene.",
+  "mode": "run",
+  "postId": 1867,
+  "pageChosen": "staging /digitalizacion-taquillas/ -- 'Digitalizacion de taquillas existentes'. Elegida entre las que SI tienen un core/heading H2 real por ser la menos critica: es informativa, no es una landing comercial, no es la home ni la pagina de presupuesto, y no figura en el backlog SEO del Daily Brief. Bloques reales: core/button, core/buttons, core/heading, core/image, core/list, core/paragraph, yoast/faq-block.",
+  "operation": "update_post_content",
+  "whyNotAnAbility": "gutenberg-write-content EXISTE para post_content, pero el servidor declara textualmente que solo escribe cuando TODOS los bloques son novamira/* dynamic-only, y que para bloques nativos/estaticos RECHAZA la escritura. Esta pagina es core/* + yoast/*, asi que selectExecutionPath() lo deriva del contenido real y devuelve execute_php_fallback. Dato del censo: NINGUNA pagina del sitio tiene bloques novamira/*.",
+  "note": "mode=run: E2E de cambio temporal de un H2 (core/heading) por el fallback de PHP, con reversion verificada.",
   "lastRun": {
     "runUrl": "https://github.com/dorquita/zentry-ai-department/actions/runs/31942175626",
     "postId": 2077,

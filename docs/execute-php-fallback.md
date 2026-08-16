@@ -58,26 +58,76 @@ habilitada por nada de esto.
 
 ## 2. Cómo se decide native ability vs PHP fallback
 
-`selectExecutionPath()` en
-[`src/core/execute-php-operations.ts`](../src/core/execute-php-operations.ts).
+`selectExecutionPath({ plan })` en
+[`src/core/execute-php-operations.ts`](../src/core/execute-php-operations.ts),
+apoyado en
+[`novamira-ability-capabilities.ts`](../src/core/novamira-ability-capabilities.ts).
 
-| Operación | Ability nativa | Camino por defecto |
+**Que exista una ability nativa NO basta para considerarla aplicable.**
+La decisión tiene tres pasos, y el segundo es el que importa:
+
+1. ¿Existe una ability nativa para esta operación?
+2. ¿Soporta **realmente** el target/contenido solicitado?
+3. Sólo entonces → `native_ability`. Si existe pero es incompatible →
+   `execute_php_fallback` con un `nativeAbilityUnsuitableReason`
+   **verificable**.
+
+| Operación | Ability nativa | Camino |
 |---|---|---|
-| `update_post_content` | `novamira/gutenberg-write-content` | **native_ability** |
-| `update_post_title` | ninguna | `execute_php_fallback` |
-| `update_post_excerpt` | ninguna | `execute_php_fallback` |
-| `update_post_meta` | ninguna | `execute_php_fallback` |
+| `update_post_content` con bloques **sólo `novamira/*`** | `gutenberg-write-content` | **native_ability** |
+| `update_post_content` con **cualquier** bloque `core/*` | existe, pero **la rechaza** | `execute_php_fallback` |
+| `update_post_content` clásico / vacío | existe, pero no aplica | `execute_php_fallback` |
+| `update_post_title` / `_excerpt` / `_meta` | ninguna | `execute_php_fallback` |
 
-La regla es asimétrica a propósito: **si existe ability nativa, el
-fallback exige declarar por qué no sirve para ese caso concreto**
-(`nativeAbilityUnsuitableReason`). Sin ese motivo, la función devuelve
-`native_ability` y el guard rechaza cualquier intento de ejecutar PHP
-(`failedCheck: "execution_path"`).
+### Por qué: lo que dice el servidor, textualmente
 
-El código no puede juzgar si el motivo es bueno — pero **obliga a que
-exista y quede en el audit trail**, con la ability nativa que se descartó
-al lado, para que una persona pueda revisarlo. "Es más cómodo en PHP" no
-sobrevive a esa revisión.
+Leído con `mcp-adapter-get-ability-info` (modo `ability-info`), no
+supuesto. `novamira/gutenberg-write-content`:
+
+> *"Directly writes Gutenberg post_content **only when every supplied
+> block is a registered Novamira-owned dynamic-only block**.
+> Native/static Gutenberg blocks require browser JS finalization…"*
+>
+> `block_spec`: *"**Only registered `novamira/*` dynamic-only blocks are
+> accepted here**."*
+>
+> instructions: *"For static/native blocks, **this ability refuses the
+> write**."*
+
+Así que `core/heading`, `core/paragraph`, `core/list` y `core/buttons`
+**no** son escribibles por ella. Enrutarlos a la nativa dejaría el cambio
+sin camino.
+
+### ¿Y la cola de bloques nativos?
+
+`gutenberg-add-pending-change` + `gutenberg-enable-batch-finalization`
+sí aceptan bloques nativos, pero el propio servidor dice:
+
+> *"Queued changes are **not live until** gutenberg-enable-batch-finalization
+> marks the batch ready and **an open Block Editor Queue page** completes
+> it."*
+>
+> *"if online is false, ask the **user** to open dashboard_url and **keep
+> the Block Editor Queue page open**…"*
+
+Exige un navegador humano abierto y no escribe por sí sola: **no es un
+camino automatizable** para una pasada del departamento. Queda descartado
+explícitamente, no por omisión.
+
+### El motivo se deriva, no se declara
+
+`selectExecutionPath` **ya no acepta** un `nativeAbilityUnsuitableReason`
+del caller — era justo la puerta que esta función existe para cerrar. El
+motivo sale de parsear los tipos de bloque del `ChangePlan`
+([`gutenberg-blocks.ts`](../src/core/gutenberg-blocks.ts)) y cita el
+bloque concreto que la nativa rechaza.
+
+Y el guard **recalcula la selección entera** desde el plan y exige que
+coincida (`capability_selection_mismatch`). Con eso:
+
+- forzar PHP sobre contenido `novamira/*` compatible → bloqueado;
+- forzar la nativa sobre un `core/heading` → bloqueado;
+- mentir diciendo `nativeAbility: null` → bloqueado.
 
 `executionPath` (`native_ability | execute_php_fallback`) se registra
 **siempre**, en los dos casos.
