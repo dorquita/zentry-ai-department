@@ -91,13 +91,36 @@ interface RestPage {
   meta?: Record<string, unknown>;
 }
 
+/**
+ * GET al REST del core. Dos detalles que importan:
+ *
+ * - Un fallo de red se envuelve con contexto. `fetch` a secas lanza
+ *   "fetch failed" y nada mas, que en un log de CI no dice ni que se
+ *   estaba leyendo ni si llego a escribirse algo.
+ * - UN reintento para errores de RED (no para respuestas HTTP de error):
+ *   es una lectura idempotente y un corte puntual no deberia tumbar una
+ *   pasada de solo lectura. Un HTTP 4xx/5xx NO se reintenta: eso es una
+ *   respuesta del servidor, no un blip.
+ */
 async function restGet<T>(url: string, authHeader: string): Promise<T> {
-  const response = await fetch(url, { method: "GET", headers: { Authorization: authHeader } });
-  if (!response.ok) {
-    // Nunca se propaga el cuerpo crudo: podria traer datos del sitio.
-    throw new Error(`El REST del core respondio HTTP ${response.status} al leer ${url.replace(/https?:\/\/[^/]+/, "(host)")}.`);
+  const safeUrl = url.replace(/https?:\/\/[^/]+/, "(host)");
+  let lastNetworkError = "";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    let response: Response;
+    try {
+      response = await fetch(url, { method: "GET", headers: { Authorization: authHeader } });
+    } catch (err) {
+      lastNetworkError = err instanceof Error ? err.message : String(err);
+      if (attempt === 1) continue;
+      throw new Error(`Fallo de RED leyendo ${safeUrl} (${lastNetworkError}) tras 2 intentos. No se ha escrito nada.`);
+    }
+    if (!response.ok) {
+      // Nunca se propaga el cuerpo crudo: podria traer datos del sitio.
+      throw new Error(`El REST del core respondio HTTP ${response.status} al leer ${safeUrl}.`);
+    }
+    return (await response.json()) as T;
   }
-  return (await response.json()) as T;
+  throw new Error(`Fallo de RED leyendo ${safeUrl} (${lastNetworkError}). No se ha escrito nada.`);
 }
 
 /** Lee el estado real de la pagina. Es el `getState` que consume el executor. */
