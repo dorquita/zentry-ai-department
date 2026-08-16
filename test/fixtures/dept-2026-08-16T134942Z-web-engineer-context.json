@@ -1,0 +1,1269 @@
+{
+  "contextKind": "department_coordination_v1",
+  "departmentRunId": "dept-2026-08-16T134942Z",
+  "qaStatus": "PASS_WITH_WARNINGS",
+  "growthSummary": "Esta sintesis cruza las tres salidas reales de esta pasada coordinada (seo-specialist, content-strategist, analytics-specialist; sem-specialist ausente) con los resumenes deterministas del departamento. La imagen es la de un backlog SEO/contenido muy maduro (105 acciones historicas, 103 work orders listas, pero solo 5 de 77 change packs listos para revision) con dos bloqueos operativos concretos que deben resolverse antes de ejecutar mas trabajo de contenido: (1) un enrutado tecnico roto (pagina /cerraduras/ en papelera recibiendo trafico, keyword generica 'melamina' mal enrutada a /taquillas-melamina-fenolico/) y (2) una decision humana ya tomada que rechaza publicar en produccion paginas nuevas de staging por falta de calidad visual -- decision que choca directamente con la prioridad #5 de seo-specialist (promover clusters new_page_candidate a produccion) y con la propia landing 'colegio' que propone content-strategist. En paralelo, analytics-specialist detecta un evento clave (click_phone) que nunca se dispara pese a estar bien configurado y una version de GTM cuyo nombre sugiere que sigue sin publicar pese a marcarse como 'live'. sem-specialist no aporta datos en esta pasada, asi que las 70 candidatas SEM detectadas por el watcher deterministico quedan sin sintesis experta.",
+  "sourceOfRecommendations": "growth-director-v2 sintetizo las salidas reales de los especialistas de esta misma pasada; qa-reviewer las reviso; solo lo que aparece en approvedRecommendations[] paso ambas puertas.",
+  "approvedRecommendations": [
+    {
+      "rank": 1,
+      "title": "Resolver el enrutado tecnico roto de /cerraduras/ y el mal enrutado de 'melamina' antes de cualquier otro esfuerzo SEO en esas paginas",
+      "rationale": "Impacto alto porque afecta a 4 keywords activas con impresiones reales (51 combinadas en /cerraduras/, 112 combinadas de 'melamina' generica); confianza alta porque el propio catalogo de clusters documenta ambos casos con decisiones ya tomadas (O22 papelera, O29.1 cierre pendiente); esfuerzo bajo segun la propia clasificacion de seo-specialist. Es requisito previo antes de invertir en contenido/CRO sobre esas URLs.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Decision explicita de Pau sobre la URL objetivo real de /cerraduras/",
+        "Ejecucion del script de resolucion de canibalizacion O29.1"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-action-2"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-action-1",
+          "description": "seo-specialist, accion priorizada #1: \"Corregir el enrutado de /cerraduras/ (pagina obsoleta en papelera) antes de invertir en las keywords que apuntan ahi\" (priority=high, impact=high, effort=low, relatedIds=T1/O2/O9/F3)."
+        },
+        {
+          "ref": "dept-seo-action-2",
+          "description": "seo-specialist, accion priorizada #2: \"Cerrar el mal enrutado de la keyword generica 'melamina' hacia /taquillas-melamina-fenolico/ segun la decision O29.1 ya aprobada\" (priority=high, impact=medium, effort=low, relatedIds=T3/O7/F2)."
+        }
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 2,
+      "title": "Aclarar la contradiccion entre la aprobacion critica pendiente de 'taquillas melamina' y la recomendacion SEO de cerrar ese enrutado antes de tocar la pagina",
+      "rationale": "Hay una solicitud de aprobacion de riesgo critico esperando decision sobre la misma URL (https://zentrylockers.com/taquillas-melamina-fenolico/) que seo-specialist recomienda no reforzar hasta cerrar el mal enrutado O29.1. Publicar el plan pendiente sin resolver primero esa decision podria consolidar el problema en vez de solucionarlo, por lo que la confianza de esta prioridad es media (contradiccion no resuelta) aunque el impacto de acertar es alto y el esfuerzo de revisarlo es bajo (solo requiere una decision humana, no trabajo tecnico nuevo).",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Revision humana de la solicitud de aprobacion critica pendiente",
+        "Resultado de la prioridad de enrutado SEO"
+      ],
+      "evidenceRefs": [
+        "approvals-pending",
+        "dept-seo-opportunity-7",
+        "cross-melamina-approval-vs-seo"
+      ],
+      "evidence": [
+        {
+          "ref": "approvals-pending",
+          "description": "(referencia citada por growth-director-v2 que no aparece en el catalogo de evidencia de esta pasada -- tratala como NO verificada)"
+        },
+        {
+          "ref": "dept-seo-opportunity-7",
+          "description": "seo-specialist, oportunidad (cannibalization, priority=medium, basis=evidence) sobre keyword \"taquillas melamina / taquillas de melamina (enrutadas a fenolico)\" / pagina \"https://zentrylockers.com/taquillas-melamina-fenolico/\": No ejecutar el refuerzo de contenido sugerido para estas dos entradas en esta URL: cerrarlas via el script de resolucion de canibalizacion (O29.1) y, si procede, redirigir el esfu..."
+        },
+        {
+          "ref": "cross-melamina-approval-vs-seo",
+          "description": "Cruce entre approvalRequestsSummary.topPending (1 solicitud critica: 'taquillas melamina', https://zentrylockers.com/taquillas-melamina-fenolico/, relatedType=production_deployment_plan) y la oportunidad O7 / finding F2 / technicalIssue T3 de seo-specialist, que documenta que esa misma URL recibe trafico de la keyword generica 'melamina' mal enrutada segun la decision O29.1, pendiente de cierre via script."
+        }
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Reescribir metas en las paginas con CTR sistemicamente 0%",
+      "rationale": "Impacto alto porque afecta a 15 de 16 oportunidades del run mas reciente (problema generalizado, no puntual); confianza alta porque el patron esta documentado con evidencia repetida en el catalogo de jobs; esfuerzo medio porque implica trabajo de redaccion en varias paginas, no solo una.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-seo-action-3"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-action-3",
+          "description": "seo-specialist, accion priorizada #3: \"Reescribir metas (title/description) en las paginas con CTR 0% para revertir el patron sistemico de bajo CTR\" (priority=high, impact=high, effort=medium, relatedIds=T2/F1/O3/O6/O8/O9)."
+        }
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "Ejecutar los quick wins on-page en paginas a un empujon de top 10",
+      "rationale": "Impacto alto por proximidad real a primera pagina (posiciones 20-25 en varias keywords); confianza alta porque son datos de posicion/impresiones ya verificados por seo-specialist; esfuerzo medio por el trabajo de contenido/enlazado que requiere.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-seo-action-4"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-action-4",
+          "description": "seo-specialist, accion priorizada #4: \"Ejecutar los quick wins de on-page en las paginas a un empujon de top 10\" (priority=high, impact=high, effort=medium, relatedIds=O1/O4/O5)."
+        }
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 5,
+      "title": "No publicar en produccion ninguna landing nueva (staging new_page_candidate ni la propuesta 'colegio') hasta completar la segunda iteracion visual ya exigida",
+      "rationale": "Impacto medio (evita repetir un rechazo ya conocido y perder tiempo de revision humana); confianza alta porque se basa en una decision humana textual y reciente, no en una suposicion; esfuerzo medio porque implica trabajo de diseno/fotografia antes de volver a proponer publicacion. Aplica tanto a los 4 clusters de staging citados por seo-specialist como a la landing 'colegio' de content-strategist, que reconoce explicitamente el mismo precedente como riesgo.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Segunda iteracion visual/de contenido de las paginas en staging (decision humana ya expresada el 2026-08-16)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "dept-content-risks",
+        "human-decision-staging-rejection"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-action-5",
+          "description": "seo-specialist, accion priorizada #5: \"Promover a produccion los clusters new_page_candidate ya aprobados visualmente en staging (metalicas, vestuarios, universidad, taquillas inteligentes)\" (priority=medium, impact=medium, effort=medium, relatedIds=CG1/CG2/CG3/CG4/F8)."
+        },
+        {
+          "ref": "dept-content-risks",
+          "description": "content-strategist, riesgos/incognitas declarados (4): Riesgo de canibalizacion SEO con la keyword 'colegios' y contenido relacionado, ya senalado explicitamente en risks del contexto; requiere revisar el cluster antes de publicar. | brandRationale marca que esta keyword 'requiere revision manual para decidir Zentry vs Tukandado'; el enfoque selector m..."
+        },
+        {
+          "ref": "human-decision-staging-rejection",
+          "description": "Decision humana registrada en la seccion de decisiones anteriores del prompt (rechazo v1, 2026-08-16T09:32:20.630Z, propuesta: 'Publicar en produccion las paginas nuevas ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general)'): motivo textual 'Las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias. Necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion.'"
+        }
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "Diagnosticar el evento click_phone y confirmar el estado real de publicacion de GTM",
+      "rationale": "Impacto medio porque afecta a la fiabilidad de la atribucion de llamadas y de todos los eventos CTA nuevos; confianza alta porque ambos hallazgos vienen de datos GA4/GTM reales del propio analytics-specialist; esfuerzo bajo porque son verificaciones puntuales (DebugView y estado de version), no cambios de codigo.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-4"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-analytics-action-1",
+          "description": "analytics-specialist, accion priorizada (high, claimType=RECOMMENDATION): Validar en GA4 DebugView si el tag 'GA4 Event - click_phone' se dispara al hacer clic en el enlace de telefono en produccion, ya que el evento clave no registro ninguna ocurrencia en el periodo pese ..."
+        },
+        {
+          "ref": "dept-analytics-action-2",
+          "description": "analytics-specialist, accion priorizada (high, claimType=RECOMMENDATION): Confirmar el estado real de publicacion de la version de GTM referenciada como 'liveVersionName' ('sin publicar, pendiente aprobacion Pau'), ya que un contenedor no publicado afectaria la fiabilidad ..."
+        },
+        {
+          "ref": "dept-analytics-tracking-issue-4",
+          "description": "analytics-specialist, problema de medicion (claimType=FACT): El texto de liveVersionName en GTM es 'O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5)', combinando la etiqueta de version 'live' con un texto que menciona 'sin publicar, pen..."
+        }
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 7,
+      "title": "Investigar la discrepancia entre click_request_quote y view_quote_page, y confirmar si click_catalog_download debe contar como conversion",
+      "rationale": "Impacto medio porque afecta a la interpretacion del embudo de presupuesto y del catalogo de descargas; confianza media porque analytics-specialist lo marca como hipotesis sin confirmar causa raiz; esfuerzo bajo porque son revisiones de configuracion en GTM Preview y en la administracion de GA4.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-analytics-action-3",
+        "dept-analytics-action-4"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-analytics-action-3",
+          "description": "analytics-specialist, accion priorizada (medium, claimType=RECOMMENDATION): Investigar en GTM Preview la discrepancia entre click_request_quote (55 ocurrencias) y view_quote_page (12 ocurrencias) para entender el flujo real del embudo de presupuesto."
+        },
+        {
+          "ref": "dept-analytics-action-4",
+          "description": "analytics-specialist, accion priorizada (medium, claimType=RECOMMENDATION): Verificar en la administracion de GA4 si click_catalog_download esta marcado como evento de conversion, dada la discrepancia entre sus 2 ocurrencias y 0 conversiones."
+        }
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 8,
+      "title": "Decidir cobertura de las keywords objetivo sin cluster (taquillas para gimnasios, digitalizacion de taquillas, lockers inteligentes)",
+      "rationale": "Impacto medio porque son keywords de prioridad alta/media segun el catalogo estatico de negocio; confianza media porque su ausencia de cluster se basa en inferencia, no en evidencia directa de intencion de busqueda; esfuerzo bajo porque es una decision de alcance, no ejecucion inmediata.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-seo-action-7"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-action-7",
+          "description": "seo-specialist, accion priorizada #7: \"Decidir cobertura para las keywords objetivo sin cluster ni actionItem (taquillas para gimnasios, digitalizacion de taquillas, lockers inteligentes)\" (priority=medium, impact=medium, effort=low, relatedIds=CG5/CG6/CG7/F4/F5/F6)."
+        }
+      ],
+      "qaWarnings": []
+    }
+  ],
+  "blockedRecommendations": [],
+  "specialistStatuses": [
+    {
+      "employee": "seo-specialist",
+      "status": "executed",
+      "note": "seo-specialist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas."
+    },
+    {
+      "employee": "content-strategist",
+      "status": "executed",
+      "note": "content-strategist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas."
+    },
+    {
+      "employee": "analytics-specialist",
+      "status": "executed",
+      "note": "analytics-specialist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas."
+    },
+    {
+      "employee": "sem-specialist",
+      "status": "not_available",
+      "note": "sem-specialist queda EXPLICITAMENTE FUERA de esta fase (pendiente / temporalmente no disponible). No hay ninguna senal de SEM/Google Ads en esta pasada: no asumas gasto, CPC, impresiones, campanas activas ni ningun otro dato de Ads, y no trates su ausencia como si SEM estuviera sano o vacio. Su ausencia NUNCA bloquea esta pasada."
+    }
+  ],
+  "confirmedExistingPageUrls": [
+    "https://staging.zentrylockers.com/digitalizacion-taquillas/",
+    "https://staging.zentrylockers.com/configurador-bancos/",
+    "https://staging.zentrylockers.com/cookie-policy-politica-de-cookies/",
+    "https://staging.zentrylockers.com/taquillas-inteligentes/",
+    "https://staging.zentrylockers.com/configurador-taquillas/",
+    "https://staging.zentrylockers.com/contacto/",
+    "https://staging.zentrylockers.com/soluciones/",
+    "https://staging.zentrylockers.com/",
+    "https://staging.zentrylockers.com/taquillas-para-gimnasios/",
+    "https://staging.zentrylockers.com/taquillas-para-colegios/",
+    "https://staging.zentrylockers.com/taquillas-para-empresas/",
+    "https://staging.zentrylockers.com/taquillas-para-hoteles/",
+    "https://staging.zentrylockers.com/taquillas-para-coworkings/",
+    "https://staging.zentrylockers.com/taquillas-para-centros-deportivos/",
+    "https://staging.zentrylockers.com/taquillas-para-hospitales/",
+    "https://staging.zentrylockers.com/taquillas-para-oficinas/",
+    "https://staging.zentrylockers.com/taquillas-para-industria/",
+    "https://staging.zentrylockers.com/solicitar-presupuesto/",
+    "https://staging.zentrylockers.com/cerraduras-inteligentes-taquillas/",
+    "https://staging.zentrylockers.com/cerraduras-para-taquillas/",
+    "https://staging.zentrylockers.com/taquillas-melamina/",
+    "https://staging.zentrylockers.com/taquillas-fenolicas/",
+    "https://staging.zentrylockers.com/taquillas-metalicas/",
+    "https://staging.zentrylockers.com/taquillas-por-sector/",
+    "https://staging.zentrylockers.com/taquillas/",
+    "https://staging.zentrylockers.com/bancos-de-vestuario/",
+    "https://staging.zentrylockers.com/taquillas-escolares/",
+    "https://staging.zentrylockers.com/aviso-legal/",
+    "https://staging.zentrylockers.com/privacidad/",
+    "https://staging.zentrylockers.com/gracias/",
+    "https://staging.zentrylockers.com/descargas/",
+    "https://staging.zentrylockers.com/taquillas-fenolicas-perfileria/",
+    "https://staging.zentrylockers.com/taquillas-melamina-fenolico/",
+    "https://staging.zentrylockers.com/cookies/",
+    "https://staging.zentrylockers.com/gracias-por-registrarte/",
+    "https://staging.zentrylockers.com/my-account/",
+    "https://staging.zentrylockers.com/carrito/",
+    "https://staging.zentrylockers.com/blog/",
+    "https://staging.zentrylockers.com/productos/",
+    "https://staging.zentrylockers.com/tienda/",
+    "https://staging.zentrylockers.com/finalizar-compra/",
+    "https://staging.zentrylockers.com/taquillas-exterior/",
+    "https://staging.zentrylockers.com/taquillas-resina-abs/",
+    "https://staging.zentrylockers.com/sin-acceso/"
+  ],
+  "stagingInventory": [
+    {
+      "wordpressPageId": 1867,
+      "slug": "digitalizacion-taquillas",
+      "stagingUrl": "https://staging.zentrylockers.com/digitalizacion-taquillas/",
+      "status": "publish",
+      "title": "Digitalización de taquillas existentes",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/image",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Problemas habituales con taquillas ya instaladas",
+        "Cómo enfocamos la digitalización",
+        "Para quién encaja este servicio",
+        "Qué datos nos ayuda que nos envíes",
+        "Ventajas de digitalizar en lugar de renovar todo",
+        "Preguntas frecuentes sobre digitalización de taquillas existentes",
+        "Envíanos fotos de tus taquillas y estudiamos la adaptación"
+      ],
+      "contentLength": 9796,
+      "versionHash": "6cdc897a5d90e792f1ae54cef65d8a8c8c3a3fc8b19595dae23ca055aab08bc5"
+    },
+    {
+      "wordpressPageId": 2077,
+      "slug": "configurador-bancos",
+      "stagingUrl": "https://staging.zentrylockers.com/configurador-bancos/",
+      "status": "publish",
+      "title": "Configurador de bancos (prototipo)",
+      "excerpt": "Prototipo interno del configurador 3D de bancos de vestuario -- Fase O23.2.",
+      "blockTypes": [],
+      "h2Headings": [],
+      "contentLength": 111,
+      "versionHash": "d782b5795d9914fa1d6267b34c57fe50b09fd8a3d2a064a0ec285c2d06ee4c33"
+    },
+    {
+      "wordpressPageId": 3316,
+      "slug": "cookie-policy-politica-de-cookies",
+      "stagingUrl": "https://staging.zentrylockers.com/cookie-policy-politica-de-cookies/",
+      "status": "publish",
+      "title": "Cookie Policy / Política de cookies",
+      "excerpt": "",
+      "blockTypes": [
+        "complianz/document"
+      ],
+      "h2Headings": [],
+      "contentLength": 106,
+      "versionHash": "06c3403338fc567578730b6815513f21da8ff57041a8bd3d06f6cb8b52917df9"
+    },
+    {
+      "wordpressPageId": 2103,
+      "slug": "taquillas-inteligentes",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-inteligentes/",
+      "status": "publish",
+      "title": "Taquillas Inteligentes",
+      "excerpt": "Taquillas Inteligentes: materiales, ventajas y presupuesto con Zentry, fabricante directo. Sin compromiso.",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/columns"
+      ],
+      "h2Headings": [
+        "taquillas inteligentes",
+        "Puntos clave",
+        "Cerradura mecanica vs electronica",
+        "Donde se usan habitualmente",
+        "Taquillas Inteligentes: la solucion completa",
+        "App / tarjeta / codigo de acceso",
+        "Casos de uso (gimnasios, empresas, centros deportivos)",
+        "Solicita una demo",
+        "Como pedir tu presupuesto",
+        "Solicita tu demo o presupuesto sin compromiso"
+      ],
+      "contentLength": 13351,
+      "versionHash": "1da787b7cd73a817ef2e97df9ff13d78b4016f2ab570e427896aebce5f8e0abe"
+    },
+    {
+      "wordpressPageId": 2088,
+      "slug": "configurador-taquillas",
+      "stagingUrl": "https://staging.zentrylockers.com/configurador-taquillas/",
+      "status": "publish",
+      "title": "Configurador de taquillas (prototipo)",
+      "excerpt": "",
+      "blockTypes": [],
+      "h2Headings": [],
+      "contentLength": 102,
+      "versionHash": "b1e199ea3c36b9c2d60b2e3a39189f79122acabdb02ce844110c251110ce92d7"
+    },
+    {
+      "wordpressPageId": 30,
+      "slug": "contacto",
+      "stagingUrl": "https://staging.zentrylockers.com/contacto/",
+      "status": "publish",
+      "title": "Contacto",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/paragraph",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/form",
+        "kadence/rowlayout"
+      ],
+      "h2Headings": [],
+      "contentLength": 17176,
+      "versionHash": "24373172724807c644ce976d8a933d2e9e0d7e53c90a05287bc0d0770e3e1d9a"
+    },
+    {
+      "wordpressPageId": 24,
+      "slug": "soluciones",
+      "stagingUrl": "https://staging.zentrylockers.com/soluciones/",
+      "status": "publish",
+      "title": "Soluciones de taquillas y lockers para empresas",
+      "excerpt": "",
+      "blockTypes": [
+        "core/list",
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 1082,
+      "versionHash": "cae14b0a389125302dd78abac3d1187f13c5397f55c9c2ab6dcd4201b34e6471"
+    },
+    {
+      "wordpressPageId": 100,
+      "slug": "inicio-2",
+      "stagingUrl": "https://staging.zentrylockers.com/",
+      "status": "publish",
+      "title": "Inicio",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/column",
+        "core/columns",
+        "core/cover",
+        "core/group",
+        "core/heading",
+        "core/image",
+        "core/list",
+        "core/paragraph",
+        "kadence/advancedbtn",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/infobox",
+        "kadence/rowlayout",
+        "kadence/singlebtn",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué ofrecemos",
+        "Taquillas a medida",
+        "Cerraduras mecánicas o electrónicas",
+        "Soluciones por sector",
+        "Asesoramiento y presupuesto",
+        "Soluciones por sector",
+        "Materiales y tipos de taquilla",
+        "Cerraduras inteligentes para taquillas",
+        "¿Ya tienes taquillas instaladas?",
+        "Cómo trabajamos",
+        "Por qué trabajar con Zentry Lockers",
+        "Catálogo y presupuesto",
+        "Preguntas frecuentes",
+        "Cuéntanos tu proyecto y te ayudamos a elegir la solución adecuada"
+      ],
+      "contentLength": 47823,
+      "versionHash": "13b8e5b3be7433df4a3b3ccf05e14fb42c2a4bfe51d99d44c2368b20adc8c17e"
+    },
+    {
+      "wordpressPageId": 124,
+      "slug": "taquillas-para-gimnasios",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-gimnasios/",
+      "status": "publish",
+      "title": "Taquillas para gimnasios",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/image",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesita realmente un vestuario de gimnasio",
+        "Taquillas recomendadas para gimnasios y centros deportivos",
+        "Cerraduras y control de acceso para vestuarios",
+        "Un proyecto a medida para tu gimnasio",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para gimnasios",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 11571,
+      "versionHash": "08f1045f322a47a77ed323d02ff97b479828efd8bed42cf7e54ca52829307ff8"
+    },
+    {
+      "wordpressPageId": 127,
+      "slug": "taquillas-para-colegios",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-colegios/",
+      "status": "publish",
+      "title": "Taquillas para colegios",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/image",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesita un centro educativo al equipar sus espacios",
+        "Taquillas recomendadas para colegios y centros educativos",
+        "Cerraduras adaptadas a la gestión escolar",
+        "Un proyecto a medida para tu centro",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para colegios",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 10211,
+      "versionHash": "37cb0d184e1105a6aaa5f437b89bbcb64549ce094af3ef342c48c0b510e51432"
+    },
+    {
+      "wordpressPageId": 129,
+      "slug": "taquillas-para-empresas",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-empresas/",
+      "status": "publish",
+      "title": "Taquillas para empresas",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/image",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesitan las empresas al equipar oficinas y vestuarios",
+        "Taquillas recomendadas para empresas y oficinas",
+        "Cerraduras inteligentes para gestionar el acceso del personal",
+        "Un proyecto a medida para tu empresa",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para empresas",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 10368,
+      "versionHash": "a36cdfef6eab653b30e8aa0bdb736b9c81fb84236c414cc70e1ad52e8e6b4271"
+    },
+    {
+      "wordpressPageId": 131,
+      "slug": "taquillas-para-hoteles",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-hoteles/",
+      "status": "publish",
+      "title": "Taquillas para hoteles",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesita un hotel al equipar sus espacios",
+        "Taquillas recomendadas para hoteles",
+        "Cerraduras y control de acceso para hoteles",
+        "Un proyecto a medida para tu hotel",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para hoteles",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 9215,
+      "versionHash": "8ed129fc01a081d759fcde429b2fe21ef3f902e5ceb0032bb0840f6aff958d62"
+    },
+    {
+      "wordpressPageId": 133,
+      "slug": "taquillas-para-coworkings",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-coworkings/",
+      "status": "publish",
+      "title": "Taquillas para coworkings",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesita un coworking al equipar sus espacios",
+        "Taquillas recomendadas para coworkings",
+        "Cerraduras y control de acceso para coworkings",
+        "Un proyecto a medida para tu espacio de coworking",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para coworkings",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 9386,
+      "versionHash": "148967817500f974f009b6565fbe2bae121f80962a88797cf7884d1d91f2c602"
+    },
+    {
+      "wordpressPageId": 1820,
+      "slug": "taquillas-para-centros-deportivos",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-centros-deportivos/",
+      "status": "publish",
+      "title": "Taquillas para centros deportivos",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesita un centro deportivo al equipar sus vestuarios",
+        "Taquillas recomendadas para centros deportivos",
+        "Cerraduras y control de acceso",
+        "Un proyecto a medida para tu instalación",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para centros deportivos",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 9438,
+      "versionHash": "461fd76bc9e01c1fe53d07e1f2932d88a5f00d2c73989765b870de8daf3275c4"
+    },
+    {
+      "wordpressPageId": 1821,
+      "slug": "taquillas-para-hospitales",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-hospitales/",
+      "status": "publish",
+      "title": "Taquillas para hospitales",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesita un centro sanitario al equipar sus espacios",
+        "Taquillas recomendadas para hospitales",
+        "Cerraduras y gestión segura del acceso",
+        "Un proyecto a medida para tu centro",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para hospitales",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 8794,
+      "versionHash": "cc27003776ec949c15d4c37e89276920f8573402820b1e4d1258effbcc61637a"
+    },
+    {
+      "wordpressPageId": 1822,
+      "slug": "taquillas-para-oficinas",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-oficinas/",
+      "status": "publish",
+      "title": "Taquillas para oficinas",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesita una oficina al equipar sus espacios",
+        "Taquillas recomendadas para oficinas",
+        "Cerraduras electrónicas para lockers de uso rotativo",
+        "Un proyecto a medida para tu oficina",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para oficinas",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 8836,
+      "versionHash": "ddd46dd077662f5bf83df9bc3860195691845016d09ea241383b6b49f64cc0d6"
+    },
+    {
+      "wordpressPageId": 1823,
+      "slug": "taquillas-para-industria",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-para-industria/",
+      "status": "publish",
+      "title": "Taquillas para industria",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué necesita un entorno industrial al equipar sus vestuarios",
+        "Taquillas recomendadas para industria",
+        "Cerraduras y control de acceso",
+        "Un proyecto a medida para tu nave o fábrica",
+        "Por qué trabajar con Zentry Lockers",
+        "Preguntas frecuentes sobre taquillas para industria",
+        "Solicita presupuesto para tu proyecto"
+      ],
+      "contentLength": 8979,
+      "versionHash": "0f61db6304741f5d5fe1372811f64914d89caf87361edef566252ebbb0427bb8"
+    },
+    {
+      "wordpressPageId": 1862,
+      "slug": "solicitar-presupuesto",
+      "stagingUrl": "https://staging.zentrylockers.com/solicitar-presupuesto/",
+      "status": "publish",
+      "title": "Solicitar presupuesto",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué información necesitamos",
+        "Tipos de proyectos que trabajamos",
+        "Envíanos tu solicitud",
+        "Por qué pedir presupuesto con Zentry Lockers",
+        "Preguntas frecuentes sobre solicitar presupuesto",
+        "Sigue explorando"
+      ],
+      "contentLength": 9555,
+      "versionHash": "3ad768de5a0fac650505706df10494401d6ffa04b7d0a260896b783ebdb4d820"
+    },
+    {
+      "wordpressPageId": 1865,
+      "slug": "cerraduras-inteligentes-taquillas",
+      "stagingUrl": "https://staging.zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "status": "publish",
+      "title": "Cerraduras inteligentes para taquillas",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/image",
+        "core/list",
+        "core/paragraph",
+        "yoast/faq-block"
+      ],
+      "h2Headings": [
+        "Qué problema resuelven las cerraduras inteligentes",
+        "Tipos de apertura disponibles según el modelo",
+        "Sectores donde encajan las cerraduras inteligentes",
+        "Ventajas de las cerraduras inteligentes",
+        "Compatibilidad con taquillas nuevas o existentes",
+        "Modelos disponibles",
+        "Preguntas frecuentes sobre cerraduras inteligentes para taquillas",
+        "Solicita información sobre cerraduras inteligentes"
+      ],
+      "contentLength": 9908,
+      "versionHash": "3092002d19ecbf05d07ff23b9936b8e07ff24fc4d0c918ab49793dfff364b39c"
+    },
+    {
+      "wordpressPageId": 2060,
+      "slug": "cerraduras-para-taquillas",
+      "stagingUrl": "https://staging.zentrylockers.com/cerraduras-para-taquillas/",
+      "status": "publish",
+      "title": "Cerraduras para taquillas",
+      "excerpt": "Cerraduras electrónicas para taquillas Zentry con tecnología Tukandado. Modelos ARES, ORBIS, BOXIS y NEO para proyectos B2B.",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/column",
+        "core/columns",
+        "core/group",
+        "core/list",
+        "core/paragraph"
+      ],
+      "h2Headings": [
+        "Dos familias de cerraduras",
+        "Modelos de cerraduras electrónicas",
+        "Precio y condiciones comerciales",
+        "Integración en tu proyecto",
+        "¿Hablamos de tu proyecto?"
+      ],
+      "contentLength": 6481,
+      "versionHash": "d092df9be47e14f8ccf7f77aeecfada5dfa37f6420410c21d4ca96a07c3e1e33"
+    },
+    {
+      "wordpressPageId": 470,
+      "slug": "taquillas-melamina",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-melamina/",
+      "status": "publish",
+      "title": "Taquillas melamina",
+      "excerpt": "",
+      "blockTypes": [
+        "core/column",
+        "core/columns",
+        "core/group",
+        "core/paragraph",
+        "core/post-terms",
+        "core/post-title",
+        "kadence/advancedbtn",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/rowlayout",
+        "kadence/singlebtn",
+        "kadence/tab",
+        "kadence/tabs",
+        "woocommerce/add-to-cart-form",
+        "woocommerce/product-image",
+        "woocommerce/product-meta",
+        "woocommerce/product-price",
+        "woocommerce/product-rating",
+        "woocommerce/product-sale-badge",
+        "woocommerce/product-sku",
+        "woocommerce/product-summary",
+        "woocommerce/single-product"
+      ],
+      "h2Headings": [],
+      "contentLength": 28547,
+      "versionHash": "aa38ce75c7a08fa217f52adc295cb1345e0e9e79bcfd0a6a07e5d69b7139fee7"
+    },
+    {
+      "wordpressPageId": 468,
+      "slug": "taquillas-fenolicas",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-fenolicas/",
+      "status": "publish",
+      "title": "Taquillas fenólicas",
+      "excerpt": "",
+      "blockTypes": [
+        "core/column",
+        "core/columns",
+        "core/group",
+        "core/paragraph",
+        "core/post-terms",
+        "core/post-title",
+        "kadence/advancedbtn",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/rowlayout",
+        "kadence/singlebtn",
+        "kadence/tab",
+        "kadence/tabs",
+        "woocommerce/add-to-cart-form",
+        "woocommerce/product-image",
+        "woocommerce/product-meta",
+        "woocommerce/product-price",
+        "woocommerce/product-rating",
+        "woocommerce/product-sale-badge",
+        "woocommerce/product-sku",
+        "woocommerce/product-summary",
+        "woocommerce/single-product"
+      ],
+      "h2Headings": [],
+      "contentLength": 56979,
+      "versionHash": "b3cb88141799a2f155f43dad820dc1d3bed2bba02ce306d2741c1d2d4ce6c4b4"
+    },
+    {
+      "wordpressPageId": 108,
+      "slug": "taquillas-metalicas",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-metalicas/",
+      "status": "publish",
+      "title": "Taquillas metálicas",
+      "excerpt": "",
+      "blockTypes": [
+        "core/column",
+        "core/columns",
+        "core/group",
+        "core/paragraph",
+        "core/post-terms",
+        "core/post-title",
+        "kadence/advancedbtn",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/rowlayout",
+        "kadence/singlebtn",
+        "kadence/tab",
+        "kadence/tabs",
+        "woocommerce/add-to-cart-form",
+        "woocommerce/product-image",
+        "woocommerce/product-meta",
+        "woocommerce/product-price",
+        "woocommerce/product-rating",
+        "woocommerce/product-sale-badge",
+        "woocommerce/product-sku",
+        "woocommerce/product-summary",
+        "woocommerce/single-product"
+      ],
+      "h2Headings": [],
+      "contentLength": 45798,
+      "versionHash": "68eba7e43563fb1bd1f98dfa78fd9bfa8afb871cef375fa4ee333b1d40e5b4d0"
+    },
+    {
+      "wordpressPageId": 1636,
+      "slug": "taquillas-por-sector",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-por-sector/",
+      "status": "publish",
+      "title": "Taquillas por sector",
+      "excerpt": "",
+      "blockTypes": [
+        "core/heading",
+        "core/paragraph",
+        "kadence/advancedbtn",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/image",
+        "kadence/rowlayout",
+        "kadence/singlebtn"
+      ],
+      "h2Headings": [
+        "También trabajamos con estos sectores",
+        "Soluciones complementarias para proyectos por sector"
+      ],
+      "contentLength": 16451,
+      "versionHash": "fe519cb643681df0ec9959ff1863817bfa4d634318e98192b8c86a7ae628f297"
+    },
+    {
+      "wordpressPageId": 22,
+      "slug": "taquillas",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas/",
+      "status": "publish",
+      "title": "Taquillas de Zentry Lockers",
+      "excerpt": "",
+      "blockTypes": [
+        "core/paragraph",
+        "kadence/advancedbtn",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/infobox",
+        "kadence/rowlayout",
+        "kadence/singlebtn"
+      ],
+      "h2Headings": [
+        "Cerraduras inteligentes y presupuesto a tu medida",
+        "¿Hablamos de tu proyecto?"
+      ],
+      "contentLength": 24527,
+      "versionHash": "bae14c4f58c85eafc22b04ddc6fb1888067ff28313c14f649d0066b68a57d552"
+    },
+    {
+      "wordpressPageId": 2042,
+      "slug": "bancos-de-vestuario",
+      "stagingUrl": "https://staging.zentrylockers.com/bancos-de-vestuario/",
+      "status": "publish",
+      "title": "Bancos de vestuario para gimnasios, empresas y centros deportivos",
+      "excerpt": "Bancos de vestuario en pino, fenolico y melamina para gimnasios, empresas, colegios y centros deportivos. Modelos simples, con perchero y con zapatero.",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/column",
+        "core/columns",
+        "core/image",
+        "core/list"
+      ],
+      "h2Headings": [
+        "Tres materiales, una misma gama",
+        "Tres configuraciones, para cada necesidad",
+        "Los 9 modelos de la gama",
+        "Usos recomendados",
+        "Combina bancos y taquillas Zentry",
+        "Preguntas frecuentes"
+      ],
+      "contentLength": 12990,
+      "versionHash": "13fc0fdd7ba3fa591dd891d792ab8ca36137cd8bfbaf9d7d935c204be85c000e"
+    },
+    {
+      "wordpressPageId": 1960,
+      "slug": "taquillas-escolares",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-escolares/",
+      "status": "publish",
+      "title": "Taquillas Escolares | Fabricante y venta directa - Zentry",
+      "excerpt": "Taquillas Escolares: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry.",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/column",
+        "core/columns",
+        "core/image"
+      ],
+      "h2Headings": [
+        "Modelos y medidas disponibles",
+        "Materiales: metalica, fenolica o melamina",
+        "Precios y presupuesto sin compromiso",
+        "Preguntas frecuentes sobre taquillas escolares",
+        "Como trabajamos",
+        "Preguntas frecuentes",
+        "Enlaces relacionados",
+        "Solicita presupuesto sin compromiso"
+      ],
+      "contentLength": 4879,
+      "versionHash": "02b19127f76e90606da126438cb561f975f3f35a0f4dde55ec91bd1cacb27788"
+    },
+    {
+      "wordpressPageId": 256,
+      "slug": "aviso-legal",
+      "stagingUrl": "https://staging.zentrylockers.com/aviso-legal/",
+      "status": "publish",
+      "title": "Aviso legal",
+      "excerpt": "",
+      "blockTypes": [
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 1601,
+      "versionHash": "d05225dcf19861b5368aa380c4375410a982a53447ed8ad607ed99a226ce9938"
+    },
+    {
+      "wordpressPageId": 251,
+      "slug": "privacidad",
+      "stagingUrl": "https://staging.zentrylockers.com/privacidad/",
+      "status": "publish",
+      "title": "Privacidad",
+      "excerpt": "",
+      "blockTypes": [
+        "core/list",
+        "core/list-item",
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 2946,
+      "versionHash": "96b02b893ae7b93c6f72c23f9d408815a5bbed228493f25ac4340242109654d2"
+    },
+    {
+      "wordpressPageId": 1937,
+      "slug": "gracias",
+      "stagingUrl": "https://staging.zentrylockers.com/gracias/",
+      "status": "publish",
+      "title": "Solicitud recibida",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/heading",
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 914,
+      "versionHash": "d2b309c7a1cd59ace2c6f17ab20916de33bb5f9d3124a403393aa79df894974d"
+    },
+    {
+      "wordpressPageId": 26,
+      "slug": "descargas",
+      "stagingUrl": "https://staging.zentrylockers.com/descargas/",
+      "status": "publish",
+      "title": "Catálogo de taquillas y cerraduras",
+      "excerpt": "",
+      "blockTypes": [
+        "core/button",
+        "core/buttons",
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 0,
+      "versionHash": "a72af510f401d023d28d7faa20c5466c4f4a13698b899f0cdaeed1a4f8d15fee"
+    },
+    {
+      "wordpressPageId": 1271,
+      "slug": "taquillas-fenolicas-perfileria",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-fenolicas-perfileria/",
+      "status": "publish",
+      "title": "Taquillas fenólicas perfilería",
+      "excerpt": "",
+      "blockTypes": [
+        "core/column",
+        "core/columns",
+        "core/group",
+        "core/post-terms",
+        "core/post-title",
+        "kadence/advancedbtn",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/rowlayout",
+        "kadence/singlebtn",
+        "kadence/tab",
+        "kadence/tabs",
+        "woocommerce/add-to-cart-form",
+        "woocommerce/product-image",
+        "woocommerce/product-meta",
+        "woocommerce/product-price",
+        "woocommerce/product-rating",
+        "woocommerce/product-sale-badge",
+        "woocommerce/product-sku",
+        "woocommerce/product-summary",
+        "woocommerce/single-product"
+      ],
+      "h2Headings": [],
+      "contentLength": 56630,
+      "versionHash": "8320b2e04e140937bfacf2ecb71d51d894b80282e1c65d97532340edae564e05"
+    },
+    {
+      "wordpressPageId": 1269,
+      "slug": "taquillas-melamina-fenolico",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-melamina-fenolico/",
+      "status": "publish",
+      "title": "Taquillas melamina fenólico",
+      "excerpt": "",
+      "blockTypes": [
+        "core/column",
+        "core/columns",
+        "core/group",
+        "core/paragraph",
+        "core/post-terms",
+        "core/post-title",
+        "kadence/advancedbtn",
+        "kadence/advancedheading",
+        "kadence/column",
+        "kadence/rowlayout",
+        "kadence/singlebtn",
+        "kadence/tab",
+        "kadence/tabs",
+        "woocommerce/add-to-cart-form",
+        "woocommerce/product-image",
+        "woocommerce/product-meta",
+        "woocommerce/product-price",
+        "woocommerce/product-rating",
+        "woocommerce/product-sale-badge",
+        "woocommerce/product-sku",
+        "woocommerce/product-summary",
+        "woocommerce/single-product"
+      ],
+      "h2Headings": [],
+      "contentLength": 34139,
+      "versionHash": "7dae78287cc10be27378bb20590fe419576363c1f50f7bf1f4c57ca47ff6c76f"
+    },
+    {
+      "wordpressPageId": 254,
+      "slug": "cookies",
+      "stagingUrl": "https://staging.zentrylockers.com/cookies/",
+      "status": "publish",
+      "title": "Cookies",
+      "excerpt": "",
+      "blockTypes": [
+        "core/list",
+        "core/list-item",
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 2195,
+      "versionHash": "3ba53e6cb04fa092485925ea96690d3cb8b9c20caa7bd51ddf2c57edf26985a1"
+    },
+    {
+      "wordpressPageId": 1391,
+      "slug": "gracias-por-registrarte",
+      "stagingUrl": "https://staging.zentrylockers.com/gracias-por-registrarte/",
+      "status": "publish",
+      "title": "Gracias por registrarte",
+      "excerpt": "",
+      "blockTypes": [
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 250,
+      "versionHash": "c1aa8549dc6dce9d6882ae6d676ae38c0926278fee031c357b5f760ab3d5e4ac"
+    },
+    {
+      "wordpressPageId": 9,
+      "slug": "my-account",
+      "stagingUrl": "https://staging.zentrylockers.com/my-account/",
+      "status": "publish",
+      "title": "Mi cuenta",
+      "excerpt": "",
+      "blockTypes": [
+        "core/paragraph",
+        "core/shortcode"
+      ],
+      "h2Headings": [],
+      "contentLength": 123,
+      "versionHash": "2a933a711db646c416bf037e81aad420a965311ab15ede5e1fe0c1cda72f2d0b"
+    },
+    {
+      "wordpressPageId": 353,
+      "slug": "carrito",
+      "stagingUrl": "https://staging.zentrylockers.com/carrito/",
+      "status": "publish",
+      "title": "Carrito",
+      "excerpt": "",
+      "blockTypes": [
+        "core/shortcode"
+      ],
+      "h2Headings": [],
+      "contentLength": 61,
+      "versionHash": "4c64d86d11ae659fd7745fb6a1cbd9805c2a2b4712fcfa95d71b2892aa94bf4e"
+    },
+    {
+      "wordpressPageId": 1206,
+      "slug": "blog",
+      "stagingUrl": "https://staging.zentrylockers.com/blog/",
+      "status": "publish",
+      "title": "Blog",
+      "excerpt": "",
+      "blockTypes": [],
+      "h2Headings": [],
+      "contentLength": 0,
+      "versionHash": "fdeebc2474c92baef08fdc35d7b7249965799278912ebf62db015fa49b082637"
+    },
+    {
+      "wordpressPageId": 1203,
+      "slug": "productos",
+      "stagingUrl": "https://staging.zentrylockers.com/productos/",
+      "status": "publish",
+      "title": "Productos",
+      "excerpt": "",
+      "blockTypes": [],
+      "h2Headings": [],
+      "contentLength": 0,
+      "versionHash": "8f7300918726d620d6b70588719133d3438c6883553f8668eaba3fc522c91a0e"
+    },
+    {
+      "wordpressPageId": 352,
+      "slug": "tienda",
+      "stagingUrl": "https://staging.zentrylockers.com/tienda/",
+      "status": "publish",
+      "title": "Tienda",
+      "excerpt": "",
+      "blockTypes": [],
+      "h2Headings": [],
+      "contentLength": 0,
+      "versionHash": "03fdf983a090799f3949b140049dfcdbbef31bf1c27e434640f7f44ea32e1de5"
+    },
+    {
+      "wordpressPageId": 354,
+      "slug": "finalizar-compra",
+      "stagingUrl": "https://staging.zentrylockers.com/finalizar-compra/",
+      "status": "publish",
+      "title": "Finalizar compra",
+      "excerpt": "",
+      "blockTypes": [
+        "core/shortcode"
+      ],
+      "h2Headings": [],
+      "contentLength": 65,
+      "versionHash": "69bba3b63ed6240662590dc940ec416447f81c93909ef8b92536e201b1c95428"
+    },
+    {
+      "wordpressPageId": 116,
+      "slug": "taquillas-exterior",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-exterior/",
+      "status": "publish",
+      "title": "Taquillas Exterior",
+      "excerpt": "",
+      "blockTypes": [
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 70,
+      "versionHash": "a4d8e99981a228b7518d4ed8fad31cfa33fe548d3ebf6812eea6138e559d218a"
+    },
+    {
+      "wordpressPageId": 114,
+      "slug": "taquillas-resina-abs",
+      "stagingUrl": "https://staging.zentrylockers.com/taquillas-resina-abs/",
+      "status": "publish",
+      "title": "Taquillas Resina/ABS",
+      "excerpt": "",
+      "blockTypes": [
+        "core/paragraph"
+      ],
+      "h2Headings": [],
+      "contentLength": 72,
+      "versionHash": "9630cbe6b94a41b1f2b5d78882d17439b7d41fb2ca4580bd5fc6d884c2c735d4"
+    },
+    {
+      "wordpressPageId": 12,
+      "slug": "sin-acceso",
+      "stagingUrl": "https://staging.zentrylockers.com/sin-acceso/",
+      "status": "publish",
+      "title": "Sin acceso",
+      "excerpt": "",
+      "blockTypes": [],
+      "h2Headings": [],
+      "contentLength": 15,
+      "versionHash": "3d22dd9f8c3073744601f57f9dc70ad2ba5db0a1d89fc50d7c1005d57ba0ba77"
+    }
+  ],
+  "stagingInventoryUnavailableReason": "",
+  "noPluginThemeApiInventoryNotice": "Este proyecto NO mantiene ningun inventario real y actualizado de plugins, temas ni rutas de API de WordPress instalados en zentrylockers.com. No existe ningun dato fiable al respecto en este contexto ni en ningun otro sitio al que tengas acceso. Cualquier necesidad tecnica de este tipo (formularios, tablas comparativas interactivas, integraciones) debe ir en unknowns o dependencies, marcada explicitamente como pendiente de confirmar por un humano con acceso real al sitio -- nunca redactada como si ya existiera o estuviera instalada.",
+  "noConfirmedPageInventoryNotice": "Esta pasada SI trae inventario real de staging (`stagingInventory[]`, leido por REST). Las paginas que aparecen ahi estan CONFIRMADAS: existen, con ese id, ese slug, esa URL y esos tipos de bloque. Cualquier pagina que NO este en esa lista sigue sin confirmar, y sobre ella no puedes declarar ningun changePlan."
+}

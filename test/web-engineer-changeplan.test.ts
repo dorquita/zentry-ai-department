@@ -699,7 +699,16 @@ export function runWebEngineerChangePlanTests(): TestCase[] {
             assert.equal(lower.includes(forbidden), false, `el resumen no puede contener "${forbidden}"`);
           }
           assert.equal(serialized.includes(fakePassword), false, "el resumen no puede arrastrar el valor de WP_API_PASSWORD");
-          assert.equal(serialized.includes("meta"), false, "el resumen no expone los metadatos crudos de la pagina");
+          // El bloque `meta` CRUDO de la pagina no sale nunca: podria
+          // traer metadatos de cualquier plugin. Lo unico que se expone
+          // son los DOS valores de la allowlist de Yoast, y como campos
+          // propios y nombrados -- son el BEFORE de `update_post_meta`,
+          // y sin ellos no se puede proponer un valor nuevo completo.
+          assert.equal(serialized.includes('"meta":'), false, "el resumen no expone el bloque de metadatos crudos de la pagina");
+          assert.deepEqual(
+            [...new Set(summary.flatMap((brief) => Object.keys(brief).filter((key) => key.toLowerCase().startsWith("meta"))))],
+            ["metaTitle", "metaDescription"]
+          );
 
           // Y solo va lo que el prompt necesita: paginas PUBLICADAS.
           assert.deepEqual(

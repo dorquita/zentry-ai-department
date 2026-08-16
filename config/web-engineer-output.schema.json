@@ -74,7 +74,7 @@
     },
     "changePlans": {
       "type": "array",
-      "description": "Planes de cambio EJECUTABLES, uno por recomendacion que puedas resolver con evidencia real del inventario de staging que se te ha dado. NUNCA inventes un pageId ni un hash: no los pongas aqui, el sistema los resuelve por su cuenta. Si no puedes citar la pagina con su URL de staging o su slug EXACTOS, no incluyas la recomendacion en este array: quedara como implementacion manual, que es el resultado correcto.",
+      "description": "Planes de cambio EJECUTABLES, uno por recomendacion aprobada cuya pagina objetivo ya viene resuelta en approvedRecommendations[].resolvedTargets[] y cuyo BEFORE tienes en targetPageSnapshots[]. NUNCA inventes un pageId ni un hash: no los pongas aqui, el sistema los resuelve por su cuenta contra el inventario real. Si no puedes citar la pagina con su URL de staging o su slug EXACTOS, o no sabes escribir el valor nuevo COMPLETO, no incluyas la recomendacion en este array: quedara como implementacion manual, que es el resultado correcto.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -88,7 +88,7 @@
         "properties": {
           "recommendationId": {
             "type": "string",
-            "description": "Id de la recomendacion aprobada por QA a la que corresponde este plan."
+            "description": "Id de la recomendacion aprobada por QA a la que corresponde este plan. Copialo LITERALMENTE de approvedRecommendations[].recommendationId -- no uses el rank ni el titulo."
           },
           "targetPage": {
             "type": "string",
@@ -106,7 +106,7 @@
           },
           "newValue": {
             "type": "string",
-            "description": "Contenido NUEVO y COMPLETO del campo. Para update_post_content, el post_content entero resultante, no un fragmento."
+            "description": "Contenido NUEVO, COMPLETO y FINAL del campo. Texto real, nunca una instruccion ni una descripcion del cambio. Para update_post_content, el post_content entero resultante, no un fragmento ni un diff."
           },
           "metaKey": {
             "type": "string",

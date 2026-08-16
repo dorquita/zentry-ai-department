@@ -1,0 +1,79 @@
+{
+  "implementationSummary": "Esta pasada coordinada aprueba ocho lineas de trabajo que van desde corregir un enrutado tecnico roto y una canibalizacion de keyword ya documentada, hasta reescribir metadatos SEO en paginas con CTR sistemicamente nulo, diagnosticar dos problemas de medicion en GA4/GTM, y frenar explicitamente la publicacion en produccion de paginas nuevas de staging hasta una segunda iteracion visual ya exigida por una decision humana previa. Ninguna de las recomendaciones aprobadas trae en este contexto el detalle exacto (URL especifica + contenido nuevo completo) necesario para declarar un `changePlan` ejecutable: son decisiones, diagnosticos o trabajos de alcance no definido a nivel de pagina concreta, asi que esta especificacion define el trabajo tecnico y de verificacion necesario para que un humano con acceso real complete cada tarea, sin tocar ningun sistema todavia.",
+  "targetPages": [
+    "https://zentrylockers.com/cerraduras/ (URL de produccion citada en la evidencia; su existencia NO esta confirmada en este contexto, solo hay inventario de staging)",
+    "https://zentrylockers.com/taquillas-melamina-fenolico/ (URL de produccion citada en la evidencia de la solicitud de aprobacion critica pendiente; NO figura en confirmedExistingPageUrls, que solo cubre staging)",
+    "https://staging.zentrylockers.com/taquillas-melamina-fenolico/ (confirmada en stagingInventory, wordpressPageId 1269, equivalente de staging de la URL de produccion anterior segun el slug)",
+    "Paginas con CTR 0% (identidad exacta no proporcionada en este contexto; solo se citan relatedIds internos T2/F1/O3/O6/O8/O9, no URLs)",
+    "Paginas a un empujon de top 10 (identidad exacta no proporcionada en este contexto; solo se citan relatedIds internos O1/O4/O5, no URLs)",
+    "Clusters new_page_candidate citados como 'metalicas, vestuarios, universidad, taquillas inteligentes general' (slugs exactos no proporcionados en este contexto; no se puede verificar contra stagingInventory sin esos slugs)",
+    "https://staging.zentrylockers.com/taquillas-para-gimnasios/ (confirmada, relacionada con la keyword sin cluster 'taquillas para gimnasios')",
+    "https://staging.zentrylockers.com/digitalizacion-taquillas/ (confirmada, relacionada con la keyword sin cluster 'digitalizacion de taquillas')",
+    "https://staging.zentrylockers.com/taquillas-inteligentes/ (confirmada, relacionada con la keyword sin cluster 'lockers inteligentes')",
+    "Enrutado/redirecciones del sitio (mecanismo concreto sin confirmar)",
+    "Meta title y meta description (campos SEO gestionados presumiblemente via un plugin de SEO, sin confirmar cual)",
+    "Contenido de pagina (bloques de la pagina afectada, sin identificar aun de forma especifica)",
+    "Contenedor y version de Google Tag Manager",
+    "Configuracion de eventos y conversiones de GA4",
+    "Documentacion interna de asignacion keyword-a-cluster (no es un sistema web, es gestion de alcance)"
+  ],
+  "targetComponents": [],
+  "proposedChanges": [
+    {
+      "description": "Investigar y corregir el enrutado tecnico de /cerraduras/ (pagina en papelera que sigue recibiendo trafico de 4 keywords activas), definiendo con un humano cual es la URL canonica destino antes de tocar nada.",
+      "rationale": "Corresponde a la recomendacion aprobada #1 'Resolver el enrutado tecnico roto de /cerraduras/ y el mal enrutado de melamina antes de cualquier otro esfuerzo SEO en esas paginas'.",
+      "targetPageOrComponent": "https://zentrylockers.com/cerraduras/ (existencia no confirmada) / Enrutado/redirecciones del sitio"
+    },
+    {
+      "description": "Identificar de forma explicita (con datos de Search Console/analitica que este contexto no incluye) el listado completo de paginas con CTR 0% y redactar metas (title/description) nuevas para cada una, en un ciclo de revision separado por pagina.",
+      "rationale": "Corresponde a la recomendacion aprobada #3 'Reescribir metas en las paginas con CTR sistemicamente 0%'.",
+      "targetPageOrComponent": "Paginas con CTR 0% (identidad exacta pendiente de identificar) / Meta title y meta description"
+    },
+    {
+      "description": "Identificar de forma explicita las paginas en posiciones 20-25 candidatas a quick win y definir los cambios on-page concretos (contenido, enlazado interno) necesarios para cada una.",
+      "rationale": "Corresponde a la recomendacion aprobada #4 'Ejecutar los quick wins on-page en paginas a un empujon de top 10'.",
+      "targetPageOrComponent": "Paginas a un empujon de top 10 (identidad exacta pendiente de identificar) / Contenido de pagina"
+    },
+    {
+      "description": "Definir el procedimiento de verificacion en GA4 DebugView para confirmar si el tag 'GA4 Event - click_phone' se dispara realmente al hacer clic en el enlace de telefono en produccion, y el procedimiento para confirmar el estado real de publicacion de la version de GTM marcada como 'live' pero con nombre 'sin publicar, pendiente aprobacion Pau'.",
+      "rationale": "Corresponde a la recomendacion aprobada #6 'Diagnosticar el evento click_phone y confirmar el estado real de publicacion de GTM'.",
+      "targetPageOrComponent": "Contenedor y version de Google Tag Manager / Configuracion de eventos de GA4"
+    },
+    {
+      "description": "Definir el procedimiento de investigacion en GTM Preview para la discrepancia entre click_request_quote (55 ocurrencias) y view_quote_page (12 ocurrencias), y el procedimiento de verificacion en la administracion de GA4 sobre si click_catalog_download esta marcado como evento de conversion.",
+      "rationale": "Corresponde a la recomendacion aprobada #7 'Investigar la discrepancia entre click_request_quote y view_quote_page, y confirmar si click_catalog_download debe contar como conversion'.",
+      "targetPageOrComponent": "Configuracion de eventos y conversiones de GA4"
+    }
+  ],
+  "filesOrSystemsAffected": [],
+  "acceptanceCriteria": [
+    "Existe una decision documentada de un humano con acceso a produccion sobre la URL canonica destino de /cerraduras/, y el enrutado deja de servir trafico a la pagina en papelera",
+    "El script de resolucion de canibalizacion O29.1 se ha ejecutado (o se ha documentado explicitamente por que no procede) y queda constancia del resultado antes de cualquier cambio de contenido en /taquillas-melamina-fenolico/",
+    "La solicitud de aprobacion critica pendiente sobre 'taquillas melamina' (production_deployment_plan) ha sido revisada y resuelta por un humano antes de avanzar con cualquier refuerzo de contenido en esa URL",
+    "Existe un listado explicito y verificable de URLs con CTR 0%, con meta title/description nuevos redactados y revisados para cada una",
+    "Existe un listado explicito y verificable de URLs en posiciones 20-25 con los cambios on-page concretos definidos y revisados para cada una",
+    "No se ha generado ninguna especificacion de publicacion en produccion para los clusters new_page_candidate ni para la landing 'colegio' hasta que quede documentada la finalizacion de la segunda iteracion visual/de contenido exigida",
+    "Queda documentado en GA4 DebugView si el tag click_phone se dispara o no en produccion, y documentado el estado real de publicacion de la version de GTM en cuestion",
+    "Queda documentada la causa de la discrepancia click_request_quote / view_quote_page y el estado real de click_catalog_download como evento de conversion en GA4",
+    "Queda documentada una decision explicita (cubrir o no, y con que alcance) para las tres keywords sin cluster, considerando las paginas ya existentes en staging relacionadas"
+  ],
+  "validationPlan": [
+    "Esta pasada coordinada NO trae `stagingQaResult` ni `existingPageAudit` (solo `noConfirmedPageInventoryNotice` y `stagingInventory`), por lo que no se puede afirmar el estado de QA de ninguna pagina afectada; cualquier cambio concreto que se derive de esta especificacion debera pasar por una ejecucion de Staging QA antes de considerarse validado",
+    "Para el enrutado de /cerraduras/: un humano con acceso a produccion debe verificar el comportamiento actual (codigo de respuesta, destino real) antes de definir la correccion",
+    "Para la canibalizacion de 'melamina': un humano debe ejecutar o confirmar la ejecucion del script O29.1 y contrastar el resultado contra stagingInventory (pagina id 1269, slug taquillas-melamina-fenolico) para verificar que el contenido no ha cambiado de forma no controlada",
+    "Para las reescrituras de meta (CTR 0%) y los quick wins on-page: una vez identificadas las URLs concretas (dato no disponible en este contexto), cada cambio propuesto debe pasar revision de copy y, si aplica, ejecutarse primero en staging con verificacion visual antes de cualquier consideracion de produccion",
+    "Para los clusters new_page_candidate: revision humana de diseno/fotografia que confirme explicitamente el cierre de la segunda iteracion exigida por la decision del 2026-08-16, antes de volver a proponer publicacion",
+    "Para GA4/GTM: un humano con acceso a GA4 DebugView y al panel de versiones de GTM debe ejecutar las verificaciones descritas y documentar el resultado antes de dar por resuelto ningun hallazgo de analytics-specialist"
+  ],
+  "rollbackPlan": [
+    "Ningun cambio se ejecuta en esta fase, por lo que no hay accion en produccion o staging que revertir todavia; este plan de rollback aplica a una fase APPLY futura, no a esta especificacion",
+    "Cuando se concrete cualquier cambio de contenido o meta sobre una pagina identificada en stagingInventory, conservar el `versionHash` y el contenido actual de esa pagina como snapshot antes de aplicar el cambio, para poder restaurarlo si algo falla",
+    "Para cambios de enrutado, documentar el comportamiento de enrutado previo (URLs y codigos de respuesta) antes de modificarlo, de forma que pueda revertirse a ese estado conocido",
+    "Para GTM, no publicar ninguna version de contenedor sin aprobacion humana explicita; si una version publicada causa problemas, el rollback es restaurar la version publicada anterior mediante el historial de versiones de GTM",
+    "Ampliando las rollbackNotes originales del departamento (no incluidas literalmente en este contexto salvo como referencia a decisiones ya tomadas): cualquier reversion de contenido publicado debe partir de una copia verificada del estado anterior, nunca de memoria o reconstruccion aproximada"
+  ],
+  "dependencies": [],
+  "risks": [],
+  "approvalRequired": true,
+  "unknowns": []
+}

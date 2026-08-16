@@ -96,6 +96,7 @@
     "content-strategist:parse-runner-result-for-ci": "ts-node scripts/parse-content-strategist-runner-result-for-ci.ts",
     "department:run": "ts-node scripts/run-department-coordination.ts",
     "department:parse-runner-result-for-ci": "ts-node scripts/parse-department-runner-result-for-ci.ts",
+    "department:replay-web-engineer": "ts-node scripts/replay-web-engineer-changeplans.ts",
     "department:apply": "ts-node scripts/run-department-apply.ts",
     "department:apply:stage": "ts-node scripts/run-department-apply.ts --phase stage",
     "department:apply:notify": "ts-node scripts/run-department-apply.ts --phase notify",
