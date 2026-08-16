@@ -110,6 +110,8 @@
     "claude-employee:record-execution-for-ci": "ts-node scripts/record-claude-employee-execution-for-ci.ts",
     "novamira:probe": "ts-node scripts/probe-novamira-mcp.ts",
     "probe:google": "ts-node scripts/probe-google-live.ts",
+    "state:snapshot": "ts-node scripts/department-state.ts --mode snapshot",
+    "state:verify": "ts-node scripts/department-state.ts --mode verify",
     "staging:inventory": "ts-node scripts/read-staging-inventory.ts",
     "approvals:record-decisions": "ts-node scripts/o46-record-daily-brief-decisions.ts"
   },

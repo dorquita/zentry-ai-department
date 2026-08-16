@@ -79,6 +79,7 @@ import { runWorkerRuntimeCompatTests } from "../test/worker-runtime-compat.test"
 import { runExternalDependenciesAuditTests } from "../test/external-dependencies-audit.test";
 import { runGoogleAdsLiveMigrationTests } from "../test/google-ads-live-migration.test";
 import { runVpsIndependenceTests } from "../test/vps-independence.test";
+import { runStatePersistenceTests } from "../test/state-persistence.test";
 import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
 
 interface TestCase {
@@ -166,6 +167,7 @@ async function main(): Promise<void> {
     { suiteName: "external-dependencies-audit", cases: runExternalDependenciesAuditTests() },
     { suiteName: "google-ads-live-migration", cases: runGoogleAdsLiveMigrationTests() },
     { suiteName: "vps-independence", cases: runVpsIndependenceTests() },
+    { suiteName: "state-persistence", cases: runStatePersistenceTests() },
   ];
 
   let passed = 0;

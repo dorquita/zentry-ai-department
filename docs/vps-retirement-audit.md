@@ -106,7 +106,33 @@ sigue commiteando** ese estado.
 
 Marca: **`VPS_DEPENDENT` (indirecta)**.
 
-### Por que NO se ha habilitado el commit-back en esta fase
+### RESUELTO en la Fase O55 — rama de estado dedicada
+
+La persistencia ya existe. Diseno implementado:
+
+| Requisito | Como se cumple |
+|---|---|
+| Un unico escritor | Solo el job `persist-state` escribe, y el `concurrency` del workflow serializa las pasadas completas |
+| Evitar conflictos | Rama `department-state` separada de `main`; `--force-with-lease` (nunca `--force`) con 3 reintentos |
+| Evitar perdida de datos | `npm run state:verify` compara manifiestos antes/despues; si un `.jsonl` pierde lineas o un fichero desaparece, **no se persiste nada** |
+| Conservar historial | Es una rama de git: un commit por pasada, con enlace al run |
+| Permitir recuperacion | `git checkout department-state@{N}` |
+| No contaminar `main` | Rama huerfana, sin historia comun con `main` |
+| Sin VPS | Todo ocurre dentro de Actions |
+
+Least privilege: el workflow tiene **dos jobs**. El que ejecuta los seis
+empleados Claude sigue en `contents: read` — ningun agente puede escribir
+en el repositorio. `contents: write` vive solo en `persist-state`, que no
+ejecuta Claude, no llama a ninguna API externa y no corre codigo del
+repositorio: descarga el artifact ya verificado y commitea.
+
+La invariante que lo hace seguro: los `data/*.jsonl` son **estrictamente
+append-only** (verificado sobre los 8 modulos que escriben estado: 8 usan
+`appendFileSync`, 0 usan `writeFileSync`, y hay un test que lo fija). Que
+un fichero de estado encoja es imposible en una pasada sana, asi que se
+trata como fallo en vez de tolerarse.
+
+### Por que NO se habilito antes
 
 La solucion tecnica es directa (`contents: write` + un step que commitee
 `data/` y `reports/` al final de la pasada), pero habilitarla **ahora
@@ -141,6 +167,37 @@ documento sin haber habilitado la persistencia.
   el mas caro; ademas D1 esta explicitamente fuera de alcance ahora.
 
 Recomendacion: **rama de estado dedicada**, tras parar el timer del VPS.
+
+---
+
+## 3b. Quien escribe el estado en el VPS, exactamente (Fase O55)
+
+Distincion que resulto importante: **escribir en disco** y **publicar en
+GitHub** son dos cosas distintas, y las hacen actores distintos.
+
+| Actor | Que hace | Cuando | ¿Automatico? |
+|---|---|---|---|
+| `zentry-seo-watcher.timer` → `zentry-seo-watcher.service` → `npm run growth:daily` | Escribe `data/*.jsonl` y `reports/**` en el disco del VPS | 08:00 UTC diario | SI |
+| `zentry-telegram-approvals.service` | Escribe `data/telegram-*.jsonl` y `data/approval-requests.jsonl` (long-poll permanente) | continuo | SI |
+| Una persona por SSH (`root@srv1777637.hstgr.cloud`) | `git commit && git push` de `data/`+`reports/` a `main` | irregular | **NO** |
+
+Verificado: **ningun fichero del repositorio ejecuta `git commit` ni
+`git push`** — ni los scripts, ni las units systemd, ni nada bajo `src/`.
+Y los commits de `root@srv...` estan a horas dispersas (15:59, 16:59,
+18:48, 19:54, 20:12, 20:27 el 10 de agosto; 17:24 el 14), nunca a las
+08:00 que dispara el timer. Son commits a mano.
+
+**Consecuencia para la migracion:** no existe ni ha existido nunca un
+escritor AUTOMATICO del VPS sobre el repositorio. Activar el escritor de
+GitHub no crea una carrera con nada: escribe ademas en una rama distinta
+(`department-state`), que el VPS no toca. La unica condicion es
+**dejar de commitear `data/` a mano desde el VPS**, porque a partir de
+ese momento esos commits serian estado paralelo que nadie lee.
+
+`zentry-telegram-approvals.service` si sigue siendo un escritor en disco
+del VPS, pero queda **fuera de alcance por decision explicita** (no tocar
+Telegram). Mientras nadie commitee lo que escribe, no afecta al estado
+que consume GitHub.
 
 ---
 
