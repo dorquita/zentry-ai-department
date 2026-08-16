@@ -1,6 +1,7 @@
 import * as assert from "node:assert/strict";
 import { buildSemRunnerResultSummary, buildSemSpecialistArtifact, renderSemSpecialistMarkdown, SemResult, SemSpecialistOutput } from "../src/employees/sem-specialist/sem-specialist-output";
 import { SemSpecialistContext } from "../src/employees/sem-specialist/sem-specialist-context";
+import { classifySnapshotFreshness } from "../src/core/snapshot-freshness";
 
 export interface TestCase {
   name: string;
@@ -21,7 +22,15 @@ function baseContext(): SemSpecialistContext {
     responsiveSearchAds: 11,
     semCandidateCount: 70,
     metricsWindow: "LAST_30_DAYS",
+    metricsStartDate: "2026-07-16",
+    metricsEndDate: "2026-08-14",
+    freshness: classifySnapshotFreshness({
+      sourceGeneratedAt: "2026-08-14T11:13:30.858Z",
+      now: "2026-08-14T11:20:00.000Z",
+    }),
     metrics: [],
+    searchTerms: [],
+    searchTermCount: 0,
     departmentSummary: null,
     evidenceCatalog: [],
   };

@@ -8,6 +8,7 @@ import {
   SeoSpecialistResult,
   validateSeoSpecialistOutput,
 } from "../src/employees/seo-specialist/domain";
+import { classifySnapshotFreshness } from "../src/core/snapshot-freshness";
 import { SeoSpecialistContext } from "../src/employees/seo-specialist/context";
 import { ActionItem } from "../src/agents/seo-director";
 
@@ -40,6 +41,12 @@ function makeActionItem(overrides: Partial<ActionItem> = {}): ActionItem {
 function makeContext(overrides: Partial<SeoSpecialistContext> = {}): SeoSpecialistContext {
   return {
     generatedAt: "2026-08-15T00:00:00.000Z",
+    sourceGeneratedAt: "2026-08-14T00:00:00.000Z",
+    sourceKind: "search_console",
+    freshness: classifySnapshotFreshness({
+      sourceGeneratedAt: "2026-08-14T00:00:00.000Z",
+      now: "2026-08-15T00:00:00.000Z",
+    }),
     dataAvailability: {
       hasJobData: true,
       hasTargetKeywordCatalog: true,

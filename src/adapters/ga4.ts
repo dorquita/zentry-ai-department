@@ -84,6 +84,47 @@ function buildAuthClient() {
   return client;
 }
 
+export interface Ga4ProbeResult {
+  propertyId: string;
+  startDate: string;
+  endDate: string;
+  sessions: number;
+}
+
+/**
+ * Fase O50 — probe MINIMO de solo lectura para verificar, desde GitHub
+ * Actions, que las credenciales de GA4 son validas y llegan de verdad a
+ * la API. Un unico `runReport` sin dimensiones y con una sola metrica
+ * (`sessions`) sobre los ultimos 7 dias — el dato mas pequeno y
+ * verificable posible. Sigue siendo `properties.runReport`, exactamente
+ * el mismo metodo de consulta que usa `getGa4Snapshot()`: no existe
+ * ninguna ruta de escritura en este fichero.
+ */
+export async function probeGa4(): Promise<Ga4ProbeResult> {
+  const propertyId = resolvePropertyId();
+  const endDate = shiftDate(new Date().toISOString().slice(0, 10), -1);
+  const startDate = shiftDate(endDate, -7);
+
+  const auth = buildAuthClient();
+  const analyticsdata = google.analyticsdata({ version: "v1beta", auth });
+
+  try {
+    const data = await runReport(analyticsdata, propertyId, {
+      dateRanges: [{ startDate, endDate }],
+      metrics: [{ name: "sessions" }],
+      limit: "1",
+    });
+    const sessions = Number(data.rows?.[0]?.metricValues?.[0]?.value ?? 0);
+    recordCredentialSuccess("ga4");
+    return { propertyId, startDate, endDate, sessions };
+  } catch (err) {
+    const safeMessage = sanitizeError(err);
+    logger.error("Probe de GA4 fallo", { error: safeMessage });
+    recordCredentialFailure("ga4", safeMessage);
+    throw new Error(`Probe de GA4 fallo: ${safeMessage}`);
+  }
+}
+
 export interface Ga4ChannelRow {
   channel: string;
   sessions: number;

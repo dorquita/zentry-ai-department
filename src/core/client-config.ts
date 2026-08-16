@@ -551,13 +551,71 @@ export interface ClientServiceCredentialsStatus {
  * pensada para gates tipo "conectado=true/false", no para resolver el
  * valor en si.
  */
+/**
+ * Fase O50 — lee un fichero de `configPaths` de un cliente CONCRETO (no
+ * necesariamente el activo) sin memoizar y sin lanzar nunca: si el
+ * cliente no existe, la ruta no esta declarada, el fichero no esta en
+ * disco o no es JSON valido, devuelve `null`. Es una lectura auxiliar
+ * para el gate de credenciales, no una via alternativa de configuracion.
+ */
+function readClientConfigFile<T>(clientId: string, key: keyof ClientConfigPaths): T | null {
+  if (!clientExists(clientId)) return null;
+  try {
+    const relPath = loadClientConfig(clientId, { strict: true }).configPaths?.[key];
+    if (!relPath) return null;
+    const full = path.join(PROJECT_ROOT, relPath);
+    if (!fs.existsSync(full)) return null;
+    return JSON.parse(fs.readFileSync(full, "utf-8")) as T;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fase O50 — claves de `CLIENT_SERVICE_CREDENTIAL_KEYS` que este cliente
+ * YA tiene resueltas por su propia configuracion commiteada
+ * (`clients/<id>/analytics.json`, `clients/<id>/ads.json`), y que por
+ * tanto NO hacen falta como variable de entorno.
+ *
+ * Existe para cerrar una incoherencia real detectada en la auditoria de
+ * dependencias externas: los adaptadores (ga4.ts, gtm.ts, google-ads.ts)
+ * prefieren desde la Fase O16.1 el identificador del fichero de cliente
+ * y solo caen al `.env` si el fichero no lo trae, pero este gate seguia
+ * exigiendo la variable de entorno igualmente. El resultado era que
+ * `hasGa4Credentials()` podia decir "falta GA4_PROPERTY_ID" mientras
+ * `resolvePropertyId()` lo habria resuelto sin problema — y el watcher
+ * se saltaba GA4 por una variable que no necesitaba.
+ *
+ * SOLO cubre identificadores NO SECRETOS (property/container/workspace/
+ * customer id), que es exactamente lo que esos ficheros contienen. Ni un
+ * solo client secret, refresh token o developer token puede resolverse
+ * por esta via: esas claves no aparecen aqui y se siguen exigiendo como
+ * variable de entorno, sin excepcion.
+ */
+export function resolveClientConfigProvidedCredentialKeys(clientId: string): Set<string> {
+  const provided = new Set<string>();
+
+  const analytics = readClientConfigFile<ClientAnalyticsConfig>(clientId, "analytics");
+  if (analytics?.ga4PropertyId) provided.add("GA4_PROPERTY_ID");
+  if (analytics?.gtmContainerId) provided.add("GTM_CONTAINER_ID");
+  if (analytics?.gtmWorkspaceId) provided.add("GTM_WORKSPACE_ID");
+
+  const ads = readClientConfigFile<ClientAdsConfig>(clientId, "ads");
+  if (ads?.customerId) provided.add("GOOGLE_ADS_CUSTOMER_ID");
+  if (ads?.loginCustomerId) provided.add("GOOGLE_ADS_LOGIN_CUSTOMER_ID");
+
+  return provided;
+}
+
 export function resolveClientServiceCredentials(
   clientId: string,
   service: ClientCredentialService
 ): ClientServiceCredentialsStatus {
   const keys = CLIENT_SERVICE_CREDENTIAL_KEYS[service];
+  const providedByConfig = resolveClientConfigProvidedCredentialKeys(clientId);
   const missing: string[] = [];
   for (const key of keys) {
+    if (providedByConfig.has(key)) continue;
     if (!resolveClientEnvVar(clientId, key)) {
       missing.push(resolveClientEnvVarName(clientId, key));
     }

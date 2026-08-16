@@ -3,7 +3,13 @@ import * as path from "path";
 import { readAllJobs } from "../../core/job-registry";
 import { buildActionPlan, ActionItem } from "../../agents/seo-director";
 import { resolveActiveClientPaths } from "../../core/client-paths";
-import { TargetKeyword, SeoJob } from "../../core/types";
+import { TargetKeyword, SeoJob, DepartmentEvent } from "../../core/types";
+import { readAllEvents } from "../../core/department-events";
+import {
+  SnapshotFreshness,
+  classifySnapshotFreshness,
+  resolveSnapshotMaxAgeHours,
+} from "../../core/snapshot-freshness";
 
 /**
  * Context builder para el empleado `seo-specialist` (ver
@@ -55,11 +61,43 @@ export interface SeoSpecialistDataAvailability {
 }
 
 export interface SeoSpecialistContext {
+  /**
+   * Cuando se CONSTRUYO este contexto -- es decir, siempre "ahora". NO es
+   * la fecha de los datos: para eso esta `sourceGeneratedAt`. Los dos
+   * campos se separan desde la Fase O50 justo porque confundirlos era el
+   * mecanismo exacto por el que un snapshot de hace dias se presentaba
+   * como una lectura de hoy.
+   */
   generatedAt: string;
+  /** ISO del job mas reciente de la ultima pasada del SEO Watcher: CUANDO se leyo Search Console de verdad. `null` si no hay jobs. */
+  sourceGeneratedAt: string | null;
+  /**
+   * `search_console` = lectura real de la API. `mock` = datos de ejemplo
+   * de data/sample-search-console-data.json (SEO_DATA_SOURCE sin
+   * configurar cae a "mock" por defecto). Se propaga hasta el prompt para
+   * que ningun especialista pueda presentar datos de ejemplo como
+   * rendimiento real del sitio.
+   */
+  sourceKind: string | null;
+  /** Procedencia y antigüedad ya clasificadas (Fase O50). */
+  freshness: SnapshotFreshness;
   dataAvailability: SeoSpecialistDataAvailability;
   actionItems: ActionItem[];
   targetKeywords: TargetKeyword[];
   clusters: SeoClusterCatalogEntry[];
+}
+
+export interface BuildSeoSpecialistContextOptions {
+  /** Inyectable para tests -- por defecto, readAllJobs() (lectura real de data/jobs.jsonl). */
+  jobs?: SeoJob[];
+  /** Inyectable para tests -- por defecto, readAllEvents(). Solo se usa para correlacionar runId -> departmentRunId. */
+  events?: DepartmentEvent[];
+  /** Inyectable para tests -- por defecto, el ahora real. */
+  now?: string;
+  /** departmentRunId de la pasada EN CURSO; por defecto DEPARTMENT_RUN_ID. */
+  currentDepartmentRunId?: string | null;
+  /** Inyectable para tests; por defecto SNAPSHOT_MAX_AGE_HOURS. */
+  maxAgeHours?: number;
 }
 
 /**
@@ -108,8 +146,47 @@ function findLatestReportPath(dir: string): string | undefined {
   return path.join(dir, files[files.length - 1]);
 }
 
-export function buildSeoSpecialistContext(): SeoSpecialistContext {
-  const jobs = readAllJobs();
+/**
+ * Fase O50 -- CUANDO se leyo Search Console de verdad para esta pasada:
+ * el `createdAt` mas reciente entre los jobs de `latestRunId`. Los jobs
+ * de una misma pasada se escriben en el mismo instante logico, asi que
+ * cualquiera valdria; se toma el maximo para no depender del orden del
+ * fichero. `null` si esa pasada no dejo ningun job.
+ */
+export function resolveSeoSourceGeneratedAt(latestRunJobs: SeoJob[]): string | null {
+  return latestRunJobs.reduce<string | null>(
+    (max, job) => (!max || job.createdAt > max ? job.createdAt : max),
+    null
+  );
+}
+
+/**
+ * Fase O50 -- el `runId` del SEO Watcher NO es el `departmentRunId` de
+ * la pasada del departamento, asi que no se pueden comparar
+ * directamente. La correlacion real vive en el bus de eventos: el evento
+ * `agent_finished` de seo-watcher lleva el `departmentRunId` de la
+ * pasada Y el `runId` del watcher en su payload. `undefined` si no hay
+ * evento para ese runId (p.ej. jobs de un historico anterior al bus de
+ * eventos) -- en ese caso simplemente no se puede afirmar que sea de
+ * esta pasada, que es exactamente lo que queremos.
+ */
+export function resolveSeoSnapshotDepartmentRunId(
+  events: DepartmentEvent[],
+  latestRunId: string | undefined
+): string | undefined {
+  if (!latestRunId) return undefined;
+  const match = events.filter(
+    (e) => e.agent === "seo-watcher" && e.type === "agent_finished" && e.payload?.runId === latestRunId
+  );
+  if (match.length === 0) return undefined;
+  return match.reduce((latest, current) => (current.createdAt > latest.createdAt ? current : latest))
+    .departmentRunId;
+}
+
+export function buildSeoSpecialistContext(
+  options: BuildSeoSpecialistContextOptions = {}
+): SeoSpecialistContext {
+  const jobs = options.jobs ?? readAllJobs();
   const latestRunId = findLatestRunId(jobs);
   const latestRunJobs = latestRunId ? jobs.filter((j) => j.meta.runId === latestRunId) : [];
   const actionItems = latestRunJobs.length > 0 ? buildActionPlan(latestRunJobs) : [];
@@ -121,8 +198,27 @@ export function buildSeoSpecialistContext(): SeoSpecialistContext {
   const seoDirectorReportPath = findLatestReportPath(path.join(reportsDir, "seo-director"));
   const seoWatcherReportPath = findLatestReportPath(path.join(reportsDir, "seo"));
 
+  const sourceGeneratedAt = resolveSeoSourceGeneratedAt(latestRunJobs);
+  const sourceKind = latestRunJobs[0]?.meta.dataSource ?? null;
+  const freshness = classifySnapshotFreshness({
+    sourceGeneratedAt,
+    now: options.now ?? new Date().toISOString(),
+    maxAgeHours: options.maxAgeHours ?? resolveSnapshotMaxAgeHours(),
+    currentDepartmentRunId:
+      options.currentDepartmentRunId !== undefined
+        ? options.currentDepartmentRunId
+        : process.env.DEPARTMENT_RUN_ID ?? null,
+    snapshotDepartmentRunId: resolveSeoSnapshotDepartmentRunId(
+      options.events ?? (latestRunId ? readAllEvents() : []),
+      latestRunId
+    ),
+  });
+
   return {
     generatedAt: new Date().toISOString(),
+    sourceGeneratedAt,
+    sourceKind,
+    freshness,
     dataAvailability: {
       hasJobData: jobs.length > 0,
       hasTargetKeywordCatalog: targetKeywords.length > 0,

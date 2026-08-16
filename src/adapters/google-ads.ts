@@ -160,6 +160,46 @@ async function searchGoogleAds(customerId: string, query: string): Promise<Recor
   return results;
 }
 
+export interface GoogleAdsProbeResult {
+  customerId: string;
+  descriptiveName: string;
+  currencyCode: string;
+  timeZone: string;
+}
+
+/**
+ * Fase O50 — probe MINIMO de solo lectura para verificar desde GitHub
+ * Actions que developer token + OAuth + login-customer-id forman una
+ * combinacion valida. Una unica GAQL `SELECT ... FROM customer LIMIT 1`
+ * a traves de `searchGoogleAds()` — el mismo unico punto de red de este
+ * adaptador, que solo llama a `googleAds:search`. No lee campanas, no
+ * lee keywords, y por construccion no puede activar, pausar, crear ni
+ * modificar nada.
+ */
+export async function probeGoogleAds(): Promise<GoogleAdsProbeResult> {
+  const customerId = resolveCustomerId();
+  try {
+    const rows = await searchGoogleAds(
+      customerId,
+      "SELECT customer.id, customer.descriptive_name, customer.currency_code, customer.time_zone FROM customer LIMIT 1"
+    );
+    const customer = rows[0]?.customer ?? {};
+    const result: GoogleAdsProbeResult = {
+      customerId: String(customer.id ?? normalizeCustomerId(customerId)),
+      descriptiveName: String(customer.descriptiveName ?? ""),
+      currencyCode: String(customer.currencyCode ?? ""),
+      timeZone: String(customer.timeZone ?? ""),
+    };
+    recordCredentialSuccess("google_ads");
+    return result;
+  } catch (err) {
+    const safeMessage = sanitizeError(err);
+    logger.error("Probe de Google Ads fallo", { error: safeMessage });
+    recordCredentialFailure("google_ads", safeMessage);
+    throw new Error(`Probe de Google Ads fallo: ${safeMessage}`);
+  }
+}
+
 export interface AdsCampaignSummary {
   id: string;
   name: string;
@@ -211,12 +251,48 @@ export interface AdsCampaignMetrics {
   costMicros: number;
   conversions: number;
   ctr: number;
+  /** Fase O51 — CPC medio en micros. `null` si la campana no tuvo clics en la ventana (la API no devuelve la metrica). */
+  averageCpcMicros: number | null;
+  /** Fase O51 — valor de conversion acumulado. 0 si no hay conversiones con valor asignado. */
+  conversionsValue: number;
+}
+
+/**
+ * Fase O51 — terminos de busqueda reales que dispararon anuncios
+ * (`search_term_view`). Es una vista de SOLO LECTURA: no existe ningun
+ * metodo de mutacion asociado, y anadir un termino como negativa seria
+ * una operacion distinta (campaign_criterion:mutate) que este adaptador
+ * no implementa.
+ */
+export interface AdsSearchTermSummary {
+  searchTerm: string;
+  campaignId: string;
+  campaignName: string;
+  adGroupId: string;
+  impressions: number;
+  clicks: number;
+  costMicros: number;
+  conversions: number;
 }
 
 export interface GoogleAdsSnapshot {
   customerId: string;
   loginCustomerId: string;
+  /**
+   * Etiqueta descriptiva de la ventana. Se mantiene NO NUMERICA a
+   * proposito: el auditor de sem-specialist busca cifras cerca de
+   * palabras como "gasto"/"cpc", y una ventana escrita como
+   * "2026-07-17..2026-08-15" haria que "2026" se leyera como una cifra
+   * inventada (falso positivo real ya documentado en
+   * sem-specialist-output.ts). Las fechas exactas van en
+   * `metricsStartDate`/`metricsEndDate`.
+   */
   metricsWindow: string;
+  /** Fase O51 — limites exactos de la ventana de metricas (YYYY-MM-DD, ambos inclusive). */
+  metricsStartDate: string;
+  metricsEndDate: string;
+  /** Fase O51 — ISO del momento en que se hablo con la API de Google Ads. */
+  generatedAt: string;
   campaigns: AdsCampaignSummary[];
   adGroups: AdsAdGroupSummary[];
   positiveKeywords: AdsKeywordSummary[];
@@ -224,6 +300,43 @@ export interface GoogleAdsSnapshot {
   ads: AdsAdSummary[];
   conversionActions: AdsConversionActionSummary[];
   metrics: AdsCampaignMetrics[];
+  searchTerms: AdsSearchTermSummary[];
+}
+
+const DEFAULT_ADS_LOOKBACK_DAYS = 30;
+const SEARCH_TERM_LIMIT = 200;
+
+function shiftDate(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Fase O51 — ventana EXPLICITA en vez del `DURING LAST_30_DAYS` de
+ * antes. Dos motivos: (1) `LAST_30_DAYS` se resuelve en la zona horaria
+ * de la cuenta de Ads, asi que la misma consulta lanzada desde el VPS y
+ * desde un runner de GitHub podia cubrir dias distintos; (2) sin fechas
+ * explicitas el snapshot no puede decir a que periodo corresponde, que es
+ * justo lo que hace falta para no presentar metricas viejas como
+ * actuales. Termina AYER: el dia en curso siempre esta incompleto.
+ */
+export function resolveMetricsDateRange(
+  env: Record<string, string | undefined> = process.env,
+  today: string = new Date().toISOString().slice(0, 10)
+): { startDate: string; endDate: string } {
+  const raw = (env.GOOGLE_ADS_LOOKBACK_DAYS ?? "").trim();
+  const lookback = raw.length > 0 ? Number(raw) : DEFAULT_ADS_LOOKBACK_DAYS;
+  if (!Number.isFinite(lookback) || lookback <= 0) {
+    throw new Error(
+      `GOOGLE_ADS_LOOKBACK_DAYS invalido: "${raw}". Debe ser un numero de dias positivo (por defecto ${DEFAULT_ADS_LOOKBACK_DAYS}).`
+    );
+  }
+  const endDate = shiftDate(today, -1);
+  // -(lookback - 1) para que la ventana tenga EXACTAMENTE `lookback` dias
+  // contando ambos extremos, no uno de mas.
+  const startDate = shiftDate(endDate, -(lookback - 1));
+  return { startDate, endDate };
 }
 
 function microsToEuros(micros: number | null | undefined): number | null {
@@ -240,16 +353,28 @@ function microsToEuros(micros: number | null | undefined): number | null {
 export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
   const customerId = normalizeCustomerId(resolveCustomerId());
   const loginCustomerId = normalizeCustomerId(resolveLoginCustomerId());
+  const { startDate, endDate } = resolveMetricsDateRange();
+  const generatedAt = new Date().toISOString();
 
   logger.info("Consultando Google Ads (solo lectura, googleAds:search)", {
     customerId,
     loginCustomerId,
     apiVersion: resolveApiVersion(),
+    startDate,
+    endDate,
   });
 
   try {
-    const [campaignRows, adGroupRows, adGroupKeywordRows, campaignNegativeRows, adRows, conversionRows, metricRows] =
-      await Promise.all([
+    const [
+      campaignRows,
+      adGroupRows,
+      adGroupKeywordRows,
+      campaignNegativeRows,
+      adRows,
+      conversionRows,
+      metricRows,
+      searchTermRows,
+    ] = await Promise.all([
         searchGoogleAds(
           customerId,
           `SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign_budget.amount_micros FROM campaign ORDER BY campaign.id`
@@ -276,7 +401,14 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
         ),
         searchGoogleAds(
           customerId,
-          `SELECT campaign.id, campaign.name, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions, metrics.ctr FROM campaign WHERE segments.date DURING LAST_30_DAYS`
+          `SELECT campaign.id, campaign.name, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions, metrics.conversions_value, metrics.ctr, metrics.average_cpc FROM campaign WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'`
+        ),
+        // search_term_view: terminos de busqueda REALES que dispararon
+        // anuncios. Solo lectura. Se acota a los 200 de mas impresiones
+        // para no traer una cola infinita de terminos de 1 impresion.
+        searchGoogleAds(
+          customerId,
+          `SELECT search_term_view.search_term, campaign.id, campaign.name, ad_group.id, metrics.impressions, metrics.clicks, metrics.cost_micros, metrics.conversions FROM search_term_view WHERE segments.date BETWEEN '${startDate}' AND '${endDate}' ORDER BY metrics.impressions DESC LIMIT ${SEARCH_TERM_LIMIT}`
         ),
       ]);
 
@@ -344,6 +476,22 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
       costMicros: Number(r.metrics?.costMicros ?? 0),
       conversions: Number(r.metrics?.conversions ?? 0),
       ctr: Number(r.metrics?.ctr ?? 0),
+      // La API omite average_cpc cuando no hubo clics. `null` (no 0)
+      // distingue "no hubo clics, no hay CPC" de "el CPC fue 0", que no
+      // es lo mismo y no debe presentarse igual.
+      averageCpcMicros: r.metrics?.averageCpc != null ? Number(r.metrics.averageCpc) : null,
+      conversionsValue: Number(r.metrics?.conversionsValue ?? 0),
+    }));
+
+    const searchTerms: AdsSearchTermSummary[] = searchTermRows.map((r) => ({
+      searchTerm: String(r.searchTermView?.searchTerm ?? ""),
+      campaignId: String(r.campaign?.id ?? ""),
+      campaignName: String(r.campaign?.name ?? ""),
+      adGroupId: String(r.adGroup?.id ?? ""),
+      impressions: Number(r.metrics?.impressions ?? 0),
+      clicks: Number(r.metrics?.clicks ?? 0),
+      costMicros: Number(r.metrics?.costMicros ?? 0),
+      conversions: Number(r.metrics?.conversions ?? 0),
     }));
 
     logger.info("Google Ads: lectura completada", {
@@ -353,6 +501,9 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
       negativeKeywords: negativeKeywords.length,
       ads: ads.length,
       conversionActions: conversionActions.length,
+      searchTerms: searchTerms.length,
+      startDate,
+      endDate,
     });
 
     recordCredentialSuccess("google_ads");
@@ -360,6 +511,9 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
       customerId,
       loginCustomerId,
       metricsWindow: "LAST_30_DAYS",
+      metricsStartDate: startDate,
+      metricsEndDate: endDate,
+      generatedAt,
       campaigns,
       adGroups,
       positiveKeywords,
@@ -367,6 +521,7 @@ export async function getGoogleAdsSnapshot(): Promise<GoogleAdsSnapshot> {
       ads,
       conversionActions,
       metrics,
+      searchTerms,
     };
   } catch (err) {
     const safeMessage = sanitizeError(err);

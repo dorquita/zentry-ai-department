@@ -47,6 +47,7 @@ import {
 } from "../src/employees/sem-specialist/sem-specialist-output";
 import { extractJsonFromModelResponse } from "../src/core/claude-employee-runtime";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
+import { assertSnapshotUsable, resolveRequireLiveSources } from "../src/core/snapshot-freshness";
 import { resolveActiveClientPaths } from "../src/core/client-paths";
 
 const AGENT_NAME = "sem-specialist";
@@ -87,7 +88,33 @@ function buildPromptMarkdown(context: SemSpecialistContext): string {
   lines.push("");
   lines.push("---");
   lines.push("");
-  lines.push("## 2. Contexto estructurado (SemSpecialistContext)");
+  // Fase O51 -- la procedencia va ANTES de las cifras, igual que en SEO y
+  // Analytics: quien lee primero las metricas y despues la fecha ya ha
+  // sacado la conclusion equivocada.
+  lines.push("## 2. PROCEDENCIA Y FRESCURA DE ESTOS DATOS (leer antes que las cifras)");
+  lines.push("");
+  lines.push(`- **Estado:** \`${context.freshness.status}\``);
+  lines.push(`- **Lectura real de Google Ads:** ${context.sourceGeneratedAt}`);
+  lines.push(
+    `- **Ventana de metricas:** ${context.metricsStartDate ?? "(desconocida)"} a ${context.metricsEndDate ?? "(desconocida)"}`
+  );
+  lines.push(
+    `- **Antigüedad:** ${context.freshness.ageHours !== null ? `${context.freshness.ageHours} h` : "desconocida"} (umbral ${context.freshness.maxAgeHours} h)`
+  );
+  lines.push(`- **Generado en esta pasada:** ${context.freshness.producedInThisRun ? "SI" : "NO"}`);
+  lines.push(`- **Conectado a Google Ads en el momento de la lectura:** ${context.connectedToGoogleAdsAtSourceTime ? "SI" : "NO"}`);
+  lines.push("");
+  lines.push(context.freshness.humanSummary);
+  if (!context.connectedToGoogleAdsAtSourceTime) {
+    lines.push("");
+    lines.push(
+      "AVISO ADICIONAL: en el momento de generar este snapshot NO habia conexion real con Google Ads. Las cifras de campana proceden del estado DOCUMENTADO en config/sem-campaign-state.json, no de la cuenta. No las presentes como el estado real de la cuenta."
+    );
+  }
+  lines.push("");
+  lines.push("---");
+  lines.push("");
+  lines.push("## 3. Contexto estructurado (SemSpecialistContext)");
   lines.push("");
   lines.push("```json");
   lines.push(JSON.stringify(context, null, 2));
@@ -176,6 +203,18 @@ async function main(): Promise<void> {
     console.log("sem-specialist: no hay ningun evento sem-watcher (agent_finished) registrado en data/department-events.jsonl todavia. No se genera ninguna propuesta (no-op, sin invocar a Claude).");
     result = { status: "no_data" };
   } else {
+    // Fase O51 -- fail-closed opcional (REQUIRE_LIVE_SOURCES=true): sin
+    // una lectura de Google Ads hecha en ESTA pasada, la etapa falla con
+    // un error explicito en vez de razonar sobre el ultimo snapshot
+    // conocido creyendo que es el estado actual de la cuenta.
+    assertSnapshotUsable("sem-watcher (Google Ads)", context.freshness, {
+      requireLive: resolveRequireLiveSources(),
+    });
+    console.log(
+      `Procedencia del snapshot SEM: ${context.freshness.status}, conectado=${context.connectedToGoogleAdsAtSourceTime}` +
+        ` (leido el ${context.sourceGeneratedAt}` +
+        `${context.freshness.ageHours !== null ? `, hace ${context.freshness.ageHours} h` : ""}).`
+    );
     console.log(`sem-specialist: usando snapshot de sem-watcher del evento ${context.sourceEventId} (${context.sourceGeneratedAt}).`);
     result = resolveResult(args["sem-specialist-output"], outDir, promptFilePath, context);
   }

@@ -101,6 +101,43 @@ async function findAccountForContainer(
   );
 }
 
+export interface GtmProbeResult {
+  accountId: string;
+  containerId: string;
+  containerName: string;
+  containerPublicId: string;
+}
+
+/**
+ * Fase O50 — probe MINIMO de solo lectura para verificar desde GitHub
+ * Actions que las credenciales de GTM llegan de verdad a la API. Solo
+ * `accounts.list` + `accounts.containers.list` (via
+ * `findAccountForContainer`) — nada de tags/triggers/variables, y desde
+ * luego nada de `publish`/`create`/`update`/`delete`, que no existen en
+ * este fichero.
+ */
+export async function probeGtm(): Promise<GtmProbeResult> {
+  const containerId = resolveContainerId().trim();
+  const auth = buildAuthClient();
+  const tagmanager = google.tagmanager({ version: "v2", auth });
+
+  try {
+    const { accountId, container } = await findAccountForContainer(tagmanager, containerId);
+    recordCredentialSuccess("gtm");
+    return {
+      accountId,
+      containerId,
+      containerName: container.name ?? "",
+      containerPublicId: container.publicId ?? "",
+    };
+  } catch (err) {
+    const safeMessage = sanitizeError(err);
+    logger.error("Probe de GTM fallo", { error: safeMessage });
+    recordCredentialFailure("gtm", safeMessage);
+    throw new Error(`Probe de GTM fallo: ${safeMessage}`);
+  }
+}
+
 export interface GtmTagSummary {
   tagId: string;
   name: string;

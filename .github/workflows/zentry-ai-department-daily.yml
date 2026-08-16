@@ -79,9 +79,11 @@ jobs:
     runs-on: ubuntu-latest
     # Seis invocaciones de Claude (SEO, Content, Analytics, Growth, QA,
     # Web Engineer), cada una acotada a 10 min en su propio step del
-    # runtime comun, mas los pasos deterministas de coordinacion. 90 min
-    # es el backstop del JOB completo.
-    timeout-minutes: 90
+    # runtime comun, mas los pasos deterministas de coordinacion y, desde
+    # la Fase O52, el pipeline determinista de 26 agentes que antes solo
+    # corria en el VPS (hasta 30 min propios). 120 min es el backstop del
+    # JOB completo.
+    timeout-minutes: 120
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -108,6 +110,169 @@ jobs:
         run: npm run department:parse-runner-result-for-ci -- coord-init.log
 
       # =====================================================================
+      # FASE 0.5 -- FUENTES LIVE (Fase O50, ver docs/external-dependencies-audit.md)
+      #
+      # POR QUE EXISTE: hasta esta fase, la pasada diaria de GitHub Actions
+      # NO leia Google en vivo. Leia data/jobs.jsonl,
+      # data/department-events.jsonl y reports/analytics/*.md tal y como
+      # estaban COMMITEADOS en el repositorio — ficheros que generaba el
+      # VPS legacy con su propio `.env`. Es decir: el "departamento
+      # independiente" razonaba en realidad sobre snapshots del VPS, y sin
+      # ninguna senal de su antigüedad.
+      #
+      # Estos dos steps mueven la RECOLECCION a Actions: los watchers
+      # deterministas hablan con la API de Google aqui dentro, con el
+      # MISMO departmentRunId de la pasada, y dejan el snapshot fresco que
+      # leeran despues los especialistas. La separacion se mantiene
+      # intacta: recoleccion = codigo determinista (estos steps),
+      # razonamiento = agentes Claude (fases 1 en adelante). Ningun
+      # especialista recibe credenciales de Google, ni antes ni ahora.
+      #
+      # `continue-on-error: true` a proposito: si faltan credenciales o la
+      # API falla, la pasada NO se cae — pero tampoco finge. El snapshot
+      # anterior queda etiquetado con su antigüedad real
+      # (src/core/snapshot-freshness.ts) y el especialista lo recibe
+      # marcado como `stale` en la cabecera de su prompt. Lo que se elimina
+      # es el fallback SILENCIOSO, no el fallback.
+      #
+      # SOLO LECTURA: searchanalytics.query, properties.runReport,
+      # accounts/containers/workspaces .list/.get/.live. Ni un solo metodo
+      # de escritura existe en los adaptadores que usan.
+      #
+      # SEM/Google Ads queda FUERA a proposito (sigue fuera de fase): aqui
+      # solo se ha identificado su infraestructura de datos, no se
+      # reactiva. Ver docs/external-dependencies-audit.md.
+      # =====================================================================
+      - name: "[LIVE] Search Console -> snapshot de esta pasada (solo lectura)"
+        id: live_gsc
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run seo:watch -- --departmentRunId "$DEPARTMENT_RUN_ID" --require-live 2>&1 | tee live-gsc.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          # Sin esto, resolveDataSource() cae a "mock" y el watcher
+          # generaria jobs con datos de ejemplo. `--require-live` aborta
+          # antes de leer nada si esta variable no dice search_console.
+          SEO_DATA_SOURCE: search_console
+          GSC_OAUTH_CLIENT_ID: ${{ secrets.GSC_OAUTH_CLIENT_ID }}
+          GSC_OAUTH_CLIENT_SECRET: ${{ secrets.GSC_OAUTH_CLIENT_SECRET }}
+          GSC_OAUTH_REFRESH_TOKEN: ${{ secrets.GSC_OAUTH_REFRESH_TOKEN }}
+
+      - name: "[LIVE] GA4 + GTM -> snapshot de esta pasada (solo lectura)"
+        id: live_analytics
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run analytics:watch -- --departmentRunId "$DEPARTMENT_RUN_ID" --require-live 2>&1 | tee live-analytics.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          # GA4 y GTM comparten el MISMO cliente OAuth (un unico cliente
+          # con los dos scopes readonly) -- ver docs/analytics-readonly.md.
+          GOOGLE_ANALYTICS_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_CLIENT_ID }}
+          GOOGLE_ANALYTICS_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_CLIENT_SECRET }}
+          GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN }}
+
+      # Google Ads (Fase O51). La RECOLECCION si se migra aqui: el watcher
+      # lee la cuenta en vivo y deja el snapshot de esta pasada, igual que
+      # SEO y Analytics. Lo que sigue fuera de fase es el AGENTE
+      # sem-specialist dentro de la pasada coordinada, que se mantiene
+      # como `not_available` mas abajo por decision explicita.
+      #
+      # READ-ONLY sin excepciones: el adaptador solo llama a
+      # `googleAds:search` (GAQL de consulta). No existe ni una llamada
+      # `:mutate` en todo el fichero, asi que este step no puede activar,
+      # pausar, crear ni modificar ninguna campana, presupuesto, keyword
+      # ni anuncio. La fase SEM-write no esta habilitada.
+      - name: "[LIVE] Google Ads -> snapshot de esta pasada (solo lectura, 0 mutaciones)"
+        id: live_ads
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run sem:watch -- --departmentRunId "$DEPARTMENT_RUN_ID" --require-live 2>&1 | tee live-ads.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
+          GOOGLE_ADS_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_ADS_OAUTH_CLIENT_ID }}
+          GOOGLE_ADS_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_OAUTH_CLIENT_SECRET }}
+          GOOGLE_ADS_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_OAUTH_REFRESH_TOKEN }}
+
+      - name: "[LIVE] Estado real de las fuentes de esta pasada"
+        if: always()
+        run: |
+          echo "Search Console (seo-watcher): $GSC_OUTCOME"
+          echo "GA4 + GTM (analytics-watcher): $ANALYTICS_OUTCOME"
+          echo "Google Ads (sem-watcher): $ADS_OUTCOME"
+          if [ "$GSC_OUTCOME" != "success" ] || [ "$ANALYTICS_OUTCOME" != "success" ] || [ "$ADS_OUTCOME" != "success" ]; then
+            echo "::warning::Al menos una fuente Google NO se leyo en vivo en esta pasada. Los especialistas afectados recibiran el ultimo snapshot conocido ETIQUETADO con su antiguedad real (stale), nunca presentado como dato de hoy. Revisa los logs [LIVE] de arriba: dicen que NOMBRES de variable faltan, nunca sus valores."
+          fi
+        env:
+          GSC_OUTCOME: ${{ steps.live_gsc.outcome }}
+          ANALYTICS_OUTCOME: ${{ steps.live_analytics.outcome }}
+          ADS_OUTCOME: ${{ steps.live_ads.outcome }}
+
+      # =====================================================================
+      # FASE 0.6 -- PIPELINE DETERMINISTA + GROWTH DIRECTOR v1 (Fase O52)
+      #
+      # POR QUE EXISTE: la auditoria de la Fase O50 dejo una dependencia
+      # viva del VPS que no cerraba ninguna de las anteriores. Los
+      # informes `reports/daily/executive-<fecha>.md` y
+      # `technical-<fecha>.md` los genera growth-director v1, y v1 solo
+      # corria dentro de `npm run growth:daily`, que solo lanzaba el timer
+      # systemd del VPS. Apagar el VPS hoy significaba quedarse sin esos
+      # dos informes, aunque todo lo demas siguiera funcionando.
+      #
+      # Este step ejecuta el MISMO pase de 26 agentes, aqui dentro y con
+      # el departmentRunId de esta pasada, con tres diferencias:
+      #
+      #   --skip-watchers   Los pasos 1/6/7 ya corrieron en la FASE 0.5,
+      #                     ademas con `--require-live`, que es MAS
+      #                     estricto que este pase. Repetirlos serian
+      #                     llamadas duplicadas a Google.
+      #   --no-email        El correo lo envia el Daily Brief coordinado
+      #                     al final de este mismo workflow. Dos correos
+      #                     por pasada seria una regresion.
+      #   sin flags de escritura  Los agentes que escriben
+      #                     (wordpress-draft-agent, staging-executor,
+      #                     production-draft-executor) son fail-closed por
+      #                     diseno: exigen su variable puesta literalmente
+      #                     a "true". Como este step NO las inyecta, esos
+      #                     pasos se registran como no habilitados y no
+      #                     tocan nada. Las credenciales de WordPress que
+      #                     si se pasan son de LECTURA, para que el estado
+      #                     que reporta el informe sea real y no "sin datos".
+      #
+      # Cada paso esta aislado (runPipelineStep): uno que falle se
+      # registra y el pase continua, en vez de tumbar las 26 etapas.
+      # =====================================================================
+      - name: "[GROWTH-V1] Pipeline determinista + informes diarios de esta pasada"
+        id: growth_v1
+        continue-on-error: true
+        timeout-minutes: 30
+        run: |
+          set -o pipefail
+          npm run growth:daily -- --departmentRunId "$DEPARTMENT_RUN_ID" --skip-watchers --no-email 2>&1 | tee growth-v1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          # Solo lectura: sin WORDPRESS_DRAFTS_ENABLED / STAGING_EXECUTION_ENABLED /
+          # PRODUCTION_* no se intenta ni una escritura.
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+
+      - name: "[GROWTH-V1] Informes diarios generados en esta pasada"
+        if: always()
+        run: |
+          if [ "$GROWTH_OUTCOME" != "success" ]; then
+            echo "::warning::El pipeline determinista / Growth Director v1 no termino bien en esta pasada. Los informes reports/daily/ pueden faltar o estar incompletos. Ver el log del step [GROWTH-V1]."
+          fi
+          echo "Informes diarios presentes tras esta pasada:"
+          find reports/daily -maxdepth 1 -name '*.md' -printf '%TY-%Tm-%Td %TH:%TM  %p\n' 2>/dev/null \
+            | sort | tail -6 || echo "(sin directorio reports/daily)"
+        env:
+          GROWTH_OUTCOME: ${{ steps.growth_v1.outcome }}
+
+      # =====================================================================
       # FASE 1 -- ESPECIALISTAS (SEO, Content, Analytics)
       # Cada uno corre con SU PROPIO runner, sin modificar. Un especialista
       # que falle o no tenga insumos NO tumba la pasada: se registra su
@@ -121,6 +286,12 @@ jobs:
         run: |
           set -o pipefail
           npm run seo-specialist:run 2>&1 | tee seo-step1.log
+        env:
+          # Fase O50: sin esto el especialista no puede distinguir "snapshot
+          # generado en ESTA pasada" de "ultimo snapshot commiteado por el
+          # VPS". Con esto, la cabecera de su prompt dice cual de las dos
+          # cosas esta leyendo.
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
 
       - name: "[SEO] Parsear RUNNER_RESULT_JSON (paso 1)"
         id: seo1
@@ -314,6 +485,9 @@ jobs:
         run: |
           set -o pipefail
           npm run analytics-specialist:run 2>&1 | tee analytics-step1.log
+        env:
+          # Fase O50 -- ver la nota del step equivalente de SEO.
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
 
       - name: "[ANALYTICS] Parsear RUNNER_RESULT_JSON (paso 1)"
         id: analytics1

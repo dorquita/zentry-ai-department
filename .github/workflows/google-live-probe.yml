@@ -1,0 +1,105 @@
+name: Google Live Probe (solo lectura)
+
+# Prueba de vida READ-ONLY de las cuatro integraciones Google del
+# departamento, ejecutada DESDE GitHub Actions -- ver
+# docs/external-dependencies-audit.md.
+#
+# Responde con evidencia, no por deduccion, a: "¿GitHub Actions puede
+# leer de verdad de Search Console / GA4 / GTM / Google Ads?". Que un
+# especialista Claude produzca output NO demuestra que haya acceso live
+# a la API: hasta la Fase O50 los especialistas razonaban sobre snapshots
+# que generaba el VPS y que solo llegaban aqui commiteados al repo.
+#
+# CERO ESCRITURAS, por construccion:
+#   - Search Console: `sites.list` (nunca sitemaps.submit / sites.add / sites.delete)
+#   - GA4:            `properties.runReport` con UNA metrica (nunca analyticsadmin)
+#   - GTM:            `accounts.list` + `containers.list` (nunca publish/create/update/delete)
+#   - Google Ads:     `SELECT ... FROM customer LIMIT 1` (nunca :mutate)
+# No crea campanas, no modifica GTM, no modifica GA4, no modifica Search
+# Console. Los adaptadores que usa no contienen ninguna llamada de
+# mutacion.
+#
+# SECRETOS: se inyectan con el MISMO nombre que ya usan los adaptadores y
+# que ya tiene el `.env` del VPS -- asi la migracion es solo "copiar el
+# valor", sin renombrados que puedan mapear mal una credencial. Los
+# identificadores NO secretos (property/container/workspace/customer id,
+# site url) NO se inyectan: ya estan commiteados en clients/zentry/
+# {analytics,ads,seo}.json y los adaptadores los prefieren desde la Fase
+# O16.1. El script nunca imprime un valor, y aborta antes de escribir
+# nada si detectara el valor de un secreto en su propia salida.
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Servicios a probar (coma). Vacio = los cuatro."
+        required: false
+        default: ""
+      require:
+        description: "Servicios que DEBEN quedar live (coma). Vacio = informativo, no falla."
+        required: false
+        default: ""
+
+concurrency:
+  group: google-live-probe
+  cancel-in-progress: false
+
+# Solo lectura del repo. Sin id-token, sin packages, sin nada mas.
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe READ-ONLY de Google
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: "Probe LIVE (solo lectura, 0 escrituras)"
+        id: probe
+        run: |
+          set -o pipefail
+          npm run probe:google -- --services "$SERVICES" --require "$REQUIRE" 2>&1 | tee probe.log
+        env:
+          SERVICES: ${{ inputs.services }}
+          REQUIRE: ${{ inputs.require }}
+          # --- Search Console (OAuth2 client + refresh token) ---
+          GSC_OAUTH_CLIENT_ID: ${{ secrets.GSC_OAUTH_CLIENT_ID }}
+          GSC_OAUTH_CLIENT_SECRET: ${{ secrets.GSC_OAUTH_CLIENT_SECRET }}
+          GSC_OAUTH_REFRESH_TOKEN: ${{ secrets.GSC_OAUTH_REFRESH_TOKEN }}
+          # --- GA4 + GTM (comparten el MISMO cliente OAuth, con los dos scopes) ---
+          GOOGLE_ANALYTICS_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_CLIENT_ID }}
+          GOOGLE_ANALYTICS_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_CLIENT_SECRET }}
+          GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_ANALYTICS_OAUTH_REFRESH_TOKEN }}
+          # --- Google Ads (developer token + OAuth2 client + refresh token) ---
+          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
+          GOOGLE_ADS_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_ADS_OAUTH_CLIENT_ID }}
+          GOOGLE_ADS_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_OAUTH_CLIENT_SECRET }}
+          GOOGLE_ADS_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_OAUTH_REFRESH_TOKEN }}
+
+      - name: "Resumen del probe"
+        if: always()
+        run: |
+          {
+            echo "## Google Live Probe (solo lectura)"
+            echo ""
+            if [ -f probe.log ]; then
+              sed -n '/^## Probe LIVE/,/^PROBE_RESULT_JSON=/p' probe.log | grep -v '^PROBE_RESULT_JSON='
+            else
+              echo "El probe no llego a generar salida. Ver el log del step anterior."
+            fi
+            echo ""
+            echo "- **Escrituras en sistemas Google:** NINGUNA."
+            echo "- **Valores de credenciales impresos:** NINGUNO (solo nombres de variable)."
+          } >> "$GITHUB_STEP_SUMMARY"

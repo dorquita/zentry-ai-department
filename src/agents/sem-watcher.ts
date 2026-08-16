@@ -547,7 +547,19 @@ export async function runSemWatcher(departmentRunId?: string): Promise<SemWatche
       responsiveSearchAds: campaignState.responsiveSearchAds,
       semCandidateCount: semCandidates.length,
       metricsWindow: adsSnapshot?.metricsWindow,
+      // Fase O51 -- limites exactos de la ventana e instante real de la
+      // lectura. Sin esto, el snapshot SEM no podia decir a que periodo
+      // corresponde ni cuando se hablo con la API, que es justo lo que
+      // hace falta para no presentar metricas viejas como actuales.
+      metricsStartDate: adsSnapshot?.metricsStartDate,
+      metricsEndDate: adsSnapshot?.metricsEndDate,
+      adsGeneratedAt: adsSnapshot?.generatedAt,
       metrics: adsSnapshot?.metrics ?? [],
+      // Solo los 25 terminos de mas impresiones: el payload vive en un
+      // JSONL append-only que se lee entero en cada pasada, asi que no
+      // puede crecer con 200 filas por dia.
+      searchTerms: (adsSnapshot?.searchTerms ?? []).slice(0, 25),
+      searchTermCount: adsSnapshot?.searchTerms.length ?? 0,
       reportPath: result.reportPath,
       departmentSummary,
     },

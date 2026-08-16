@@ -76,6 +76,9 @@ import { runProductionApplyRunnerTests } from "../test/production-apply-runner.t
 import { runWorkerWebhookTests } from "../test/worker-webhook.test";
 import { runWorkerD1StoreTests } from "../test/worker-d1-store.test";
 import { runWorkerRuntimeCompatTests } from "../test/worker-runtime-compat.test";
+import { runExternalDependenciesAuditTests } from "../test/external-dependencies-audit.test";
+import { runGoogleAdsLiveMigrationTests } from "../test/google-ads-live-migration.test";
+import { runVpsIndependenceTests } from "../test/vps-independence.test";
 import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
 
 interface TestCase {
@@ -160,6 +163,9 @@ async function main(): Promise<void> {
     { suiteName: "worker-webhook", cases: runWorkerWebhookTests() },
     { suiteName: "worker-d1-store", cases: runWorkerD1StoreTests() },
     { suiteName: "worker-runtime-compat", cases: runWorkerRuntimeCompatTests() },
+    { suiteName: "external-dependencies-audit", cases: runExternalDependenciesAuditTests() },
+    { suiteName: "google-ads-live-migration", cases: runGoogleAdsLiveMigrationTests() },
+    { suiteName: "vps-independence", cases: runVpsIndependenceTests() },
   ];
 
   let passed = 0;

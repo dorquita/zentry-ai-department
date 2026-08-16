@@ -27,3 +27,23 @@ jobs:
 
       - name: Test
         run: npm test
+
+      # Fase O50: hasta ahora actionlint solo se pasaba a mano en local, asi
+      # que un error de sintaxis o una expresion mal escrita en un workflow
+      # solo se descubria al ejecutarlo. Con la recoleccion de datos ya
+      # dentro de Actions, un workflow roto deja al departamento sin fuentes
+      # live -- merece un check propio.
+      - name: Actionlint
+        env:
+          # SC2016 ("las expresiones no se expanden entre comillas
+          # simples") es un falso positivo sistematico en este repo:
+          # varios workflows embeben JavaScript con `node -e '...'`, y ahi
+          # `$`/`${...}` son sintaxis de JS. Pasar a comillas dobles, que
+          # es lo que sugiere el aviso, haria que el shell expandiera esas
+          # expresiones ANTES de que Node viera el script -- justo el bug
+          # que las comillas simples evitan. Es el unico codigo silenciado,
+          # y a nivel de repositorio porque el patron se repite.
+          SHELLCHECK_OPTS: "-e SC2016"
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
