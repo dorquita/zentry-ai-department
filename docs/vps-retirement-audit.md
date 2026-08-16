@@ -170,6 +170,37 @@ Recomendacion: **rama de estado dedicada**, tras parar el timer del VPS.
 
 ---
 
+## 3b. Quien escribe el estado en el VPS, exactamente (Fase O55)
+
+Distincion que resulto importante: **escribir en disco** y **publicar en
+GitHub** son dos cosas distintas, y las hacen actores distintos.
+
+| Actor | Que hace | Cuando | ¿Automatico? |
+|---|---|---|---|
+| `zentry-seo-watcher.timer` → `zentry-seo-watcher.service` → `npm run growth:daily` | Escribe `data/*.jsonl` y `reports/**` en el disco del VPS | 08:00 UTC diario | SI |
+| `zentry-telegram-approvals.service` | Escribe `data/telegram-*.jsonl` y `data/approval-requests.jsonl` (long-poll permanente) | continuo | SI |
+| Una persona por SSH (`root@srv1777637.hstgr.cloud`) | `git commit && git push` de `data/`+`reports/` a `main` | irregular | **NO** |
+
+Verificado: **ningun fichero del repositorio ejecuta `git commit` ni
+`git push`** — ni los scripts, ni las units systemd, ni nada bajo `src/`.
+Y los commits de `root@srv...` estan a horas dispersas (15:59, 16:59,
+18:48, 19:54, 20:12, 20:27 el 10 de agosto; 17:24 el 14), nunca a las
+08:00 que dispara el timer. Son commits a mano.
+
+**Consecuencia para la migracion:** no existe ni ha existido nunca un
+escritor AUTOMATICO del VPS sobre el repositorio. Activar el escritor de
+GitHub no crea una carrera con nada: escribe ademas en una rama distinta
+(`department-state`), que el VPS no toca. La unica condicion es
+**dejar de commitear `data/` a mano desde el VPS**, porque a partir de
+ese momento esos commits serian estado paralelo que nadie lee.
+
+`zentry-telegram-approvals.service` si sigue siendo un escritor en disco
+del VPS, pero queda **fuera de alcance por decision explicita** (no tocar
+Telegram). Mientras nadie commitee lo que escribe, no afecta al estado
+que consume GitHub.
+
+---
+
 ## 4. Prueba "VPS OFF" ejecutada
 
 Se ha ejecutado el pase completo **sin nada corriendo en
