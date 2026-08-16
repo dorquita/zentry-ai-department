@@ -517,7 +517,9 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
         //
         // El diagnostico es EFIMERO por pasada: vive en runner.temp y se
         // publica como artifact, nunca en el arbol de estado.
-        const healthPaths = [...workflow.matchAll(/health-record-path:\s*(\S+)/g)].map((match) => match[1]);
+        // Hasta el final de linea, no `\S+`: la ruta contiene espacios
+        // dentro de la interpolacion de Actions (`${{ runner.temp }}`).
+        const healthPaths = [...workflow.matchAll(/health-record-path:[ \t]*(.+)/g)].map((match) => match[1].trim());
         assert.ok(healthPaths.length >= 6, `deberia haber una ruta de diagnostico por empleado (encontradas ${healthPaths.length})`);
         for (const healthPath of healthPaths) {
           assert.ok(!/github\.workspace/.test(healthPath), `el diagnostico no puede vivir en el workspace persistido: ${healthPath}`);
