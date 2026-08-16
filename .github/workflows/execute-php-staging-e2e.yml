@@ -75,6 +75,7 @@ jobs:
           else
             MODE=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").mode)')
             POST_ID=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").postId)')
+            ABILITY=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").ability || "")')
           fi
           if [ "$MODE" != "list" ] && [ "$MODE" != "run" ] && [ "$MODE" != "ability-info" ]; then
             echo "mode=\"$MODE\" desconocido. Fail-closed: no se ejecuta nada."
@@ -86,12 +87,15 @@ jobs:
           fi
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
           echo "postId=$POST_ID" >> "$GITHUB_OUTPUT"
+          echo "ability=${ABILITY:-}" >> "$GITHUB_OUTPUT"
           echo "Modo resuelto: $MODE (postId=$POST_ID)."
 
       - name: E2E
         run: |
           set -o pipefail
-          if [ "$MODE" != "run" ]; then
+          if [ "$MODE" = "ability-info" ] && [ -n "$ABILITY" ]; then
+            npx ts-node scripts/o47-execute-php-e2e.ts --mode ability-info --ability "$ABILITY"
+          elif [ "$MODE" != "run" ]; then
             npx ts-node scripts/o47-execute-php-e2e.ts --mode "$MODE"
           else
             npx ts-node scripts/o47-execute-php-e2e.ts --mode run --postId "$POST_ID"
@@ -99,6 +103,7 @@ jobs:
         env:
           MODE: ${{ steps.request.outputs.mode }}
           POST_ID: ${{ steps.request.outputs.postId }}
+          ABILITY: ${{ steps.request.outputs.ability }}
           # Entorno: STAGING y nada mas. Ninguna variable de produccion se
           # expone a este job, ni siquiera apagada.
           WORDPRESS_ENV: staging
