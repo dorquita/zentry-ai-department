@@ -530,6 +530,13 @@ Concretamente, quedan obsoletos para este flujo:
 - **`deploy/zentry-telegram-approvals.service`** — la unit de systemd que
   mantenía vivo el receptor de Telegram por long-poll. Ya no hace falta
   ningún proceso permanente esperando: Telegram entrega por webhook.
+> **Ojo con el bot mientras el V1 siga vivo.** Un bot no puede tener
+> webhook y `getUpdates` simultaneamente: al registrar el webhook, el
+> poller del VPS empieza a recibir 409 y el flujo historico se rompe. Si
+> el V1 tiene que seguir funcionando (hoy si: alimenta backlogs y change
+> packs que consume el sistema nuevo), usa un **segundo bot** para el
+> flujo serverless. Detalle en `infra/cloudflare/README.md`.
+
 - **`scripts/telegram-approvals-service.ts`** — el poller que ejecutaba
   esa unit.
 - **`department-changes.jsonl`** (en el `data/` del cliente activo, ver

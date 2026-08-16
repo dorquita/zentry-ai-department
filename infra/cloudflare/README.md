@@ -21,6 +21,41 @@ Ficheros de este directorio:
 
 ---
 
+## ⚠️ ANTES DE EMPEZAR: conflicto de bot con el sistema V1
+
+**Un bot de Telegram no puede tener webhook y `getUpdates` a la vez.** Es
+una restriccion del propio Bot API: en cuanto se registra un webhook,
+cualquier llamada a `getUpdates` con ese token devuelve **409 Conflict**.
+
+Esto importa aqui porque el proyecto tiene todavia un poller en marcha:
+
+- `deploy/zentry-telegram-approvals.service` ejecuta
+  `scripts/telegram-approvals-service.ts`, que hace `getUpdates` en bucle
+  para las aprobaciones **historicas** (change_pack, staging_review_page,
+  production_*), que siguen en uso.
+
+Si registras el webhook sobre **el mismo bot**, ese servicio entra en
+error 409 permanente y las aprobaciones V1 dejan de funcionar.
+
+### Recomendacion: usa un SEGUNDO bot para el flujo serverless
+
+Es la unica opcion que deja los dos sistemas funcionando a la vez sin
+tocar nada del V1:
+
+1. Habla con [@BotFather](https://t.me/BotFather) -> `/newbot`.
+2. Ese token nuevo es el que va en `TELEGRAM_BOT_TOKEN` **del Worker**
+   (`wrangler secret`) y en el `TELEGRAM_BOT_TOKEN` del **workflow de
+   produccion** (secret de GitHub Actions), que es quien responde el
+   resultado de la publicacion.
+3. El bot viejo se queda intacto en el VPS, con su poller, atendiendo el
+   flujo historico.
+4. Añade el bot nuevo al mismo chat y toma nota de su `chat_id` (puede
+   coincidir con el de siempre si es tu chat privado; el `user_id`
+   autorizado es el tuyo en cualquier caso).
+
+Alternativa (NO recomendada hoy): reutilizar el bot unico y parar el
+poller V1. Solo tiene sentido cuando el flujo historico ya no se use.
+
 ## 0. Antes de empezar
 
 Necesitas:
