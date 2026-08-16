@@ -126,7 +126,15 @@ ChangePack: recibes
   RESUELTA por el departamento de forma determinista (igualdad exacta de
   URL o de slug contra ese inventario), con su motivo. No la vuelvas a
   buscar. Si viene vacio, `targetResolutionStatus` y
-  `targetResolutionReason` dicen exactamente por que.
+  `targetResolutionReason` dicen exactamente por que. Si
+  `targetResolutionStatus` es `multi_target`, la recomendacion apunta a
+  VARIAS paginas a proposito (consolidar dos URLs, por ejemplo): eso no
+  es ambiguedad y no bloquea nada -- declara UN changePlan POR PAGINA,
+  cada uno con su `targetPage`, todos con la misma `recommendationId`.
+- `yoastMetaUnavailableNotice`: si trae texto, la meta de Yoast NO se ha
+  podido leer en esta pasada y `update_post_meta` queda FUERA de alcance.
+  `metaTitle`/`metaDescription` en `null` NO significan "vacio" en ese
+  caso. Title, excerpt y contenido no se ven afectados.
 - `targetPageSnapshots[]`: el BEFORE COMPLETO de esas paginas objetivo,
   incluido el `post_content` real. Es tu estado actual verificado. Si una
   entrada trae `contentAvailable: false`, su cuerpo NO se te ha

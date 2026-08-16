@@ -7,10 +7,12 @@ import { DepartmentQaStatus } from "./types";
 import { DepartmentSpecialistInput } from "./specialist-inputs";
 import {
   buildTargetPageSnapshots,
+  isYoastMetaReadable,
   StagingInventory,
   StagingPageBrief,
   StagingPageFullSnapshot,
   StagingPageSnapshot,
+  YOAST_META_UNREADABLE_NOTICE,
 } from "./staging-inventory";
 import { RecommendationTargetStatus, resolveRecommendationTargets } from "./target-resolution";
 import { buildRecommendationId } from "./apply/types";
@@ -114,6 +116,12 @@ export interface DepartmentWebEngineerContext {
    * NO significa que este vacia.
    */
   targetPageSnapshots: StagingPageFullSnapshot[];
+  /**
+   * Vacio = la meta de Yoast SI se ha podido leer y se puede proponer.
+   * No vacio = no se ha podido leer en esta pasada, y dice por que; en
+   * ese caso `update_post_meta` queda fuera de alcance.
+   */
+  yoastMetaUnavailableNotice: string;
 }
 
 export const NO_CONFIRMED_PAGE_INVENTORY_NOTICE =
@@ -127,7 +135,9 @@ export const WEB_ENGINEER_COORDINATION_RULES: string[] = [
   "Cada `proposedChanges[]` debe poder remontarse a una recomendacion concreta de `approvedRecommendations[]`: cita su titulo en el `rationale` para conservar la trazabilidad de extremo a extremo.",
   "Si una recomendacion aprobada trae `qaWarnings`, reflejalas: o como criterio de aceptacion que las cierre, o como `unknowns[]` explicito. No las ignores.",
   "`stagingInventory[]` es el inventario REAL de staging leido del sitio antes de invocarte: id, slug, URL, titulo, excerpt, meta Yoast actual, tipos de bloque y H2 de cada pagina publicada. Es la UNICA fuente valida para citar una pagina.",
-  "`approvedRecommendations[].resolvedTargets[]` ya trae la pagina objetivo RESUELTA por el departamento de forma determinista (igualdad exacta de URL o slug contra el inventario). No la vuelvas a buscar ni la cuestiones: si trae una pagina, esa es la pagina. Si viene vacio, mira `targetResolutionReason` -- y entonces esa recomendacion NO tiene ChangePlan.",
+  "`approvedRecommendations[].resolvedTargets[]` ya trae la(s) pagina(s) objetivo RESUELTAS por el departamento de forma determinista (igualdad exacta de URL o slug contra el inventario). No las vuelvas a buscar ni las cuestiones: si trae una pagina, esa es la pagina. Si viene vacio, mira `targetResolutionReason` -- y entonces esa recomendacion NO tiene ChangePlan.",
+  "Si `targetResolutionStatus` es `multi_target`, la recomendacion apunta a VARIAS paginas a proposito (p.ej. consolidar el on-page de dos URLs). Eso no es ambiguedad y no bloquea nada: declara UN changePlan POR PAGINA, cada uno con su `targetPage` propio y todos con la misma `recommendationId`.",
+  "`yoastMetaUnavailableNotice`: si viene con texto, la meta de Yoast NO se ha podido leer en esta pasada y `update_post_meta` queda FUERA de alcance -- `metaTitle`/`metaDescription` en `null` no significan que esten vacias. Title, excerpt y contenido no se ven afectados.",
   "`targetPageSnapshots[]` es el BEFORE COMPLETO de esas paginas objetivo: title, excerpt, meta Yoast y `post_content` real. Es de donde sacas el estado actual. Si una entrada trae `contentAvailable: false`, NO tienes su cuerpo: no lo reconstruyas y no declares `update_post_content` sobre ella.",
   "REGLA DE ORO PARA `changePlans[]`: si una recomendacion tiene EXACTAMENTE UNA pagina en `resolvedTargets[]`, tienes su BEFORE en `targetPageSnapshots[]`, y sabes escribir el valor nuevo COMPLETO de un campo del catalogo, entonces DEBES declarar el ChangePlan. No dejarlo como trabajo manual 'por prudencia': la prudencia ya esta en que el sistema resuelve el pageId y el hash por su cuenta y en que nada se ejecuta sin aprobacion humana.",
   "Cada entrada de `changePlans[]` lleva: `recommendationId` copiado LITERALMENTE de `approvedRecommendations[].recommendationId` (no el rank, no el titulo), `targetPage` con la URL de staging o el slug EXACTOS del inventario, la `operation` del catalogo, y `newValue` con el contenido nuevo COMPLETO del campo. Para `update_post_content`, el `post_content` ENTERO resultante -- no un fragmento, no un diff, no una instruccion.",
@@ -162,19 +172,21 @@ export function resolveRecommendationTargetFields(input: {
   const targets = resolveRecommendationTargets([input.title, input.rationale, ...input.evidenceDescriptions], input.inventory);
   return {
     recommendationId: buildRecommendationId(input.departmentRunId, input.rank),
-    resolvedTargets: targets.references
-      .filter((ref) => ref.status === "resolved")
-      .map((ref) => {
-        const page = targets.pages.find((p) => p.wordpressPageId === ref.wordpressPageId);
-        return {
-          wordpressPageId: ref.wordpressPageId as number,
-          slug: page?.slug ?? "",
-          stagingUrl: page?.stagingUrl ?? "",
-          citedAs: ref.raw,
-          crossEnvironment: ref.crossEnvironment,
-          reason: ref.reason,
-        };
-      }),
+    // UNA entrada por PAGINA, no por referencia: la misma pagina citada
+    // por su URL de produccion y por su path es un unico objetivo, y
+    // duplicarla solo invita a declarar el cambio dos veces.
+    resolvedTargets: targets.pages.map((page) => {
+      const citations = targets.references.filter((ref) => ref.status === "resolved" && ref.wordpressPageId === page.wordpressPageId);
+      const first = citations[0];
+      return {
+        wordpressPageId: page.wordpressPageId,
+        slug: page.slug,
+        stagingUrl: page.stagingUrl,
+        citedAs: first?.raw ?? "",
+        crossEnvironment: citations.some((c) => c.crossEnvironment),
+        reason: first?.reason ?? "",
+      };
+    }),
     targetResolutionStatus: targets.status,
     targetResolutionReason: targets.reason,
     pages: targets.pages,
@@ -256,6 +268,7 @@ export function buildDepartmentWebEngineerContext(input: {
     stagingInventory: input.stagingInventory ?? [],
     stagingInventoryUnavailableReason: input.stagingInventoryUnavailableReason ?? "",
     targetPageSnapshots: buildTargetPageSnapshots([...targetPages.values()]),
+    yoastMetaUnavailableNotice: inventory.pages.length > 0 && !isYoastMetaReadable(inventory) ? YOAST_META_UNREADABLE_NOTICE : "",
     noPluginThemeApiInventoryNotice: NO_PLUGIN_THEME_API_INVENTORY_NOTICE,
     noConfirmedPageInventoryNotice:
       (input.stagingInventory ?? []).length > 0

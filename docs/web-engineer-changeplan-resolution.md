@@ -84,13 +84,21 @@ exactamente lo que el agente tiene prohibido hacer.
   canonica de la pagina en los dos entornos. Queda marcado como
   `crossEnvironment: true` y con su motivo.
 - Cero fuzzy, cero similitud semantica, cero eleccion entre candidatos.
-  Dos paginas distintas -> `ambiguous_target`, y NO se elige ninguna.
+  UNA referencia que casa con VARIAS paginas del inventario no aporta
+  ninguna (`ambiguous`, fail-closed).
+- Una recomendacion que nombra VARIAS paginas a proposito ("consolidar
+  el on-page de /a/ y /b/") es `multi_target`, no ambiguedad: no hay
+  nada que elegir, se declara UN ChangePlan POR PAGINA y cada plan sigue
+  teniendo un unico destino. La primera version de este resolver las
+  bloqueaba, y con ellas justo el trabajo on-page real -- lo detecto la
+  pasada `dept-2026-08-16T145334Z`.
 
 ### BEFORE real en el contexto
 
 - `StagingPageBrief` ahora lleva `metaTitle` / `metaDescription` (los dos
-  valores de la allowlist de Yoast, leidos). `null` = la clave no existe;
-  nunca se rellena con algo derivado del title.
+  valores de la allowlist de Yoast). `null` nunca se rellena con algo
+  derivado del title -- y ver mas abajo por que `null` no siempre
+  significa "vacio".
 - `targetPageSnapshots[]`: BEFORE **completo**, incluido el
   `post_content` real, solo de las paginas que han quedado resueltas como
   objetivo. Una pagina cuyo cuerpo no cabe en el presupuesto viene con
@@ -98,6 +106,15 @@ exactamente lo que el agente tiene prohibido hacer.
   ella cae en `missing_before`, no en "reescribe lo que quieras".
 - El bloque `meta` crudo de la pagina NO se expone: podria traer
   metadatos de cualquier plugin.
+- **La meta de Yoast no viaja por el REST del core de este sitio** (las
+  claves `_yoast_wpseo_*` no estan registradas con `show_in_rest`):
+  comprobado en la pasada `dept-2026-08-16T145334Z`, 0 de 44 paginas la
+  exponen. Pagina a pagina eso es indistinguible de "no tiene meta"; a
+  nivel de inventario, no. Cuando NINGUNA pagina la expone, el contexto
+  lo dice por escrito (`yoastMetaUnavailableNotice`) y
+  `update_post_meta` cae en `missing_before` -- escribirla seria pisar
+  un valor que nunca vimos. Habilitar ese camino requiere exponer las
+  claves por REST o leerlas por el fallback PHP, y es trabajo aparte.
 
 ### Contrato de salida alineado en las tres capas
 
@@ -119,7 +136,7 @@ es justamente donde el contenido final es el entregable.
 | --- | --- |
 | `actionable` | Todo lo necesario para ejecutar existe |
 | `unresolved_target` | No sabemos que pagina es |
-| `ambiguous_target` | Varias paginas posibles: no se elige |
+| `ambiguous_target` | Una referencia casa con varias paginas: no se elige |
 | `target_not_publishable` | Pagina resuelta pero no publicada |
 | `missing_before` | Sabemos la pagina, no tenemos su estado actual |
 | `missing_after` | No hay valor nuevo completo |
@@ -154,6 +171,25 @@ del ChangePlan, diagnostico) sobre el input REAL de la pasada que fallo.
 No invoca a Claude, no toca la red, no escribe en ningun sistema. Iterar
 una hipotesis pasa de ~18 minutos y seis invocaciones de Claude a unos
 segundos. Ver `test/fixtures/README.md` para sus limitaciones.
+
+## Segunda iteracion, guiada por la propia instrumentacion
+
+La primera pasada real con el fix (`dept-2026-08-16T145334Z`, run
+`31953899041`) siguio dando 0 ChangePlans -- pero ya **dijo por que**, una
+recomendacion a una, y eso descubrio dos cosas que la primera version no
+podia ver:
+
+| # | Diagnostico | Lectura |
+| --- | --- | --- |
+| 1 | `qa_blocked` | Correcto: QA la bloqueo. |
+| 2 | `no_change_plan_declared`, target **resuelto** (page 2060), BEFORE disponible | Correcto: "reasignar o cerrar acciones sobre una pagina obsoleta" es higiene de backlog, no una edicion de pagina. |
+| 3 | `ambiguous_target` (1865 y 470) | **Falso negativo.** Era "consolidar el on-page de dos URLs": dos objetivos legitimos, no una eleccion. -> `multi_target`. |
+| 4-6 | `no_target_reference` | Correcto: GA4/GTM y decisiones de alcance. |
+
+Y el inventario dejo ver que **0 de 44 paginas exponen la meta de Yoast**
+por REST. Las dos correcciones estan arriba. Sin el diagnostico por
+recomendacion, las dos habrian seguido siendo invisibles detras de un
+"0 ChangePlans".
 
 ## Lo que NO se ha tocado
 

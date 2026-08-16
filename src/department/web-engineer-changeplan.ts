@@ -9,7 +9,7 @@ import {
   selectExecutionPath,
   validateExecutePhpChangePlan,
 } from "../core/execute-php-operations";
-import { PageResolution, resolveStagingPage, StagingInventory, StagingPageSnapshot, versionHashOfPage } from "./staging-inventory";
+import { isYoastMetaReadable, PageResolution, resolveStagingPage, StagingInventory, StagingPageSnapshot, versionHashOfPage } from "./staging-inventory";
 
 /**
  * DE PROSA A CHANGEPLAN EJECUTABLE.
@@ -212,8 +212,23 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
     );
   }
 
-  // 4. BEFORE REAL. Reescribir el cuerpo ENTERO de una pagina cuyo
-  //    cuerpo actual no hemos podido leer seria destruirlo, no editarlo.
+  // 4. BEFORE REAL.
+  //
+  //    La meta de Yoast no viaja por el REST del core de este sitio, asi
+  //    que "no la vemos" es indistinguible, pagina a pagina, de "esta
+  //    vacia". A nivel de inventario SI se distingue -- y sin BEFORE
+  //    legible, escribir la meta seria pisar un valor que nunca vimos.
+  if (operation === "update_post_meta" && !isYoastMetaReadable(inventory)) {
+    return manual(
+      draft,
+      "missing_before",
+      `Ninguna de las ${inventory.pages.length} paginas del inventario expone la meta de Yoast por el REST del core, asi que el BEFORE de "${String(draft.metaKey)}" no se ha podido leer en esta pasada. Un update_post_meta a ciegas pisaria un valor que no hemos visto.`,
+      page
+    );
+  }
+
+  //    Y reescribir el cuerpo ENTERO de una pagina cuyo cuerpo actual no
+  //    hemos podido leer seria destruirlo, no editarlo.
   if (operation === "update_post_content" && page.contentHtml.length === 0) {
     return manual(
       draft,

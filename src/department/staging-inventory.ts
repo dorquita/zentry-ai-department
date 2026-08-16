@@ -46,6 +46,28 @@ export interface StagingInventory {
 
 export const STAGING_INVENTORY_CONTRACT_VERSION = "staging-inventory/v1";
 
+/**
+ * ¿Se ha podido LEER la meta de Yoast en esta pasada?
+ *
+ * Las claves `_yoast_wpseo_*` no estan registradas con `show_in_rest` en
+ * este sitio, asi que el REST del core devuelve las paginas SIN ellas.
+ * El resultado es indistinguible, pagina a pagina, de "esta pagina no
+ * tiene meta" -- y esa confusion es peligrosa: llevaria a proponer un
+ * `update_post_meta` creyendo que se crea un valor cuando en realidad se
+ * estaria pisando uno existente que nunca vimos.
+ *
+ * A nivel de INVENTARIO si se distingue: si NINGUNA de las paginas
+ * publicadas expone ninguna clave de la allowlist, lo que falla es la
+ * lectura, no el contenido. Fail-closed sobre esa señal: sin BEFORE
+ * legible no se propone tocar la meta.
+ */
+export function isYoastMetaReadable(inventory: StagingInventory): boolean {
+  return inventory.pages.some((page) => Object.values(page.meta).some((value) => typeof value === "string"));
+}
+
+export const YOAST_META_UNREADABLE_NOTICE =
+  "La meta de Yoast (`_yoast_wpseo_title` / `_yoast_wpseo_metadesc`) NO se ha podido leer en esta pasada: ninguna pagina publicada la expone por el REST del core, porque esas claves no estan registradas con show_in_rest en este sitio. Eso significa que NO conoces el valor actual, y `metaTitle`/`metaDescription` en `null` NO quiere decir que esten vacias. Por tanto NO declares ningun `changePlan` con `operation: update_post_meta` en esta pasada: sin BEFORE legible seria escribir encima de algo que no has visto. Title y excerpt si los tienes leidos y se pueden proponer con normalidad.";
+
 export function emptyStagingInventory(reason: string, capturedAt: string): StagingInventory {
   return { contractVersion: STAGING_INVENTORY_CONTRACT_VERSION, capturedAt, pages: [], unavailableReason: reason };
 }

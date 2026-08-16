@@ -8,6 +8,7 @@ import {
   StagingInventory,
   StagingPageSnapshot,
   STAGING_INVENTORY_CONTRACT_VERSION,
+  isYoastMetaReadable,
   summarizePageForPrompt,
   TARGET_SNAPSHOT_CONTENT_BUDGET,
 } from "../src/department/staging-inventory";
@@ -166,15 +167,15 @@ export function runWebEngineerTargetResolutionTests(): TestCase[] {
       },
     },
     {
-      name: "Ambiguous target: dos paginas distintas citadas -> ambiguous_target y CERO paginas elegidas",
+      name: "Multi target: dos paginas citadas A PROPOSITO no son ambiguedad -- las dos se entregan, una por ChangePlan",
       fn: () => {
         const resolution = resolveRecommendationTargets(
-          [`Tocar ${STAGING_HOST}/taquillas-melamina-fenolico/ y ${STAGING_HOST}/digitalizacion-taquillas/.`],
+          [`Consolidar el on-page de ${STAGING_HOST}/taquillas-melamina-fenolico/ y ${STAGING_HOST}/digitalizacion-taquillas/.`],
           INVENTORY
         );
-        assert.equal(resolution.status, "ambiguous_target");
-        assert.equal(resolution.pages.length, 2);
-        assert.match(resolution.reason, /no se elige/i);
+        assert.equal(resolution.status, "multi_target");
+        assert.deepEqual(resolution.pages.map((p) => p.wordpressPageId), [1269, 1867]);
+        assert.match(resolution.reason, /No hay nada que elegir/i);
       },
     },
     {
@@ -392,6 +393,76 @@ export function runWebEngineerTargetResolutionTests(): TestCase[] {
       },
     },
 
+    {
+      name: "multi_target: el contexto entrega las DOS paginas (una entrada por pagina, no por cita) y el BEFORE de ambas",
+      fn: () => {
+        const context = contextFor([
+          recommendation({
+            rank: 1,
+            title: `Consolidar el on-page de ${PRODUCTION_HOST}/taquillas-melamina-fenolico/ y ${PRODUCTION_HOST}/digitalizacion-taquillas/`,
+            rationale: `Ver ${STAGING_HOST}/taquillas-melamina-fenolico/ y ${STAGING_HOST}/digitalizacion-taquillas/.`,
+          }),
+        ]);
+        const rec = context.approvedRecommendations[0];
+        assert.equal(rec.targetResolutionStatus, "multi_target");
+        // Cuatro citas, dos paginas: una entrada por PAGINA.
+        assert.deepEqual(rec.resolvedTargets.map((t) => t.wordpressPageId), [1269, 1867]);
+        assert.deepEqual(context.targetPageSnapshots.map((s) => s.wordpressPageId), [1269, 1867]);
+      },
+    },
+    {
+      name: "Cada pagina de un multi_target admite su PROPIO ChangePlan, cada uno con un unico destino",
+      fn: () => {
+        const ids = [buildRecommendationId(RUN_ID, 1)];
+        const plans = [
+          buildChangePlanFromDraft({
+            draft: draft({ targetPage: `${STAGING_HOST}/taquillas-melamina-fenolico/`, newValue: "Titulo nuevo de melamina" }),
+            inventory: INVENTORY,
+            approvedRecommendationIds: ids,
+          }),
+          buildChangePlanFromDraft({
+            draft: draft({ targetPage: `${STAGING_HOST}/digitalizacion-taquillas/`, newValue: "Titulo nuevo de digitalizacion" }),
+            inventory: INVENTORY,
+            approvedRecommendationIds: ids,
+          }),
+        ];
+        assert.deepEqual(plans.map((p) => p.status), ["ACTIONABLE", "ACTIONABLE"]);
+        assert.deepEqual(plans.map((p) => p.plan?.targetId), [1269, 1867]);
+      },
+    },
+
+    // 5b. META DE YOAST NO LEGIBLE ------------------------------------------
+    {
+      name: "Si NINGUNA pagina expone la meta Yoast, la lectura es lo que falla: update_post_meta cae en missing_before, no se escribe a ciegas",
+      fn: () => {
+        const withoutMeta = inventory([page({ wordpressPageId: 1269, slug: "taquillas-melamina-fenolico" })]);
+        assert.equal(isYoastMetaReadable(withoutMeta), false);
+        assert.equal(isYoastMetaReadable(INVENTORY), true);
+
+        const resolved = buildChangePlanFromDraft({
+          draft: draft({ operation: "update_post_meta", metaKey: "_yoast_wpseo_metadesc", newValue: "Meta nueva." }),
+          inventory: withoutMeta,
+        });
+        assert.equal(resolved.status, "MANUAL");
+        assert.equal(resolved.resolution, "missing_before");
+        assert.match(resolved.reason, /a ciegas/i);
+
+        // Y el title, que SI se lee, sigue siendo proponible sobre la misma pagina.
+        const title = buildChangePlanFromDraft({ draft: draft({ newValue: "Titulo nuevo" }), inventory: withoutMeta });
+        assert.equal(title.status, "ACTIONABLE");
+      },
+    },
+    {
+      name: "El contexto avisa por escrito de que la meta Yoast no se pudo leer, en vez de dejar un null que parece 'vacio'",
+      fn: () => {
+        const withoutMeta = inventory([page({ wordpressPageId: 1269, slug: "taquillas-melamina-fenolico" })]);
+        const context = contextFor([recommendation({ rank: 1, title: `Reescribir metas de ${STAGING_HOST}/taquillas-melamina-fenolico/` })], withoutMeta);
+        assert.match(context.yoastMetaUnavailableNotice, /NO se ha podido leer/);
+        assert.match(context.yoastMetaUnavailableNotice, /NO quiere decir que esten vacias/);
+        assert.equal(contextFor([recommendation({ rank: 1, title: "sin objetivo" })], INVENTORY).yoastMetaUnavailableNotice, "");
+      },
+    },
+
     // 6. TRAZABILIDAD SEO: relatedIds -> pagina -----------------------------
     {
       name: "Los relatedIds de una accion de SEO se resuelven a las paginas que declaran sus oportunidades y problemas tecnicos",
@@ -459,7 +530,7 @@ export function runWebEngineerTargetResolutionTests(): TestCase[] {
         assert.equal(byId.get(`${RUN_ID}#rec-1`)?.changePlanStatus, "no_change_plan_declared");
         assert.equal(byId.get(`${RUN_ID}#rec-1`)?.pageIdResolved, 1269);
         assert.equal(byId.get(`${RUN_ID}#rec-2`)?.changePlanStatus, "unresolved_target");
-        assert.equal(byId.get(`${RUN_ID}#rec-3`)?.targetResolution, "ambiguous_target");
+        assert.equal(byId.get(`${RUN_ID}#rec-3`)?.targetResolution, "multi_target");
         assert.equal(byId.get(`${RUN_ID}#rec-3`)?.pageIdResolved, null);
         assert.equal(byId.get(`${RUN_ID}#rec-4`)?.changePlanStatus, "qa_blocked");
         // Y NO todos comparten el mismo estado, que era justo el problema.

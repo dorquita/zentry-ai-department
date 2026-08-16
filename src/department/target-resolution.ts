@@ -45,8 +45,23 @@ export interface TargetReferenceResolution {
   reason: string;
 }
 
-/** Estado de la recomendacion ENTERA respecto a su pagina objetivo. */
-export type RecommendationTargetStatus = "resolved" | "ambiguous_target" | "unresolved_target" | "no_target_reference";
+/**
+ * Estado de la recomendacion ENTERA respecto a su pagina objetivo.
+ *
+ * `multi_target` NO es un fallo, y distinguirlo de `ambiguous` importa:
+ * una recomendacion como "consolidar el on-page de /pagina-a/ y
+ * /pagina-b/" nombra las DOS paginas a proposito. Ahi no hay nada que
+ * elegir -- hay dos objetivos, y cada uno se resuelve con SU propio
+ * ChangePlan, cada uno con un unico destino. Tratarlo como ambiguo
+ * (que es lo que hacia la primera version de este modulo) bloqueaba
+ * justo el trabajo on-page real.
+ *
+ * La ambiguedad de verdad -- UNA referencia que casa con VARIAS paginas
+ * del inventario -- se resuelve a nivel de referencia
+ * (`TargetReferenceStatus: "ambiguous"`) y ahi si es fail-closed: esa
+ * referencia no aporta ninguna pagina.
+ */
+export type RecommendationTargetStatus = "resolved" | "multi_target" | "unresolved_target" | "no_target_reference";
 
 export interface RecommendationTargetResolution {
   status: RecommendationTargetStatus;
@@ -161,10 +176,10 @@ export function resolveRecommendationTargets(texts: string[], inventory: Staging
 
   if (pages.length > 1) {
     return {
-      status: "ambiguous_target",
+      status: "multi_target",
       references: resolutions,
       pages,
-      reason: `La recomendacion cita ${pages.length} paginas distintas del inventario (${pages.map((p) => p.wordpressPageId).join(", ")}). Un cambio solo puede tener UN destino: no se elige por el modelo ni por este resolver.`,
+      reason: `La recomendacion cita ${pages.length} paginas distintas del inventario (${pages.map((p) => p.wordpressPageId).join(", ")}), todas resueltas de forma inequivoca. No hay nada que elegir: cada pagina es un objetivo propio y se declara con SU propio ChangePlan, cada uno con un unico destino.`,
     };
   }
 
