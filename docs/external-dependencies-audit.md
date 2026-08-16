@@ -103,14 +103,48 @@ infraestructura de datos; no se ha reactivado nada.
 
 ---
 
+## 1b. VERIFICACION LIVE REAL (2026-08-16)
+
+Ejecutado desde GitHub Actions, run
+[31955333717](https://github.com/dorquita/zentry-ai-department/actions/runs/31955333717),
+`probedAt = 2026-08-16T15:20:35.635Z`:
+
+| Fuente | Estado | Dato real devuelto por la API en esa misma ejecucion |
+|---|---|---|
+| Search Console | `live` | authMethod=oauth2, `sc-domain:zentrylockers.com`, 1 sitio accesible, configurado accesible=true |
+| GA4 | `live` | propertyId=544190531, ventana 2026-08-08..2026-08-15, **118 sesiones** |
+| GTM | `live` | accountId=6364338615, containerId=257386510, **www.zentrylockers.com (GTM-MSPSGLK5)** |
+| Google Ads | `live` | customerId=8369126564, **Zentry Lockers**, EUR, Europe/Madrid |
+
+### El fallo intermedio que hubo que corregir
+
+El primer probe con los secretos ya cargados dejo GSC y Ads en `live`
+pero GA4 y GTM en `failed` con `invalid_client`. Como los dos comparten
+las tres variables `GOOGLE_ANALYTICS_OAUTH_*`, el problema estaba en ese
+par de credenciales.
+
+Causa: `resolveClientEnvVar()` devolvia el valor de la variable **tal
+cual**. Un secreto de GitHub pegado con un salto de linea final conserva
+ese `\n`, llega entero al cliente OAuth y Google responde
+`invalid_client` — un error que apunta a "el client id no existe", no a
+"sobra un caracter invisible". Corregido recortando en el unico punto por
+el que pasan todas las credenciales (Fase O54).
+
+De ahi salio tambien el traductor de errores OAuth del probe: separa
+`invalid_client` (el par client id/secret no vale) de `invalid_grant`
+(el refresh token caduco), que se parecen mucho y significan cosas
+opuestas.
+
+---
+
 ## 2. Estado por integracion
 
 | Integracion | Estado ANTES | Estado DESPUES de esta fase |
 |---|---|---|
-| Search Console | `LIVE_VPS_DEPENDENT` + `STALE_RISK` | `LIVE_GITHUB` (en cuanto existan los 3 secretos GSC) |
-| GA4 | `LIVE_VPS_DEPENDENT` + `STALE_RISK` | `LIVE_GITHUB` (en cuanto existan los 3 secretos GOOGLE_ANALYTICS) |
-| GTM | `LIVE_VPS_DEPENDENT` + `STALE_RISK` | `LIVE_GITHUB` (comparte los secretos de GA4) |
-| Google Ads | `SNAPSHOT_ONLY` (fuera de fase) | `SNAPSHOT_ONLY` — probe disponible, recoleccion NO migrada a propostio |
+| Search Console | `LIVE_VPS_DEPENDENT` + `STALE_RISK` | **`LIVE_GITHUB`** — verificado 2026-08-16 |
+| GA4 | `LIVE_VPS_DEPENDENT` + `STALE_RISK` | **`LIVE_GITHUB`** — verificado 2026-08-16 |
+| GTM | `LIVE_VPS_DEPENDENT` + `STALE_RISK` | **`LIVE_GITHUB`** — verificado 2026-08-16 |
+| Google Ads | `SNAPSHOT_ONLY` (fuera de fase) | **`LIVE_GITHUB`** — recoleccion migrada (O51) y verificada 2026-08-16. READ-ONLY estricto |
 | WordPress staging / produccion | `LIVE_GITHUB` (ya lo estaba) | sin cambios (fuera de alcance) |
 | Novamira MCP | `LIVE_GITHUB` (ya lo estaba) | sin cambios (fuera de alcance) |
 | SMTP (email del Daily Brief) | `LIVE_GITHUB` (ya lo estaba) | sin cambios |
