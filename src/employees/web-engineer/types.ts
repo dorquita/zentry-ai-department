@@ -19,6 +19,23 @@ export interface WebEngineerProposedChange {
   targetPageOrComponent: string;
 }
 
+/**
+ * Plan de cambio EJECUTABLE declarado por web-engineer. Deliberadamente
+ * NO tiene `pageId` ni `expectedBeforeHash`: esos los resuelve
+ * `buildChangePlanFromDraft()` contra el inventario REAL de staging. Si
+ * el modelo los aportara, se ignorarian.
+ */
+export interface WebEngineerChangePlanEntry {
+  recommendationId: string;
+  /** URL de staging o slug EXACTOS, copiados del inventario. */
+  targetPage: string;
+  operation: "update_post_content" | "update_post_title" | "update_post_excerpt" | "update_post_meta";
+  /** Contenido nuevo COMPLETO del campo. */
+  newValue: string;
+  metaKey?: "_yoast_wpseo_title" | "_yoast_wpseo_metadesc";
+  rationale: string;
+}
+
 export interface WebEngineerOutput {
   implementationSummary: string;
   targetPages: string[];
@@ -32,4 +49,11 @@ export interface WebEngineerOutput {
   risks: string[];
   approvalRequired: boolean;
   unknowns: string[];
+  /**
+   * OPCIONAL y aditivo: una salida sin `changePlans` sigue siendo valida
+   * (es exactamente lo que produce el modelo cuando no puede resolver
+   * ninguna pagina con evidencia real, y ese es el resultado correcto,
+   * no un fallo).
+   */
+  changePlans?: WebEngineerChangePlanEntry[];
 }

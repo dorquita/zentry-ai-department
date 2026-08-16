@@ -5,6 +5,7 @@ import { buildDepartmentPrompt } from "./prompt";
 import { DepartmentPromotionResult, DepartmentRecommendation } from "./promotion";
 import { DepartmentQaStatus } from "./types";
 import { DepartmentSpecialistInput } from "./specialist-inputs";
+import { StagingPageBrief } from "./staging-inventory";
 
 /**
  * FASE 4 -- que recibe `web-engineer` en una pasada coordinada.
@@ -52,10 +53,19 @@ export interface DepartmentWebEngineerContext {
   approvedRecommendations: DepartmentApprovedRecommendation[];
   blockedRecommendations: DepartmentBlockedRecommendation[];
   specialistStatuses: { employee: string; status: string; note: string }[];
-  /** Vacio SIEMPRE en esta fase: esta pasada no vincula ninguna recomendacion a una pagina real ya auditada. Ver `noConfirmedPageInventoryNotice`. */
+  /** URLs de staging REALES, leidas del sitio. Ya no va vacio cuando el inventario se pudo leer. */
   confirmedExistingPageUrls: string[];
   noPluginThemeApiInventoryNotice: string;
   noConfirmedPageInventoryNotice: string;
+  /**
+   * INVENTARIO REAL de staging, leido por REST antes de esta fase. Es la
+   * evidencia con la que web-engineer puede citar una pagina sin
+   * adivinarla. Vacio = no se pudo leer, y entonces no debe declarar
+   * ningun `changePlans`.
+   */
+  stagingInventory: StagingPageBrief[];
+  /** Motivo por el que el inventario esta vacio. Vacio = se leyo bien. */
+  stagingInventoryUnavailableReason: string;
 }
 
 export const NO_CONFIRMED_PAGE_INVENTORY_NOTICE =
@@ -68,6 +78,11 @@ export const WEB_ENGINEER_COORDINATION_RULES: string[] = [
   "No inventes rutas, plugins, temas, endpoints, IDs de pagina ni componentes existentes. Nada de eso esta confirmado en este contexto -- ver `noPluginThemeApiInventoryNotice` y `noConfirmedPageInventoryNotice`. Todo supuesto de ese tipo va a `unknowns[]` o `dependencies[]`.",
   "Cada `proposedChanges[]` debe poder remontarse a una recomendacion concreta de `approvedRecommendations[]`: cita su titulo en el `rationale` para conservar la trazabilidad de extremo a extremo.",
   "Si una recomendacion aprobada trae `qaWarnings`, reflejalas: o como criterio de aceptacion que las cierre, o como `unknowns[]` explicito. No las ignores.",
+  "`stagingInventory[]` es el inventario REAL de staging leido del sitio antes de invocarte: id, slug, URL, titulo, excerpt, tipos de bloque y H2 actuales de cada pagina publicada. Es la UNICA fuente valida para citar una pagina.",
+  "Cuando puedas resolver una recomendacion contra una pagina CONCRETA de `stagingInventory[]`, declarala en `changePlans[]`: `targetPage` con la URL de staging o el slug EXACTOS copiados del inventario, la `operation` del catalogo, y `newValue` con el contenido nuevo COMPLETO del campo. Para `update_post_content`, el `post_content` ENTERO resultante -- no un fragmento, no un diff.",
+  "NUNCA pongas un pageId ni un hash de version en `changePlans[]`: no existen esos campos y el sistema los resuelve por su cuenta contra el inventario. Si no puedes citar la pagina de forma exacta, NO incluyas esa recomendacion en `changePlans[]`: quedara como implementacion manual, y ese es el resultado correcto, no un fallo tuyo.",
+  "Si `stagingInventory[]` viene vacio, `changePlans[]` debe ir vacio: sin inventario no hay evidencia con la que resolver ninguna pagina.",
+  "Las unicas operaciones del catalogo son `update_post_content`, `update_post_title`, `update_post_excerpt` y `update_post_meta` (esta ultima solo con `_yoast_wpseo_title` o `_yoast_wpseo_metadesc`). Cualquier otra cosa -- redirecciones, media, usuarios, plugins, temas, ficheros, WP-CLI, SQL -- esta fuera de alcance y no se declara aqui.",
 ];
 
 export function buildDepartmentWebEngineerContext(input: {
@@ -76,6 +91,9 @@ export function buildDepartmentWebEngineerContext(input: {
   growthSummary: string;
   evidenceCatalog: GrowthEvidenceItem[];
   specialistInputs: DepartmentSpecialistInput[];
+  /** Inventario REAL de staging ya leido. Vacio si no se pudo leer. */
+  stagingInventory?: StagingPageBrief[];
+  stagingInventoryUnavailableReason?: string;
 }): DepartmentWebEngineerContext {
   const byRef = new Map(input.evidenceCatalog.map((e) => [e.ref, e]));
   const resolveEvidence = (rec: DepartmentRecommendation): GrowthEvidenceItem[] =>
@@ -102,9 +120,14 @@ export function buildDepartmentWebEngineerContext(input: {
     })),
     blockedRecommendations: input.promotion.blocked.map((rec) => ({ rank: rec.rank, title: rec.title, blockedBy: rec.blockedBy })),
     specialistStatuses: input.specialistInputs.map((i) => ({ employee: i.employee, status: i.status, note: i.note })),
-    confirmedExistingPageUrls: [],
+    confirmedExistingPageUrls: (input.stagingInventory ?? []).map((page) => page.stagingUrl).filter((url) => url.trim().length > 0),
+    stagingInventory: input.stagingInventory ?? [],
+    stagingInventoryUnavailableReason: input.stagingInventoryUnavailableReason ?? "",
     noPluginThemeApiInventoryNotice: NO_PLUGIN_THEME_API_INVENTORY_NOTICE,
-    noConfirmedPageInventoryNotice: NO_CONFIRMED_PAGE_INVENTORY_NOTICE,
+    noConfirmedPageInventoryNotice:
+      (input.stagingInventory ?? []).length > 0
+        ? "Esta pasada SI trae inventario real de staging (`stagingInventory[]`, leido por REST). Las paginas que aparecen ahi estan CONFIRMADAS: existen, con ese id, ese slug, esa URL y esos tipos de bloque. Cualquier pagina que NO este en esa lista sigue sin confirmar, y sobre ella no puedes declarar ningun changePlan."
+        : NO_CONFIRMED_PAGE_INVENTORY_NOTICE,
   };
 }
 

@@ -108,7 +108,9 @@
     "department:changes:list": "ts-node scripts/list-department-changes.ts",
     "department:email": "ts-node scripts/send-department-daily-brief-email.ts",
     "claude-employee:record-execution-for-ci": "ts-node scripts/record-claude-employee-execution-for-ci.ts",
-    "novamira:probe": "ts-node scripts/probe-novamira-mcp.ts"
+    "novamira:probe": "ts-node scripts/probe-novamira-mcp.ts",
+    "staging:inventory": "ts-node scripts/read-staging-inventory.ts",
+    "approvals:record-decisions": "ts-node scripts/o46-record-daily-brief-decisions.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

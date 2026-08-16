@@ -54,6 +54,11 @@ import { containsSecretValue, REQUIRED_SMTP_VARS, resolveDailyBriefEmailConfig }
 import { resolveActiveClientConfig } from "../src/core/client-config";
 import { sendReportEmail } from "../src/core/mailer";
 import { ResolveDecisionsResult } from "../src/approvals/manual/decision";
+import { appendExecutePhpAudit } from "../src/core/execute-php-audit";
+import { buildPhpForPlan } from "../src/core/execute-php-builder";
+import { callNovamiraExecutePhp, openSession } from "../src/adapters/novamira-mcp-client";
+import { readStagingPage } from "../src/adapters/staging-inventory-reader";
+import { applyChangePlanWithPhp, ExecutePhpContext, PhpTargetState } from "../src/department/apply/execute-php-executor";
 
 function parseArgs(argv: string[]): Record<string, string> {
   const args: Record<string, string> = {};
@@ -239,6 +244,31 @@ async function main(): Promise<void> {
       rejectionReason: decision.reason,
     };
 
+    // --- CAMINO NUEVO: la propuesta trae un ChangePlan ejecutable ya
+    //     resuelto contra el inventario real. No se interpreta prosa.
+    if (decision.action === "approve" && item?.executableChangePlan) {
+      const outcome = await executeChangePlan(item, decision, departmentRunId, decidedBy);
+      appendHumanDecision({
+        decisionId: buildDecisionId(departmentRunId, decision.proposal.recommendationId, now.toISOString()),
+        departmentRunId,
+        proposalNumber: decision.proposal.number,
+        recommendationId: decision.proposal.recommendationId,
+        changeId: decision.proposal.changeId,
+        recommendationTitle: decision.proposal.title,
+        action: decision.action,
+        rejectionReason: "",
+        overrides: decision.overrides,
+        target: decision.target,
+        decidedBy,
+        decidedAt: now.toISOString(),
+        executionStatus: outcome.status,
+        executionDetail: outcome.detail,
+      });
+      outcomes.push(outcome);
+      console.log(`  #${outcome.number} ${outcome.title} -> ${outcome.status}${outcome.detail ? ` (${outcome.detail.slice(0, 160)})` : ""}`);
+      continue;
+    }
+
     // Rechazos y pendientes: se registran, no se ejecuta nada.
     if (decision.action !== "approve") {
       base.status = decision.action === "reject" ? "rejected" : "deferred";
@@ -347,12 +377,117 @@ async function main(): Promise<void> {
   }
 }
 
+/**
+ * Ejecuta un ChangePlan ya resuelto. Toda la maquinaria de seguridad es
+ * la que ya estaba: snapshot, ancla de version (STALE), guard con PHP
+ * determinista, read-back por REST (via distinta a la escritura),
+ * validacion de scope, rollback verificado y audit trail.
+ *
+ * `native_ability` todavia NO tiene executor cableado: se dice y no se
+ * ejecuta, en vez de fingir que si. Hoy no bloquea nada real -- el sitio
+ * no tiene ni un bloque `novamira/*`, asi que todo enruta al fallback.
+ */
+async function executeChangePlan(
+  item: DepartmentApplyItem,
+  decision: ResolvedDecision,
+  departmentRunId: string,
+  decidedBy: string
+): Promise<ExecutionOutcome> {
+  const executable = item.executableChangePlan as NonNullable<DepartmentApplyItem["executableChangePlan"]>;
+  const base: ExecutionOutcome = {
+    number: decision.proposal.number,
+    id: decision.proposal.id,
+    title: decision.proposal.title,
+    action: decision.action,
+    target: decision.target,
+    status: "not_executed",
+    detail: "",
+    stagingUrl: executable.stagingUrl,
+    before: [{ field: executable.operation, value: executable.beforeValue }],
+    after: [{ field: executable.operation, value: executable.afterValue }],
+    validationStatus: "not_run",
+    rollbackStatus: "not_needed",
+    rejectionReason: "",
+  };
+
+  if (decision.target === "production") {
+    return { ...base, detail: "PRODUCCION no se toca en esta fase. La aprobacion queda registrada, pero no se escribe nada." };
+  }
+  if (executable.capability.executionPath === "native_ability") {
+    return {
+      ...base,
+      detail: `El camino elegido es "native_ability" (${executable.capability.nativeAbility}) y ese executor todavia NO esta cableado en esta fase. No se ejecuta nada: se dice en vez de fingir que se aplico.`,
+    };
+  }
+
+  const context: ExecutePhpContext = {
+    departmentRunId,
+    recommendationId: item.recommendationId,
+    changeId: decision.proposal.changeId ?? `${departmentRunId}#change-${item.recommendationRank}`,
+    qaStatus: item.qaStatus,
+    capabilitySelection: executable.capability,
+    flags: {
+      executePhpFallbackEnabled: isEnabled("NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED"),
+      novamiraStagingWritesEnabled: isEnabled("NOVAMIRA_STAGING_WRITES_ENABLED"),
+      wordpressEnv: resolveWordpressEnv(),
+    },
+  };
+
+  const session = await openSession();
+  const outcome = await applyChangePlanWithPhp(executable.plan, context, {
+    getState: async (postId: number): Promise<PhpTargetState> => {
+      const page = await readStagingPage(postId);
+      return {
+        id: page.wordpressPageId,
+        status: page.status,
+        title: page.title,
+        contentHtml: page.contentHtml,
+        excerpt: page.excerpt,
+        link: page.stagingUrl,
+        slug: page.slug,
+        meta: page.meta,
+      };
+    },
+    runPhp: async (php: string) =>
+      callNovamiraExecutePhp(
+        {
+          actor: "web_engineer_apply",
+          abilityName: "novamira/execute-php",
+          environment: "staging",
+          phase: php === buildPhpForPlan(executable.plan) ? "apply" : "rollback",
+          qaStatus: context.qaStatus,
+          departmentRunId: context.departmentRunId,
+          recommendationId: context.recommendationId,
+          changeId: context.changeId,
+          plan: executable.plan,
+          php,
+          capabilitySelection: executable.capability,
+          flags: context.flags,
+          snapshotPreviousValue: executable.beforeValue,
+          snapshotPreviousExisted: true,
+        },
+        session
+      ),
+  });
+
+  for (const record of outcome.audit) appendExecutePhpAudit(record);
+
+  return {
+    ...base,
+    status: outcome.status,
+    detail: `${outcome.detail} (decidido por ${decidedBy})`,
+    validationStatus: outcome.validation,
+    rollbackStatus: outcome.rollback,
+    after: outcome.afterValue !== null ? [{ field: executable.operation, value: outcome.afterValue }] : base.after,
+  };
+}
+
 /** Traduce el estado real del executor al vocabulario del informe. Fail-closed: lo desconocido es `failed`, nunca `applied`. */
 function mapOutcome(status: string): ExecutedWork["outcome"] {
-  if (status === "staging_applied" || status === "production_applied") return "applied";
-  if (status === "staging_rolled_back" || status === "production_rolled_back") return "rolled_back";
-  if (status === "staging_validation_failed" || status === "production_validation_failed") return "validation_failed";
-  if (status === "not_executed" || status === "approval_stale" || status === "deferred" || status === "rejected") return "not_executed";
+  if (status === "staging_applied" || status === "production_applied" || status === "applied") return "applied";
+  if (status === "staging_rolled_back" || status === "production_rolled_back" || status === "rolled_back") return "rolled_back";
+  if (status === "staging_validation_failed" || status === "production_validation_failed" || status === "validation_failed") return "validation_failed";
+  if (status === "not_executed" || status === "approval_stale" || status === "stale" || status === "deferred" || status === "rejected") return "not_executed";
   return "failed";
 }
 
@@ -411,7 +546,7 @@ async function sendExecutionReport(
     rejected: resolved.decisions.filter((d) => d.action === "reject"),
     newRecommendations: [],
     writes: {
-      staging: outcomes.filter((o) => o.target === "staging" && (o.status === "staging_applied" || o.rollbackStatus !== "not_needed")).length,
+      staging: outcomes.filter((o) => o.target === "staging" && (o.status === "staging_applied" || o.status === "applied" || o.rollbackStatus !== "not_needed")).length,
       production: outcomes.filter((o) => o.target === "production" && o.status === "production_applied").length,
     },
     cost: runs.length > 0 ? summarizeDepartmentRunCost(runs) : null,

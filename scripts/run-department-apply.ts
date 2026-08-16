@@ -39,6 +39,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import * as fs from "fs";
+import * as path from "path";
 import {
   getWordpressPage,
   isWordpressDraftsEnabled,
@@ -62,6 +63,7 @@ import { Approval, ApprovalStore } from "../src/approvals/store";
 import { flushRecordedTransitions, recordingTransitionPort } from "../src/approvals/executor-bridge";
 import { checkStagingApplyGuards, StagingApplyGuards } from "../src/department/apply/guards";
 import { buildApplyPlan, projectChangesIntoSummary } from "../src/department/apply/plan";
+import { ResolvedChangePlan } from "../src/department/web-engineer-changeplan";
 import { computeVersionHash } from "../src/department/apply/version";
 import { sendChangeApprovalRequest } from "../src/department/apply/telegram-notifier";
 import { applyChangeToStaging } from "../src/department/apply/staging-executor";
@@ -132,6 +134,22 @@ export function loadOwnedStagingPages(): OwnedStagingPage[] {
     byPageId.set(page.wordpressPageId, { wordpressPageId: page.wordpressPageId, stagingUrl: page.publicUrl });
   }
   return [...byPageId.values()];
+}
+
+/**
+ * Planes ya resueltos por la fase `complete-web-engineer` contra el
+ * inventario real de staging. Ausentes = pasada antigua o sin planes:
+ * se sigue con el camino de siempre, nunca se inventa uno.
+ */
+function loadResolvedChangePlans(departmentRunId: string): ResolvedChangePlan[] {
+  const filePath = path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "change-plans.json");
+  if (!fs.existsSync(filePath)) return [];
+  try {
+    const raw = JSON.parse(fs.readFileSync(filePath, "utf-8")) as { resolved?: ResolvedChangePlan[] };
+    return Array.isArray(raw.resolved) ? raw.resolved : [];
+  } catch {
+    return [];
+  }
 }
 
 function loadPromotion(departmentRunId: string): DepartmentPromotionResult {
@@ -243,7 +261,8 @@ async function phasePlan(args: Record<string, string>): Promise<void> {
   const webEngineer = loadWebEngineer(departmentRunId);
   const ownedStagingPages = loadOwnedStagingPages();
 
-  let summary = buildApplyPlan({ departmentRunId, promotion, webEngineer, ownedStagingPages });
+  const resolvedChangePlans = loadResolvedChangePlans(departmentRunId);
+  let summary = buildApplyPlan({ departmentRunId, promotion, webEngineer, ownedStagingPages, resolvedChangePlans });
   summary = await captureVersionAnchors(summary);
   summary = updateApplySummaryItems(summary, summary.items, {
     externalWritesPerformed: false,
