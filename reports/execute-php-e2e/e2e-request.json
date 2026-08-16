@@ -1,10 +1,15 @@
 {
   "authorizedBy": "pau",
   "authorization": "Aprobacion humana para UN E2E reversible sobre STAGING del fallback execute-php. No autoriza produccion.",
-  "mode": "run",
+  "mode": "list",
   "postId": 2077,
   "pageChosen": "staging /configurador-bancos/ -- 'Configurador de bancos (prototipo)'. Elegida por ser la pagina MENOS critica del sitio: su propio excerpt la declara prototipo interno (Fase O23.2), no es una landing comercial ni tiene trafico SEO objetivo. Ademas su post_excerpt NO esta vacio, asi que el BEFORE, el cambio y la reversion son todos verificables sobre contenido real.",
   "operation": "update_post_excerpt",
   "whyNotAnAbility": "post_excerpt no tiene ninguna ability nativa de Novamira que lo escriba (NATIVE_ABILITY_FOR_OPERATION.update_post_excerpt === null), asi que selectExecutionPath() elige execute_php_fallback sin necesidad de declarar ningun motivo. Un H2 habria vivido en post_content, que SI tiene ability nativa (gutenberg-write-content) y por tanto se habria enrutado a la nativa bajo esta misma politica.",
-  "note": "mode=run: E2E completo sobre la pagina 2077. Corregido el motivo por el que el intento anterior no escribio nada: el input_schema real de la ability (leido con mcp-adapter-get-ability-info, no adivinado) dice 'Do NOT include <?php tags' porque hace eval() del codigo. Las plantillas ya no incluyen la etiqueta, y el resultado viaja en base64 para sobrevivir al anidamiento JSON del sobre MCP."
+  "note": "Vuelto a mode=list a proposito: el fichero queda en su estado seguro (solo lectura) para que un push futuro no dispare otra escritura. Para repetir el E2E hay que volver a ponerlo en mode=run explicitamente, y ese cambio queda en el historial de git como autorizacion de esa ejecucion concreta.",
+  "lastRun": {
+    "runUrl": "https://github.com/dorquita/zentry-ai-department/actions/runs/31942175626",
+    "postId": 2077,
+    "result": "OK -- identicalToStart=true, stagingWrites=2, productionWrites=0"
+  }
 }

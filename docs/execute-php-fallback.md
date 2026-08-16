@@ -160,8 +160,8 @@ devuelve un `failedCheck` estable que los tests verifican por nombre.
 | 7 | QA ∈ {PASS, PASS_WITH_WARNINGS} | `qa` |
 | 8 | `departmentRunId` + `recommendationId` + `changeId` presentes | `traceability` |
 | 9 | ChangePlan válido y operación habilitada con rollback | `plan` / `operation_not_enabled` |
-| 10 | El camino elegido es el fallback, y la nativa se justificó | `execution_path` / `native_ability_preferred` |
-| 11 | **El PHP es exactamente el que generan las plantillas** | `php_not_deterministic` |
+| 10 | El camino elegido es el fallback; la ability nativa se **re-deriva del catálogo** (no se cree lo que declare quien llama) y, si existe, se exige un motivo en su propio campo | `execution_path` / `native_ability_mismatch` / `native_ability_preferred` |
+| 11 | **El PHP es exactamente el de la plantilla de ESTA fase** (`apply` escribe lo del plan; `rollback` escribe lo del snapshot — nunca "una de las dos") | `php_not_deterministic` / `rollback_without_snapshot` |
 | 12 | Escaneo de operaciones prohibidas | `forbidden_operation` |
 
 Sin trazabilidad no se escribe: **el audit trail es parte del permiso, no
@@ -250,10 +250,17 @@ llamar.
 Después de escribir:
 
 1. **Releer** el estado real.
-2. El valor del scope coincide con lo pedido.
+2. El valor del scope coincide con lo pedido, comparado **exacto salvo
+   espacios**. Aquí NO se usa `normalizeForVersioning` (quita etiquetas y
+   pasa a minúsculas): esa tolerancia es correcta para detectar deriva,
+   pero como verificación posterior daría por "validado" un cambio que
+   sólo tocara un `href` o el uso de mayúsculas sin haberse escrito.
 3. **Nada fuera del scope cambió** — se compara la huella completa:
    status, slug, título, excerpt, hash del cuerpo y cada clave de meta.
-4. Se registra el resultado.
+4. Si `execute-php` no devuelve su marcador de resultado, se declara
+   explícitamente que **el PHP no llegó a ejecutarse** — no se diagnostica
+   como "el contenido no coincide".
+5. Se registra el resultado.
 
 > Nunca se considera éxito porque `execute-php` devolviera OK. La lectura
 > se hace además **por REST**, un camino distinto al de la escritura (MCP),
@@ -319,3 +326,54 @@ Los tres son necesarios. Apagar cualquiera desactiva el fallback.
 - [`manual-approval-flow.md`](manual-approval-flow.md)
 - [`department-apply.md`](department-apply.md)
 - [`wordpress-safety-policy.md`](wordpress-safety-policy.md)
+
+---
+
+## 14. E2E real ejecutado (2026-08-16)
+
+Run: [31942175626](https://github.com/dorquita/zentry-ai-department/actions/runs/31942175626).
+Página: `https://staging.zentrylockers.com/configurador-bancos/` (post **2077**,
+"Configurador de bancos (prototipo)") — la menos crítica del sitio: su
+propio excerpt la declara prototipo interno, no es landing comercial y no
+tiene keyword objetivo.
+
+Operación: `update_post_excerpt`. **No tiene ability nativa**, así que
+`selectExecutionPath()` eligió el fallback sin necesidad de declarar
+ningún motivo — la consigna era demostrar el fallback donde no hay
+alternativa nativa, y esto lo cumple sin forzar nada.
+
+> Un H2 habría vivido en `post_content`, que **sí** tiene ability nativa
+> (`gutenberg-write-content`). Bajo esta misma política ese cambio se
+> habría enrutado a la nativa, y llevarlo a PHP habría exigido declarar un
+> motivo falso. Por eso el E2E cambia una frase que no es un H2.
+
+| Paso | Resultado real |
+|---|---|
+| BEFORE | `"Prototipo interno del configurador 3D de bancos de vestuario -- Fase O23.2."` — versión `d782b5795d99` |
+| Cambio temporal | `"… Fase O23.2. [E2E execute-php 2026-08-16T10:38:24.357Z]"` — versión `f18f92ff8d19` |
+| AFTER validado | releído por REST: valor exacto + nada fuera del scope cambió |
+| Reversión | `applied`, validación `passed` |
+| Read-back final | `"Prototipo interno del configurador 3D de bancos de vestuario -- Fase O23.2."` — versión `d782b5795d99` |
+| **Idéntico al inicio** | **sí** (`identicalToStart: true`) |
+| **Staging writes** | **2** |
+| **Production writes** | **0** |
+
+### El primer intento falló, y eso es la mejor evidencia
+
+El run anterior ([31941898596](https://github.com/dorquita/zentry-ai-department/actions/runs/31941898596))
+escribió y **no aplicó nada**: el `input_schema` real de la ability dice
+*"Do NOT include `<?php` tags"* porque hace `eval()` del código, y las
+plantillas lo incluían. El sistema **no se creyó** el "ok" de
+`execute-php`: releyó, vio que el valor no había cambiado, revirtió y
+verificó la reversión. La página quedó intacta y el run acabó en rojo.
+
+De ahí salieron dos correcciones, ninguna de ellas relajando nada:
+
+- Las plantillas ya no llevan la etiqueta de apertura, y el resultado
+  viaja en base64 para sobrevivir al anidamiento JSON del sobre MCP.
+- Si `execute-php` no devuelve su marcador, ahora se dice **"el PHP no
+  llegó a ejecutarse"** en vez de diagnosticarlo como "el contenido no
+  coincide".
+
+El esquema se obtuvo preguntando (`mcp-adapter-get-ability-info`, sólo
+lectura de metadatos), no adivinando — que es lo que había fallado.
