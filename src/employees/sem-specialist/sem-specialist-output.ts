@@ -285,17 +285,36 @@ const UNIT_LOOKAHEAD_CHARS = 24;
  */
 const CONVERSION_ACTION_QUALIFIER = /^\s*(?:primaria|principal|secundaria)/i;
 
+/**
+ * La palabra clave de la categoria NO puede estar pegada a un guion, un
+ * guion bajo u otro caracter de palabra: si lo esta, forma parte de un
+ * IDENTIFICADOR, no de una frase.
+ *
+ * Caso real (run 31966285132, y con toda probabilidad varios de los
+ * rechazos anteriores por "CPC"): el prompt ORDENA al subagente citar la
+ * entrada centinela `sem-cpc-not-available` cuando quiere decir que no
+ * hay CPC. Al escribir "...(sem-cpc-not-available) y 0 clics...", el
+ * patron de la categoria "cpc" enganchaba la subcadena `cpc` DENTRO del
+ * id, saltaba el hueco "-not-available) y " y capturaba el "0" siguiente
+ * como si fuera una cifra de CPC inventada. Es decir: seguir las
+ * instrucciones al pie de la letra garantizaba el rechazo de la salida
+ * entera. Lo mismo aplicaba a `sem-metrics-<i>-conversions`,
+ * `sem-roas-not-available` y cualquier id que contenga una palabra clave.
+ */
+const KW_START = "(?<![\\w-])";
+const KW_END = "(?![\\w-])";
+
 const QUANT_CLAIM_CATEGORIES: QuantClaimCategory[] = [
-  { id: "cpc", label: "CPC", pattern: new RegExp(`cpc${GAP}${NUM}`, "gi") },
+  { id: "cpc", label: "CPC", pattern: new RegExp(`${KW_START}cpc${KW_END}${GAP}${NUM}`, "gi") },
   // Dos ordenes de frase: "12 conversiones" (numero primero, habitual en
   // metricas tabulares) Y "conversiones: 12" / "el numero de conversiones
   // fue de 12" (palabra clave primero) -- solo cubrir el primer orden
   // dejaba sin auditar cualquier afirmacion fabricada con el orden
   // inverso (detectado en code review).
-  { id: "conversiones", label: "conversiones", pattern: new RegExp(`${NUM}\\s*conversion(?:es)?\\b|conversion(?:es)?${GAP}${NUM}`, "gi") },
-  { id: "roas", label: "ROAS", pattern: new RegExp(`roas${GAP}${NUM}`, "gi") },
-  { id: "gasto", label: "gasto/coste", pattern: new RegExp(`(?:gasto|coste)${GAP}${NUM}\\s*€?`, "gi") },
-  { id: "presupuesto", label: "presupuesto", pattern: new RegExp(`presupuesto${GAP}${NUM}\\s*€?`, "gi") },
+  { id: "conversiones", label: "conversiones", pattern: new RegExp(`${NUM}\\s*${KW_START}conversion(?:es)?${KW_END}|${KW_START}conversion(?:es)?${KW_END}${GAP}${NUM}`, "gi") },
+  { id: "roas", label: "ROAS", pattern: new RegExp(`${KW_START}roas${KW_END}${GAP}${NUM}`, "gi") },
+  { id: "gasto", label: "gasto/coste", pattern: new RegExp(`${KW_START}(?:gasto|coste)${KW_END}${GAP}${NUM}\\s*€?`, "gi") },
+  { id: "presupuesto", label: "presupuesto", pattern: new RegExp(`${KW_START}presupuesto${KW_END}${GAP}${NUM}\\s*€?`, "gi") },
 ];
 
 /**

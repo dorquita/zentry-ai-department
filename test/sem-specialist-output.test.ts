@@ -783,6 +783,65 @@ export function runSemSpecialistOutputTests(): TestCase[] {
         assert.deepEqual(violations, [], `un CPC REAL citado correctamente no debe rechazarse: ${JSON.stringify(violations)}`);
       },
     },
+    // --- REGRESION run 31966285132: la palabra clave dentro de un ID ---
+    //
+    // El prompt ORDENA citar `sem-cpc-not-available` para declarar que no
+    // hay CPC. Al escribirlo, el patron de la categoria "cpc" enganchaba
+    // la subcadena `cpc` DENTRO del id, saltaba "-not-available) y " y
+    // capturaba el "0" siguiente como una cifra de CPC inventada: seguir
+    // las instrucciones garantizaba el rechazo de la salida entera.
+    {
+      name: "REGRESION run 31966285132: citar sem-cpc-not-available seguido de una cifra NO es una afirmacion de CPC",
+      fn: () => {
+        const context = baseContext();
+        const cpcItem = catalogItem(context, "sem-cpc-not-available");
+        const output = baseOutput({
+          prioritizedExperiments: [
+            {
+              title: "Confirmar disponibilidad de datos de rendimiento antes de fijar estrategia de puja",
+              hypothesis: "No hay CPC real disponible (sem-cpc-not-available) y 0 clics registrados en la ventana.",
+              expectedImpact: "Evitar decidir puja sin datos.",
+              evidenceRefs: [cpcItem.id],
+              priority: "medium",
+            },
+          ],
+          evidence: [evidenceFromCatalog(cpcItem)],
+        });
+        const { fabricatedClaims, uncitedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], `citar la centinela no puede rechazar la salida: ${JSON.stringify(fabricatedClaims)}`);
+        assert.deepEqual(uncitedClaims, []);
+      },
+    },
+    {
+      name: "REGRESION run 31966285132: la misma proteccion cubre los ids de conversiones, roas, gasto y presupuesto",
+      fn: () => {
+        const context = baseContext({
+          metrics: [{ campaignId: "c1", campaignName: "X", impressions: 10, clicks: 1, costEUR: 1, conversions: 0, ctr: 0.1, averageCpcEUR: 1, conversionsValue: 0 }],
+        });
+        const output = baseOutput({
+          campaignFindings: [
+            emptyFinding({ description: "Ver sem-metrics-0-conversions y 0 filas mas; tambien sem-roas-not-available y 0 datos derivados.", evidenceRefs: [] }),
+          ],
+          budgetObservations: [
+            emptyFinding({ description: "Referencias internas: sem-budget-daily-total y 0 cambios, sem-spend-real y 0 movimientos.", evidenceRefs: [] }),
+          ],
+        });
+        const { fabricatedClaims } = auditSemSpecialistOutput(context, output);
+        assert.deepEqual(fabricatedClaims, [], "un id del catalogo nunca puede leerse como la palabra clave de una afirmacion");
+      },
+    },
+    {
+      name: "REGRESION run 31966285132: el guardado es SOLO para identificadores -- 'CPC de 2,5 €' en prosa sigue siendo fabricacion",
+      fn: () => {
+        const context = baseContext();
+        const output = baseOutput({
+          biddingObservations: [emptyFinding({ description: "El CPC medio observado es de 2,5 € por clic.", evidenceRefs: [] })],
+        });
+        const { fabricatedClaims } = auditSemSpecialistOutput(context, output);
+        assert.ok(fabricatedClaims.some((v) => /CPC/i.test(v)), "una cifra de CPC en prosa normal se sigue rechazando");
+      },
+    },
+
     // --- Dos severidades: fabricacion (dura) vs cita que falta (aviso) ---
     //
     // POR QUE (fallo real, pasada 31962578324): sem-specialist era el
