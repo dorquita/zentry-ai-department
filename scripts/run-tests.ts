@@ -10,6 +10,8 @@
 import { runExecutiveReportTests } from "../test/executive-report.test";
 import { runNovamiraGuardTests } from "../test/novamira-guard.test";
 import { runExecutePhpGuardTests } from "../test/execute-php-guard.test";
+import { runWebEngineerChangePlanTests } from "../test/web-engineer-changeplan.test";
+import { runDailyRunIntegrationTests } from "../test/daily-run-integration.test";
 import { runNovamiraProfilesTests } from "../test/novamira-profiles.test";
 import { runClientConfigTests } from "../test/client-config.test";
 import { runSubagentToolGuardTests } from "../test/subagent-tool-guard.test";
@@ -91,6 +93,8 @@ async function main(): Promise<void> {
     { suiteName: "executive-report", cases: runExecutiveReportTests() },
     { suiteName: "novamira-guard", cases: runNovamiraGuardTests() },
     { suiteName: "execute-php-guard", cases: runExecutePhpGuardTests() },
+    { suiteName: "web-engineer-changeplan", cases: runWebEngineerChangePlanTests() },
+    { suiteName: "daily-run-integration", cases: runDailyRunIntegrationTests() },
     { suiteName: "novamira-profiles", cases: runNovamiraProfilesTests() },
     { suiteName: "client-config", cases: runClientConfigTests() },
     { suiteName: "subagent-tool-guard", cases: runSubagentToolGuardTests() },

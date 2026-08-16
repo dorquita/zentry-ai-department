@@ -6,18 +6,123 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "implementationSummary": { "type": "string" },
-    "targetPages": { "type": "array", "items": { "type": "string" } },
-    "targetComponents": { "type": "array", "items": { "type": "string" } },
-    "proposedChanges": { "type": "array", "items": { "$ref": "#/definitions/proposedChange" } },
-    "filesOrSystemsAffected": { "type": "array", "items": { "type": "string" } },
-    "acceptanceCriteria": { "type": "array", "items": { "type": "string" } },
-    "validationPlan": { "type": "array", "items": { "type": "string" } },
-    "rollbackPlan": { "type": "array", "items": { "type": "string" } },
-    "dependencies": { "type": "array", "items": { "type": "string" } },
-    "risks": { "type": "array", "items": { "type": "string" } },
-    "approvalRequired": { "type": "boolean" },
-    "unknowns": { "type": "array", "items": { "type": "string" } }
+    "implementationSummary": {
+      "type": "string"
+    },
+    "targetPages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "targetComponents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "proposedChanges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/proposedChange"
+      }
+    },
+    "filesOrSystemsAffected": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "acceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validationPlan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rollbackPlan": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "approvalRequired": {
+      "type": "boolean"
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "changePlans": {
+      "type": "array",
+      "description": "Planes de cambio EJECUTABLES, uno por recomendacion que puedas resolver con evidencia real del inventario de staging que se te ha dado. NUNCA inventes un pageId ni un hash: no los pongas aqui, el sistema los resuelve por su cuenta. Si no puedes citar la pagina con su URL de staging o su slug EXACTOS, no incluyas la recomendacion en este array: quedara como implementacion manual, que es el resultado correcto.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recommendationId",
+          "targetPage",
+          "operation",
+          "newValue",
+          "rationale"
+        ],
+        "properties": {
+          "recommendationId": {
+            "type": "string",
+            "description": "Id de la recomendacion aprobada por QA a la que corresponde este plan."
+          },
+          "targetPage": {
+            "type": "string",
+            "description": "URL de staging EXACTA o slug EXACTO de la pagina objetivo, copiados del inventario que se te ha dado. Nada aproximado."
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "update_post_content",
+              "update_post_title",
+              "update_post_excerpt",
+              "update_post_meta"
+            ],
+            "description": "Operacion del catalogo cerrado."
+          },
+          "newValue": {
+            "type": "string",
+            "description": "Contenido NUEVO y COMPLETO del campo. Para update_post_content, el post_content entero resultante, no un fragmento."
+          },
+          "metaKey": {
+            "type": "string",
+            "enum": [
+              "_yoast_wpseo_title",
+              "_yoast_wpseo_metadesc"
+            ],
+            "description": "Solo para update_post_meta."
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Por que este cambio responde a la recomendacion."
+          }
+        }
+      }
+    }
   },
   "required": [
     "implementationSummary",
@@ -38,11 +143,21 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "description": { "type": "string" },
-        "rationale": { "type": "string" },
-        "targetPageOrComponent": { "type": "string" }
+        "description": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "targetPageOrComponent": {
+          "type": "string"
+        }
       },
-      "required": ["description", "rationale", "targetPageOrComponent"]
+      "required": [
+        "description",
+        "rationale",
+        "targetPageOrComponent"
+      ]
     }
   }
 }

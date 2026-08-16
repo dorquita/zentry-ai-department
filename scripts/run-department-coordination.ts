@@ -39,6 +39,8 @@ import { QaReviewerOutput, validateQaReviewerOutput } from "../src/employees/qa-
 import { auditWebEngineerOutputForUnconfirmedCapabilities, validateWebEngineerOutput } from "../src/employees/web-engineer/validator";
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
 import { loadPreviousHumanFeedback } from "../src/approvals/manual/decision-store";
+import { emptyStagingInventory, StagingInventory, summarizeInventoryForPrompt } from "../src/department/staging-inventory";
+import { buildChangePlanFromDraft, parseChangePlanDrafts } from "../src/department/web-engineer-changeplan";
 import { readApplySummary } from "../src/department/apply/store";
 import { buildDepartmentDailyBrief, DepartmentDailyBrief, PreviousRunSnapshot, renderDepartmentDailyBriefMarkdown, renderDepartmentStepSummary } from "../src/department/daily-brief";
 import { summarizeDepartmentRunCost } from "../src/department/employee-runs";
@@ -407,12 +409,38 @@ function phaseCompleteQa(args: Record<string, string>): DepartmentRunnerResultSu
   };
 }
 
+/** Lee el inventario que dejo `scripts/read-staging-inventory.ts`. Ausente = vacio con su motivo. */
+function loadStagingInventoryFile(departmentRunId: string): StagingInventory {
+  const filePath = path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "staging-inventory.json");
+  if (!fs.existsSync(filePath)) {
+    return emptyStagingInventory(
+      "Esta pasada no incluyo el paso de lectura de staging (scripts/read-staging-inventory.ts). Sin inventario no se resuelve ningun pageId.",
+      new Date().toISOString()
+    );
+  }
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf-8")) as StagingInventory;
+  } catch (err) {
+    return emptyStagingInventory(`El inventario de staging de esta pasada no es JSON utilizable (${err instanceof Error ? err.message : String(err)}).`, new Date().toISOString());
+  }
+}
+
 function phasePrepareWebEngineer(args: Record<string, string>): DepartmentRunnerResultSummary {
   const departmentRunId = requireDepartmentRunId(args);
   assertSubagentIsToolless("web-engineer");
   const manifest = readManifest(departmentRunId);
   const promotion = loadPromotion(departmentRunId);
   const paths = resolveDepartmentRunPaths(departmentRunId);
+  // La lectura de staging la hace scripts/read-staging-inventory.ts, que
+  // es quien cablea el adaptador (mismo patron que el resto de sistemas
+  // externos de este repo). Esta fase SOLO lee el fichero ya escrito:
+  // la pasada coordinada no alcanza ningun sistema externo.
+  const stagingInventory = loadStagingInventoryFile(departmentRunId);
+  console.log(
+    stagingInventory.pages.length > 0
+      ? `Inventario REAL de staging leido: ${stagingInventory.pages.length} pagina(s) publicadas. Cero escrituras.`
+      : `Inventario de staging NO disponible (${stagingInventory.unavailableReason}). web-engineer no podra declarar ningun changePlan y todo quedara como implementacion manual, que es el resultado correcto.`
+  );
 
   if (!promotion) {
     const reason = "No existe promotion.json en esta pasada (la fase de QA no llego a resolver la puerta). Fail-closed: web-engineer no recibe nada.";
@@ -446,6 +474,11 @@ function phasePrepareWebEngineer(args: Record<string, string>): DepartmentRunner
     growthSummary: growthOutput?.growthSummary ?? "",
     evidenceCatalog: [...specialists.evidenceCatalog, ...(growthOutput?.evidence ?? [])],
     specialistInputs: specialists.inputs,
+    // Inventario REAL de staging, SOLO LECTURA. Es lo que permite que
+    // web-engineer cite una pagina en vez de adivinarla. Cero
+    // escrituras: este lector no tiene ninguna funcion que escriba.
+    stagingInventory: summarizeInventoryForPrompt(stagingInventory),
+    stagingInventoryUnavailableReason: stagingInventory.unavailableReason,
   });
   const prompt = buildDepartmentWebEngineerPrompt(context, loadPreviousHumanFeedback());
   writeStageContext(departmentRunId, "web-engineer", context);
@@ -494,6 +527,26 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
 
   const context = JSON.parse(fs.readFileSync(contextPath, "utf-8")) as DepartmentWebEngineerContext;
   const auditWarnings = auditWebEngineerOutputForUnconfirmedCapabilities(toWebEngineerAuditContext(context), output);
+
+  // De INTENCION declarada a PLAN EJECUTABLE: el pageId, el BEFORE y el
+  // ancla de version salen del inventario REAL, nunca del modelo.
+  const inventoryPath = path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "staging-inventory.json");
+  const stagingInventory: StagingInventory = fs.existsSync(inventoryPath)
+    ? (JSON.parse(fs.readFileSync(inventoryPath, "utf-8")) as StagingInventory)
+    : emptyStagingInventory("No se guardo inventario de staging en esta pasada.", new Date().toISOString());
+  const { drafts, rejected } = parseChangePlanDrafts((output as { changePlans?: unknown }).changePlans);
+  const resolvedPlans = drafts.map((draft) => buildChangePlanFromDraft({ draft, inventory: stagingInventory }));
+  const actionable = resolvedPlans.filter((r) => r.status === "ACTIONABLE");
+  writeDepartmentJson(path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "change-plans.json"), {
+    departmentRunId,
+    generatedAt: new Date().toISOString(),
+    draftsDeclared: drafts.length,
+    draftsRejected: rejected,
+    resolved: resolvedPlans,
+  });
+  console.log(
+    `ChangePlans: ${drafts.length} declarado(s) por web-engineer, ${actionable.length} resuelto(s) como EJECUTABLE contra el inventario real, ${resolvedPlans.length - actionable.length} sin resolver (quedan manuales).`
+  );
   fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), "utf-8");
   writeDepartmentJson(artifactPath, {
     generatedAt: new Date().toISOString(),
@@ -674,7 +727,10 @@ function phaseGate(args: Record<string, string>): DepartmentRunnerResultSummary 
   return baseResult("gate", departmentRunId, "ok", reason);
 }
 
-const PHASES: Record<DepartmentRunnerPhase, (args: Record<string, string>) => DepartmentRunnerResultSummary> = {
+// `prepare-web-engineer` es async: LEE el inventario real de staging
+// antes de construir el contexto. Las demas siguen siendo sincronas y el
+// dispatcher las envuelve por igual.
+const PHASES: Record<DepartmentRunnerPhase, (args: Record<string, string>) => DepartmentRunnerResultSummary | Promise<DepartmentRunnerResultSummary>> = {
   init: phaseInit,
   "record-stage": phaseRecordStage,
   "prepare-growth": phasePrepareGrowth,
@@ -687,20 +743,18 @@ const PHASES: Record<DepartmentRunnerPhase, (args: Record<string, string>) => De
   gate: phaseGate,
 };
 
-function main(): void {
+async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const phase = args.phase as DepartmentRunnerPhase | undefined;
   if (!phase || !(DEPARTMENT_RUNNER_PHASES as string[]).includes(phase)) {
     throw new Error(`--phase invalido o ausente. Fases validas: ${DEPARTMENT_RUNNER_PHASES.join(", ")}.`);
   }
-  printResult(PHASES[phase](args));
+  printResult(await PHASES[phase](args));
 }
 
 if (require.main === module) {
-  try {
-    main();
-  } catch (err) {
+  main().catch((err) => {
     console.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
-  }
+  });
 }

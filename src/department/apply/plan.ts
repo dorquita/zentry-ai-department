@@ -2,6 +2,7 @@ import { WebEngineerOutput } from "../../employees/web-engineer/types";
 import { DepartmentPromotionResult, DepartmentRecommendation, signalMentionsTitle } from "../promotion";
 import { attributeEvidenceRefToEmployees } from "../specialist-inputs";
 import { OwnedStagingPage, resolveApplyCapability } from "./capability";
+import { ResolvedChangePlan } from "../web-engineer-changeplan";
 import { DepartmentChangeRequest } from "./change-types";
 import {
   buildApplyItemId,
@@ -13,6 +14,7 @@ import {
   DepartmentApplyStatus,
   DepartmentApplySummary,
   emptyTraceability,
+  ExecutablePlanRecord,
 } from "./types";
 
 /**
@@ -41,6 +43,11 @@ export interface BuildApplyPlanInput {
   promotion: DepartmentPromotionResult;
   webEngineer: { status: string; output?: WebEngineerOutput };
   ownedStagingPages: OwnedStagingPage[];
+  /**
+   * Planes YA resueltos contra el inventario real de staging. Es el
+   * camino nuevo: sustituye a interpretar prosa buscando `page_id=N`.
+   */
+  resolvedChangePlans?: ResolvedChangePlan[];
   now?: Date;
 }
 
@@ -76,13 +83,19 @@ export function selectChangesForRecommendation(
   return promotedCount === 1 ? [...output.proposedChanges] : [];
 }
 
-export function resolvePlannedStatus(params: { isBlockedByQa: boolean; capabilitySupported: boolean }): DepartmentApplyStatus {
+export function resolvePlannedStatus(params: { isBlockedByQa: boolean; capabilitySupported: boolean; hasExecutablePlan?: boolean }): DepartmentApplyStatus {
   if (params.isBlockedByQa) return "blocked";
+  // Un ChangePlan ejecutable YA resuelto contra el inventario real hace
+  // accionable la recomendacion aunque la capacidad legacy (la que
+  // interpretaba prosa buscando `page_id=N`) no la reconozca. Es
+  // justamente el cuello de botella que este camino elimina.
+  if (params.hasExecutablePlan) return "proposed";
   if (!params.capabilitySupported) return "requires_manual_staging_implementation";
   return "proposed";
 }
 
 export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySummary {
+  const plansByRecommendationId = new Map((input.resolvedChangePlans ?? []).map((resolved) => [resolved.recommendationId, resolved]));
   const now = input.now ?? new Date();
   const nowIso = now.toISOString();
   const webOutput = input.webEngineer.status === "executed" ? input.webEngineer.output : undefined;
@@ -120,7 +133,26 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
           hasSpecification: specification !== null,
         });
 
-    const applyStatus = resolvePlannedStatus({ isBlockedByQa: blockedByQa, capabilitySupported: capability.supported });
+    const resolvedPlan = blockedByQa ? undefined : plansByRecommendationId.get(buildRecommendationId(input.departmentRunId, recommendation.rank));
+    const executableChangePlan: ExecutablePlanRecord | null =
+      resolvedPlan && resolvedPlan.status === "ACTIONABLE" && resolvedPlan.plan && resolvedPlan.capability && resolvedPlan.page
+        ? {
+            plan: resolvedPlan.plan,
+            capability: resolvedPlan.capability,
+            wordpressPageId: resolvedPlan.page.wordpressPageId,
+            stagingUrl: resolvedPlan.page.stagingUrl,
+            beforeValue: resolvedPlan.beforeValue,
+            afterValue: resolvedPlan.afterValue,
+            operation: resolvedPlan.operation,
+            rationale: resolvedPlan.rationale,
+          }
+        : null;
+
+    const applyStatus = resolvePlannedStatus({
+      isBlockedByQa: blockedByQa,
+      capabilitySupported: capability.supported,
+      hasExecutablePlan: executableChangePlan !== null,
+    });
 
     return {
       contractVersion: DEPARTMENT_APPLY_CONTRACT_VERSION,
@@ -147,6 +179,7 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
           "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
       },
       applyCapability: capability,
+      executableChangePlan,
       applyStatus,
       validationStatus: "not_run",
       rollbackStatus: "not_needed",

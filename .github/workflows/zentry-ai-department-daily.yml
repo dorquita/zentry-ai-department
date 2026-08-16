@@ -594,6 +594,22 @@ jobs:
       # Si QA bloqueo todo, este empleado NO se invoca (y se registra como
       # blocked, no como fallo).
       # =====================================================================
+      # Lectura REAL de staging antes de especificar. SOLO LECTURA: el
+      # adaptador que usa este paso no tiene ninguna funcion de
+      # escritura, y la pasada diaria sigue siendo PLANIFICACION.
+      # STAGING WRITES EN ESTE WORKFLOW = 0.
+      - name: "[STAGING] Leer inventario real (solo lectura, 0 escrituras)"
+        id: inventory
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run staging:inventory -- --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-staging-inventory.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
+          WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+
       - name: "[COORD] Preparar contexto de web-engineer (solo recomendaciones aprobadas)"
         id: web_prep_run
         continue-on-error: true

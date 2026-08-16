@@ -31,6 +31,7 @@
  * todo el sistema, no dos que haya que traducir.
  */
 
+import { CapabilitySelection, ExecutePhpChangePlan } from "../../core/execute-php-operations";
 import { DepartmentChangeCapabilityId } from "./change-types";
 import { DEPARTMENT_CHANGE_STATUSES, DepartmentChangeStatus, isDepartmentChangeStatus } from "./state-machine";
 
@@ -58,6 +59,23 @@ export interface StagingPublishedMetaUpdateTarget {
   newTitle: string | null;
   /** Nueva meta description (excerpt). `null` = no se toca. */
   newMetaDescription: string | null;
+}
+
+/**
+ * Plan ejecutable adjunto a un elemento de apply. Se persiste con la
+ * pasada para que la sesion de aprobacion pueda cargarlo tal cual, sin
+ * volver a interpretar prosa.
+ */
+export interface ExecutablePlanRecord {
+  plan: ExecutePhpChangePlan;
+  capability: CapabilitySelection;
+  wordpressPageId: number;
+  stagingUrl: string;
+  /** Valor REAL del campo antes del cambio, leido del sitio. */
+  beforeValue: string;
+  afterValue: string;
+  operation: string;
+  rationale: string;
 }
 
 export interface DepartmentApplyCapability {
@@ -156,6 +174,13 @@ export interface DepartmentApplyItem {
   webEngineerSpecification: DepartmentApplySpecification | null;
   humanApproval: DepartmentHumanApproval;
   applyCapability: DepartmentApplyCapability;
+  /**
+   * ADITIVO: plan de cambio EJECUTABLE ya resuelto contra el inventario
+   * real de staging (pageId real, BEFORE real, ancla de version real).
+   * `null` = esta recomendacion no llego a plan y por tanto NO es
+   * accionable, por muy bien redactada que este.
+   */
+  executableChangePlan: ExecutablePlanRecord | null;
   applyStatus: DepartmentApplyStatus;
   validationStatus: DepartmentApplyValidationStatus;
   rollbackStatus: DepartmentApplyRollbackStatus;

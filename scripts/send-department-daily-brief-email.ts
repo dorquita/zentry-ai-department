@@ -26,6 +26,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import * as fs from "fs";
+import * as path from "path";
 import { resolveActiveClientConfig } from "../src/core/client-config";
 import { sendReportEmail } from "../src/core/mailer";
 import { readApplySummary } from "../src/department/apply/store";
@@ -63,6 +64,26 @@ function loadApplySummary(departmentRunId: string): DepartmentApplySummary | nul
   }
 }
 
+/**
+ * Motivo por el que el inventario de staging vino vacio, si vino vacio.
+ * Va a SALUD DEL DEPARTAMENTO: sin inventario ninguna propuesta puede ser
+ * ACTIONABLE, y ese es un fallo tecnico que hay que ver, no una lista de
+ * propuestas MANUAL sin causa aparente.
+ */
+function loadStagingInventoryUnavailableReason(departmentRunId: string): string {
+  const filePath = path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "staging-inventory.json");
+  if (!fs.existsSync(filePath)) {
+    return "Esta pasada no incluyo el paso de lectura de staging (scripts/read-staging-inventory.ts): no hay inventario con el que resolver ningun pageId.";
+  }
+  try {
+    const inventory = JSON.parse(fs.readFileSync(filePath, "utf-8")) as { unavailableReason?: string; pages?: unknown[] };
+    if (Array.isArray(inventory.pages) && inventory.pages.length > 0) return "";
+    return String(inventory.unavailableReason ?? "").trim() || "El inventario de staging de esta pasada vino vacio y sin motivo declarado.";
+  } catch (err) {
+    return `El inventario de staging de esta pasada no es JSON utilizable (${err instanceof Error ? err.message : String(err)}).`;
+  }
+}
+
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const departmentRunId = args.departmentRunId;
@@ -83,6 +104,7 @@ async function main(): Promise<void> {
     apply: loadApplySummary(departmentRunId),
     cost,
     runUrl: args.runUrl && args.runUrl !== "true" ? args.runUrl : "",
+    stagingInventoryUnavailableReason: loadStagingInventoryUnavailableReason(departmentRunId),
   });
 
   const config = resolveDailyBriefEmailConfig({

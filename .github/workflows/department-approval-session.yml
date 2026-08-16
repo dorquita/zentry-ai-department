@@ -1,0 +1,165 @@
+name: Zentry AI Department -- Sesion de aprobacion (segunda mitad del dia)
+
+# SEGUNDA MITAD DEL FLUJO DIARIO.
+#
+# Por la manana, la pasada coordinada manda el Daily Brief con las
+# propuestas NUMERADAS y no escribe en ningun sistema. Mas tarde, una
+# persona decide ("aprueba 2; rechaza 5 porque...") y ESO es lo que
+# ejecuta este workflow.
+#
+# Por que existe como workflow y no solo como script: el directorio de la
+# pasada (`reports/department/<id>/`) vive en el artifact del run que la
+# genero, no en el repositorio. Aqui se recupera ese artifact y se ejecuta
+# la sesion sobre los MISMOS ficheros que produjeron el Daily Brief -- no
+# sobre una reconstruccion.
+#
+# ESCRITURAS: solo STAGING, y solo lo aprobado explicitamente. Produccion
+# no se toca: el executor de ChangePlan la rechaza de forma incondicional
+# y a este job no se le pasa ninguna variable de produccion.
+#
+# DRY-RUN por defecto: sin `execute: true` ensena como ha interpretado la
+# decision y no escribe nada.
+on:
+  workflow_dispatch:
+    inputs:
+      departmentRunId:
+        description: "departmentRunId de la pasada cuyo Daily Brief se esta respondiendo"
+        required: true
+        type: string
+      decisions:
+        description: 'Decisiones en JSON, p.ej. [{"number":2,"action":"approve"}]'
+        required: true
+        type: string
+      execute:
+        description: "false = dry-run (no escribe nada). true = ejecuta lo aprobado en STAGING."
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: department-approval-session
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  approval-session:
+    name: Ejecutar la decision humana sobre el Daily Brief
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # El artifact de la pasada trae manifest, etapas, promocion,
+      # apply-summary, change-plans y el propio Daily Brief. Sin el no hay
+      # nada que aprobar, asi que este step NO lleva continue-on-error: si
+      # falla, la sesion no llega a correr y nada se escribe.
+      #
+      # El nombre del artifact lleva el `departmentRunId`, asi que la
+      # correspondencia con la pasada es EXACTA: no hay que adivinar de
+      # que run vino ni elegir "el mas reciente".
+      - name: Recuperar el directorio de la pasada desde su artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPARTMENT_RUN_ID: ${{ inputs.departmentRunId }}
+        run: |
+          set -euo pipefail
+          NAME="zentry-ai-department-${DEPARTMENT_RUN_ID}"
+          URL=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            | node -e '
+              const data = JSON.parse(require("fs").readFileSync(0, "utf8"));
+              const name = process.argv[1];
+              const hit = (data.artifacts || []).find((a) => a.name === name && !a.expired);
+              if (!hit) { console.error(`No hay ningun artifact llamado ${name} sin expirar.`); process.exit(1); }
+              console.log(hit.archive_download_url);
+            ' "$NAME")
+          mkdir -p "reports/department/${DEPARTMENT_RUN_ID}"
+          curl -sSL -H "Authorization: Bearer $GH_TOKEN" -o /tmp/run.zip "$URL"
+          unzip -q -o /tmp/run.zip -d "reports/department/${DEPARTMENT_RUN_ID}"
+          echo "Artifact $NAME restaurado."
+
+      - name: Escribir el fichero de decisiones
+        env:
+          DECISIONS: ${{ inputs.decisions }}
+        run: |
+          set -euo pipefail
+          # Por variable de entorno, nunca interpolado en el script: el
+          # texto lo escribe una persona y no puede acabar siendo shell.
+          printf '%s' "$DECISIONS" > decisions.json
+          node -e '
+            const raw = require("fs").readFileSync("decisions.json", "utf8");
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) throw new Error("Las decisiones deben ser una lista JSON.");
+            console.log(`${parsed.length} decision(es) leidas.`);
+          '
+
+      - name: Sesion de aprobacion
+        run: |
+          set -o pipefail
+          ARGS=(--departmentRunId "$DEPARTMENT_RUN_ID" --decisions decisions.json --decided-by "github-actions:${GITHUB_ACTOR}")
+          if [ "$EXECUTE" = "true" ]; then
+            ARGS+=(--execute)
+          fi
+          npm run approvals:session -- "${ARGS[@]}"
+        env:
+          DEPARTMENT_RUN_ID: ${{ inputs.departmentRunId }}
+          EXECUTE: ${{ inputs.execute }}
+          # Entorno: STAGING y nada mas. Ninguna variable de produccion se
+          # expone a este job, ni siquiera apagada.
+          WORDPRESS_ENV: staging
+          DEPARTMENT_STAGING_APPLY_ENABLED: "true"
+          NOVAMIRA_STAGING_WRITES_ENABLED: "true"
+          NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED: "true"
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
+          WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          # Segundo email con los resultados reales de lo ejecutado.
+          DAILY_BRIEF_EMAIL_TO: ${{ secrets.DAILY_BRIEF_EMAIL_TO }}
+          REPORT_EMAIL_TO: ${{ secrets.REPORT_EMAIL_TO }}
+          REPORT_EMAIL_FROM: ${{ secrets.REPORT_EMAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+
+      - name: Subir el resultado de la sesion
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: approval-session-${{ inputs.departmentRunId }}
+          path: |
+            reports/department/${{ inputs.departmentRunId }}/approval-session.json
+            data/human-decisions.jsonl
+            data/execute-php-audit.jsonl
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Resumen
+        if: always()
+        run: |
+          {
+            echo "## Sesion de aprobacion"
+            echo ""
+            echo "- **Pasada:** \`${{ inputs.departmentRunId }}\`"
+            echo "- **Modo:** ${{ inputs.execute == true && 'EJECUTA lo aprobado en STAGING' || 'dry-run (no escribe nada)' }}"
+            echo "- **Escrituras en produccion:** 0"
+            echo ""
+            echo "El detalle de cada propuesta (BEFORE, AFTER, validacion, rollback) esta en el log del step \"Sesion de aprobacion\" y en el segundo email."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,6 +1,7 @@
 import { buildNumberedProposals, NumberedProposal } from "../approvals/manual/proposal";
 import { APPLY_STATUS_LABEL, APPLY_STATUS_REPORT_ORDER, DepartmentApplyItem, DepartmentApplyStatus, DepartmentApplySummary } from "./apply/types";
 import { DepartmentDailyBrief } from "./daily-brief";
+import { buildDepartmentHealth, DepartmentHealthReport, incidentsFromApplyItems } from "./department-health";
 import { DepartmentRunCostSummary, formatCostUsd, formatDurationMs } from "./employee-runs";
 
 /**
@@ -44,6 +45,13 @@ export interface DailyBriefEmailInput {
   runUrl: string;
   /** Fecha del informe (YYYY-MM-DD). Si no se pasa, se deriva de `brief.generatedAt`. */
   date?: string;
+  /**
+   * Motivo por el que el inventario real de staging vino vacio, si vino
+   * vacio. Va a SALUD DEL DEPARTAMENTO: sin inventario ninguna propuesta
+   * puede ser ACTIONABLE, y eso hay que decirlo como incidencia tecnica,
+   * no dejarlo implicito en una lista de propuestas MANUAL sin causa.
+   */
+  stagingInventoryUnavailableReason?: string;
 }
 
 export interface DailyBriefEmail {
@@ -149,6 +157,29 @@ function departmentStatusRows(brief: DepartmentDailyBrief): { employee: string; 
   ];
 }
 
+/**
+ * SALUD DEL DEPARTAMENTO. Los fallos tecnicos internos viven aqui y solo
+ * aqui: no son decisiones de negocio, no se numeran y no se aprueban.
+ */
+export function departmentHealthReport(input: DailyBriefEmailInput): DepartmentHealthReport {
+  const report = buildDepartmentHealth({
+    stageStatuses: input.brief.stageStatuses,
+    stagingInventoryUnavailableReason: input.stagingInventoryUnavailableReason ?? "",
+  });
+  return {
+    ...report,
+    incidents: [...report.incidents, ...incidentsFromApplyItems(input.apply?.items ?? [])],
+  };
+}
+
+function healthIncidentLines(report: DepartmentHealthReport): string[] {
+  if (report.incidents.length === 0) return ["Ninguna incidencia tecnica interna en esta pasada."];
+  return report.incidents.map((incident) => `[${incident.severity.toUpperCase()}] ${incident.component}: ${shorten(incident.detail, 300)} -> ${incident.policy}`);
+}
+
+const HEALTH_NOTE =
+  "Estas incidencias son TECNICAS: no se aprueban ni se rechazan. Se reintentan en la siguiente pasada o se arreglan en el repositorio, segun la politica tecnica del proyecto. Por eso no aparecen en la lista numerada de arriba.";
+
 function costLines(cost: DepartmentRunCostSummary | null): string[] {
   if (!cost || cost.runs.length === 0) {
     return ["Coste de Claude en esta pasada: no reportado (no hay registros de ejecucion utilizables). No se ha estimado ninguna cifra."];
@@ -182,6 +213,7 @@ const NUMBERED_PROPOSALS_TITLE = "PROPUESTAS NUMERADAS -- ESTO ES LO QUE PUEDES 
  */
 const HOW_TO_ANSWER_LINES: string[] = [
   'Responde en Claude Code, en lenguaje natural, citando los numeros de esta lista. Por ejemplo: "aprueba 1, 2 y 4; rechaza 3 porque el copy no me gusta; deja 5 pendiente".',
+  "ESTADO ACTIONABLE significa literalmente: si la apruebas, el sistema sabe ejecutarla -- pagina resuelta, BEFORE real leido y camino de ejecucion decidido. MANUAL significa que la propuesta es valida pero todavia necesita trabajo humano. BLOCKED significa que QA o un guard la ha detenido. STALE significa que la pagina cambio despues de proponerla y hay que volver a proponerla sobre el estado nuevo.",
   "El numero es tu referencia; el id es la del sistema. Antes de ejecutar nada se comprueba que el numero sigue apuntando al mismo id, para que un informe viejo no ejecute lo que no es.",
   "Un rechazo necesita motivo: se guarda LITERAL y es lo que alimenta las siguientes propuestas del departamento.",
   "Lo que no menciones queda PENDIENTE. El silencio NUNCA se interpreta como aprobacion: ninguna propuesta se ejecuta sola.",
@@ -206,10 +238,39 @@ function proposalStaging(proposal: NumberedProposal): string {
  * Cambios campo a campo. El `before` viene tal cual de la propuesta:
  * cuando dice que se leera antes de aplicar es que TODAVIA NO SE HA LEIDO,
  * y eso se muestra literal en vez de inventar un valor actual.
+ *
+ * Cuando la propuesta SI trae un ChangePlan resuelto, el BEFORE ya no es
+ * una promesa: es el valor real leido de staging antes de proponer, y el
+ * AFTER es exactamente lo que se escribiria. Por eso ese caso se imprime
+ * primero y con esa etiqueta -- la diferencia entre "lo leere" y "lo he
+ * leido" es justamente lo que hace que una propuesta sea aprobable.
  */
 function proposalChangeLines(proposal: NumberedProposal): string[] {
+  if (proposal.beforeSummary.length > 0 || proposal.afterSummary.length > 0) {
+    const field = proposal.operation || "campo";
+    return [
+      `${field}: ANTES (real, leido de staging) "${proposal.beforeSummary}"`,
+      `${field}: DESPUES (propuesto) "${proposal.afterSummary}"`,
+    ];
+  }
   if (proposal.changes.length === 0) return ["(sin before/after concreto todavia: esta propuesta no trae cambio de campos resuelto)"];
   return proposal.changes.map((change) => `${change.field}: antes "${change.before}" -> despues "${change.after}"`);
+}
+
+/**
+ * Ejecucion resuelta: operacion, pageId REAL y camino de ejecucion. Solo
+ * aparece cuando hay ChangePlan; si no lo hay se dice, en vez de imprimir
+ * campos vacios que parecerian datos.
+ */
+function proposalExecutionLines(proposal: NumberedProposal): string[] {
+  if (proposal.executionPath.length === 0) {
+    return ["Ejecucion: sin ChangePlan resuelto en esta pasada (no hay operacion, ni pageId, ni camino de ejecucion)."];
+  }
+  return [
+    `Operacion: ${proposal.operation}`,
+    `Pagina de WordPress: ${proposal.wordpressPageId === null ? "(no resuelta)" : `page_id=${proposal.wordpressPageId}`}`,
+    `Camino de ejecucion: ${proposal.executionPath}`,
+  ];
 }
 
 function proposalTextBlock(proposal: NumberedProposal): string[] {
@@ -223,9 +284,11 @@ function proposalTextBlock(proposal: NumberedProposal): string[] {
   lines.push(`    Staging: ${proposalStaging(proposal)}`);
   lines.push("    Cambio propuesto:");
   for (const change of proposalChangeLines(proposal)) lines.push(`      - ${change}`);
+  for (const line of proposalExecutionLines(proposal)) lines.push(`    ${line}`);
   lines.push(`    Capacidad de apply: ${proposal.capability} -- ${shorten(proposal.capabilityReason, 260)}`);
   lines.push(`    QA: ${proposal.qaStatus}`);
   lines.push(`    Riesgo: ${proposal.risk}`);
+  lines.push(`    ESTADO: ${proposal.proposalStatus}`);
   lines.push(`    Estado actual: ${proposal.statusLabel}`);
   if (proposal.actionable) {
     lines.push("    Accionable hoy: SI -- si la apruebas, se ejecuta con un executor determinista.");
@@ -268,10 +331,21 @@ export function renderNumberedProposalsText(apply: DepartmentApplySummary | null
   return lines;
 }
 
+const PROPOSAL_STATUS_COLOR: Record<NumberedProposal["proposalStatus"], string> = {
+  ACTIONABLE: "#1b6b3a",
+  BLOCKED: "#b3261e",
+  MANUAL: "#8a6100",
+  STALE: "#8a6100",
+};
+
 function proposalHtmlBlock(proposal: NumberedProposal): string {
   const badgeColor = proposal.actionable ? "#1a4fbf" : "#8a6100";
+  const statusColor = PROPOSAL_STATUS_COLOR[proposal.proposalStatus] ?? "#33415c";
   const changes = proposalChangeLines(proposal)
     .map((change) => `<li style="margin:0 0 4px;"><code style="font-size:12px;">${escapeHtml(change)}</code></li>`)
+    .join("");
+  const execution = proposalExecutionLines(proposal)
+    .map((line) => `<li style="margin:0 0 4px;color:#33415c;">${escapeHtml(line)}</li>`)
     .join("");
   const actionability = proposal.actionable
     ? '<p style="margin:8px 0 0;color:#1b6b3a;"><strong>Accionable hoy:</strong> SI &mdash; si la apruebas, se ejecuta con un executor determinista.</p>'
@@ -296,11 +370,13 @@ function proposalHtmlBlock(proposal: NumberedProposal): string {
       <p style="margin:6px 0;color:#33415c;"><strong>Staging:</strong> ${escapeHtml(proposalStaging(proposal))}</p>
       <p style="margin:6px 0 4px;color:#33415c;"><strong>Cambio propuesto:</strong></p>
       <ul style="margin:0 0 8px;padding-left:20px;">${changes}</ul>
+      <ul style="margin:0 0 8px;padding-left:20px;">${execution}</ul>
       <p style="margin:6px 0;color:#33415c;"><strong>Capacidad de apply:</strong> ${escapeHtml(proposal.capability)} &mdash; ${escapeHtml(
         shorten(proposal.capabilityReason, 260)
       )}</p>
       <p style="margin:6px 0;color:#33415c;"><strong>QA:</strong> ${escapeHtml(proposal.qaStatus)}</p>
       <p style="margin:6px 0;color:#33415c;"><strong>Riesgo:</strong> ${escapeHtml(proposal.risk)}</p>
+      <p style="margin:6px 0;color:#33415c;"><strong>ESTADO:</strong> <span style="color:${statusColor};font-weight:700;">${escapeHtml(proposal.proposalStatus)}</span></p>
       <p style="margin:6px 0;color:#33415c;"><strong>Estado actual:</strong> ${escapeHtml(proposal.statusLabel)}</p>
       ${actionability}
     </div>`;
@@ -414,9 +490,14 @@ export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
   if (brief.blockedOrUnknown.length > 12) lines.push(`- (${brief.blockedOrUnknown.length - 12} entrada(s) mas en el informe completo del run.)`);
   lines.push("");
 
-  lines.push("6. ESTADO DEL DEPARTAMENTO");
+  lines.push("6. SALUD DEL DEPARTAMENTO");
   lines.push("");
   for (const row of departmentStatusRows(brief)) lines.push(`- ${row.employee}: ${row.status}`);
+  lines.push("");
+  lines.push("Incidencias tecnicas internas:");
+  for (const line of healthIncidentLines(departmentHealthReport(input))) lines.push(`- ${line}`);
+  lines.push("");
+  lines.push(HEALTH_NOTE);
   lines.push("");
 
   lines.push("7. COSTE DE LA PASADA");
@@ -535,7 +616,13 @@ export function renderDailyBriefEmailHtml(input: DailyBriefEmailInput): string {
 
   ${htmlSection("5. Blocked / unknown", htmlList(brief.blockedOrUnknown.slice(0, 12).map((i) => shorten(i, 300))))}
 
-  ${htmlSection("6. Estado del departamento", `<table style="border-collapse:collapse;width:100%;">${statusRows}</table>`)}
+  ${htmlSection(
+    "6. Salud del departamento",
+    `<table style="border-collapse:collapse;width:100%;">${statusRows}</table>
+     <p style="margin:12px 0 4px;font-weight:600;color:#0b1b33;">Incidencias tecnicas internas</p>
+     ${htmlList(healthIncidentLines(departmentHealthReport(input)))}
+     <p style="margin:0;color:#54617a;">${escapeHtml(HEALTH_NOTE)}</p>`
+  )}
 
   ${htmlSection("7. Coste de la pasada", htmlList(costLines(input.cost)))}
 
