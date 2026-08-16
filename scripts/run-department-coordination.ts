@@ -69,7 +69,9 @@ import {
   writeStageContext,
   writeStagePrompt,
 } from "../src/department/run-store";
-import { loadSpecialistInputs } from "../src/department/specialist-inputs";
+import { attributeEvidenceRefToEmployees, loadSpecialistInputs } from "../src/department/specialist-inputs";
+import { buildWebEngineerDiagnostics, renderWebEngineerDiagnosticsLines } from "../src/department/web-engineer-diagnostics";
+import { buildRecommendationId } from "../src/department/apply/types";
 import {
   buildDepartmentCoordinationRunId,
   DepartmentRunManifest,
@@ -479,7 +481,18 @@ function phasePrepareWebEngineer(args: Record<string, string>): DepartmentRunner
     // escrituras: este lector no tiene ninguna funcion que escriba.
     stagingInventory: summarizeInventoryForPrompt(stagingInventory),
     stagingInventoryUnavailableReason: stagingInventory.unavailableReason,
+    // El inventario COMPLETO no va al prompt entero: se usa aqui para
+    // resolver de forma determinista la pagina objetivo de cada
+    // recomendacion y para adjuntar el BEFORE real SOLO de esas paginas.
+    fullStagingInventory: stagingInventory,
   });
+  const resolvedTargetCount = context.approvedRecommendations.filter((rec) => rec.targetResolutionStatus === "resolved").length;
+  console.log(
+    `Resolucion determinista de paginas objetivo: ${resolvedTargetCount}/${context.approvedRecommendations.length} recomendacion(es) con pagina resuelta; ${context.targetPageSnapshots.length} snapshot(s) BEFORE adjunto(s).`
+  );
+  for (const rec of context.approvedRecommendations) {
+    console.log(`  [${rec.targetResolutionStatus}] ${rec.recommendationId} -> ${rec.resolvedTargets.map((t) => t.wordpressPageId).join(", ") || "-"} :: ${rec.targetResolutionReason}`);
+  }
   const prompt = buildDepartmentWebEngineerPrompt(context, loadPreviousHumanFeedback());
   writeStageContext(departmentRunId, "web-engineer", context);
   const promptPath = writeStagePrompt(departmentRunId, "web-engineer", prompt);
@@ -535,7 +548,8 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
     ? (JSON.parse(fs.readFileSync(inventoryPath, "utf-8")) as StagingInventory)
     : emptyStagingInventory("No se guardo inventario de staging en esta pasada.", new Date().toISOString());
   const { drafts, rejected } = parseChangePlanDrafts((output as { changePlans?: unknown }).changePlans);
-  const resolvedPlans = drafts.map((draft) => buildChangePlanFromDraft({ draft, inventory: stagingInventory }));
+  const approvedRecommendationIds = context.approvedRecommendations.map((rec) => rec.recommendationId);
+  const resolvedPlans = drafts.map((draft) => buildChangePlanFromDraft({ draft, inventory: stagingInventory, approvedRecommendationIds }));
   const actionable = resolvedPlans.filter((r) => r.status === "ACTIONABLE");
   writeDepartmentJson(path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "change-plans.json"), {
     departmentRunId,
@@ -547,6 +561,25 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
   console.log(
     `ChangePlans: ${drafts.length} declarado(s) por web-engineer, ${actionable.length} resuelto(s) como EJECUTABLE contra el inventario real, ${resolvedPlans.length - actionable.length} sin resolver (quedan manuales).`
   );
+
+  // DIAGNOSTICO: una fila por recomendacion, con el motivo EXACTO. Es lo
+  // que evita que "0 ChangePlans" vuelva a ser un numero sin explicacion.
+  const promotionForDiagnostics = loadPromotion(departmentRunId);
+  const diagnostics = buildWebEngineerDiagnostics({
+    departmentRunId,
+    context,
+    resolved: resolvedPlans,
+    rejectedDrafts: rejected,
+    declaredCount: drafts.length,
+    attributeEvidenceRef: attributeEvidenceRefToEmployees,
+    blocked: (promotionForDiagnostics?.blocked ?? []).map((rec) => ({
+      recommendationId: buildRecommendationId(departmentRunId, rec.rank),
+      rank: rec.rank,
+      blockedBy: rec.blockedBy,
+    })),
+  });
+  writeDepartmentJson(path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "web-engineer-diagnostics.json"), diagnostics);
+  for (const line of renderWebEngineerDiagnosticsLines(diagnostics)) console.log(line);
   fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), "utf-8");
   writeDepartmentJson(artifactPath, {
     generatedAt: new Date().toISOString(),

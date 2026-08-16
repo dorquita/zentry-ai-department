@@ -170,6 +170,11 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
       confidence: recommendation.confidence,
       effort: recommendation.effort,
       webEngineerSpecification: specification,
+      changePlanResolution: blockedByQa ? "qa_blocked" : (resolvedPlan?.resolution ?? "no_change_plan_declared"),
+      changePlanResolutionReason: blockedByQa
+        ? `Bloqueada por QA en esta pasada: ${recommendation.blockedBy.join(" | ") || "sin motivo literal registrado"}.`
+        : (resolvedPlan?.reason ??
+          "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion)."),
       humanApproval: {
         status: "none",
         approvalRequestId: null,

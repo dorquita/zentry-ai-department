@@ -181,6 +181,23 @@ export interface DepartmentApplyItem {
    * accionable, por muy bien redactada que este.
    */
   executableChangePlan: ExecutablePlanRecord | null;
+  /**
+   * ADITIVO: POR QUE esta recomendacion es (o no es) accionable, con la
+   * causa exacta -- `unresolved_target`, `ambiguous_target`,
+   * `missing_before`, `missing_after`, `unsupported_operation`...
+   *
+   * `applyStatus` NO se puede usar para esto: comparte vocabulario con
+   * la maquina de estados persistente del cambio (state-machine.ts,
+   * Telegram, produccion), y ahi `requires_manual_staging_implementation`
+   * significa "no hay executor para esto en esta pasada" -- un unico
+   * estado para causas que no tienen nada que ver entre si. Este campo
+   * es el diagnostico; aquel sigue siendo el estado del cambio.
+   *
+   * `null` = esta pasada no evaluo ningun ChangePlan para el elemento
+   * (por ejemplo, artefactos anteriores a este contrato).
+   */
+  changePlanResolution: string | null;
+  changePlanResolutionReason: string | null;
   applyStatus: DepartmentApplyStatus;
   validationStatus: DepartmentApplyValidationStatus;
   rollbackStatus: DepartmentApplyRollbackStatus;

@@ -275,7 +275,11 @@ async function phasePlan(args: Record<string, string>): Promise<void> {
   console.log(`Contrato de apply escrito en ${toRepoRelative(filePath)}: ${summarize(summary) || "sin elementos"}.`);
   console.log(`Paginas de staging publicadas disponibles como destino: ${ownedStagingPages.length}.`);
   for (const item of summary.items) {
-    console.log(`  - [${item.applyStatus}] #${item.recommendationRank} ${item.title}`);
+    // El estado del CAMBIO y el POR QUE son dos cosas distintas: sin la
+    // segunda, ocho recomendaciones con ocho causas distintas se leian
+    // como el mismo "requires_manual_staging_implementation".
+    console.log(`  - [${item.applyStatus}] [${item.changePlanResolution ?? "sin diagnostico"}] #${item.recommendationRank} ${item.title}`);
+    if (item.changePlanResolutionReason) console.log(`      motivo: ${item.changePlanResolutionReason}`);
   }
 }
 

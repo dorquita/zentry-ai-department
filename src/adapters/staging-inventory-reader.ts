@@ -93,7 +93,24 @@ export interface ReadStagingInventoryOptions {
   now?: () => Date;
   /** Inyectable para tests. Por defecto, `fetch`. */
   fetchImpl?: typeof fetch;
+  /** Inyectable para tests: espera entre reintentos de RED. Por defecto, un `setTimeout` real. */
+  sleep?: (ms: number) => Promise<void>;
 }
+
+/**
+ * Esperas entre reintentos de la lectura del inventario, en ms.
+ *
+ * Tres intentos con backoff en vez de dos seguidos, y la razon es
+ * concreta: en la pasada `dept-2026-08-16T161309Z` el inventario fallo
+ * con `fetch failed` tras dos intentos inmediatos, y eso dejo la pasada
+ * ENTERA sin ninguna pagina resoluble -- incluida una recomendacion de
+ * title/meta sobre una pagina real que habria sido ejecutable. Un corte
+ * de red de dos segundos no deberia costar una pasada de departamento.
+ *
+ * Sigue siendo solo para fallos de RED: un HTTP de error es una
+ * respuesta del servidor y no se reintenta nunca.
+ */
+export const INVENTORY_RETRY_DELAYS_MS = [1000, 3000];
 
 /**
  * Lee las paginas PUBLICADAS de staging. Nunca lanza: devuelve el motivo
@@ -123,17 +140,26 @@ export async function readStagingInventory(options: ReadStagingInventoryOptions 
   const authHeader = `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString("base64")}`;
   const url = `${restBase}/pages?per_page=${Math.min(maxPages, 100)}&status=publish&context=edit&orderby=modified&order=desc`;
 
-  // UN reintento para fallos de RED (lectura idempotente); nunca para un
-  // HTTP de error, que es una respuesta del servidor y no un corte.
+  // Reintentos con espera para fallos de RED (la lectura es idempotente);
+  // nunca para un HTTP de error, que es una respuesta del servidor y no
+  // un corte.
+  const sleep = options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  const totalAttempts = INVENTORY_RETRY_DELAYS_MS.length + 1;
   let lastNetworkError = "";
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= totalAttempts; attempt++) {
     let response: Response;
     try {
       response = await doFetch(url, { method: "GET", headers: { Authorization: authHeader } });
     } catch (err) {
       lastNetworkError = err instanceof Error ? err.message : String(err);
-      if (attempt === 1) continue;
-      return emptyStagingInventory(`Fallo de red leyendo el inventario de staging en ${host} (${lastNetworkError}) tras 2 intentos.`, capturedAt);
+      if (attempt < totalAttempts) {
+        await sleep(INVENTORY_RETRY_DELAYS_MS[attempt - 1]);
+        continue;
+      }
+      return emptyStagingInventory(
+        `Fallo de red leyendo el inventario de staging en ${host} (${lastNetworkError}) tras ${totalAttempts} intentos con espera.`,
+        capturedAt
+      );
     }
     if (!response.ok) {
       return emptyStagingInventory(`El REST del core de ${host} respondio HTTP ${response.status} al leer el inventario de staging.`, capturedAt);
@@ -154,5 +180,5 @@ export async function readStagingInventory(options: ReadStagingInventoryOptions 
       unavailableReason: "",
     };
   }
-  return emptyStagingInventory(`Fallo de red leyendo el inventario de staging en ${host} (${lastNetworkError}).`, capturedAt);
+  return emptyStagingInventory(`Fallo de red leyendo el inventario de staging en ${host} (${lastNetworkError}) tras ${totalAttempts} intentos con espera.`, capturedAt);
 }
