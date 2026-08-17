@@ -505,20 +505,130 @@ absorbida por la arquitectura nueva.
 
 ---
 
+## 13-ter. El cutover: cómo se invierte la autoridad
+
+Hasta la fase anterior MongoDB **recibía** el estado pero no lo
+**decidía**. Los lectores seguían leyendo `data/*.jsonl` restaurados de
+la rama `department-state`. Esta fase invierte la dirección.
+
+### La hidratación
+
+```text
+antes:   department-state ──► data/*.jsonl ──► lectores ──► decisiones
+ahora:   MongoDB ──► data/*.jsonl (proyección) ──► lectores ──► decisiones
+```
+
+`src/persistence/hydration.ts` proyecta a `data/` todo el estado de
+clase A y B al principio de cada pasada. Los ficheros siguen existiendo,
+pero dejan de ser la fuente: son una **proyección** que se regenera.
+
+**Por qué proyectar y no convertir cada lector a `async`.** Los lectores
+(`readCurrentActions`, `readAllEvents`, `readCurrentChangePacks`…) son
+síncronos y tienen unos 40 llamantes entre los 26 agentes del pipeline
+v1, los runners de empleado y los scripts de mantenimiento. Convertirlos
+a `async` obligaría a propagar `await` por toda esa superficie a la vez,
+con un riesgo de regresión enorme y ninguna ganancia sobre la propiedad
+que de verdad importa: **de dónde sale el estado con el que razona el
+departamento**. Con la hidratación sale de MongoDB. Que el último tramo
+sean ficheros locales del runner es transporte, no autoridad — igual que
+un ORM materializa filas en objetos sin que nadie diga que los objetos
+son la fuente de verdad.
+
+**No es un fallback.** No hay `try MongoDB / catch fichero` en ninguna
+parte. Si el modo es `mongo` y MongoDB no responde, la hidratación falla
+y la pasada se para. Es preferible no correr a correr sobre un `data/`
+de procedencia desconocida.
+
+### Los lectores que sí se migraron uno a uno
+
+Dos lectores no se arreglaban con hidratar, porque leían **mal** o leían
+de un sitio que MongoDB no proyecta:
+
+| Lector | Problema real | Ahora |
+| --- | --- | --- |
+| `loadPreviousHumanFeedback()` | Se limitaba a los rechazos **con motivo**. De las 7 decisiones reales, 6 son aprobaciones: devolvía 0 entradas | `loadPreviousHumanFeedbackFromState()` lee `human_decisions` con las **tres** acciones |
+| `loadPreviousRunSnapshot()` | Leía el brief anterior de `reports/`, que es un artifact (clase D) y no se migra: ataba la continuidad a restaurar la rama | `department_runs.briefSummary`, escrito por la propia fase del brief |
+
+Ninguno de los dos consulta el histórico de eventos: leen el **estado
+actual** de su colección. `human_decisions` son 7 documentos y crecen
+con el número de decisiones humanas, no con los 16.000 eventos. Cero
+N+1: una consulta indexada, no una por recomendación.
+
+### `subjectKey`: qué responde y qué no
+
+`recommendationId` lleva el `departmentRunId` dentro, así que la misma
+recomendación lógica recibe un id distinto en cada pasada.
+`buildSubjectKey()` normaliza el título (sin acentos, sin puntuación,
+minúsculas) y `decisions.listForSubject()` recupera todas las decisiones
+sobre el mismo asunto entre pasadas.
+
+**Pero es un habilitador, no una solución.** Los títulos los genera
+`growth-director-v2` como texto libre en cada pasada (`"title": "string"`
+en su schema, sin ninguna restricción), y los títulos reales contienen
+contenido volátil: *"las 7 páginas con CTR 0%"*, *"el quick win de mayor
+impacto"*. Dos pasadas que hablan del mismo asunto casi nunca escriben
+el mismo título. Hoy `subjectKey` **no ha emparejado nada** todavía,
+sencillamente porque sólo hay decisiones de una pasada.
+
+La continuidad lógica que SÍ funciona hoy vive a nivel de empleado, en
+`canonicalKey` de `action-backlog.jsonl`: es generado por plantilla
+(`targetBrand|actionType:kinds|keyword|page`), no por un modelo, y el
+90,4% de las acciones (105 de 105 con `seenCount > 1`, hasta 69) aparece
+en más de una pasada. `subjectKey` se conserva indexado como señal
+secundaria; declararlo suficiente sería falso.
+
+### Clasificación de los `.jsonl` después de la migración
+
+Ningún fichero se borra. Con 29 ficheros en el registro:
+
+| Clase | Cuántos | Qué son ahora | Ejemplos |
+| --- | --- | --- | --- |
+| **A — autoritativo** | 14 | **EXPORT.** MongoDB decide; el fichero es la proyección que leen los lectores síncronos | `action-backlog`, `work-orders`, `change-packs`, `approval-requests`, `staging-review-pages` |
+| **B — evento append-only** | 8 | **EXPORT.** Igual que A, pero sin sobrescritura: un evento no cambia | `department-events`, `jobs`, `action-audit` |
+| **C — derivado** | 7 | **DERIVED.** MongoDB no es su fuente. Se regeneran leyendo el sistema externo | `staging-qa-results`, `existing-page-audit`, `credential-health` |
+| **D — artifact** | — | **LEGACY READ-ONLY.** `reports/**` no es estado y no se migra | `reports/department/**` |
+
+Ninguno es todavía **CANDIDATE FOR REMOVAL**: los de clase C siguen
+teniendo lectores reales, y los de A/B son la proyección que consume el
+runtime. La limpieza masiva no toca en esta fase.
+
+`staging-review-pages.jsonl` se **reclasificó de C a A** en esta fase. La
+justificación anterior ("derivable de las ejecuciones de staging") era
+falsa: `publicUrl` es la URL real publicada y `staging-executions.jsonl`
+sólo guarda `wordpressDraftUrl` (la forma `?page_id=N`). El propio lector
+pone las páginas de revisión después a propósito para que su URL gane.
+Sin ese dato el sistema deja de saber qué páginas de staging controla.
+
+### Qué le queda a la rama `department-state`
+
+| Función | ¿Sigue? | ¿Es requisito de runtime? |
+| --- | --- | --- |
+| Continuidad del estado entre pasadas | No | **No.** La aporta MongoDB |
+| Continuidad del brief ("qué ha cambiado") | No | **No.** `department_runs.briefSummary` |
+| Historial de `reports/**` | Sí | No para continuidad; sí para consultar informes viejos |
+| Backup/auditoría fuera de Atlas | Sí | No |
+
+`persist-state` saltado ya no significa "estado perdido": significa que
+el export a la rama no se actualizó esa vez. Se demuestra con el
+`workflow_dispatch` `skipLegacyRestore`, que ejecuta la pasada **sin
+restaurar nada** de la rama. Esa prueba es no destructiva por diseño: en
+ese modo tampoco se empaqueta ni se persiste nada, precisamente para que
+un `reports/` sin restaurar no se force-pushe encima del histórico.
+
+---
+
 ## 14. Estado de la transición
 
 - [x] **Fase 1 — shadow write.** Implementada.
 - [x] **Fase 2 — verificación.** `--mode equivalence` compara semántica
       (ids, cardinalidad, decisiones), nunca bytes.
-- [ ] **Fase 3 — lectores en MongoDB.** NO empezada. Es lo único que
-      separa el sistema de poder declarar MongoDB fuente de verdad, y es
-      la razón por la que todavía no se declara: hoy
-      `loadPreviousHumanFeedback()` sigue leyendo
-      `data/department-human-decisions.jsonl`, no MongoDB. La autoridad
-      fluye desde el fichero, aunque MongoDB sea un espejo fiel y
-      verificado.
-- [ ] **Fase 4 — MongoDB como fuente de verdad.**
-- [ ] **Fase 5 — exports.** Los JSON/Markdown pasan a ser proyecciones.
+- [x] **Fase 3 — lectores en MongoDB.** Hidratación + los dos lectores
+      migrados uno a uno (decisiones humanas y continuidad del brief).
+- [x] **Fase 4 — MongoDB como fuente de verdad.**
+      `DEPARTMENT_PERSISTENCE_MODE=mongo` en la pasada diaria y en la
+      sesión de aprobación cuando hay credenciales. Sin ellas, `legacy`.
+- [x] **Fase 5 — exports.** Los `.jsonl` de clase A y B son proyecciones
+      regeneradas desde MongoDB en cada pasada.
 
 ### Migración ejecutada y verificada — run `32018080973`
 

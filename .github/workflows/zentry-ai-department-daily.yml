@@ -62,7 +62,16 @@ name: Zentry AI Department -- Daily Brief (coordinacion real)
 on:
   schedule:
     - cron: "0 7 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      skipLegacyRestore:
+        description: >-
+          No restaurar data/ ni reports/ desde la rama de estado. Prueba de
+          que la continuidad ya NO depende del legacy: el estado sale
+          entero de MongoDB. No borra nada -- la rama sigue intacta.
+        required: false
+        default: false
+        type: boolean
 
 # Una sola pasada coordinada a la vez: dos pasadas simultaneas podrian
 # leer/escribir a la vez sobre los mismos registros del departamento.
@@ -132,8 +141,14 @@ jobs:
       # que haya commiteado en main -- es el arranque en frio esperado,
       # no un fallo.
       # =====================================================================
+      # Fase O57: con `skipLegacyRestore` este paso NO se ejecuta. Es la
+      # prueba de la seccion 11 del cutover -- el runner arranca sin nada
+      # heredado de la rama de estado y la pasada tiene que recuperar la
+      # continuidad entera desde MongoDB. Es NO DESTRUCTIVO: la rama
+      # `department-state` no se toca, solo se ignora en este run.
       - name: "[STATE] Restaurar data/ y reports/ desde la rama de estado"
         id: restore_state
+        if: ${{ inputs.skipLegacyRestore != true }}
         run: |
           set -euo pipefail
           if git fetch --depth=1 origin "$STATE_BRANCH" 2>/dev/null; then
@@ -148,6 +163,7 @@ jobs:
           STATE_BRANCH: department-state
 
       - name: "[STATE] Manifiesto ANTES de la pasada"
+        if: ${{ inputs.skipLegacyRestore != true }}
         run: npm run state:snapshot -- --out "$RUNNER_TEMP/state-before.json"
 
       # =====================================================================
@@ -1103,9 +1119,13 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
 
+      # Sin restauracion legacy no hay foto ANTES con la que comparar, y
+      # `data/` viene de MongoDB: comparar contra la nada solo produciria
+      # ruido. La verificacion que SI importa en ese modo es la de
+      # invariantes de MongoDB, que corre igual (arriba).
       - name: "[STATE] Verificar que la pasada no ha perdido estado"
         id: verify_state
-        if: always()
+        if: ${{ always() && inputs.skipLegacyRestore != true }}
         run: |
           set -o pipefail
           npm run state:verify -- --before "$RUNNER_TEMP/state-before.json" 2>&1 | tee state-verify.log
@@ -1114,8 +1134,13 @@ jobs:
             sed -n '/^## Verificacion del estado/,/^STATE_VERIFY_JSON=/p' state-verify.log | grep -v '^STATE_VERIFY_JSON='
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # CRITICO: en modo `skipLegacyRestore` NO se empaqueta nada, y por
+      # tanto el job `persist-state` no encuentra artifact y no corre. Sin
+      # esta guarda, un `reports/` casi vacio (no se restauro) se
+      # force-pusharia sobre la rama de estado y BORRARIA el historico.
+      # La prueba de la seccion 11 es no destructiva justo por esto.
       - name: "[STATE] Empaquetar el estado para el job de persistencia"
-        if: always() && steps.verify_state.outcome == 'success'
+        if: ${{ always() && steps.verify_state.outcome == 'success' && inputs.skipLegacyRestore != true }}
         uses: actions/upload-artifact@v4
         with:
           name: department-state-${{ github.run_id }}
@@ -1227,6 +1252,10 @@ jobs:
   persist-state:
     name: Persistir el estado del departamento
     needs: department-run
+    # Fase O57: en la prueba sin legacy este job NO corre. El estado ya
+    # esta en MongoDB; la rama es un export, y un export incompleto es
+    # peor que ninguno.
+    if: ${{ inputs.skipLegacyRestore != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
