@@ -74,6 +74,26 @@ export function extractFinalResultMessage(messages: unknown): ExecutionFileMessa
   return resultMessages[resultMessages.length - 1];
 }
 
+/**
+ * `claude-code-action` escribe SIEMPRE su `execution_file` en la misma
+ * ruta (`$RUNNER_TEMP/claude-execution-output.json`), asi que dos
+ * invocaciones dentro del mismo job comparten fichero. Si un segundo
+ * intento muriese antes de escribirlo, leer esa ruta devolveria la
+ * salida del PRIMER intento -- mezclando intentos, que es justo lo que
+ * el reintento controlado no puede permitir.
+ *
+ * TOOL puro (sin acceso a disco a proposito, recibe ya el mtime leido):
+ * un `execution_file` es OBSOLETO si se escribio ANTES de que empezara el
+ * intento que lo esta leyendo. Sin `attemptStartedMs` (comportamiento por
+ * defecto, identico al de antes de existir el reintento) nada es
+ * obsoleto.
+ */
+export function isExecutionFileStale(params: { mtimeMs: number; attemptStartedMs?: number }): boolean {
+  const { mtimeMs, attemptStartedMs } = params;
+  if (attemptStartedMs === undefined || !Number.isFinite(attemptStartedMs)) return false;
+  return mtimeMs < attemptStartedMs;
+}
+
 export type ClaudeEmployeeOutputSource = "structured_output" | "execution_file_fallback";
 
 export interface ResolvedClaudeEmployeeOutput {

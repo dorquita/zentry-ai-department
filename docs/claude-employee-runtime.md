@@ -463,14 +463,20 @@ ninguna** de antemano.
   `additionalProperties: false`, `$ref`/`definitions`, más anotaciones
   puras). Si un empleado futuro necesita `pattern`/`minLength`/`oneOf`/etc.,
   sigue siendo trabajo pendiente implementarlas en `json-schema-lite.ts`.
-- **Validación de `structured_output` (caso A) contra el schema no tiene
-  todavía evidencia empírica de un run real con contenido.** Las tres
-  ejecuciones reales de `ux-ui-landing-architect-v2` hasta ahora (dos en
-  PR #3, una en PR #5) siempre han terminado en el caso B (fallback) --
-  `structured_output` nunca ha llegado poblado en un run real. La
-  validación de schema añadida al caso A en este PR usa la misma lógica
-  ya probada (`json-schema-lite.ts`) contra el mismo schema, pero no se
-  ha podido demostrar contra un caso A real todavía.
+- **`structured_output` (caso A) llegaba SIEMPRE vacío, y ya se sabe por
+  qué** (incidente P0 de fiabilidad de `seo-specialist`, resuelto -- ver
+  la sección "Structured output: por qué `--json-schema` estaba inerte"
+  más abajo). Causa: el frontmatter `tools: []` literal impedía que
+  Claude Code expusiera al subagente la herramienta `StructuredOutput`,
+  que es el ÚNICO canal por el que el Agent SDK entrega la salida de
+  `--json-schema`. Sin esa herramienta el modelo no puede entregar salida
+  estructurada, responde texto libre, y `claude-code-action` falla con
+  *"--json-schema was provided but Claude did not return
+  structured_output"*. Todo el contrato pasaba entonces a depender del
+  fallback (caso B), o sea de que el modelo acertase el JSON a mano.
+  `seo-specialist` ya tiene `StructuredOutput` concedido y resuelve por
+  caso A; los demás empleados siguen en caso B (mismo comportamiento que
+  antes, sin regresión) hasta que se generalice.
 - **`config/subagent-tool-allowlist.json`, `package.json` y
   `scripts/run-tests.ts` siguen siendo ficheros compartidos** que cada
   uno de los 7 empleados debe tocar (ver "Puntos de conflicto" arriba) --
@@ -480,3 +486,76 @@ ninguna** de antemano.
   `scripts/run-tests.ts`. Automatizar esto (p.ej. autodescubrir
   `test/*.test.ts`) es una mejora razonable para una iteración futura,
   fuera del alcance de PR #6.
+
+
+## Structured output: por qué `--json-schema` estaba inerte
+
+Esta sección documenta la causa raíz del incidente P0 de fiabilidad
+intermitente de `seo-specialist` y el mecanismo que lo arregla. Aplica al
+runtime común, no solo a ese empleado.
+
+### El mecanismo
+
+`--json-schema` NO es un filtro de texto: el Agent SDK lo implementa
+exponiendo una herramienta, `StructuredOutput`, y validando contra el
+schema lo que el modelo pasa por ella (re-preguntando al modelo cuando no
+encaja, hasta su propio límite de reintentos). Si esa herramienta no está
+disponible para el agente, no hay canal por el que entregar la salida: el
+modelo responde texto libre y el resultado termina con
+`subtype: "success"`, `is_error: false`, `num_turns: 1` y
+`structured_output` ausente.
+
+### La evidencia
+
+Reproducido con el CLI `claude` 2.1.233 -- exactamente la versión que
+instala el commit fijado de `claude-code-action`:
+
+| Invocación | `num_turns` | `stop_reason` | `structured_output` |
+| --- | --- | --- | --- |
+| `--json-schema` sin `--agent` | 2 | `tool_use` | **presente** |
+| `--json-schema --agent seo-specialist` (`tools: []`) | 1 | `end_turn` | ausente |
+| `--json-schema --agent seo-specialist --allowedTools StructuredOutput` | 1 | `end_turn` | ausente |
+| `--json-schema --agent <copia con `tools: StructuredOutput`>` | 2 | `tool_use` | **presente** |
+
+Dos consecuencias prácticas:
+
+1. `--allowedTools` en la línea de comando **no** rescata la situación: el
+   `tools:` del frontmatter del agente es el que manda. La concesión tiene
+   que estar en el `.md` del agente (y, por el guard, también en
+   `config/subagent-tool-allowlist.json`).
+2. Con `StructuredOutput` concedido, el número de turnos sube de 1 a 3-4
+   (medido con el prompt real de `seo-specialist`), porque el SDK
+   re-pregunta cuando la salida no cumple el schema. Por eso `--max-turns`
+   pasó de 8 a 12 y los `timeout-minutes` del step caller de 10 a 20.
+
+### Por qué esto no relaja la seguridad
+
+`StructuredOutput` no es una capacidad: no lee ficheros, no escribe nada,
+no sale a la red y no invoca ningún sistema. Es un formato de respuesta.
+`src/core/subagent-tool-guard.ts` lo modela explícitamente
+(`SIDE_EFFECT_FREE_SDK_TOOLS`, categoría `sdk_output` del allowlist) y
+sigue denegando fail-closed cualquier otra herramienta, incluidas las de
+solo lectura. El guard además pasó a exigir **igualdad de conjuntos**
+entre el `tools:` del `.md` y el `allowedTools` del allowlist, en los dos
+sentidos -- antes solo detectaba drift cuando el drift añadía
+herramientas, que es justo por lo que esta divergencia podía existir sin
+que nadie se enterara.
+
+### Reintento clasificado
+
+Con `StructuredOutput` operativo la validación de schema la hace el SDK,
+pero su límite de reintentos es finito y una ejecución puede terminar sin
+entregar salida. Para ese resto, el runtime común hace **un** reintento,
+y solo si el fallo se ha podido CLASIFICAR como variabilidad del
+modelo/servicio (`src/core/claude-employee-retry.ts`). Nunca se reintenta
+un fallo de autenticación, de configuración, de schema no soportado, un
+`execution_file` corrupto ni nada que no se sepa clasificar (fail-closed).
+
+Dos defensas independientes impiden mezclar intentos: el `execution_file`
+del intento 1 se aparta de la ruta compartida antes del intento 2, y el
+resolutor descarta cualquier `execution_file` cuyo `mtime` sea anterior al
+inicio del intento que lo está leyendo
+(`isExecutionFileStale()`). Que hubo reintento queda registrado
+explícitamente en los outputs `attempts` / `retried` /
+`first-attempt-failure-class` y en el coste por intento
+(`claude-execution.attempt-1.json` junto a `claude-execution.json`).

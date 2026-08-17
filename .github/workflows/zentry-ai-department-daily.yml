@@ -444,7 +444,13 @@ jobs:
         id: seo_runtime
         continue-on-error: true
         if: steps.seo_prompt.outcome == 'success' && steps.seo1.outputs.status == 'pending_execution'
-        timeout-minutes: 10
+        # 20 min (no 10 como el resto de empleados): seo-specialist es el
+        # unico que ya tiene StructuredOutput concedido, asi que su
+        # --json-schema esta operativo y el SDK re-pregunta al modelo
+        # cuando la salida no cumple el schema (2-3 turnos en vez de 1).
+        # Ademas este presupuesto tiene que cubrir el reintento
+        # clasificado del runtime comun, no un unico intento.
+        timeout-minutes: 20
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: seo-specialist
@@ -1245,7 +1251,7 @@ jobs:
           cat "$RUN_DIR/department-daily-brief.md" 2>/dev/null || echo "(sin Daily Brief)"
           echo ""
           echo "===== COSTE POR EMPLEADO (un registro por invocacion, ya no se pisan entre si) ====="
-          for f in "$RUN_DIR"/stages/*/claude-execution.json; do
+          for f in "$RUN_DIR"/stages/*/claude-execution*.json; do
             [ -f "$f" ] || continue
             echo "--- $f"
             cat "$f"

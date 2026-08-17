@@ -51,10 +51,17 @@ jobs:
     name: Ejecutar seo-specialist
     runs-on: ubuntu-latest
     # Backstop de tiempo en dos capas (ver docs/claude-employee-runtime.md,
-    # seccion de timeouts): timeout-minutes: 20 aqui es el limite del JOB
+    # seccion de timeouts): timeout-minutes: 35 aqui es el limite del JOB
     # completo (incluye los pasos de dominio antes y despues del runtime);
-    # el step "[RUNTIME]" mas abajo lleva su propio timeout-minutes: 10.
-    timeout-minutes: 20
+    # el step "[RUNTIME]" mas abajo lleva su propio timeout-minutes: 20.
+    #
+    # Los dos valores subieron (20->35 el job, 10->20 el step) al conceder
+    # StructuredOutput al agente: con --json-schema ya operativo, el SDK
+    # VALIDA la salida contra el schema y re-pregunta al modelo cuando no
+    # encaja, asi que una invocacion pasa de ~1 turno (~4 min medidos) a
+    # 2-3 turnos (~6 min medidos). El presupuesto tiene que cubrir DOS
+    # intentos (el reintento clasificado del runtime comun), no uno.
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -118,10 +125,10 @@ jobs:
         id: runtime
         # timeout-minutes SI es valido aqui (step normal del workflow
         # caller, no un step interno de la composite action) -- limita
-        # TODA la composite action (auth + preflights + claude-code-action
-        # + resolucion de salida) a 10 min. Ver docs/claude-employee-runtime.md,
-        # seccion de timeouts.
-        timeout-minutes: 10
+        # TODA la composite action (auth + preflights + intento 1 +
+        # resolucion + reintento clasificado + resolucion final) a 20 min.
+        # Ver docs/claude-employee-runtime.md, seccion de timeouts.
+        timeout-minutes: 20
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: seo-specialist

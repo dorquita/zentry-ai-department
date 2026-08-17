@@ -83,7 +83,41 @@ export function getKnownExternalWriteTools(allowlist: SubagentAllowlistFile = lo
     .flatMap((category) => category.examples);
 }
 
-export type ToolRiskClassification = "read_only" | "local_write" | "external_read" | "external_write" | "unknown";
+export type ToolRiskClassification = "read_only" | "local_write" | "external_read" | "external_write" | "sdk_output" | "unknown";
+
+/**
+ * Herramientas SIN NINGUNA capacidad: no leen ficheros, no escriben nada,
+ * no salen a la red y no pueden invocar a ningun sistema. Son el canal
+ * por el que el Agent SDK ENTREGA la salida estructurada cuando se pasa
+ * `--json-schema` -- no le dan al modelo ninguna capacidad nueva, solo
+ * un formato de respuesta.
+ *
+ * Por que esto existe (incidente P0 de seo-specialist, ver
+ * docs/claude-employee-runtime.md, seccion "Structured output"): con
+ * `tools: []` literal en el frontmatter, Claude Code NO expone
+ * `StructuredOutput` al agente, asi que `--json-schema` queda INERTE --
+ * el modelo no tiene forma de entregar la salida estructurada y responde
+ * texto libre. `claude-code-action` falla entonces con
+ * "--json-schema was provided but Claude did not return structured_output",
+ * y toda la validacion de contrato pasa a depender del fallback via
+ * `execution_file`, o sea de que el modelo acierte el schema a mano.
+ * Demostrado empiricamente con el CLI 2.1.233 (mismo que instala la
+ * Action): sin agente -> `stop_reason: "tool_use"` y structured_output
+ * presente; con `--agent <toolless>` -> `stop_reason: "end_turn"`, un
+ * solo turno y structured_output ausente.
+ *
+ * Conceder EXACTAMENTE esta herramienta (y solo esta) devuelve
+ * `--json-schema` a la vida sin conceder ninguna capacidad real: el
+ * modelo sigue sin poder leer el repositorio, ejecutar comandos, ni
+ * tocar ningun sistema externo. Cualquier otra herramienta sigue
+ * denegada por el mismo modelo fail-closed de siempre.
+ */
+export const SIDE_EFFECT_FREE_SDK_TOOLS: readonly string[] = ["StructuredOutput"];
+
+/** Una herramienta es "de capacidad" si NO esta en la lista cerrada de herramientas sin efectos de `SIDE_EFFECT_FREE_SDK_TOOLS`. Fail-closed: cualquier nombre desconocido cuenta como capacidad. */
+export function isCapabilityTool(toolName: string): boolean {
+  return !SIDE_EFFECT_FREE_SDK_TOOLS.includes(toolName);
+}
 
 /**
  * Clasifica una herramienta segun en que categoria de `toolCategories`
@@ -201,16 +235,30 @@ export interface ToollessCheckResult {
 }
 
 /**
- * Chequeo estricto "cero herramientas", pensado para agentes como
- * ux-ui-landing-architect-v2 cuyo diseno exige las 4 condiciones a la
- * vez (ver docs/ux-ui-landing-architect-v2-experiment.md):
+ * Chequeo estricto "cero herramientas DE CAPACIDAD", exigido a todo
+ * empleado Claude antes de invocarlo (ver
+ * docs/ux-ui-landing-architect-v2-experiment.md y
+ * docs/claude-employee-runtime.md). Las 4 condiciones:
  *   1. el agente esta presente en el allowlist,
- *   2. `allowedTools` esta vacio,
+ *   2. `allowedTools` no contiene NINGUNA herramienta de capacidad --
+ *      solo puede contener herramientas de `SIDE_EFFECT_FREE_SDK_TOOLS`
+ *      (hoy: `StructuredOutput`, el canal de entrega de `--json-schema`,
+ *      que no concede ninguna capacidad al modelo),
  *   3. `externalWriteToolsGranted` esta vacio,
- *   4. el frontmatter `tools:` del propio `.md` tambien esta vacio y
- *      declarado explicitamente (nunca ausente).
- * Cualquier inconsistencia entre estas 4 condiciones se reporta en
- * `reasons` -- `assertSubagentIsToolless()` la convierte en excepcion.
+ *   4. el frontmatter `tools:` del propio `.md` esta declarado
+ *      explicitamente (nunca ausente) y coincide EXACTAMENTE, como
+ *      conjunto, con `allowedTools` del allowlist.
+ *
+ * La condicion 4 es mas estricta que la version anterior de esta
+ * funcion: antes solo exigia que AMBOS estuvieran vacios, asi que solo
+ * detectaba drift cuando el drift consistia en anadir herramientas. Ahora
+ * exige igualdad de conjuntos en los dos sentidos, asi que tambien
+ * detecta el caso inverso (el allowlist concede algo que el `.md` no
+ * declara, o al reves) -- que es justamente el fallo silencioso que
+ * dejaba `--json-schema` inerte.
+ *
+ * Cualquier inconsistencia se reporta en `reasons` --
+ * `assertSubagentIsToolless()` la convierte en excepcion.
  */
 export function checkSubagentIsToolless(agentName: string, allowlist: SubagentAllowlistFile = loadSubagentToolAllowlist()): ToollessCheckResult {
   const entry = allowlist.agents[agentName];
@@ -219,8 +267,9 @@ export function checkSubagentIsToolless(agentName: string, allowlist: SubagentAl
   }
 
   const reasons: string[] = [];
-  if (entry.allowedTools.length !== 0) {
-    reasons.push(`allowedTools no esta vacio: [${entry.allowedTools.join(", ")}].`);
+  const capabilityTools = entry.allowedTools.filter(isCapabilityTool);
+  if (capabilityTools.length !== 0) {
+    reasons.push(`allowedTools no esta vacio de herramientas de capacidad: [${capabilityTools.join(", ")}]. Solo se admiten herramientas sin efectos: [${SIDE_EFFECT_FREE_SDK_TOOLS.join(", ")}].`);
   }
   if (entry.externalWriteToolsGranted.length !== 0) {
     reasons.push(`externalWriteToolsGranted no esta vacio: [${entry.externalWriteToolsGranted.join(", ")}].`);
@@ -228,9 +277,13 @@ export function checkSubagentIsToolless(agentName: string, allowlist: SubagentAl
 
   const frontmatterTools = parseAgentFrontmatterTools(agentName, allowlist);
   if (frontmatterTools === undefined) {
-    reasons.push(`El frontmatter de "${entry.definitionFile}" no declara "tools:" explicitamente (deberia declarar tools: []).`);
-  } else if (frontmatterTools.length !== 0) {
-    reasons.push(`El frontmatter de "${entry.definitionFile}" declara tools: [${frontmatterTools.join(", ")}], deberia ser [].`);
+    reasons.push(`El frontmatter de "${entry.definitionFile}" no declara "tools:" explicitamente (deberia declararlo, aunque sea tools: []).`);
+  } else {
+    const declared = [...frontmatterTools].sort();
+    const granted = [...entry.allowedTools].sort();
+    if (declared.join(" ") !== granted.join(" ")) {
+      reasons.push(`El frontmatter de "${entry.definitionFile}" declara tools: [${declared.join(", ")}], que NO coincide con allowedTools del allowlist: [${granted.join(", ")}].`);
+    }
   }
 
   return { ok: reasons.length === 0, reasons };

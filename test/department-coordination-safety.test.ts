@@ -456,14 +456,29 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       },
     },
     {
-      name: "Cada etapa Claude del workflow usa el runtime comun SIN modificarlo, con timeout-minutes: 10 en el step caller",
+      name: "Cada etapa Claude del workflow usa el runtime comun SIN modificarlo, y CADA step caller declara su propio timeout-minutes acotado",
       fn: () => {
         const workflow = fs.readFileSync(WORKFLOW_PATH, "utf-8");
         const runtimeUses = workflow.match(/uses:\s*\.\/\.github\/actions\/claude-employee-runtime/g) ?? [];
         // 6 empleados Claude en la pasada: SEO, Content, Analytics, Growth, QA, Web Engineer.
         assert.equal(runtimeUses.length, 6, "cada etapa Claude debe invocar el runtime comun");
-        const timeouts = workflow.match(/timeout-minutes:\s*10/g) ?? [];
-        assert.ok(timeouts.length >= 6, "cada step del runtime comun debe llevar su timeout-minutes: 10");
+
+        // El invariante REAL que protege este test no es el numero 10: es
+        // que ninguna invocacion de Claude pueda correr sin backstop de
+        // tiempo, y que ese backstop siga siendo pequeno comparado con el
+        // del job (120 min). seo-specialist lleva 20 en vez de 10 desde
+        // que tiene StructuredOutput concedido: con --json-schema ya
+        // operativo el SDK re-pregunta al modelo cuando la salida no
+        // cumple el schema (2-3 turnos en vez de 1), y ademas ese
+        // presupuesto tiene que cubrir el reintento clasificado del
+        // runtime comun. Fijar "10" literal habria obligado a elegir entre
+        // el test y el fix.
+        const timeouts = (workflow.match(/timeout-minutes:\s*(\d+)/g) ?? []).map((line) => Number(line.split(":")[1].trim()));
+        const stepTimeouts = timeouts.filter((minutes) => minutes <= 30);
+        assert.ok(stepTimeouts.length >= 6, `cada step del runtime comun debe llevar su propio timeout-minutes acotado (<=30); encontrados: ${JSON.stringify(timeouts)}`);
+        for (const minutes of stepTimeouts) {
+          assert.ok(minutes >= 5, `un timeout-minutes de ${minutes} es demasiado corto para una invocacion real de Claude`);
+        }
         assert.ok(workflow.includes("agent-name: sem-specialist") === false, "sem-specialist NO se ejecuta en esta fase");
       },
     },

@@ -50,29 +50,64 @@ inputs:
     required: false
     default: ""
   max-turns:
-    description: 'Limite de turnos pasado a --max-turns (fail-closed frente a sesiones que no convergen).'
+    description: >-
+      Limite de turnos pasado a --max-turns (fail-closed frente a sesiones
+      que no convergen). Subido de 8 a 12 al conceder StructuredOutput:
+      con --json-schema ya operativo, la validacion contra el schema la
+      hace el SDK, que RE-PREGUNTA al modelo cuando la salida no encaja, y
+      cada re-pregunta consume un turno. Medido con el prompt real de
+      seo-specialist (CLI 2.1.233, mismo que instala la Action): 1 turno
+      sin StructuredOutput, 3-4 turnos con el. claude-code-action falla el
+      run si num_turns supera este limite, asi que 8 dejaba un margen
+      demasiado justo para el mecanismo que arregla el incidente. Para un
+      empleado que todavia no tenga StructuredOutput concedido esto no
+      cambia nada: sigue resolviendo en 1 turno.
     required: false
-    default: "8"
+    default: "12"
   disallowed-tools:
-    description: 'Patron pasado a --disallowedTools, defensa en profundidad sobre el tools:[] del propio agente.'
+    description: 'Patron pasado a --disallowedTools, defensa en profundidad sobre el tools: del propio agente.'
     required: false
     default: "mcp__*"
+  max-retries:
+    description: >-
+      Numero maximo de REINTENTOS (no de intentos) de la invocacion de
+      Claude cuando la resolucion de salida falla con una clase
+      CLASIFICADA como variabilidad del modelo/servicio -- ver
+      src/core/claude-employee-retry.ts. "0" desactiva el reintento y deja
+      el comportamiento identico al de antes de existir este input. El
+      valor por defecto es "1" a proposito: un unico reintento acota el
+      coste y evita convertir un fallo real en una espera larga. NUNCA se
+      reintenta un fallo de autenticacion, de configuracion, de schema no
+      soportado, un execution_file corrupto, ni ningun fallo que no se
+      haya podido clasificar (fail-closed).
+    required: false
+    default: "1"
 
 outputs:
   claude-outcome:
     description: >-
       Resultado REAL (sin enmascarar por continue-on-error) del step que
-      invoca claude-code-action: "success" o "failure". Un "failure" aqui
-      NO significa necesariamente que el empleado fallara -- puede haberse
-      recuperado via el fallback (ver output-source).
-    value: ${{ steps.claude.outcome }}
+      invoca claude-code-action, correspondiente al INTENTO FINAL:
+      "success" o "failure". Un "failure" aqui NO significa
+      necesariamente que el empleado fallara -- puede haberse recuperado
+      via el fallback (ver output-source).
+    value: ${{ steps.retry-decision.outputs.retry == 'true' && steps.claude-retry.outcome || steps.claude.outcome }}
   output-source:
     description: >-
       "structured_output" si la salida vino directa de claude-code-action,
       "execution_file_fallback" si se recupero del execution_file. Vacio
       si el runtime fallo por completo (el step del runtime ya habra
       fallado en ese caso -- este output es solo para Step Summary).
-    value: ${{ steps.resolve.outputs.source }}
+    value: ${{ steps.retry-decision.outputs.retry == 'true' && steps.resolve-retry.outputs.source || steps.resolve.outputs.source }}
+  attempts:
+    description: 'Numero de invocaciones de Claude realmente realizadas en esta ejecucion del runtime ("1" o "2").'
+    value: ${{ steps.retry-decision.outputs.retry == 'true' && '2' || '1' }}
+  retried:
+    description: '"true" si el primer intento fallo con una clase reintentable y se lanzo un segundo intento. Queda registrado explicitamente para poder distinguir "fue a la primera" de "hizo falta reintentar".'
+    value: ${{ steps.retry-decision.outputs.retry == 'true' && 'true' || 'false' }}
+  first-attempt-failure-class:
+    description: 'Clase del fallo del PRIMER intento (vacio si el primer intento resolvio bien) -- ver src/core/claude-employee-retry.ts.'
+    value: ${{ steps.resolve.outputs.failure-class }}
 
 runs:
   using: "composite"
@@ -253,6 +288,18 @@ runs:
     # "[RUNTIME] Ejecutar...") y docs/claude-employee-runtime.md, seccion
     # de timeouts -- todo empleado nuevo debe copiar ese
     # timeout-minutes: 10 en su propio caller.
+    # Marca de tiempo de arranque del intento 1. La usa el resolutor
+    # (CLAUDE_EXECUTION_FILE_MIN_MTIME_MS) para no aceptar NUNCA un
+    # execution_file anterior a este intento: claude-code-action escribe
+    # siempre en la MISMA ruta ($RUNNER_TEMP/claude-execution-output.json),
+    # asi que sin esta marca un intento que muriese antes de escribir su
+    # fichero reutilizaria en silencio la salida del intento anterior.
+    - name: "[RUNTIME] Marcar inicio del intento 1"
+      id: attempt1
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: echo "started-ms=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+
     - name: Ejecutar empleado Claude
       id: claude
       if: steps.claude-auth.outputs.method != 'none'
@@ -288,16 +335,140 @@ runs:
     # generico (JSON Schema), nunca Claude ni la Action; la validacion de
     # FORMA especifica de cada empleado la hace el propio empleado
     # DESPUES de este step, leyendo expected-output-path.
-    - name: Resolver salida del empleado (structured_output o fallback via execution_file)
+    # Intento 1: se resuelve en modo --soft, o sea CLASIFICANDO el fallo
+    # en vez de tumbar el job. Esto NO relaja el fail-closed: el intento
+    # FINAL (sea este mismo, si no hay reintento, o el reintento) se
+    # resuelve siempre sin --soft. Lo unico que hace --soft es dar al
+    # runtime la informacion necesaria para decidir si un segundo intento
+    # esta justificado.
+    - name: Resolver salida del empleado (intento 1, structured_output o fallback via execution_file)
       id: resolve
       if: steps.claude-auth.outputs.method != 'none'
       shell: bash
-      run: npm run claude-employee:resolve-output-for-ci -- "$OUTPUT_SCHEMA_PATH" "$EXPECTED_OUTPUT_PATH" "$EXECUTION_FILE_PATH"
+      run: npm run claude-employee:resolve-output-for-ci -- "$OUTPUT_SCHEMA_PATH" "$EXPECTED_OUTPUT_PATH" "$EXECUTION_FILE_PATH" --soft
       env:
         OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
         EXPECTED_OUTPUT_PATH: ${{ inputs.expected-output-path }}
         EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
         CLAUDE_STRUCTURED_OUTPUT: ${{ steps.claude.outputs.structured_output }}
+        CLAUDE_EXECUTION_FILE_MIN_MTIME_MS: ${{ steps.attempt1.outputs.started-ms }}
+
+    # Metricas del intento 1 SIEMPRE en su propio fichero, exista o no
+    # reintento: el coste del intento que fallo es exactamente el que hay
+    # que poder reportar por separado del que funciono.
+    - name: "[RUNTIME] Registrar metricas del intento 1"
+      if: always() && inputs.execution-record-path != '' && steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: |
+        npm run claude-employee:record-execution-for-ci -- \
+          "$AGENT_NAME" "${RECORD_PATH%.json}.attempt-1.json" "$EXECUTION_FILE_PATH" "$OUTPUT_SOURCE" "$CLAUDE_OUTCOME"
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+        RECORD_PATH: ${{ inputs.execution-record-path }}
+        EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
+        OUTPUT_SOURCE: ${{ steps.resolve.outputs.source }}
+        CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
+
+    # Decision de reintento -- DETERMINISTICA y fail-closed. Solo se
+    # reintenta si el intento 1 no dejo salida valida Y la clase del
+    # fallo esta clasificada como variabilidad del modelo/servicio (ver
+    # src/core/claude-employee-retry.ts). Autenticacion, configuracion,
+    # schema no soportado, execution_file corrupto y cualquier fallo NO
+    # clasificable quedan fuera por construccion.
+    - name: "[RUNTIME] Decidir si procede UN reintento (solo fallos transitorios clasificados)"
+      id: retry-decision
+      if: steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: |
+        if [ "$RESOLVED" = "true" ]; then
+          echo "retry=false" >> "$GITHUB_OUTPUT"
+          echo "Intento 1 resolvio salida valida (origen: ${SOURCE}). No procede reintento."
+          exit 0
+        fi
+        if [ "$MAX_RETRIES" = "0" ]; then
+          echo "retry=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::Intento 1 fallo (clase=${FAILURE_CLASS}) pero max-retries=0 -- no se reintenta."
+          exit 0
+        fi
+        if [ "$RETRYABLE" != "true" ]; then
+          echo "retry=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::Intento 1 fallo con clase NO reintentable (${FAILURE_CLASS}) -- no se reintenta a proposito (fail-closed): ${FAILURE_REASON}"
+          exit 0
+        fi
+        echo "retry=true" >> "$GITHUB_OUTPUT"
+        echo "::warning::Intento 1 fallo con clase reintentable (${FAILURE_CLASS}). Se lanza UN reintento. Motivo del intento 1: ${FAILURE_REASON}"
+      env:
+        RESOLVED: ${{ steps.resolve.outputs.resolved }}
+        SOURCE: ${{ steps.resolve.outputs.source }}
+        RETRYABLE: ${{ steps.resolve.outputs.retryable }}
+        FAILURE_CLASS: ${{ steps.resolve.outputs.failure-class }}
+        FAILURE_REASON: ${{ steps.resolve.outputs.failure-reason }}
+        MAX_RETRIES: ${{ inputs.max-retries }}
+
+    # Backoff + aislamiento del intento anterior. Se APARTA (no se borra)
+    # el execution_file del intento 1 para poder auditarlo, y se elimina
+    # de la ruta compartida para que el intento 2 no pueda heredarlo.
+    # Junto con CLAUDE_EXECUTION_FILE_MIN_MTIME_MS son dos defensas
+    # independientes contra mezclar la salida de dos intentos.
+    - name: "[RUNTIME] Preparar reintento (backoff + aislar el execution_file del intento 1)"
+      id: attempt2
+      if: steps.retry-decision.outputs.retry == 'true'
+      shell: bash
+      run: |
+        if [ -n "$EXECUTION_FILE_PATH" ] && [ -f "$EXECUTION_FILE_PATH" ]; then
+          mv "$EXECUTION_FILE_PATH" "${EXECUTION_FILE_PATH%.json}-attempt-1.json"
+          echo "execution_file del intento 1 apartado en ${EXECUTION_FILE_PATH%.json}-attempt-1.json (la ruta compartida queda vacia para el intento 2)."
+        fi
+        sleep 15
+        echo "started-ms=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+      env:
+        EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
+
+    - name: Ejecutar empleado Claude (reintento)
+      id: claude-retry
+      if: steps.retry-decision.outputs.retry == 'true'
+      continue-on-error: true
+      uses: anthropics/claude-code-action@9d7150bc8a3dae8149739a88019d192b579ad90c # v1.0.193
+      with:
+        prompt: ${{ inputs.prompt }}
+        github_token: ${{ inputs.github-token }}
+        anthropic_api_key: ""
+        claude_code_oauth_token: ${{ inputs.claude-code-oauth-token }}
+        claude_args: |
+          --agent ${{ inputs.agent-name }}
+          --disallowedTools "${{ inputs.disallowed-tools }}"
+          --max-turns ${{ inputs.max-turns }}
+          --json-schema '${{ steps.schema.outputs.json }}'
+
+    # Intento 2 -- fail-closed (sin --soft): si tampoco hay salida
+    # valida, este step falla y con el la composite action entera.
+    - name: Resolver salida del empleado (reintento)
+      id: resolve-retry
+      if: steps.retry-decision.outputs.retry == 'true'
+      shell: bash
+      run: npm run claude-employee:resolve-output-for-ci -- "$OUTPUT_SCHEMA_PATH" "$EXPECTED_OUTPUT_PATH" "$EXECUTION_FILE_PATH"
+      env:
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+        EXPECTED_OUTPUT_PATH: ${{ inputs.expected-output-path }}
+        EXECUTION_FILE_PATH: ${{ steps.claude-retry.outputs.execution_file }}
+        CLAUDE_STRUCTURED_OUTPUT: ${{ steps.claude-retry.outputs.structured_output }}
+        CLAUDE_EXECUTION_FILE_MIN_MTIME_MS: ${{ steps.attempt2.outputs.started-ms }}
+
+    # Fail-closed del camino SIN reintento: si el intento 1 no resolvio y
+    # no procedia reintentar, el runtime tiene que morir aqui igual que
+    # moria antes de existir el modo --soft. Sin este step, un fallo no
+    # reintentable se colaria en verde.
+    - name: "[RUNTIME] Fallo final del empleado (intento 1 sin salida valida y sin reintento posible)"
+      if: steps.claude-auth.outputs.method != 'none' && steps.resolve.outputs.resolved != 'true' && steps.retry-decision.outputs.retry != 'true'
+      shell: bash
+      run: |
+        echo "::error::${AGENT_NAME}: la invocacion de Claude no produjo ninguna salida valida contra su JSON Schema versionado. Clase de fallo: ${FAILURE_CLASS} (reintentable=${RETRYABLE}). Motivo: ${FAILURE_REASON}"
+        exit 1
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+        FAILURE_CLASS: ${{ steps.resolve.outputs.failure-class }}
+        RETRYABLE: ${{ steps.resolve.outputs.retryable }}
+        FAILURE_REASON: ${{ steps.resolve.outputs.failure-reason }}
 
     # --- Metricas de ESTA invocacion, en una ruta propia de ESTA
     # invocacion (opcional, ver el input `execution-record-path`).
@@ -318,6 +489,59 @@ runs:
       env:
         AGENT_NAME: ${{ inputs.agent-name }}
         RECORD_PATH: ${{ inputs.execution-record-path }}
-        EXECUTION_FILE_PATH: ${{ steps.claude.outputs.execution_file }}
-        OUTPUT_SOURCE: ${{ steps.resolve.outputs.source }}
-        CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
+        # Intento FINAL: el del reintento si lo hubo, el primero si no. El
+        # coste del intento 1 no se pierde -- vive en su propio fichero
+        # `.attempt-1.json`, escrito mas arriba.
+        EXECUTION_FILE_PATH: ${{ steps.retry-decision.outputs.retry == 'true' && steps.claude-retry.outputs.execution_file || steps.claude.outputs.execution_file }}
+        OUTPUT_SOURCE: ${{ steps.retry-decision.outputs.retry == 'true' && steps.resolve-retry.outputs.source || steps.resolve.outputs.source }}
+        CLAUDE_OUTCOME: ${{ steps.retry-decision.outputs.retry == 'true' && steps.claude-retry.outcome || steps.claude.outcome }}
+
+    # Telemetria de la invocacion, sin secretos: intentos, clase del
+    # fallo del intento 1, origen de la salida final y coste por intento.
+    # Va al Step Summary del run para que un fallo intermitente futuro se
+    # pueda diagnosticar SIN volver a leer miles de lineas de log.
+    - name: "[RUNTIME] Telemetria de la invocacion (sin secretos)"
+      if: always() && steps.claude-auth.outputs.method != 'none'
+      shell: bash
+      run: |
+        {
+          echo "<details><summary>Runtime de <code>${AGENT_NAME}</code>: ${ATTEMPTS} intento(s), origen de salida <code>${FINAL_SOURCE:-ninguno}</code></summary>"
+          echo ""
+          echo "| Metrica | Valor |"
+          echo "| --- | --- |"
+          echo "| Intentos | ${ATTEMPTS} |"
+          echo "| Reintentado | ${RETRIED} |"
+          echo "| Intento 1 -- resultado del step de Claude | ${CLAUDE1_OUTCOME} |"
+          echo "| Intento 1 -- resolucion | ${RESOLVED1:-false} |"
+          echo "| Intento 1 -- clase de fallo | ${FAILURE_CLASS:-(ninguno)} |"
+          echo "| Intento 2 -- resultado del step de Claude | ${CLAUDE2_OUTCOME:-(no hubo)} |"
+          echo "| Origen de la salida final | ${FINAL_SOURCE:-ninguno} |"
+          echo "| Bytes del prompt | ${#PROMPT} |"
+          echo "| Bytes del JSON Schema | $(wc -c < "$OUTPUT_SCHEMA_PATH" 2>/dev/null || echo '?') |"
+          echo "| max-turns | ${MAX_TURNS} |"
+          echo "| Runner | ${RUNNER_OS}/${RUNNER_ARCH} |"
+          echo ""
+          for f in "${RECORD_PATH%.json}.attempt-1.json" "$RECORD_PATH"; do
+            [ -n "$RECORD_PATH" ] && [ -f "$f" ] || continue
+            echo "\`\`\`json"
+            jq -c '{employee,model,outcome,outputSource,numTurns,durationMs,costUsd}' "$f" 2>/dev/null || echo "(registro no parseable)"
+            echo "\`\`\`"
+          done
+          echo "</details>"
+        } >> "$GITHUB_STEP_SUMMARY"
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+        ATTEMPTS: ${{ steps.retry-decision.outputs.retry == 'true' && '2' || '1' }}
+        RETRIED: ${{ steps.retry-decision.outputs.retry == 'true' && 'true' || 'false' }}
+        CLAUDE1_OUTCOME: ${{ steps.claude.outcome }}
+        CLAUDE2_OUTCOME: ${{ steps.claude-retry.outcome }}
+        RESOLVED1: ${{ steps.resolve.outputs.resolved }}
+        FAILURE_CLASS: ${{ steps.resolve.outputs.failure-class }}
+        FINAL_SOURCE: ${{ steps.retry-decision.outputs.retry == 'true' && steps.resolve-retry.outputs.source || steps.resolve.outputs.source }}
+        # El prompt viaja por env (nunca interpolado en la linea de
+        # comando) y solo se usa su LONGITUD -- su contenido no se
+        # imprime en ningun momento.
+        PROMPT: ${{ inputs.prompt }}
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+        MAX_TURNS: ${{ inputs.max-turns }}
+        RECORD_PATH: ${{ inputs.execution-record-path }}

@@ -20,6 +20,12 @@
       "examples": ["WebFetch", "WebSearch"],
       "isExternalWrite": false
     },
+    "sdk_output": {
+      "label": "Canal de entrega de salida del Agent SDK (sin ninguna capacidad)",
+      "examples": ["StructuredOutput"],
+      "isExternalWrite": false,
+      "note": "NO es una capacidad: no lee ficheros, no escribe nada, no sale a la red y no invoca ningun sistema. Es el unico canal por el que el Agent SDK entrega la salida de --json-schema. Con `tools: []` literal, Claude Code no expone StructuredOutput al subagente y --json-schema queda INERTE: el modelo responde texto libre, la Action falla con 'did not return structured_output', y el contrato pasa a depender de que el modelo acierte el JSON a mano (causa raiz del incidente P0 de seo-specialist). Conceder esta herramienta -- y solo esta -- devuelve la validacion de schema al SDK sin dar al modelo ninguna capacidad nueva."
+    },
     "external_write": {
       "label": "Escritura o accion en un sistema externo (WordPress, GitHub, Slack, Google Ads, GA4/GTM, Search Console, VPS/systemd, MCPs de terceros con abilities de escritura...)",
       "examples": [
@@ -94,10 +100,10 @@
     "seo-specialist": {
       "definitionFile": ".claude/agents/seo-specialist.md",
       "description": "Subagente Claude especialista SEO senior. Solo debe razonar sobre el contexto estructurado que le entrega scripts/run-seo-specialist.ts (jobs SEO agregados, catalogo de keywords objetivo, catalogo de clusters) -- cero acceso indiscriminado al repositorio, cero llamada a Search Console/otros sistemas externos en vivo, cero escritura externa.",
-      "allowedTools": [],
+      "allowedTools": ["StructuredOutput"],
       "externalWriteToolsGranted": [],
       "maxRiskCategory": "none",
-      "notes": "Cero herramientas, ni siquiera de lectura (Read/Grep/Glob). Todo el contexto que necesita se le inyecta ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista) a partir de datos ya persistidos localmente. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
+      "notes": "Cero herramientas DE CAPACIDAD: ni lectura (Read/Grep/Glob), ni escritura, ni red, ni ejecucion. La unica herramienta concedida es StructuredOutput (categoria sdk_output), que no es una capacidad sino el canal por el que el Agent SDK entrega la salida de --json-schema. Concedida a raiz del incidente P0 de fiabilidad de seo-specialist: con `tools: []` literal el SDK no expone StructuredOutput, --json-schema quedaba inerte y el contrato dependia de que el modelo acertase el JSON a mano (fallo intermitente reproducido: 1 de 2 pasadas locales violaba el schema en technicalIssues[].page). Todo el contexto que necesita razonar se le sigue inyectando ya resuelto en el prompt, construido por el runner (una funcion TOOL determinista) a partir de datos ya persistidos localmente. Si en una fase futura necesitara alguna herramienta de solo lectura, debe anadirse aqui explicitamente Y en el frontmatter `tools:` del .md -- nunca solo en uno de los dos sitios."
     },
     "analytics-specialist": {
       "definitionFile": ".claude/agents/analytics-specialist.md",
