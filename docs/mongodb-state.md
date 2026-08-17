@@ -477,7 +477,56 @@ quedan donde están; no se borra nada.
 - [ ] **Fase 4 — MongoDB como fuente de verdad.**
 - [ ] **Fase 5 — exports.** Los JSON/Markdown pasan a ser proyecciones.
 
-### Bloqueo actual
+### Migración ejecutada y verificada — run `32018080973`
+
+Cinco pasos en verde contra el cluster real, en 6 minutos:
+
+| Paso | Resultado |
+| --- | --- |
+| Sonda + escritura idempotente | ✅ |
+| Migración en seco | ✅ 0 colisiones, 0 errores de parseo |
+| Migración real | ✅ 2 min 40 s |
+| **Segunda migración consecutiva** | ✅ **0 entidades, 0 eventos, 0 decisiones escritas** |
+| Invariantes | ✅ `violations: 0` |
+| Equivalencia semántica | ✅ `divergences: 0` |
+
+Estado autoritativo en Atlas: **745 entidades, 16.223 eventos, 7 decisiones
+humanas**.
+
+La idempotencia no es una afirmación: el paso que repite la migración
+**falla el job** si la segunda ejecución escribe algo. Su verde es la
+prueba.
+
+Equivalencia por tipo (extracto; los 20 cuadran exactamente):
+
+| kind | en fichero | en MongoDB |
+| --- | --- | --- |
+| action | 115 | 115 |
+| work_order | 114 | 114 |
+| change_pack | 77 | 77 |
+| approval_request | 59 | 59 |
+| department_event | 13.952 | 13.952 |
+| seo_job | 2.036 | 2.036 |
+| **human_decision** | **7** | **7** |
+
+### Rendimiento: por qué las escrituras van en paralelo
+
+La primera versión escribía los ~14.600 documentos en serie, un
+round-trip con `w:majority` cada uno (~90 ms desde un runner de GitHub):
+más de 20 minutos por pasada, y el workflow hace dos. Con hasta 25
+escrituras en vuelo baja a 2 min 40 s.
+
+Es seguro por construcción, no por suerte: cada documento se escribe una
+sola vez por pasada (el mapa de ganadores está indexado por id) y las
+primitivas del puerto son atómicas por documento.
+
+Se añadieron además `socketTimeoutMS` y `connectTimeoutMS`.
+`serverSelectionTimeoutMS` solo acota *encontrar* un servidor; sin los
+otros dos, una operación ya enviada puede esperar indefinidamente si el
+socket muere sin RST. Fallar es preferible a colgarse: la migración cuenta
+cada fallo por separado y la reejecución lo recupera.
+
+### Historial del bloqueo de credenciales (resuelto)
 
 Intentos reales contra Atlas, workflow `MongoDB state migration`. Todos
 fallan en la sonda con `[mongo:auth_failure] bad auth : authentication
@@ -503,22 +552,13 @@ Lo que está **descartado** con evidencia:
   percent-encoding, ni un `%` que el driver esté decodificando de más, ni
   usuario o contraseña vacíos.
 
-Es decir: **la URI es estructuralmente correcta y Atlas rechaza el par
-usuario/contraseña**. Lo que queda es de la consola de Atlas, no del
-código:
+**Se resolvió regenerando la contraseña del usuario en Atlas** y
+reconstruyendo la URI con `authSource=admin`.
 
-1. El usuario de Database Access no existe **en este proyecto y cluster**
-   (es fácil crearlo en otro proyecto de la misma cuenta).
-2. La contraseña no es la que se pegó en la URI.
-3. El usuario existe pero no tiene rol sobre esta base.
-
-Lo más rápido es no adivinar: Atlas → Database Access → Edit → Edit
-Password → Autogenerate Secure Password, y reconstruir la URI con esa.
-Generar una contraseña **solo alfanumérica** elimina de raíz toda la
-familia de problemas de encoding.
-
-Hasta entonces no se puede migrar nada. El sistema sigue en shadow/legacy
-**sin degradarse**: fail-closed hizo su trabajo y no se ha escrito estado
-a medias en ningún sitio.
+Lo que dejó esta cadena de fallos, y conviene conservar: el sistema
+**nunca fingió tener persistencia**. Nueve intentos rechazados, cero
+documentos escritos, cero estado corrupto. El fail-closed hizo exactamente
+su trabajo, y la sonda dio el diagnóstico correcto sin filtrar jamás la
+URI.
 
 **SOURCE OF TRUTH: LEGACY — MONGODB SHADOW MODE**

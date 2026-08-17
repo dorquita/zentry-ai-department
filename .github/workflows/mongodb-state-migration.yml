@@ -40,6 +40,11 @@ on:
   push:
     branches:
       - claude/department-state-mongodb-6h23ib
+    # Un cambio de documentacion no necesita relanzar una migracion de
+    # 14.600 documentos contra el cluster.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 concurrency:
   group: mongodb-state-migration
