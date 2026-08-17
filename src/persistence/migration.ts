@@ -288,7 +288,8 @@ export async function planFileMigration(
 /** Escribe en MongoDB los ganadores de un plan ya resuelto. */
 async function applyFilePlan(
   plan: FileMigrationPlan,
-  repository: DepartmentStateRepository
+  repository: DepartmentStateRepository,
+  onProgress?: (message: string) => void
 ): Promise<FileMigrationResult> {
   const descriptor = plan.descriptor;
   const result: FileMigrationResult = {
@@ -311,6 +312,10 @@ async function applyFilePlan(
   };
 
   const entries = [...plan.winners.entries()];
+  if (entries.length > 0) {
+    onProgress?.(`${descriptor.file}: escribiendo ${entries.length} documento(s)...`);
+  }
+  let done = 0;
   const outcomes = await mapWithConcurrency(
     entries,
     MIGRATION_WRITE_CONCURRENCY,
@@ -344,6 +349,13 @@ async function applyFilePlan(
         // para que un fallo puntual no impida migrar el resto y quede
         // reflejado en el informe.
         return null;
+      } finally {
+        done += 1;
+        // Cada 2.000 documentos: suficiente para ver que avanza, poco
+        // suficiente para no llenar el log de la Action.
+        if (done % 2000 === 0) {
+          onProgress?.(`${descriptor.file}: ${done}/${entries.length}`);
+        }
       }
     }
   );
@@ -494,6 +506,12 @@ export interface MigrateOptions {
   now: string;
   /** Si `false`, un error de parseo no impide aplicar. Por defecto `true`. */
   strictParseErrors?: boolean;
+  /**
+   * Se invoca con el avance de cada fichero. Existe porque una migracion de
+   * 14.600 documentos que no dice nada durante minutos es indistinguible de
+   * una migracion colgada — y las dos cosas han pasado ya.
+   */
+  onProgress?: (message: string) => void;
 }
 
 /**
@@ -564,7 +582,7 @@ export async function migrateStateToMongo(
     );
   } else {
     for (const plan of plans) {
-      files.push(await applyFilePlan(plan, repository));
+      files.push(await applyFilePlan(plan, repository, options.onProgress));
     }
     decisions = await migrateHumanDecisions(
       path.join(options.dataDir, HUMAN_DECISIONS_FILE),

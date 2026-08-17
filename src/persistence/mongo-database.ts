@@ -45,6 +45,27 @@ import { MongoPersistenceError, isDuplicateKeyError, toMongoPersistenceError } f
 /** Si el cluster no responde en este plazo, se falla cerrado. */
 export const DEFAULT_SERVER_SELECTION_TIMEOUT_MS = 10_000;
 
+/**
+ * Plazo maximo de UNA operacion antes de darla por perdida.
+ *
+ * POR QUE HACE FALTA, con nombre y apellidos: `serverSelectionTimeoutMS`
+ * solo acota encontrar un servidor al que hablar; NO acota lo que tarda
+ * una operacion ya enviada. Sin esto, si Atlas cierra un socket sin RST
+ * (o la conexion se queda a medias), el driver espera indefinidamente.
+ *
+ * Se vio en el run 32017411162: la primera migracion completa tardo 2m44s
+ * y la segunda, con exactamente el mismo trabajo, se quedo colgada mas de
+ * media hora. Con 25 escrituras en vuelo basta con que unas pocas se
+ * queden esperando para siempre para que sus slots no se liberen nunca y
+ * la migracion no avance mas, sin error y sin final.
+ *
+ * Fallar es mejor que colgarse: la migracion ya cuenta cada operacion
+ * fallida por separado y la reejecucion las recupera, porque es
+ * idempotente.
+ */
+export const DEFAULT_SOCKET_TIMEOUT_MS = 45_000;
+export const DEFAULT_CONNECT_TIMEOUT_MS = 20_000;
+
 function readFreshness(document: PersistedDocument, field: string): string {
   const value = document[field];
   return typeof value === "string" ? value : "";
@@ -247,6 +268,7 @@ export class MongoStateDatabase implements StateDatabase {
 
 export interface ConnectOptions {
   serverSelectionTimeoutMS?: number;
+  socketTimeoutMS?: number;
 }
 
 /**
@@ -270,6 +292,12 @@ export async function connectStateDatabase(
     client = new driver.MongoClient(config.uri, {
       serverSelectionTimeoutMS:
         options.serverSelectionTimeoutMS ?? DEFAULT_SERVER_SELECTION_TIMEOUT_MS,
+      // Sin estos dos, una operacion enviada puede esperar para siempre.
+      socketTimeoutMS: options.socketTimeoutMS ?? DEFAULT_SOCKET_TIMEOUT_MS,
+      connectTimeoutMS: DEFAULT_CONNECT_TIMEOUT_MS,
+      // El pool tiene que dar de si para el paralelismo de la migracion,
+      // pero sin pasarse: Atlas limita conexiones por cluster.
+      maxPoolSize: 50,
       writeConcern: { w: "majority" },
       retryWrites: true,
     });

@@ -104,6 +104,9 @@ async function main(): Promise<void> {
         migrationRunId,
         now: now.toISOString(),
         strictParseErrors: args["allow-parse-errors"] !== "true",
+        // Una migracion que no dice nada durante minutos es
+        // indistinguible de una colgada. Se ha confundido ya una vez.
+        onProgress: (message) => console.log(`[migrate] ${message}`),
       },
       repository
     );
