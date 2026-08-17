@@ -1,0 +1,184 @@
+# Fase O56 — operaciones de la migracion de estado a MongoDB.
+#
+# POR QUE UN WORKFLOW PROPIO Y NO UN PASO DE LA PASADA DIARIA:
+# `MONGODB_URI` es un secret de GitHub. No existe en ninguna maquina de
+# desarrollo ni en el entorno de un agente, asi que la sonda, la migracion
+# y la verificacion contra el cluster real SOLO se pueden ejecutar aqui.
+# Ademas conviene poder lanzarlas sueltas, sin arrastrar los 120 minutos y
+# las seis invocaciones de Claude de la pasada diaria.
+#
+# TODAS las operaciones son idempotentes y no destructivas: no hay ni un
+# drop, ni un deleteMany, ni una modificacion de los `.jsonl` originales.
+# Relanzar este workflow tantas veces como haga falta es seguro por
+# construccion — y de hecho relanzarlo es como se demuestra la
+# idempotencia.
+name: MongoDB state migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Que ejecutar"
+        required: true
+        default: full
+        type: choice
+        options:
+          - probe
+          - dry-run
+          - apply
+          - verify
+          - equivalence
+          - full
+      allowParseErrors:
+        description: "Migrar aunque haya lineas corruptas conocidas"
+        required: false
+        default: false
+        type: boolean
+  # La rama de trabajo todavia no esta en main, y un workflow_dispatch solo
+  # es invocable si el fichero existe en la rama por defecto. El trigger de
+  # push permite ejecutarlo desde la propia rama mientras tanto.
+  push:
+    branches:
+      - claude/department-state-mongodb-6h23ib
+
+concurrency:
+  group: mongodb-state-migration
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  mongodb-state:
+    name: Migracion y verificacion del estado en MongoDB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+      OPERATION: ${{ inputs.operation || 'full' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fail-closed a proposito, al contrario que la pasada diaria: el
+      # estado VIVO esta en la rama `department-state`, que va por delante
+      # del `data/` commiteado en main. Migrar desde main importaria una
+      # foto vieja y el informe de recuentos mentiria.
+      - name: "[STATE] Restaurar el estado vivo desde la rama de estado"
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$STATE_BRANCH"
+          git checkout FETCH_HEAD -- data
+          echo "Estado restaurado desde \"$STATE_BRANCH\" (commit $(git rev-parse --short FETCH_HEAD))."
+          echo "Lineas de estado por fichero:"
+          wc -l data/*.jsonl | tail -1
+        env:
+          STATE_BRANCH: department-state
+
+      - name: "[MONGO] Sonda con comprobacion de escritura"
+        if: ${{ env.OPERATION == 'probe' || env.OPERATION == 'full' }}
+        run: npm run state:probe-mongodb -- --write-check
+
+      - name: "[MONGO] Migracion en seco"
+        if: ${{ env.OPERATION == 'dry-run' || env.OPERATION == 'full' }}
+        run: |
+          set -o pipefail
+          npm run state:migrate-mongodb -- --dry-run 2>&1 | tee migrate-dry-run.log
+          {
+            echo "## Migracion en seco"
+            echo ""
+            sed -n '/^| fichero /,/^- \*\*colisiones/p' migrate-dry-run.log
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "[MONGO] Migracion real"
+        if: ${{ env.OPERATION == 'apply' || env.OPERATION == 'full' }}
+        run: |
+          set -o pipefail
+          ARGS=(--apply)
+          if [ "$ALLOW_PARSE_ERRORS" = "true" ]; then
+            ARGS+=(--allow-parse-errors)
+          fi
+          npm run state:migrate-mongodb -- "${ARGS[@]}" 2>&1 | tee migrate-apply.log
+          {
+            echo "## Migracion aplicada"
+            echo ""
+            sed -n '/^| fichero /,/^- \*\*colisiones/p' migrate-apply.log
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          ALLOW_PARSE_ERRORS: ${{ inputs.allowParseErrors }}
+
+      # Segunda pasada de la migracion, inmediatamente despues de la
+      # primera: es la demostracion de idempotencia contra el cluster real.
+      # Tiene que escribir 0 y reportar duplicados evitados.
+      - name: "[MONGO] Repetir la migracion: prueba de idempotencia real"
+        if: ${{ env.OPERATION == 'apply' || env.OPERATION == 'full' }}
+        run: |
+          set -o pipefail
+          npm run state:migrate-mongodb -- --apply 2>&1 | tee migrate-again.log
+          WRITTEN=$(grep -o '"entitiesWritten":[0-9]*' migrate-again.log | head -1 | cut -d: -f2)
+          EVENTS=$(grep -o '"eventsWritten":[0-9]*' migrate-again.log | head -1 | cut -d: -f2)
+          DECISIONS=$(grep -o '"decisionsWritten":[0-9]*' migrate-again.log | head -1 | cut -d: -f2)
+          DUPES=$(grep -o '"duplicatesPrevented":[0-9]*' migrate-again.log | head -1 | cut -d: -f2)
+          echo "Segunda ejecucion: entidades=$WRITTEN eventos=$EVENTS decisiones=$DECISIONS duplicados_evitados=$DUPES"
+          if [ "$WRITTEN" != "0" ] || [ "$EVENTS" != "0" ] || [ "$DECISIONS" != "0" ]; then
+            echo "::error::La segunda ejecucion de la migracion ha escrito algo. No es idempotente."
+            exit 1
+          fi
+          {
+            echo "## Idempotencia de la migracion"
+            echo ""
+            echo "Segunda ejecucion consecutiva sobre el mismo historico:"
+            echo ""
+            echo "- entidades escritas: **$WRITTEN**"
+            echo "- eventos escritos: **$EVENTS**"
+            echo "- decisiones escritas: **$DECISIONS**"
+            echo "- duplicados evitados: **$DUPES**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "[MONGO] Verificar invariantes del estado autoritativo"
+        if: ${{ env.OPERATION == 'verify' || env.OPERATION == 'full' }}
+        run: |
+          set -o pipefail
+          npm run state:verify-mongodb 2>&1 | tee mongo-verify.log
+          {
+            echo ""
+            sed -n '/^## Verificacion del estado autoritativo/,/^MONGO_STATE_VERIFY_JSON=/p' mongo-verify.log \
+              | grep -v '^MONGO_STATE_VERIFY_JSON='
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "[MONGO] Equivalencia semantica legacy vs MongoDB"
+        if: ${{ env.OPERATION == 'equivalence' || env.OPERATION == 'full' }}
+        run: |
+          set -o pipefail
+          npm run state:verify-mongodb -- --mode equivalence 2>&1 | tee mongo-equivalence.log
+          {
+            echo ""
+            sed -n '/^## Equivalencia semantica/,/^MONGO_EQUIVALENCE_JSON=/p' mongo-equivalence.log \
+              | grep -v '^MONGO_EQUIVALENCE_JSON='
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Los logs llevan recuentos y nombres de coleccion, nunca la URI ni
+      # credenciales: todo lo que se imprime pasa por el saneador.
+      - name: Subir los informes de la migracion
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mongodb-state-${{ github.run_id }}
+          path: |
+            migrate-dry-run.log
+            migrate-apply.log
+            migrate-again.log
+            mongo-verify.log
+            mongo-equivalence.log
+          if-no-files-found: warn
+          retention-days: 30
