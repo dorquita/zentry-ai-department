@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - main
+  # Para poder verificar typecheck + tests en una rama de trabajo ANTES
+  # de abrir la PR. No cambia nada de lo que ejecuta: los mismos dos
+  # pasos, sin secretos y sin permisos de escritura.
+  workflow_dispatch:
 
 jobs:
   typecheck-and-test:

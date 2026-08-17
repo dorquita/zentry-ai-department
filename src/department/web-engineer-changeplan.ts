@@ -9,7 +9,7 @@ import {
   selectExecutionPath,
   validateExecutePhpChangePlan,
 } from "../core/execute-php-operations";
-import { PageResolution, resolveStagingPage, StagingInventory, StagingPageSnapshot, versionHashOfPage } from "./staging-inventory";
+import { isYoastMetaReadable, PageResolution, resolveStagingPage, StagingInventory, StagingPageSnapshot, versionHashOfPage } from "./staging-inventory";
 
 /**
  * DE PROSA A CHANGEPLAN EJECUTABLE.
@@ -56,9 +56,35 @@ export interface WebEngineerChangePlanDraft {
 
 export type ProposalStatus = "ACTIONABLE" | "BLOCKED" | "MANUAL" | "STALE";
 
+/**
+ * MOTIVO EXACTO por el que un draft acabo donde acabo. Existe porque
+ * "requires_manual_staging_implementation" agrupaba causas que no tienen
+ * nada que ver entre si: no saber QUE pagina es no es lo mismo que
+ * saberla y que la capa de APPLY no soporte la operacion. Sin esta
+ * distincion no hay forma de saber que hay que mejorar despues.
+ *
+ * `status` (ACTIONABLE/MANUAL) sigue siendo la decision binaria que
+ * consume la capa de apply; `resolution` es el POR QUE, y siempre esta
+ * presente.
+ */
+export type ChangePlanResolution =
+  | "actionable"
+  | "invalid_draft"
+  | "unknown_recommendation"
+  | "unsupported_operation"
+  | "unresolved_target"
+  | "ambiguous_target"
+  | "target_not_publishable"
+  | "missing_before"
+  | "missing_after"
+  | "no_change_needed"
+  | "invalid_plan";
+
 export interface ResolvedChangePlan {
   recommendationId: string;
   status: ProposalStatus;
+  /** Por que exactamente. Nunca vacio, tambien cuando es ACTIONABLE. */
+  resolution: ChangePlanResolution;
   /** El plan real, listo para ejecutar. `null` salvo en ACTIONABLE. */
   plan: ExecutePhpChangePlan | null;
   capability: CapabilitySelection | null;
@@ -90,10 +116,16 @@ export function beforeValueFor(page: StagingPageSnapshot, operation: ExecutePhpO
   }
 }
 
-function manual(draft: WebEngineerChangePlanDraft, reason: string, page: StagingPageSnapshot | null = null): ResolvedChangePlan {
+function manual(
+  draft: WebEngineerChangePlanDraft,
+  resolution: Exclude<ChangePlanResolution, "actionable">,
+  reason: string,
+  page: StagingPageSnapshot | null = null
+): ResolvedChangePlan {
   return {
     recommendationId: draft.recommendationId,
     status: "MANUAL",
+    resolution,
     plan: null,
     capability: null,
     page,
@@ -108,6 +140,13 @@ function manual(draft: WebEngineerChangePlanDraft, reason: string, page: Staging
 export interface BuildChangePlanInput {
   draft: WebEngineerChangePlanDraft;
   inventory: StagingInventory;
+  /**
+   * Ids de recomendacion REALES de esta pasada. Si se pasan, un draft
+   * que cite otra cosa se rechaza AQUI, con motivo -- antes se perdia en
+   * silencio mas abajo (el plan no casaba con ningun elemento de apply y
+   * nadie decia por que).
+   */
+  approvedRecommendationIds?: string[];
 }
 
 /**
@@ -119,30 +158,42 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
   const { draft, inventory } = input;
 
   if (typeof draft.recommendationId !== "string" || draft.recommendationId.trim().length === 0) {
-    return manual(draft, "El draft no cita ninguna recommendationId. Sin trazabilidad no se construye plan.");
+    return manual(draft, "invalid_draft", "El draft no cita ninguna recommendationId. Sin trazabilidad no se construye plan.");
+  }
+  if (input.approvedRecommendationIds && !input.approvedRecommendationIds.includes(draft.recommendationId)) {
+    return manual(
+      draft,
+      "unknown_recommendation",
+      `La recommendationId "${draft.recommendationId}" no es ninguna de las recomendaciones aprobadas de esta pasada (${input.approvedRecommendationIds.join(", ") || "ninguna"}). Un plan que no se puede remontar a una recomendacion aprobada por QA no se ejecuta.`
+    );
   }
 
   // 1. OPERACION: del catalogo cerrado y habilitada.
   const operation = String(draft.operation ?? "");
   const spec = (EXECUTE_PHP_OPERATIONS as Record<string, { enabled: boolean; reason: string; scopeFields: string[] }>)[operation];
   if (!spec) {
-    return manual(draft, `Operacion "${operation}" desconocida. Solo existen: ${Object.keys(EXECUTE_PHP_OPERATIONS).join(", ")}.`);
+    return manual(draft, "unsupported_operation", `Operacion "${operation}" desconocida. Solo existen: ${Object.keys(EXECUTE_PHP_OPERATIONS).join(", ")}.`);
   }
   if (!spec.enabled) {
-    return manual(draft, `La operacion "${operation}" no esta habilitada en esta fase. ${spec.reason}`);
+    return manual(draft, "unsupported_operation", `La operacion "${operation}" no esta habilitada en esta fase. ${spec.reason}`);
   }
 
   // 2. PAGINA: resuelta contra el inventario REAL. Aqui es donde se deja
   //    de adivinar.
   const resolution: PageResolution = resolveStagingPage(draft.targetPage ?? "", inventory);
   if (!resolution.page) {
-    return manual(draft, `No se pudo resolver la pagina objetivo. ${resolution.reason}`);
+    return manual(
+      draft,
+      resolution.candidates > 1 ? "ambiguous_target" : "unresolved_target",
+      `No se pudo resolver la pagina objetivo. ${resolution.reason}`
+    );
   }
   const page = resolution.page;
 
   if (page.status !== "publish") {
     return manual(
       draft,
+      "target_not_publishable",
       `La pagina ${page.wordpressPageId} tiene status "${page.status}" y no "publish". Este flujo solo actua sobre paginas de staging publicadas (tienen que ser revisables abriendo una URL normal).`,
       page
     );
@@ -150,19 +201,46 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
 
   // 3. PAYLOAD.
   if (typeof draft.newValue !== "string" || draft.newValue.trim().length === 0) {
-    return manual(draft, "El draft no trae contenido nuevo (`newValue`). Sin valor propuesto no hay nada que escribir.", page);
+    return manual(draft, "missing_after", "El draft no trae contenido nuevo (`newValue`). Sin valor propuesto no hay nada que escribir.", page);
   }
   if (operation === "update_post_meta" && !isAllowedPostMetaKey(String(draft.metaKey))) {
     return manual(
       draft,
+      "unsupported_operation",
       `metaKey "${String(draft.metaKey)}" no esta en la allowlist (${ALLOWED_POST_META_KEYS.join(", ")}). Una clave libre seria una puerta para escribir en cualquier metadato del sitio.`,
+      page
+    );
+  }
+
+  // 4. BEFORE REAL.
+  //
+  //    La meta de Yoast no viaja por el REST del core de este sitio, asi
+  //    que "no la vemos" es indistinguible, pagina a pagina, de "esta
+  //    vacia". A nivel de inventario SI se distingue -- y sin BEFORE
+  //    legible, escribir la meta seria pisar un valor que nunca vimos.
+  if (operation === "update_post_meta" && !isYoastMetaReadable(inventory)) {
+    return manual(
+      draft,
+      "missing_before",
+      `Ninguna de las ${inventory.pages.length} paginas del inventario expone la meta de Yoast por el REST del core, asi que el BEFORE de "${String(draft.metaKey)}" no se ha podido leer en esta pasada. Un update_post_meta a ciegas pisaria un valor que no hemos visto.`,
+      page
+    );
+  }
+
+  //    Y reescribir el cuerpo ENTERO de una pagina cuyo cuerpo actual no
+  //    hemos podido leer seria destruirlo, no editarlo.
+  if (operation === "update_post_content" && page.contentHtml.length === 0) {
+    return manual(
+      draft,
+      "missing_before",
+      `No hay BEFORE del post_content de la pagina ${page.wordpressPageId} en el inventario leido. Un update_post_content sustituye el cuerpo ENTERO: sin el estado actual, aplicarlo seria escribir a ciegas.`,
       page
     );
   }
 
   const beforeValue = beforeValueFor(page, operation as ExecutePhpOperation, draft.metaKey);
   if (beforeValue === draft.newValue) {
-    return manual(draft, "El valor propuesto es identico al actual: no hay ningun cambio que aplicar.", page);
+    return manual(draft, "no_change_needed", "El valor propuesto es identico al actual: no hay ningun cambio que aplicar.", page);
   }
 
   // 4. ANCLA DE VERSION: leida, nunca declarada.
@@ -182,7 +260,7 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
 
   const validation = validateExecutePhpChangePlan(plan);
   if (!validation.ok) {
-    return manual(draft, `El plan construido no valida contra el contrato: ${validation.reason}`, page);
+    return manual(draft, "invalid_plan", `El plan construido no valida contra el contrato: ${validation.reason}`, page);
   }
 
   // 5. CAPABILITY: derivada del plan (tipos de bloque reales incluidos).
@@ -191,6 +269,7 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
   return {
     recommendationId: draft.recommendationId,
     status: "ACTIONABLE",
+    resolution: "actionable",
     plan,
     capability,
     page,

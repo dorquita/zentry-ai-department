@@ -78,7 +78,44 @@ function buildUnavailableNote(employee: SpecialistStageName, status: DepartmentS
   return `${employee}: ${statusText[status]}. Motivo registrado: ${reason} -- NO hay ningun dato de este especialista en esta pasada. No completes ese hueco con conocimiento general ni con supuestos: dilo explicitamente en dependencies[]/unknowns[] de tu salida.`;
 }
 
+/**
+ * Paginas que cita CADA elemento de la salida de SEO, indexadas por su
+ * `id`. Existe por una razon muy concreta y muy cara: las acciones
+ * priorizadas de seo-specialist NO llevan pagina -- llevan `relatedIds`
+ * ("T2/F1/O3/O6") que apuntan a las oportunidades y problemas tecnicos
+ * que SI la llevan. Al resumir una accion como prosa con sus relatedIds
+ * y nada mas, la URL se perdia justo en el salto SEO -> Growth ->
+ * web-engineer, y la recomendacion llegaba a ingenieria sin destino:
+ * "reescribir metas en las paginas con CTR 0%" sin decir cuales. De ahi
+ * que TODA propuesta acabara en implementacion manual.
+ *
+ * Esto no infiere ni adivina nada: solo sigue los ids que la propia
+ * salida de SEO ya declara.
+ */
+export function indexSeoPagesById(output: SeoSpecialistOutput): Map<string, string[]> {
+  const index = new Map<string, string[]>();
+  const add = (id: string, ...pages: (string | undefined)[]) => {
+    const clean = pages.map((p) => String(p ?? "").trim()).filter((p) => p.length > 0);
+    if (clean.length === 0 || String(id ?? "").trim().length === 0) return;
+    index.set(id, [...new Set([...(index.get(id) ?? []), ...clean])]);
+  };
+  for (const o of output.opportunities) add(o.id, o.page);
+  for (const t of output.technicalIssues) add(t.id, t.page);
+  for (const g of output.contentGaps) add(g.id, g.page);
+  for (const l of output.internalLinkRecommendations) add(l.id, l.fromPage, l.toPage);
+  for (const e of output.evidence) add(e.id, e.page);
+  return index;
+}
+
+/** Paginas de los `relatedIds` de una accion, deduplicadas y en orden. */
+export function resolveActionPages(relatedIds: string[], index: Map<string, string[]>): string[] {
+  const pages: string[] = [];
+  for (const id of relatedIds) for (const page of index.get(id) ?? []) if (!pages.includes(page)) pages.push(page);
+  return pages;
+}
+
 function buildSeoEvidence(output: SeoSpecialistOutput): EvidenceCatalogItem[] {
+  const pagesById = indexSeoPagesById(output);
   const items: EvidenceCatalogItem[] = [
     {
       ref: "dept-seo-summary",
@@ -86,15 +123,22 @@ function buildSeoEvidence(output: SeoSpecialistOutput): EvidenceCatalogItem[] {
     },
   ];
   output.prioritizedActions.slice(0, MAX_EVIDENCE_ITEMS_PER_LIST).forEach((action, i) => {
+    const pages = resolveActionPages(action.relatedIds, pagesById);
     items.push({
       ref: `dept-seo-action-${i + 1}`,
-      description: `seo-specialist, accion priorizada #${action.rank}: "${truncate(action.title, 160)}" (priority=${action.priority}, impact=${action.impact}, effort=${action.effort}, relatedIds=${action.relatedIds.join("/") || "ninguno"}).`,
+      description: `seo-specialist, accion priorizada #${action.rank}: "${truncate(action.title, 160)}" (priority=${action.priority}, impact=${action.impact}, effort=${action.effort}, relatedIds=${action.relatedIds.join("/") || "ninguno"}). Paginas citadas por esos relatedIds: ${pages.length > 0 ? pages.join(" , ") : "ninguna (los elementos referenciados no declaran pagina)"}.`,
     });
   });
   output.opportunities.slice(0, MAX_EVIDENCE_ITEMS_PER_LIST).forEach((opportunity, i) => {
     items.push({
       ref: `dept-seo-opportunity-${i + 1}`,
       description: `seo-specialist, oportunidad (${opportunity.kind}, priority=${opportunity.priority}, basis=${opportunity.basis}) sobre keyword "${opportunity.keyword}"${opportunity.page ? ` / pagina "${opportunity.page}"` : ""}: ${truncate(opportunity.recommendedAction, 180)}`,
+    });
+  });
+  output.technicalIssues.slice(0, MAX_EVIDENCE_ITEMS_PER_LIST).forEach((issue, i) => {
+    items.push({
+      ref: `dept-seo-technical-issue-${i + 1}`,
+      description: `seo-specialist, problema tecnico (severity=${issue.severity}, basis=${issue.basis}) en la pagina ${issue.page}: ${truncate(issue.issue, 180)}`,
     });
   });
   return items;

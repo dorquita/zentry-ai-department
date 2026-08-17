@@ -5,7 +5,17 @@ import { buildDepartmentPrompt } from "./prompt";
 import { DepartmentPromotionResult, DepartmentRecommendation } from "./promotion";
 import { DepartmentQaStatus } from "./types";
 import { DepartmentSpecialistInput } from "./specialist-inputs";
-import { StagingPageBrief } from "./staging-inventory";
+import {
+  buildTargetPageSnapshots,
+  isYoastMetaReadable,
+  StagingInventory,
+  StagingPageBrief,
+  StagingPageFullSnapshot,
+  StagingPageSnapshot,
+  YOAST_META_UNREADABLE_NOTICE,
+} from "./staging-inventory";
+import { RecommendationTargetStatus, resolveRecommendationTargets } from "./target-resolution";
+import { buildRecommendationId } from "./apply/types";
 
 /**
  * FASE 4 -- que recibe `web-engineer` en una pasada coordinada.
@@ -23,7 +33,26 @@ import { StagingPageBrief } from "./staging-inventory";
  * cambios.
  */
 
+/** Una pagina de staging YA resuelta como objetivo de una recomendacion. */
+export interface DepartmentRecommendationTarget {
+  wordpressPageId: number;
+  slug: string;
+  stagingUrl: string;
+  /** La referencia literal de la recomendacion/evidencia que resolvio a esta pagina. */
+  citedAs: string;
+  /** `true` si la referencia era una URL de produccion resuelta por slug. */
+  crossEnvironment: boolean;
+  reason: string;
+}
+
 export interface DepartmentApprovedRecommendation {
+  /**
+   * Id CANONICO de esta recomendacion en esta pasada. Es el valor que
+   * hay que copiar en `changePlans[].recommendationId`: sin el, un plan
+   * perfecto no se puede remontar a ninguna recomendacion aprobada y se
+   * descarta.
+   */
+  recommendationId: string;
   rank: number;
   title: string;
   rationale: string;
@@ -36,6 +65,18 @@ export interface DepartmentApprovedRecommendation {
   evidence: GrowthEvidenceItem[];
   /** Avisos de QA que NO bloquean pero que deben reflejarse en la especificacion (criterios de aceptacion / unknowns). */
   qaWarnings: string[];
+  /**
+   * Paginas de staging que el DEPARTAMENTO ya resolvio de forma
+   * determinista a partir de las URLs/paths que cita esta recomendacion
+   * y su evidencia. No es una sugerencia del modelo ni una busqueda
+   * aproximada: sale de igualdad exacta contra el inventario real.
+   * Vacio = la recomendacion no nombra ninguna pagina resoluble, y
+   * entonces NO hay ChangePlan que declarar sobre ella.
+   */
+  resolvedTargets: DepartmentRecommendationTarget[];
+  targetResolutionStatus: RecommendationTargetStatus;
+  /** Siempre no vacio: por que hay (o no hay) pagina objetivo. */
+  targetResolutionReason: string;
 }
 
 export interface DepartmentBlockedRecommendation {
@@ -66,6 +107,21 @@ export interface DepartmentWebEngineerContext {
   stagingInventory: StagingPageBrief[];
   /** Motivo por el que el inventario esta vacio. Vacio = se leyo bien. */
   stagingInventoryUnavailableReason: string;
+  /**
+   * BEFORE COMPLETO (incluido el `post_content` real) de las paginas que
+   * han quedado resueltas como objetivo de alguna recomendacion
+   * aprobada. Es lo que hace posible proponer un AFTER completo sin
+   * inventarse el estado actual. Una pagina cuyo cuerpo no cabe en el
+   * presupuesto viene con `contentAvailable: false` y su motivo -- eso
+   * NO significa que este vacia.
+   */
+  targetPageSnapshots: StagingPageFullSnapshot[];
+  /**
+   * Vacio = la meta de Yoast SI se ha podido leer y se puede proponer.
+   * No vacio = no se ha podido leer en esta pasada, y dice por que; en
+   * ese caso `update_post_meta` queda fuera de alcance.
+   */
+  yoastMetaUnavailableNotice: string;
 }
 
 export const NO_CONFIRMED_PAGE_INVENTORY_NOTICE =
@@ -78,12 +134,64 @@ export const WEB_ENGINEER_COORDINATION_RULES: string[] = [
   "No inventes rutas, plugins, temas, endpoints, IDs de pagina ni componentes existentes. Nada de eso esta confirmado en este contexto -- ver `noPluginThemeApiInventoryNotice` y `noConfirmedPageInventoryNotice`. Todo supuesto de ese tipo va a `unknowns[]` o `dependencies[]`.",
   "Cada `proposedChanges[]` debe poder remontarse a una recomendacion concreta de `approvedRecommendations[]`: cita su titulo en el `rationale` para conservar la trazabilidad de extremo a extremo.",
   "Si una recomendacion aprobada trae `qaWarnings`, reflejalas: o como criterio de aceptacion que las cierre, o como `unknowns[]` explicito. No las ignores.",
-  "`stagingInventory[]` es el inventario REAL de staging leido del sitio antes de invocarte: id, slug, URL, titulo, excerpt, tipos de bloque y H2 actuales de cada pagina publicada. Es la UNICA fuente valida para citar una pagina.",
-  "Cuando puedas resolver una recomendacion contra una pagina CONCRETA de `stagingInventory[]`, declarala en `changePlans[]`: `targetPage` con la URL de staging o el slug EXACTOS copiados del inventario, la `operation` del catalogo, y `newValue` con el contenido nuevo COMPLETO del campo. Para `update_post_content`, el `post_content` ENTERO resultante -- no un fragmento, no un diff.",
+  "`stagingInventory[]` es el inventario REAL de staging leido del sitio antes de invocarte: id, slug, URL, titulo, excerpt, meta Yoast actual, tipos de bloque y H2 de cada pagina publicada. Es la UNICA fuente valida para citar una pagina.",
+  "`approvedRecommendations[].resolvedTargets[]` ya trae la(s) pagina(s) objetivo RESUELTAS por el departamento de forma determinista (igualdad exacta de URL o slug contra el inventario). No las vuelvas a buscar ni las cuestiones: si trae una pagina, esa es la pagina. Si viene vacio, mira `targetResolutionReason` -- y entonces esa recomendacion NO tiene ChangePlan.",
+  "Si `targetResolutionStatus` es `multi_target`, la recomendacion apunta a VARIAS paginas a proposito (p.ej. consolidar el on-page de dos URLs). Eso no es ambiguedad y no bloquea nada: declara UN changePlan POR PAGINA, cada uno con su `targetPage` propio y todos con la misma `recommendationId`.",
+  "`yoastMetaUnavailableNotice`: si viene con texto, la meta de Yoast NO se ha podido leer en esta pasada y `update_post_meta` queda FUERA de alcance -- `metaTitle`/`metaDescription` en `null` no significan que esten vacias. Title, excerpt y contenido no se ven afectados.",
+  "`targetPageSnapshots[]` es el BEFORE COMPLETO de esas paginas objetivo: title, excerpt, meta Yoast y `post_content` real. Es de donde sacas el estado actual. Si una entrada trae `contentAvailable: false`, NO tienes su cuerpo: no lo reconstruyas y no declares `update_post_content` sobre ella.",
+  "REGLA DE ORO PARA `changePlans[]`: si una recomendacion tiene EXACTAMENTE UNA pagina en `resolvedTargets[]`, tienes su BEFORE en `targetPageSnapshots[]`, y sabes escribir el valor nuevo COMPLETO de un campo del catalogo, entonces DEBES declarar el ChangePlan. No dejarlo como trabajo manual 'por prudencia': la prudencia ya esta en que el sistema resuelve el pageId y el hash por su cuenta y en que nada se ejecuta sin aprobacion humana.",
+  "Cada entrada de `changePlans[]` lleva: `recommendationId` copiado LITERALMENTE de `approvedRecommendations[].recommendationId` (no el rank, no el titulo), `targetPage` con la URL de staging o el slug EXACTOS del inventario, la `operation` del catalogo, y `newValue` con el contenido nuevo COMPLETO del campo. Para `update_post_content`, el `post_content` ENTERO resultante -- no un fragmento, no un diff, no una instruccion.",
+  "`newValue` es contenido REAL y final, nunca una descripcion de lo que habria que hacer. 'Optimizar la meta description' no es un valor; el texto exacto de la meta description nueva si lo es. Si no eres capaz de escribir el valor final, no declares el plan.",
   "NUNCA pongas un pageId ni un hash de version en `changePlans[]`: no existen esos campos y el sistema los resuelve por su cuenta contra el inventario. Si no puedes citar la pagina de forma exacta, NO incluyas esa recomendacion en `changePlans[]`: quedara como implementacion manual, y ese es el resultado correcto, no un fallo tuyo.",
   "Si `stagingInventory[]` viene vacio, `changePlans[]` debe ir vacio: sin inventario no hay evidencia con la que resolver ninguna pagina.",
   "Las unicas operaciones del catalogo son `update_post_content`, `update_post_title`, `update_post_excerpt` y `update_post_meta` (esta ultima solo con `_yoast_wpseo_title` o `_yoast_wpseo_metadesc`). Cualquier otra cosa -- redirecciones, media, usuarios, plugins, temas, ficheros, WP-CLI, SQL -- esta fuera de alcance y no se declara aqui.",
+  "Declarar un `changePlan` NO es ejecutarlo. Sigue siendo una propuesta con `approvalRequired: true`: la escribe un humano tras aprobarla, y solo en staging. Que la propuesta sea concreta no la hace menos revisable -- la hace mas.",
 ];
+
+/**
+ * Enriquece UNA recomendacion con su pagina objetivo resuelta de forma
+ * determinista. Exportada a proposito: el harness de replay
+ * (`scripts/replay-web-engineer-changeplans.ts`) tiene que aplicar
+ * EXACTAMENTE esta misma resolucion sobre un contexto congelado, y
+ * duplicarla seria garantizar que las dos versiones se separen.
+ */
+export function resolveRecommendationTargetFields(input: {
+  departmentRunId: string;
+  rank: number;
+  title: string;
+  rationale: string;
+  evidenceDescriptions: string[];
+  inventory: StagingInventory;
+}): {
+  recommendationId: string;
+  resolvedTargets: DepartmentRecommendationTarget[];
+  targetResolutionStatus: RecommendationTargetStatus;
+  targetResolutionReason: string;
+  pages: StagingPageSnapshot[];
+} {
+  const targets = resolveRecommendationTargets([input.title, input.rationale, ...input.evidenceDescriptions], input.inventory);
+  return {
+    recommendationId: buildRecommendationId(input.departmentRunId, input.rank),
+    // UNA entrada por PAGINA, no por referencia: la misma pagina citada
+    // por su URL de produccion y por su path es un unico objetivo, y
+    // duplicarla solo invita a declarar el cambio dos veces.
+    resolvedTargets: targets.pages.map((page) => {
+      const citations = targets.references.filter((ref) => ref.status === "resolved" && ref.wordpressPageId === page.wordpressPageId);
+      const first = citations[0];
+      return {
+        wordpressPageId: page.wordpressPageId,
+        slug: page.slug,
+        stagingUrl: page.stagingUrl,
+        citedAs: first?.raw ?? "",
+        crossEnvironment: citations.some((c) => c.crossEnvironment),
+        reason: first?.reason ?? "",
+      };
+    }),
+    targetResolutionStatus: targets.status,
+    targetResolutionReason: targets.reason,
+    pages: targets.pages,
+  };
+}
 
 export function buildDepartmentWebEngineerContext(input: {
   departmentRunId: string;
@@ -94,19 +202,42 @@ export function buildDepartmentWebEngineerContext(input: {
   /** Inventario REAL de staging ya leido. Vacio si no se pudo leer. */
   stagingInventory?: StagingPageBrief[];
   stagingInventoryUnavailableReason?: string;
+  /**
+   * El inventario COMPLETO (con `post_content` y meta). Se usa para
+   * resolver targets de forma determinista y para adjuntar el BEFORE de
+   * las paginas objetivo. Ausente = no se resuelve ningun target, que es
+   * el resultado seguro.
+   */
+  fullStagingInventory?: StagingInventory;
 }): DepartmentWebEngineerContext {
   const byRef = new Map(input.evidenceCatalog.map((e) => [e.ref, e]));
   const resolveEvidence = (rec: DepartmentRecommendation): GrowthEvidenceItem[] =>
     rec.evidenceRefs.map((ref) => byRef.get(ref) ?? { ref, description: "(referencia citada por growth-director-v2 que no aparece en el catalogo de evidencia de esta pasada -- tratala como NO verificada)" });
 
-  return {
-    contextKind: "department_coordination_v1",
-    departmentRunId: input.departmentRunId,
-    qaStatus: input.promotion.departmentQaStatus,
-    growthSummary: input.growthSummary,
-    sourceOfRecommendations:
-      "growth-director-v2 sintetizo las salidas reales de los especialistas de esta misma pasada; qa-reviewer las reviso; solo lo que aparece en approvedRecommendations[] paso ambas puertas.",
-    approvedRecommendations: input.promotion.promoted.map((rec) => ({
+  const inventory: StagingInventory = input.fullStagingInventory ?? {
+    contractVersion: "staging-inventory/v1",
+    capturedAt: "",
+    pages: [],
+    unavailableReason: "Esta pasada no adjunto el inventario completo de staging: no se resuelve ninguna pagina objetivo.",
+  };
+
+  const targetPages = new Map<number, StagingPageSnapshot>();
+
+  const approvedRecommendations = input.promotion.promoted.map((rec) => {
+    const evidence = resolveEvidence(rec);
+    // Solo texto que viene del PROPIO departamento: titulo, motivo y
+    // descripciones de evidencia. Nada que haya escrito el modelo.
+    const targets = resolveRecommendationTargetFields({
+      departmentRunId: input.departmentRunId,
+      rank: rec.rank,
+      title: rec.title,
+      rationale: rec.rationale,
+      evidenceDescriptions: evidence.map((e) => e.description),
+      inventory,
+    });
+    for (const page of targets.pages) targetPages.set(page.wordpressPageId, page);
+    return {
+      recommendationId: targets.recommendationId,
       rank: rec.rank,
       title: rec.title,
       rationale: rec.rationale,
@@ -115,14 +246,29 @@ export function buildDepartmentWebEngineerContext(input: {
       effort: rec.effort,
       dependsOn: rec.dependsOn,
       evidenceRefs: rec.evidenceRefs,
-      evidence: resolveEvidence(rec),
+      evidence,
       qaWarnings: rec.qaWarnings,
-    })),
+      resolvedTargets: targets.resolvedTargets,
+      targetResolutionStatus: targets.targetResolutionStatus,
+      targetResolutionReason: targets.targetResolutionReason,
+    };
+  });
+
+  return {
+    contextKind: "department_coordination_v1",
+    departmentRunId: input.departmentRunId,
+    qaStatus: input.promotion.departmentQaStatus,
+    growthSummary: input.growthSummary,
+    sourceOfRecommendations:
+      "growth-director-v2 sintetizo las salidas reales de los especialistas de esta misma pasada; qa-reviewer las reviso; solo lo que aparece en approvedRecommendations[] paso ambas puertas.",
+    approvedRecommendations,
     blockedRecommendations: input.promotion.blocked.map((rec) => ({ rank: rec.rank, title: rec.title, blockedBy: rec.blockedBy })),
     specialistStatuses: input.specialistInputs.map((i) => ({ employee: i.employee, status: i.status, note: i.note })),
     confirmedExistingPageUrls: (input.stagingInventory ?? []).map((page) => page.stagingUrl).filter((url) => url.trim().length > 0),
     stagingInventory: input.stagingInventory ?? [],
     stagingInventoryUnavailableReason: input.stagingInventoryUnavailableReason ?? "",
+    targetPageSnapshots: buildTargetPageSnapshots([...targetPages.values()]),
+    yoastMetaUnavailableNotice: inventory.pages.length > 0 && !isYoastMetaReadable(inventory) ? YOAST_META_UNREADABLE_NOTICE : "",
     noPluginThemeApiInventoryNotice: NO_PLUGIN_THEME_API_INVENTORY_NOTICE,
     noConfirmedPageInventoryNotice:
       (input.stagingInventory ?? []).length > 0
