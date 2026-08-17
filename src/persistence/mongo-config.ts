@@ -48,6 +48,67 @@ export interface SanitizedMongoTarget {
 }
 
 /**
+ * Radiografia de la parte de credenciales de la URI, en booleanos.
+ *
+ * POR QUE EXISTE: cuando Atlas responde `bad auth`, las causas que
+ * quedan no se ven mirando la consola de Atlas — estan en la FORMA de la
+ * cadena, y quien la pego no puede detectarlas a ojo. Estas tres son
+ * silenciosas y producen exactamente ese error:
+ *
+ *   1. El placeholder sin sustituir. Atlas da la cadena con
+ *      `<db_password>` literal dentro. Si no se reemplaza, el driver la
+ *      envia tal cual como contrasena y el servidor dice `bad auth`.
+ *   2. Caracteres crudos que habria que escapar. La cadena "parece"
+ *      valida y el driver la acepta, pero la contrasena que viaja no es
+ *      la que el humano cree.
+ *   3. Secuencias `%XX` accidentales. Si la contrasena real contiene un
+ *      `%` literal sin escapar como `%25`, el driver DECODIFICA lo que
+ *      viene detras y autentica con otra cosa distinta. Silencioso.
+ *
+ * Solo devuelve booleanos: ni la contrasena, ni su longitud, ni ninguna
+ * pista que ayude a reconstruirla.
+ */
+export interface CredentialShape {
+  hasCredentials: boolean;
+  /** Queda un placeholder tipo `<db_password>` sin sustituir. */
+  hasPlaceholder: boolean;
+  /** Hay caracteres crudos que MongoDB exige percent-encodear. */
+  hasRawSpecialChars: boolean;
+  /** Hay secuencias `%XX`: o son intencionadas, o el driver va a decodificar de mas. */
+  hasPercentEscapes: boolean;
+  /** El usuario o la contrasena estan vacios. */
+  hasEmptyPart: boolean;
+}
+
+export function describeCredentialShape(uri: string): CredentialShape {
+  const afterScheme = uri.slice(uri.indexOf("://") + 3);
+  const at = afterScheme.lastIndexOf("@");
+  if (at === -1) {
+    return {
+      hasCredentials: false,
+      hasPlaceholder: false,
+      hasRawSpecialChars: false,
+      hasPercentEscapes: false,
+      hasEmptyPart: false,
+    };
+  }
+
+  const userinfo = afterScheme.slice(0, at);
+  const separator = userinfo.indexOf(":");
+  const username = separator === -1 ? userinfo : userinfo.slice(0, separator);
+  const password = separator === -1 ? "" : userinfo.slice(separator + 1);
+
+  return {
+    hasCredentials: true,
+    hasPlaceholder: /<[^>]*>/.test(userinfo),
+    // `:` y `@` extra dentro de la userinfo, o cualquier otro reservado crudo.
+    hasRawSpecialChars: /[/?#[\]\s]/.test(userinfo) || password.includes(":"),
+    hasPercentEscapes: /%[0-9a-fA-F]{2}/.test(userinfo),
+    hasEmptyPart: username.length === 0 || password.length === 0,
+  };
+}
+
+/**
  * Detecta la trampa mas comun de las cadenas de conexion de Atlas.
  *
  * Por especificacion, `authSource` NO es siempre `admin`: por defecto es

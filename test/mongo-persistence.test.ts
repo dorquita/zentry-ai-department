@@ -13,6 +13,7 @@ import { buildDecisionKey, buildSubjectKey, normalizeSubject } from "../src/pers
 import {
   MONGODB_DB_NAME_VAR,
   MONGODB_URI_VAR,
+  describeCredentialShape,
   describeMongoTarget,
   loadMongoConfig,
   looksLikeMissingAuthSource,
@@ -941,6 +942,70 @@ export function runMongoPersistenceTests(): TestCase[] {
           false,
           "sin base en la ruta el driver ya cae a admin por defecto: no hay trampa"
         );
+      },
+    },
+    {
+      name: "el placeholder <db_password> sin sustituir se detecta: es la causa mas tonta y mas comun",
+      fn: () => {
+        // Atlas copia la cadena con `<db_password>` literal dentro. Si no
+        // se reemplaza, el driver envia ese texto como contrasena y el
+        // servidor responde `bad auth` sin decir nada mas.
+        const shape = describeCredentialShape(
+          "mongodb+srv://zentry:<db_password>@cluster0.abc.mongodb.net/zentry?authSource=admin"
+        );
+        assert.equal(shape.hasPlaceholder, true);
+        assert.equal(shape.hasCredentials, true);
+      },
+    },
+    {
+      name: "una contrasena con % literal sin escapar se señala: el driver decodifica de mas",
+      fn: () => {
+        // Si la contrasena real es "ab%73c" y no se escribio "%25", el
+        // driver decodifica "%73" como "s" y autentica con "absc".
+        const conEscapes = describeCredentialShape(
+          "mongodb+srv://zentry:ab%73c@cluster0.abc.mongodb.net/zentry"
+        );
+        assert.equal(conEscapes.hasPercentEscapes, true);
+
+        const limpia = describeCredentialShape(
+          "mongodb+srv://zentry:claveSimple@cluster0.abc.mongodb.net/zentry"
+        );
+        assert.equal(limpia.hasPercentEscapes, false);
+        assert.equal(limpia.hasPlaceholder, false);
+        assert.equal(limpia.hasRawSpecialChars, false);
+        assert.equal(limpia.hasEmptyPart, false);
+      },
+    },
+    {
+      name: "una contrasena vacia o con caracteres crudos se detecta",
+      fn: () => {
+        assert.equal(
+          describeCredentialShape("mongodb+srv://zentry:@cluster0.abc.mongodb.net/z").hasEmptyPart,
+          true
+        );
+        assert.equal(
+          describeCredentialShape("mongodb+srv://zentry:cla/ve@cluster0.abc.mongodb.net/z")
+            .hasRawSpecialChars,
+          true,
+          "una barra cruda en la contrasena rompe el parseo de la autoridad"
+        );
+        assert.equal(
+          describeCredentialShape("mongodb://cluster0.abc.mongodb.net/z").hasCredentials,
+          false,
+          "una URI sin credenciales no es un caso de forma incorrecta"
+        );
+      },
+    },
+    {
+      name: "SEGURIDAD: la radiografia de credenciales solo devuelve booleanos",
+      fn: () => {
+        const shape = describeCredentialShape(
+          "mongodb+srv://zentry:hunter2Secreta@cluster0.abc.mongodb.net/zentry"
+        );
+        for (const value of Object.values(shape)) {
+          assert.equal(typeof value, "boolean", "ni un solo campo puede llevar texto de la URI");
+        }
+        assert.doesNotMatch(JSON.stringify(shape), /hunter2|zentry|cluster0/);
       },
     },
     {

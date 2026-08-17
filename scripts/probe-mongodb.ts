@@ -23,6 +23,7 @@
  */
 import { MIGRATIONS_COLLECTION } from "../src/persistence/collections";
 import {
+  describeCredentialShape,
   describeMongoTarget,
   loadMongoConfig,
   looksLikeMissingAuthSource,
@@ -132,12 +133,47 @@ main().catch((err) => {
   }
   if (kind === "auth_failure") {
     try {
-      if (looksLikeMissingAuthSource(describeMongoTarget(loadMongoConfig()))) {
+      const config = loadMongoConfig();
+      if (looksLikeMissingAuthSource(describeMongoTarget(config))) {
         console.error("");
         console.error(
           "[probe] SOSPECHA PRINCIPAL: la URI trae base de datos en la ruta y no fija authSource, asi " +
             "que el driver ha autenticado contra esa base en vez de contra `admin`. Anadir el parametro " +
             "authSource con valor admin al final de la URI suele arreglarlo de una."
+        );
+      }
+
+      // Radiografia de la forma de las credenciales. Solo booleanos: estas
+      // tres causas son invisibles mirando la consola de Atlas, porque
+      // estan en la cadena y no en el usuario.
+      const shape = describeCredentialShape(config.uri);
+      console.error("");
+      console.error(
+        `[probe] forma de las credenciales: placeholder=${shape.hasPlaceholder} ` +
+          `caracteres_crudos=${shape.hasRawSpecialChars} ` +
+          `secuencias_percent=${shape.hasPercentEscapes} ` +
+          `alguna_parte_vacia=${shape.hasEmptyPart}`
+      );
+      if (shape.hasPlaceholder) {
+        console.error(
+          "[probe] CAUSA ENCONTRADA: la URI todavia lleva un placeholder sin sustituir (el <db_password> " +
+            "que Atlas deja en la cadena que te copia). Se esta enviando ese texto literal como contrasena."
+        );
+      }
+      if (shape.hasEmptyPart) {
+        console.error("[probe] CAUSA ENCONTRADA: el usuario o la contrasena estan vacios en la URI.");
+      }
+      if (shape.hasRawSpecialChars) {
+        console.error(
+          "[probe] CAUSA PROBABLE: hay caracteres crudos en la parte de credenciales que MongoDB exige " +
+            "percent-encodear. La contrasena que viaja no es la que crees."
+        );
+      }
+      if (shape.hasPercentEscapes) {
+        console.error(
+          "[probe] A COMPROBAR: la URI contiene secuencias %XX. Si son intencionadas, bien. Si la " +
+            "contrasena real lleva un % literal y no se escribio como %25, el driver esta decodificando " +
+            "de mas y autenticando con otra cosa."
         );
       }
     } catch {
