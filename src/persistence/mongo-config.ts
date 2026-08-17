@@ -41,6 +41,30 @@ export interface SanitizedMongoTarget {
   dbName: string;
   /** true si la URI llevaba credenciales embebidas (sin decir cuales). */
   hasCredentials: boolean;
+  /** true si la URI trae una base de datos en la ruta (`.../loquesea`). */
+  hasPathDatabase: boolean;
+  /** true si la URI fija `authSource` explicitamente en la query string. */
+  hasExplicitAuthSource: boolean;
+}
+
+/**
+ * Detecta la trampa mas comun de las cadenas de conexion de Atlas.
+ *
+ * Por especificacion, `authSource` NO es siempre `admin`: por defecto es
+ * LA BASE QUE VENGA EN LA RUTA de la URI, y solo cae a `admin` si la ruta
+ * no trae ninguna.
+ *
+ * Atlas, en cambio, crea los usuarios en `admin`. Asi que una URI del
+ * estilo `mongodb+srv://usuario:clave@cluster/mi_base` sin `authSource`
+ * hace que el driver intente autenticar contra `mi_base`, donde ese
+ * usuario no existe — y el servidor responde con un escueto
+ * "bad auth : authentication failed" que no dice nada de esto.
+ *
+ * Devuelve `true` cuando se dan las dos condiciones a la vez, que es
+ * exactamente el caso sospechoso.
+ */
+export function looksLikeMissingAuthSource(target: SanitizedMongoTarget): boolean {
+  return target.hasCredentials && target.hasPathDatabase && !target.hasExplicitAuthSource;
 }
 
 export class MongoConfigError extends Error {
@@ -122,10 +146,20 @@ export function describeMongoTarget(config: MongoConfig): SanitizedMongoTarget {
   const afterScheme = uri.slice(uri.indexOf("://") + 3);
   const at = afterScheme.lastIndexOf("@");
   const hasCredentials = at !== -1;
-  const authority = (hasCredentials ? afterScheme.slice(at + 1) : afterScheme).split("/")[0].split("?")[0];
+  const afterAuth = hasCredentials ? afterScheme.slice(at + 1) : afterScheme;
+  const authority = afterAuth.split("/")[0].split("?")[0];
   const hostCount = authority.length === 0 ? 0 : authority.split(",").filter((h) => h.trim().length > 0).length;
 
-  return { scheme, hostCount, dbName: config.dbName, hasCredentials };
+  const query = afterAuth.includes("?") ? afterAuth.slice(afterAuth.indexOf("?") + 1) : "";
+
+  return {
+    scheme,
+    hostCount,
+    dbName: config.dbName,
+    hasCredentials,
+    hasPathDatabase: readDbNameFromUri(uri).length > 0,
+    hasExplicitAuthSource: /(^|&)authSource=/i.test(query),
+  };
 }
 
 /** Una linea legible y segura para logs. Nunca contiene host, usuario ni password. */

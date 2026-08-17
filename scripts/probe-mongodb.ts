@@ -22,7 +22,13 @@
  * el indice unico impide el duplicado.
  */
 import { MIGRATIONS_COLLECTION } from "../src/persistence/collections";
-import { describeMongoTarget, loadMongoConfig, renderMongoTarget, sanitizeMongoText } from "../src/persistence/mongo-config";
+import {
+  describeMongoTarget,
+  loadMongoConfig,
+  looksLikeMissingAuthSource,
+  renderMongoTarget,
+  sanitizeMongoText,
+} from "../src/persistence/mongo-config";
 import { connectStateDatabase } from "../src/persistence/mongo-database";
 import {
   MongoPersistenceError,
@@ -75,6 +81,16 @@ async function main(): Promise<void> {
   const target = describeMongoTarget(config);
   console.log(`[probe] destino: ${renderMongoTarget(target)}`);
 
+  // Se avisa ANTES de conectar: si la sospecha es correcta, la conexion
+  // va a fallar dentro de un segundo y este aviso es la explicacion.
+  if (looksLikeMissingAuthSource(target)) {
+    console.warn(
+      "[probe] AVISO: la URI trae base de datos en la ruta y NO fija authSource. Por especificacion, " +
+        "el driver autenticara contra esa base y no contra `admin` — que es donde Atlas crea los " +
+        "usuarios. Si la autenticacion falla, esta es la primera sospecha."
+    );
+  }
+
   const database = await connectStateDatabase(config);
   try {
     await database.ping();
@@ -115,6 +131,19 @@ main().catch((err) => {
     for (const hint of hints) console.error(`[probe]   ${hint}`);
   }
   if (kind === "auth_failure") {
+    try {
+      if (looksLikeMissingAuthSource(describeMongoTarget(loadMongoConfig()))) {
+        console.error("");
+        console.error(
+          "[probe] SOSPECHA PRINCIPAL: la URI trae base de datos en la ruta y no fija authSource, asi " +
+            "que el driver ha autenticado contra esa base en vez de contra `admin`. Anadir el parametro " +
+            "authSource con valor admin al final de la URI suele arreglarlo de una."
+        );
+      }
+    } catch {
+      // Si ni siquiera se puede releer la configuracion, el fallo ya
+      // estaba explicado antes: no se añade ruido.
+    }
     console.error("");
     console.error(
       "[probe] Este fallo NO se reintenta: reintentar con las mismas credenciales da el mismo resultado."

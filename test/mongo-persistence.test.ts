@@ -15,6 +15,7 @@ import {
   MONGODB_URI_VAR,
   describeMongoTarget,
   loadMongoConfig,
+  looksLikeMissingAuthSource,
   renderMongoTarget,
   sanitizeMongoText,
 } from "../src/persistence/mongo-config";
@@ -907,6 +908,39 @@ export function runMongoPersistenceTests(): TestCase[] {
         assert.match(hints, /PERCENT-ENCODED/i, "la contrasena sin escapar es la causa mas comun");
         assert.match(hints, /authSource/);
         assert.match(hints, /readWrite/);
+      },
+    },
+    {
+      name: "base en la ruta sin authSource: la trampa clasica de Atlas se detecta",
+      fn: () => {
+        // Por especificacion, authSource NO es siempre `admin`: por defecto
+        // es la base que venga en la RUTA de la URI. Atlas, en cambio, crea
+        // los usuarios en `admin`. Las dos cosas juntas dan un
+        // "bad auth : authentication failed" que no explica nada.
+        const sospechosa = describeMongoTarget({
+          uri: "mongodb+srv://usuario:clave@cluster0.abc.mongodb.net/zentry_ai_department",
+          dbName: "zentry_ai_department",
+        });
+        assert.equal(sospechosa.hasPathDatabase, true);
+        assert.equal(sospechosa.hasExplicitAuthSource, false);
+        assert.equal(looksLikeMissingAuthSource(sospechosa), true);
+
+        const corregida = describeMongoTarget({
+          uri: "mongodb+srv://usuario:clave@cluster0.abc.mongodb.net/zentry_ai_department?authSource=admin&retryWrites=true",
+          dbName: "zentry_ai_department",
+        });
+        assert.equal(corregida.hasExplicitAuthSource, true);
+        assert.equal(looksLikeMissingAuthSource(corregida), false);
+
+        const sinRuta = describeMongoTarget({
+          uri: "mongodb+srv://usuario:clave@cluster0.abc.mongodb.net/",
+          dbName: "zentry_department",
+        });
+        assert.equal(
+          looksLikeMissingAuthSource(sinRuta),
+          false,
+          "sin base en la ruta el driver ya cae a admin por defecto: no hay trampa"
+        );
       },
     },
     {
