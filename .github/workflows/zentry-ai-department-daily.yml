@@ -206,7 +206,14 @@ jobs:
         if: ${{ env.MONGODB_CONFIGURED == 'true' }}
         run: |
           set -o pipefail
-          npm run state:hydrate-mongodb 2>&1 | tee mongo-hydrate.log
+          ARGS=()
+          if [ "$SKIP_LEGACY_RESTORE" = "true" ]; then
+            # Prueba de continuidad sin legacy: se borran los ficheros que
+            # MongoDB posee ANTES de proyectar, para que no quede ninguna
+            # duda de que el estado sale de Atlas y no del checkout.
+            ARGS+=(--purge-first)
+          fi
+          npm run state:hydrate-mongodb -- "${ARGS[@]}" 2>&1 | tee mongo-hydrate.log
           {
             echo "## Hidratacion del estado desde MongoDB"
             echo ""
@@ -215,6 +222,7 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+          SKIP_LEGACY_RESTORE: ${{ inputs.skipLegacyRestore }}
 
       # =====================================================================
       # FASE 0 -- Abrir la pasada: un unico departmentRunId para todo el run

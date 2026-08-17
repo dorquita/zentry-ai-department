@@ -701,6 +701,84 @@ export function runMongoAuthorityCutoverTests(): TestCase[] {
     },
 
     // ---------------------------------------------------------------
+    // La prueba sin legacy: borrar y reconstruir desde MongoDB
+    // ---------------------------------------------------------------
+    {
+      name: "purgeFirst borra los ficheros de MongoDB y los reconstruye desde cero",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          // Fichero previo con contenido que NO esta en MongoDB. Si
+          // sobreviviera, la pasada estaria leyendo estado de origen
+          // desconocido y la prueba no demostraria nada.
+          writeJsonl(path.join(dataDir, "action-backlog.jsonl"), [
+            { actionId: "fantasma", status: "pending", updatedAt: "2026-01-01T00:00:00.000Z" },
+          ]);
+
+          const repository = newRepository();
+          await repository.entities.saveEntity({
+            kind: "action",
+            entityId: "a-real",
+            status: "pending",
+            recordUpdatedAt: "2026-08-16T00:00:00.000Z",
+            payload: { actionId: "a-real", status: "pending", updatedAt: "2026-08-16T00:00:00.000Z" },
+          });
+          await repository.decisions.recordDecision(decision({ action: "approve" }));
+
+          const report = await hydrateStateFromMongo(
+            repository,
+            dataDir,
+            "2026-08-17T12:00:00.000Z",
+            { purgeFirst: true }
+          );
+
+          assert.ok(report.purged.includes("action-backlog.jsonl"), "el fichero previo se borro");
+          const projected = fs.readFileSync(path.join(dataDir, "action-backlog.jsonl"), "utf-8");
+          assert.ok(projected.includes("a-real"), "lo que queda viene de MongoDB");
+          assert.ok(!projected.includes("fantasma"), "el contenido previo no sobrevive");
+          assert.equal(
+            readHumanDecisions(path.join(dataDir, "department-human-decisions.jsonl")).length,
+            1,
+            "las decisiones humanas se reconstruyen igualmente"
+          );
+        });
+      },
+    },
+    {
+      name: "purgeFirst NO toca los ficheros de clase C: MongoDB no es su fuente",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          // `seo-clusters.jsonl` es clase C. Borrarlo si seria perder datos.
+          const derived = path.join(dataDir, "seo-clusters.jsonl");
+          writeJsonl(derived, [{ clusterId: "c-1" }]);
+
+          const repository = newRepository();
+          const report = await hydrateStateFromMongo(
+            repository,
+            dataDir,
+            "2026-08-17T12:00:00.000Z",
+            { purgeFirst: true }
+          );
+
+          assert.ok(fs.existsSync(derived), "el derivado sigue ahi");
+          assert.ok(fs.readFileSync(derived, "utf-8").includes("c-1"), "y con su contenido intacto");
+          assert.ok(!report.purged.includes("seo-clusters.jsonl"));
+        });
+      },
+    },
+    {
+      name: "sin purgeFirst no se borra nada (el comportamiento por defecto no destruye)",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          writeJsonl(path.join(dataDir, "seo-clusters.jsonl"), [{ clusterId: "c-1" }]);
+          const repository = newRepository();
+          const report = await hydrateStateFromMongo(repository, dataDir, "2026-08-17T12:00:00.000Z");
+          assert.deepEqual(report.purged, []);
+          assert.ok(fs.existsSync(path.join(dataDir, "seo-clusters.jsonl")));
+        });
+      },
+    },
+
+    // ---------------------------------------------------------------
     // Continuidad del brief sin `reports/` (criterio 6)
     // ---------------------------------------------------------------
     {

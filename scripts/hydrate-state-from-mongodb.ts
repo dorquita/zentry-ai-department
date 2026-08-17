@@ -59,7 +59,19 @@ async function main(): Promise<void> {
   console.log("");
 
   try {
-    const report = await hydrateStateFromMongo(session.repository, dataDir, new Date().toISOString());
+    // `--purge-first` borra los ficheros de clase A y B ANTES de
+    // proyectar. Lo usa la prueba de continuidad sin legacy: si la pasada
+    // funciona despues de borrarlos, el estado salio de MongoDB.
+    const purgeFirst = args["purge-first"] === "true";
+    if (purgeFirst) {
+      console.log("[hydrate] --purge-first: se borran los ficheros de clase A y B antes de proyectar.");
+    }
+    const report = await hydrateStateFromMongo(
+      session.repository,
+      dataDir,
+      new Date().toISOString(),
+      { purgeFirst }
+    );
     console.log(renderHydrationReport(report));
     console.log("");
     console.log(
@@ -67,6 +79,7 @@ async function main(): Promise<void> {
         filesWritten: report.totals.filesWritten,
         documentsProjected: report.totals.documentsProjected,
         humanDecisions: report.humanDecisions,
+        purged: report.purged.length,
       })}`
     );
   } finally {

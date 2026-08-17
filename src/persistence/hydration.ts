@@ -59,6 +59,8 @@ export interface HydrationReport {
   dataDirName: string;
   files: HydratedFile[];
   humanDecisions: number;
+  /** Ficheros borrados ANTES de proyectar, si se pidio `purgeFirst`. */
+  purged: string[];
   totals: {
     filesWritten: number;
     documentsProjected: number;
@@ -112,10 +114,37 @@ function sortRecords(descriptor: EntityDescriptor, records: Record<string, unkno
 export async function hydrateStateFromMongo(
   repository: DepartmentStateRepository,
   dataDir: string,
-  hydratedAt: string
+  hydratedAt: string,
+  options: { purgeFirst?: boolean } = {}
 ): Promise<HydrationReport> {
   const files: HydratedFile[] = [];
   let documentsProjected = 0;
+
+  // `purgeFirst` borra ANTES de proyectar los ficheros que MongoDB posee
+  // (clases A y B), y solo esos. Sirve para la prueba de continuidad sin
+  // legacy: si despues de borrarlos la pasada funciona, es que el estado
+  // autoritativo salio entero de MongoDB y no de ningun fichero que
+  // estuviera ahi de antes.
+  //
+  // Es una operacion sobre el disco EFIMERO del runner, no sobre ningun
+  // dato persistido: el historico sigue en la rama de estado y en Atlas.
+  // Los ficheros de clase C y D no se tocan -- MongoDB no es su fuente y
+  // borrarlos si seria perder datos.
+  const purged: string[] = [];
+  if (options.purgeFirst) {
+    for (const descriptor of migratableDescriptors()) {
+      const filePath = path.join(dataDir, descriptor.file);
+      if (fs.existsSync(filePath)) {
+        fs.rmSync(filePath);
+        purged.push(descriptor.file);
+      }
+    }
+    const decisionsPath = path.join(dataDir, HUMAN_DECISIONS_FILE);
+    if (fs.existsSync(decisionsPath)) {
+      fs.rmSync(decisionsPath);
+      purged.push(HUMAN_DECISIONS_FILE);
+    }
+  }
 
   for (const descriptor of migratableDescriptors()) {
     const filePath = path.join(dataDir, descriptor.file);
@@ -179,6 +208,7 @@ export async function hydrateStateFromMongo(
     hydratedAt,
     dataDirName: path.basename(dataDir),
     files,
+    purged,
     humanDecisions: decisionRecords.length,
     totals: { filesWritten: files.length, documentsProjected },
     notProjected: ENTITY_REGISTRY.filter((d) => d.stateClass === "C" || d.stateClass === "D").map(
@@ -197,6 +227,12 @@ export function renderHydrationReport(report: HydrationReport): string {
   lines.push(`- **Ficheros proyectados:** ${report.totals.filesWritten}`);
   lines.push(`- **Documentos proyectados:** ${report.totals.documentsProjected}`);
   lines.push(`- **Decisiones humanas:** ${report.humanDecisions}`);
+  if (report.purged.length > 0) {
+    lines.push(
+      `- **Ficheros borrados antes de proyectar:** ${report.purged.length} ` +
+        "(prueba de que el estado sale de MongoDB y no de un fichero previo)"
+    );
+  }
   lines.push("");
   lines.push("| fichero | clase | documentos desde Mongo | lineas que habia antes |");
   lines.push("| --- | --- | --- | --- |");
