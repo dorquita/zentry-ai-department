@@ -627,11 +627,39 @@ Sin ese dato el sistema deja de saber qué páginas de staging controla.
 | Backup/auditoría fuera de Atlas | Sí | No |
 
 `persist-state` saltado ya no significa "estado perdido": significa que
-el export a la rama no se actualizó esa vez. Se demuestra con el
-`workflow_dispatch` `skipLegacyRestore`, que ejecuta la pasada **sin
-restaurar nada** de la rama. Esa prueba es no destructiva por diseño: en
-ese modo tampoco se empaqueta ni se persiste nada, precisamente para que
-un `reports/` sin restaurar no se force-pushe encima del histórico.
+el export a la rama no se actualizó esa vez.
+
+Se demuestra con el `workflow_dispatch` `skipLegacyRestore`, que ejecuta
+la pasada **sin restaurar nada** de la rama y además **borra antes de
+proyectar** (`--purge-first`) los ficheros de clase A y B. Ese borrado
+importa: `data/*.jsonl` está commiteado en el repositorio, así que "no
+restaurar la rama" por sí solo dejaba ficheros en el runner y la prueba
+habría sido más floja de lo que parecía. Borrándolos, la pasada tiene que
+reconstruir el estado autoritativo entero desde Atlas o no arranca.
+
+Es no destructiva por diseño en los tres sentidos que importan: el
+borrado ocurre en el disco efímero del runner, la rama no se toca, y en
+ese modo tampoco se empaqueta ni se persiste nada — precisamente para que
+un `reports/` sin restaurar no se force-pushe encima del histórico. Los
+ficheros de clase C y D no se borran nunca: MongoDB no es su fuente.
+
+### La certificación es un job aparte
+
+`state:certify-mongodb` (workflow **MongoDB final certification**) corre
+en un runner limpio que **no** restaura la rama, **no** hidrata y **no**
+mira ningún `data/`. Todo lo que afirma sale de consultar Atlas: si algo
+dependiera de un fichero local, fallaría. Es de solo lectura.
+
+Comprueba que las pasadas existen y están terminadas, que están
+encadenadas por `findPreviousRun`, que las decisiones humanas siguen ahí
+y **llegan enteras al lector de los agentes**, que no hay duplicados
+(contados uno a uno, sin fiarse de que el índice único exista) y que
+ningún documento incumple su contrato.
+
+Lo que deliberadamente **no** comprueba es "el estado no ha encogido":
+sin la foto de antes eso exigiría comparar una foto consigo misma, que
+daría `violations: 0` siempre y sería una tautología disfrazada de
+comprobación. Esa invariante la verifica cada pasada con su `--before`.
 
 ---
 
