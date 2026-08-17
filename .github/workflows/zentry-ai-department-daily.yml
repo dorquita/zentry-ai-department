@@ -1138,12 +1138,12 @@ jobs:
             sed -n '/^## Verificacion del estado/,/^STATE_VERIFY_JSON=/p' state-verify.log | grep -v '^STATE_VERIFY_JSON='
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # CRITICO: en modo `skipLegacyRestore` NO se empaqueta nada, y por
-      # tanto el job `persist-state` no encuentra artifact y no corre. Sin
-      # esta guarda, un `reports/` casi vacio (no se restauro) se
-      # force-pusharia sobre la rama de estado y BORRARIA el historico.
-      # La prueba de la seccion 11 es no destructiva justo por esto.
       # CRITICO — que se exporta a la rama y que no:
+      #
+      # En modo `skipLegacyRestore` no se empaqueta NADA, y por tanto el
+      # job `persist-state` no corre: sin esa guarda, un `reports/` sin
+      # restaurar se force-pusharia sobre la rama y borraria el historico.
+      # La prueba de la seccion 11 es no destructiva justo por esto.
       #
       #   `reports/`  SIEMPRE. Son artifacts (clase D), MongoDB no es su
       #               fuente y la rama es el unico sitio donde se acumulan.
