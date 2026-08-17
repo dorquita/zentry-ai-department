@@ -1,0 +1,12 @@
+{
+  "contractVersion": "claude-execution-record/v1",
+  "employee": "content-strategist",
+  "model": "claude-sonnet-5",
+  "durationMs": 100807,
+  "costUsd": 0.315932,
+  "numTurns": 3,
+  "outputSource": "structured_output",
+  "outcome": "success",
+  "note": "",
+  "recordedAt": "2026-08-17T23:13:21.079Z"
+}

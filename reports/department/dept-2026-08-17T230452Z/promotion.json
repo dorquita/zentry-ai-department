@@ -1,0 +1,178 @@
+{
+  "departmentRunId": "dept-2026-08-17T230452Z",
+  "departmentQaStatus": "BLOCKED",
+  "qaReviewStatus": "fail",
+  "globalBlockReason": "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer.",
+  "promoted": [],
+  "blocked": [
+    {
+      "rank": 1,
+      "title": "Cerrar definitivamente el enrutado obsoleto de /cerraduras/",
+      "rationale": "Impacto alto (bloquea cualquier optimizacion on-page rentable en dos keywords con volumen) y esfuerzo bajo segun seo-specialist; un humano ya aprobo esta accion previamente, por lo que la confianza es alta, pero sigue detectandose sin resolver en esta pasada -- es la accion de mayor prioridad.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Decision/aprobacion tecnica de Pau sobre la URL objetivo correcta (/cerraduras-para-taquillas/ o el cluster 1865)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-technical-issue-1",
+        "dept-seo-action-1",
+        "human-decision-cerraduras-approved"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 2,
+      "title": "Ejecutar el script o291 sobre los actionItems restantes de canibalizacion de melamina",
+      "rationale": "Impacto medio y esfuerzo bajo porque el mecanismo de resolucion ya existe; confianza rebajada a media porque hay una contradiccion real entre seo-specialist (lo encuentra activo) y content-strategist (lo asume resuelto) que debe verificarse antes de dar la accion por completada.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Verificar si el changePack aprobado de cierre de canibalizacion ya se aplico realmente a estos actionItems concretos"
+      ],
+      "evidenceRefs": [
+        "dept-seo-technical-issue-2",
+        "dept-seo-action-2",
+        "dept-content-risks",
+        "human-decision-melamina-approved"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Ejecutar el quick win aprobado de on-page en cerraduras inteligentes para taquillas",
+      "rationale": "Impacto medio, confianza alta (accion ya aprobada por un humano y con recommendedAction concreto de seo-specialist), esfuerzo medio por requerir cambios de contenido, enlazado interno y meta en la landing.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-seo-opportunity-1",
+        "dept-seo-action-3",
+        "human-decision-quickwin-approved"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "Reescribir meta title/description en las paginas con CTR 0% sistemico",
+      "rationale": "Impacto medio y esfuerzo medio dado el numero de paginas afectadas (al menos 8); confianza alta porque la accion ya fue aprobada por un humano previamente y el patron esta bien documentado por seo-specialist.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Cerrar primero las prioridades 1 y 2 para no reescribir meta de paginas que van a redirigirse o consolidarse"
+      ],
+      "evidenceRefs": [
+        "dept-seo-technical-issue-3",
+        "dept-seo-action-4",
+        "human-decision-ctr-approved"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 5,
+      "title": "Validar el disparo de click_phone en GTM/GA4 antes de asumir perdida de esa via de conversion",
+      "rationale": "Impacto alto porque podria haber una via de conversion telefonica sin medir; confianza alta y esfuerzo bajo (validacion en DebugView); accion ya aprobada por un humano previamente y reiterada por analytics-specialist como su prioridad mas alta.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-action-1",
+        "human-decision-clickphone-approved"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "Decidir sobre la publicacion de la version GTM pendiente de aprobacion de Pau",
+      "rationale": "Impacto medio (afecta a la fiabilidad de todo el analisis de tracking) y esfuerzo bajo (es una decision, no un desarrollo); confianza media porque depende de una aprobacion humana externa no confirmada en este contexto.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana de Pau sobre la version del contenedor GTM O44"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-2",
+        "dept-analytics-action-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 7,
+      "title": "Aplicar el refresco de title/meta y contenido de taquillas-melamina propuesto por content-strategist",
+      "rationale": "Impacto medio con estructura y CTA ya definidos por content-strategist, pero confianza media porque su premisa (canibalizacion ya resuelta) contradice el hallazgo de seo-specialist en esta misma pasada; publicar sin verificar podria reabrir el conflicto de canibalizacion.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Cierre confirmado del script o291 sobre la canibalizacion de melamina (prioridad 2)"
+      ],
+      "evidenceRefs": [
+        "dept-content-structure",
+        "dept-content-cta",
+        "dept-seo-technical-issue-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 8,
+      "title": "Investigar la discrepancia entre click_request_quote y view_quote_page",
+      "rationale": "Impacto medio porque afecta a la comprension del funnel de presupuesto; confianza media (analytics-specialist lo marca como hipotesis, no como hecho confirmado) y esfuerzo bajo al ser una auditoria de triggers existentes.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-analytics-action-3"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=3). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    }
+  ],
+  "unattributedBlockingSignals": [],
+  "qaSummary": {
+    "criticalFindings": 1,
+    "warningFindings": 7,
+    "safetyConcerns": 3,
+    "contradictions": 2,
+    "unsupportedClaims": 3,
+    "requiredCorrections": 7
+  }
+}

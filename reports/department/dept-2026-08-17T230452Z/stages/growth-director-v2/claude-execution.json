@@ -1,0 +1,12 @@
+{
+  "contractVersion": "claude-execution-record/v1",
+  "employee": "growth-director-v2",
+  "model": "claude-sonnet-5",
+  "durationMs": 184520,
+  "costUsd": 0.661879,
+  "numTurns": 2,
+  "outputSource": "structured_output",
+  "outcome": "success",
+  "note": "",
+  "recordedAt": "2026-08-17T23:19:04.135Z"
+}
