@@ -1,7 +1,7 @@
 # Content Work Orders — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T103833Z`
-- **Generado:** 2026-08-17T10:40:10.078Z
+- **departmentRunId:** `dept-2026-08-17T201809Z`
+- **Generado:** 2026-08-17T20:19:28.874Z
 - **Briefs generados:** 0
 
 ## Resumen ejecutivo

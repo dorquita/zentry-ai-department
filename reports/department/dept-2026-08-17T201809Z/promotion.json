@@ -1,0 +1,159 @@
+{
+  "departmentRunId": "dept-2026-08-17T201809Z",
+  "departmentQaStatus": "BLOCKED",
+  "qaReviewStatus": "fail",
+  "globalBlockReason": "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.",
+  "promoted": [],
+  "blocked": [
+    {
+      "rank": 1,
+      "title": "Cerrar/reenrutar la canibalizacion de 'melamina' y desbloquear la aprobacion critica pendiente asociada",
+      "rationale": "Un humano ya aprobo el 2026-08-16 cerrar los actionItems de canibalizacion de 'taquillas melamina' y revisar la aprobacion critica relacionada; seo-specialist confirma esta misma accion como su prioridad #1 (impacto alto, esfuerzo bajo, via el script de resolucion ya existente). Sin embargo sigue habiendo 1 aprobacion pendiente de riesgo critico sobre 'taquillas melamina', lo que indica que la decision aprobada aun no se ha materializado del todo.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Resolucion de la solicitud de aprobacion critica pendiente 'taquillas melamina' (production_deployment_plan)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "approvals-pending"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 2,
+      "title": "Corregir el destino real de las keywords que apuntan a /cerraduras/ (en papelera) antes de invertir mas esfuerzo SEO",
+      "rationale": "Aprobado por un humano el 2026-08-16. seo-specialist confirma con evidencia que 2 actionItems de alta prioridad ('cerraduras inteligentes para centros deportivos', 'cerraduras sostenibles para gimnasios') apuntan a /cerraduras/, marcada en papelera con redireccion 301 desde O22; ejecutar optimizacion on-page ahi no tiene efecto tecnico real, y ademas una de esas keywords queda huerfana sin cluster asignado.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Decision de negocio sobre el destino correcto (/cerraduras-para-taquillas/ vs /cerraduras-inteligentes-taquillas/)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Ejecutar el bundle de quick wins on-page ya aprobado (encabezado por 'cerraduras inteligentes para taquillas')",
+      "rationale": "Aprobado por un humano el 2026-08-16 para el caso principal; seo-specialist agrupa 7 keywords en posiciones 10.6-28.7 que solo requieren refuerzo on-page, meta y enlazado interno para entrar en top10, sin necesidad de contenido nuevo.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Corregir el destino real de /cerraduras/ (prioridad anterior) para no reforzar una URL equivocada"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "actions-top"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "Reescribir title/meta description en las paginas con impresiones reales y CTR 0%",
+      "rationale": "Aprobado por un humano el 2026-08-16. seo-specialist identifica el problema como sistemico (8 keywords/paginas afectadas), no un caso aislado, lo que refuerza que vale la pena tratarlo como una tarea unica de metas en vez de arreglos puntuales.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-seo-action-4"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 5,
+      "title": "Validar el disparo real de click_phone y confirmar que version de GTM esta realmente publicada",
+      "rationale": "Aprobado por un humano el 2026-08-16. analytics-specialist reporta con datos live que click_phone tiene tag y trigger activos en GTM pero 0 ocurrencias en GA4, y que el nombre de la version 'live' de GTM sugiere que en realidad esta pendiente de aprobacion de Pau -- una posible causa raiz de la discrepancia (hipotesis del propio especialista, no un hecho confirmado). Sin esta validacion no se sabe si se esta perdiendo conversion telefonica real.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Acceso humano a GA4 DebugView y al panel de versiones de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "Iterar visual y de contenido las paginas de staging ya aprobadas (metalicas, universidades, vestuarios, taquillas inteligentes general) antes de reintentar su publicacion",
+      "rationale": "seo-specialist recomienda (rank 5, sin conocer la decision previa) publicar directamente estas paginas en produccion, pero un humano ya rechazo esa misma accion el 2026-08-16 con el motivo textual \"Las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias. Necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion.\" La prioridad real no es publicar, sino iterar el diseno/contenido primero; no hay evidencia en este contexto de que esa iteracion ya se haya hecho, por eso la confianza es baja.",
+      "impact": "high",
+      "confidence": "low",
+      "effort": "medium",
+      "dependsOn": [
+        "Segunda iteracion visual y de contenido (motivo del rechazo humano del 2026-08-16)",
+        "web-engineer / visual-asset-planner (dependencia parcial en este checkout)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "human-decision-staging-rejection"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 7,
+      "title": "Coordinar la nueva landing 'Colegio' de content-strategist con el cluster SEO existente antes de publicar",
+      "rationale": "content-strategist reconoce explicitamente el riesgo de canibalizacion con la keyword/pagina 'colegios'; en paralelo seo-specialist tiene un quick win independiente sobre el cluster 'taquillas_colegios_escolares' (/taquillas-para-colegios/). Publicar la landing nueva sin coordinar enlazado o consolidar contenido arriesga competir por la misma intencion de busqueda. Ademas el propio brandRationale de content-strategist marca que el reparto Zentry/Tukandado requiere revision manual.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Ejecutar el quick win existente sobre /taquillas-para-colegios/ antes o en paralelo",
+        "Decision humana sobre el reparto de marca 50/50 Zentry/Tukandado"
+      ],
+      "evidenceRefs": [
+        "dept-content-risks",
+        "dept-seo-opportunity-5"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    }
+  ],
+  "unattributedBlockingSignals": [],
+  "qaSummary": {
+    "criticalFindings": 1,
+    "warningFindings": 3,
+    "safetyConcerns": 1,
+    "contradictions": 1,
+    "unsupportedClaims": 8,
+    "requiredCorrections": 3
+  }
+}

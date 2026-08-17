@@ -1,7 +1,7 @@
 # Production Deployment Planner — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T103833Z`
-- **Generado:** 2026-08-17T10:40:19.744Z
+- **departmentRunId:** `dept-2026-08-17T201809Z`
+- **Generado:** 2026-08-17T20:19:31.204Z
 
 **Recordatorio de seguridad: este informe es PURA PLANIFICACION. Ningun plan de este fichero, este agente ni este pase de `growth:daily` ha escrito nada en WordPress produccion. Produccion sigue intacta.**
 
@@ -53,42 +53,6 @@
 - Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
 - Snapshot de origen disponible: draft de staging `1959` (https://staging.zentrylockers.com/?page_id=1959), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
 
-### [cancelled] taquillas melamina (https://zentrylockers.com/taquillas-melamina/) — `prod-deploy-aed5cbe3-3746-4ee7-b6d2-7ae57cb30295`
-
-- sourceDraftId (staging): `2091` — https://staging.zentrylockers.com/?page_id=2091
-- targetPageId (produccion): (ninguno todavia -- pagina nueva)
-- deploymentType propuesto: `create_draft` (a confirmar manualmente, ver checklist)
-- seoMeta: title="Taquillas Melamina | Fabricante y venta directa - Zentry" | metaDescription="Taquillas Melamina: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry."
-- media incluida: (ninguna)
-- approvalRequestId: (pendiente de crear)
-
-**Checklist antes de produccion:**
-- [ ] Revisar visualmente el draft en staging antes de nada: https://staging.zentrylockers.com/?page_id=2091
-- [ ] Confirmar que el Staging QA esta en PASA (con o sin warning) -- nunca desplegar un draft que FALLA QA.
-- [ ] Confirmar el titulo y meta description definitivos (seoMeta de este plan) -- no son necesariamente los finales de marketing/SEO.
-- [ ] Confirmar que no queda ningun texto de prueba/placeholder visible en el contenido.
-- [ ] Este draft no tiene ninguna imagen optimizada asociada todavia -- decidir si hace falta antes de desplegar.
-- [ ] Decidir manualmente el deploymentType real: pagina NUEVA en produccion (create_draft) o actualizacion de una pagina YA existente (update_existing_draft) -- este plan no lo decide solo.
-- [ ] Si es una actualizacion de pagina existente: guardar un snapshot del contenido actual de produccion ANTES de tocar nada (ver rollbackPlan de este plan).
-- [ ] Aprobar el DISENO del plan primero (Telegram/chat) -- esto NO autoriza todavia ninguna escritura real.
-- [ ] Aprobar DESPUES, por separado, la AUTORIZACION DE EJECUCION (segunda pregunta de Telegram/chat, distinta de la anterior) ANTES de cualquier accion real en produccion.
-- [ ] Aplicar el cambio en produccion siempre como DRAFT primero (nunca publish directo) -- revisar de nuevo en produccion antes de publicar.
-- [ ] Confirmar que la URL/slug final en produccion es la correcta (puede diferir del slug usado en staging).
-- [ ] Este draft paso el QA CON warning(s) no bloqueante(s) -- revisar el informe de Staging QA para ver el detalle antes de decidir.
-
-**Riesgos:**
-- Este sistema NO tiene todavia capacidad de escritura real contra produccion -- aplicar este plan hoy es siempre una accion manual fuera de este proyecto (ver docs/manual-production-publish.md).
-- Actualizar una pagina YA existente en produccion puede pisar contenido/SEO ya indexado si no se revisa con cuidado antes de guardar.
-- El slug/URL final en produccion puede no coincidir con el de staging -- cambiarlo despues de indexado tiene coste SEO.
-- Las credenciales/entorno de produccion son distintos de staging -- cualquier automatizacion futura debe volver a verificar `WORDPRESS_ENV` antes de escribir.
-- El Staging QA reporto al menos un warning no bloqueante para este draft -- revisar antes de decidir si bloquea el deploy o no.
-
-**Plan de rollback:**
-- Produccion no se toca por este sistema en esta fase -- no hay nada que revertir automaticamente hoy.
-- Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
-- Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
-- Snapshot de origen disponible: draft de staging `2091` (https://staging.zentrylockers.com/?page_id=2091), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
-
 ### [plan_ready_for_review] taquillas melamina (https://zentrylockers.com/taquillas-melamina-fenolico/) — `prod-deploy-12e7020e-ba7d-479e-af50-590ee316071b`
 
 - sourceDraftId (staging): `2092` — https://staging.zentrylockers.com/?page_id=2092
@@ -124,114 +88,6 @@
 - Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
 - Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
 - Snapshot de origen disponible: draft de staging `2092` (https://staging.zentrylockers.com/?page_id=2092), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
-
-### [cancelled] taquillas colegios (https://zentrylockers.com/taquillas-para-colegios/) — `prod-deploy-f2cf576f-1c05-4dfe-8d92-9e173bc74bd5`
-
-- sourceDraftId (staging): `2093` — https://staging.zentrylockers.com/?page_id=2093
-- targetPageId (produccion): (ninguno todavia -- pagina nueva)
-- deploymentType propuesto: `create_draft` (a confirmar manualmente, ver checklist)
-- seoMeta: title="Taquillas Colegios | Fabricante y venta directa - Zentry" | metaDescription="Taquillas Colegios: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry."
-- media incluida: (ninguna)
-- approvalRequestId: (pendiente de crear)
-
-**Checklist antes de produccion:**
-- [ ] Revisar visualmente el draft en staging antes de nada: https://staging.zentrylockers.com/?page_id=2093
-- [ ] Confirmar que el Staging QA esta en PASA (con o sin warning) -- nunca desplegar un draft que FALLA QA.
-- [ ] Confirmar el titulo y meta description definitivos (seoMeta de este plan) -- no son necesariamente los finales de marketing/SEO.
-- [ ] Confirmar que no queda ningun texto de prueba/placeholder visible en el contenido.
-- [ ] Este draft no tiene ninguna imagen optimizada asociada todavia -- decidir si hace falta antes de desplegar.
-- [ ] Decidir manualmente el deploymentType real: pagina NUEVA en produccion (create_draft) o actualizacion de una pagina YA existente (update_existing_draft) -- este plan no lo decide solo.
-- [ ] Si es una actualizacion de pagina existente: guardar un snapshot del contenido actual de produccion ANTES de tocar nada (ver rollbackPlan de este plan).
-- [ ] Aprobar el DISENO del plan primero (Telegram/chat) -- esto NO autoriza todavia ninguna escritura real.
-- [ ] Aprobar DESPUES, por separado, la AUTORIZACION DE EJECUCION (segunda pregunta de Telegram/chat, distinta de la anterior) ANTES de cualquier accion real en produccion.
-- [ ] Aplicar el cambio en produccion siempre como DRAFT primero (nunca publish directo) -- revisar de nuevo en produccion antes de publicar.
-- [ ] Confirmar que la URL/slug final en produccion es la correcta (puede diferir del slug usado en staging).
-- [ ] Este draft paso el QA CON warning(s) no bloqueante(s) -- revisar el informe de Staging QA para ver el detalle antes de decidir.
-
-**Riesgos:**
-- Este sistema NO tiene todavia capacidad de escritura real contra produccion -- aplicar este plan hoy es siempre una accion manual fuera de este proyecto (ver docs/manual-production-publish.md).
-- Actualizar una pagina YA existente en produccion puede pisar contenido/SEO ya indexado si no se revisa con cuidado antes de guardar.
-- El slug/URL final en produccion puede no coincidir con el de staging -- cambiarlo despues de indexado tiene coste SEO.
-- Las credenciales/entorno de produccion son distintos de staging -- cualquier automatizacion futura debe volver a verificar `WORDPRESS_ENV` antes de escribir.
-- El Staging QA reporto al menos un warning no bloqueante para este draft -- revisar antes de decidir si bloquea el deploy o no.
-
-**Plan de rollback:**
-- Produccion no se toca por este sistema en esta fase -- no hay nada que revertir automaticamente hoy.
-- Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
-- Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
-- Snapshot de origen disponible: draft de staging `2093` (https://staging.zentrylockers.com/?page_id=2093), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
-
-### [cancelled] taquilla para el personal (https://zentrylockers.com/taquillas-para-empresas/) — `prod-deploy-b9b6c9c6-77af-44e5-834a-0609fd973d60`
-
-- sourceDraftId (staging): `2094` — https://staging.zentrylockers.com/?page_id=2094
-- targetPageId (produccion): (ninguno todavia -- pagina nueva)
-- deploymentType propuesto: `create_draft` (a confirmar manualmente, ver checklist)
-- seoMeta: title="Taquilla Para El Personal | Fabricante y venta directa - Ze…" | metaDescription="Taquilla Para El Personal: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry."
-- media incluida: (ninguna)
-- approvalRequestId: (pendiente de crear)
-
-**Checklist antes de produccion:**
-- [ ] Revisar visualmente el draft en staging antes de nada: https://staging.zentrylockers.com/?page_id=2094
-- [ ] Confirmar que el Staging QA esta en PASA (con o sin warning) -- nunca desplegar un draft que FALLA QA.
-- [ ] Confirmar el titulo y meta description definitivos (seoMeta de este plan) -- no son necesariamente los finales de marketing/SEO.
-- [ ] Confirmar que no queda ningun texto de prueba/placeholder visible en el contenido.
-- [ ] Este draft no tiene ninguna imagen optimizada asociada todavia -- decidir si hace falta antes de desplegar.
-- [ ] Decidir manualmente el deploymentType real: pagina NUEVA en produccion (create_draft) o actualizacion de una pagina YA existente (update_existing_draft) -- este plan no lo decide solo.
-- [ ] Si es una actualizacion de pagina existente: guardar un snapshot del contenido actual de produccion ANTES de tocar nada (ver rollbackPlan de este plan).
-- [ ] Aprobar el DISENO del plan primero (Telegram/chat) -- esto NO autoriza todavia ninguna escritura real.
-- [ ] Aprobar DESPUES, por separado, la AUTORIZACION DE EJECUCION (segunda pregunta de Telegram/chat, distinta de la anterior) ANTES de cualquier accion real en produccion.
-- [ ] Aplicar el cambio en produccion siempre como DRAFT primero (nunca publish directo) -- revisar de nuevo en produccion antes de publicar.
-- [ ] Confirmar que la URL/slug final en produccion es la correcta (puede diferir del slug usado en staging).
-- [ ] Este draft paso el QA CON warning(s) no bloqueante(s) -- revisar el informe de Staging QA para ver el detalle antes de decidir.
-
-**Riesgos:**
-- Este sistema NO tiene todavia capacidad de escritura real contra produccion -- aplicar este plan hoy es siempre una accion manual fuera de este proyecto (ver docs/manual-production-publish.md).
-- Actualizar una pagina YA existente en produccion puede pisar contenido/SEO ya indexado si no se revisa con cuidado antes de guardar.
-- El slug/URL final en produccion puede no coincidir con el de staging -- cambiarlo despues de indexado tiene coste SEO.
-- Las credenciales/entorno de produccion son distintos de staging -- cualquier automatizacion futura debe volver a verificar `WORDPRESS_ENV` antes de escribir.
-- El Staging QA reporto al menos un warning no bloqueante para este draft -- revisar antes de decidir si bloquea el deploy o no.
-
-**Plan de rollback:**
-- Produccion no se toca por este sistema en esta fase -- no hay nada que revertir automaticamente hoy.
-- Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
-- Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
-- Snapshot de origen disponible: draft de staging `2094` (https://staging.zentrylockers.com/?page_id=2094), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
-
-### [cancelled] taquillas fenólicas en palencia (https://zentrylockers.com/taquillas-fenolicas/) — `prod-deploy-79755187-8172-41fa-9582-7bdb20fbf2fb`
-
-- sourceDraftId (staging): `2095` — https://staging.zentrylockers.com/?page_id=2095
-- targetPageId (produccion): (ninguno todavia -- pagina nueva)
-- deploymentType propuesto: `create_draft` (a confirmar manualmente, ver checklist)
-- seoMeta: title="Taquillas Fenólicas En Palencia | Fabricante y venta direct…" | metaDescription="Taquillas Fenólicas En Palencia: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry."
-- media incluida: (ninguna)
-- approvalRequestId: (pendiente de crear)
-
-**Checklist antes de produccion:**
-- [ ] Revisar visualmente el draft en staging antes de nada: https://staging.zentrylockers.com/?page_id=2095
-- [ ] Confirmar que el Staging QA esta en PASA (con o sin warning) -- nunca desplegar un draft que FALLA QA.
-- [ ] Confirmar el titulo y meta description definitivos (seoMeta de este plan) -- no son necesariamente los finales de marketing/SEO.
-- [ ] Confirmar que no queda ningun texto de prueba/placeholder visible en el contenido.
-- [ ] Este draft no tiene ninguna imagen optimizada asociada todavia -- decidir si hace falta antes de desplegar.
-- [ ] Decidir manualmente el deploymentType real: pagina NUEVA en produccion (create_draft) o actualizacion de una pagina YA existente (update_existing_draft) -- este plan no lo decide solo.
-- [ ] Si es una actualizacion de pagina existente: guardar un snapshot del contenido actual de produccion ANTES de tocar nada (ver rollbackPlan de este plan).
-- [ ] Aprobar el DISENO del plan primero (Telegram/chat) -- esto NO autoriza todavia ninguna escritura real.
-- [ ] Aprobar DESPUES, por separado, la AUTORIZACION DE EJECUCION (segunda pregunta de Telegram/chat, distinta de la anterior) ANTES de cualquier accion real en produccion.
-- [ ] Aplicar el cambio en produccion siempre como DRAFT primero (nunca publish directo) -- revisar de nuevo en produccion antes de publicar.
-- [ ] Confirmar que la URL/slug final en produccion es la correcta (puede diferir del slug usado en staging).
-- [ ] Este draft paso el QA CON warning(s) no bloqueante(s) -- revisar el informe de Staging QA para ver el detalle antes de decidir.
-
-**Riesgos:**
-- Este sistema NO tiene todavia capacidad de escritura real contra produccion -- aplicar este plan hoy es siempre una accion manual fuera de este proyecto (ver docs/manual-production-publish.md).
-- Actualizar una pagina YA existente en produccion puede pisar contenido/SEO ya indexado si no se revisa con cuidado antes de guardar.
-- El slug/URL final en produccion puede no coincidir con el de staging -- cambiarlo despues de indexado tiene coste SEO.
-- Las credenciales/entorno de produccion son distintos de staging -- cualquier automatizacion futura debe volver a verificar `WORDPRESS_ENV` antes de escribir.
-- El Staging QA reporto al menos un warning no bloqueante para este draft -- revisar antes de decidir si bloquea el deploy o no.
-
-**Plan de rollback:**
-- Produccion no se toca por este sistema en esta fase -- no hay nada que revertir automaticamente hoy.
-- Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
-- Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
-- Snapshot de origen disponible: draft de staging `2095` (https://staging.zentrylockers.com/?page_id=2095), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
 
 ### [plan_ready_for_review] cerraduras inteligentes para taquillas (https://zentrylockers.com/cerraduras-inteligentes-taquillas/) — `prod-deploy-5b43441f-902b-4c52-9ade-6e9a3820c603`
 
@@ -808,6 +664,150 @@
 - Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
 - Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
 - Snapshot de origen disponible: draft de staging `2111` (https://staging.zentrylockers.com/?page_id=2111), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
+
+### [cancelled] taquillas melamina (https://zentrylockers.com/taquillas-melamina/) — `prod-deploy-aed5cbe3-3746-4ee7-b6d2-7ae57cb30295`
+
+- sourceDraftId (staging): `2091` — https://staging.zentrylockers.com/?page_id=2091
+- targetPageId (produccion): (ninguno todavia -- pagina nueva)
+- deploymentType propuesto: `create_draft` (a confirmar manualmente, ver checklist)
+- seoMeta: title="Taquillas Melamina | Fabricante y venta directa - Zentry" | metaDescription="Taquillas Melamina: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry."
+- media incluida: (ninguna)
+- approvalRequestId: (pendiente de crear)
+
+**Checklist antes de produccion:**
+- [ ] Revisar visualmente el draft en staging antes de nada: https://staging.zentrylockers.com/?page_id=2091
+- [ ] Confirmar que el Staging QA esta en PASA (con o sin warning) -- nunca desplegar un draft que FALLA QA.
+- [ ] Confirmar el titulo y meta description definitivos (seoMeta de este plan) -- no son necesariamente los finales de marketing/SEO.
+- [ ] Confirmar que no queda ningun texto de prueba/placeholder visible en el contenido.
+- [ ] Este draft no tiene ninguna imagen optimizada asociada todavia -- decidir si hace falta antes de desplegar.
+- [ ] Decidir manualmente el deploymentType real: pagina NUEVA en produccion (create_draft) o actualizacion de una pagina YA existente (update_existing_draft) -- este plan no lo decide solo.
+- [ ] Si es una actualizacion de pagina existente: guardar un snapshot del contenido actual de produccion ANTES de tocar nada (ver rollbackPlan de este plan).
+- [ ] Aprobar el DISENO del plan primero (Telegram/chat) -- esto NO autoriza todavia ninguna escritura real.
+- [ ] Aprobar DESPUES, por separado, la AUTORIZACION DE EJECUCION (segunda pregunta de Telegram/chat, distinta de la anterior) ANTES de cualquier accion real en produccion.
+- [ ] Aplicar el cambio en produccion siempre como DRAFT primero (nunca publish directo) -- revisar de nuevo en produccion antes de publicar.
+- [ ] Confirmar que la URL/slug final en produccion es la correcta (puede diferir del slug usado en staging).
+- [ ] Este draft paso el QA CON warning(s) no bloqueante(s) -- revisar el informe de Staging QA para ver el detalle antes de decidir.
+
+**Riesgos:**
+- Este sistema NO tiene todavia capacidad de escritura real contra produccion -- aplicar este plan hoy es siempre una accion manual fuera de este proyecto (ver docs/manual-production-publish.md).
+- Actualizar una pagina YA existente en produccion puede pisar contenido/SEO ya indexado si no se revisa con cuidado antes de guardar.
+- El slug/URL final en produccion puede no coincidir con el de staging -- cambiarlo despues de indexado tiene coste SEO.
+- Las credenciales/entorno de produccion son distintos de staging -- cualquier automatizacion futura debe volver a verificar `WORDPRESS_ENV` antes de escribir.
+- El Staging QA reporto al menos un warning no bloqueante para este draft -- revisar antes de decidir si bloquea el deploy o no.
+
+**Plan de rollback:**
+- Produccion no se toca por este sistema en esta fase -- no hay nada que revertir automaticamente hoy.
+- Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
+- Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
+- Snapshot de origen disponible: draft de staging `2091` (https://staging.zentrylockers.com/?page_id=2091), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
+
+### [cancelled] taquillas colegios (https://zentrylockers.com/taquillas-para-colegios/) — `prod-deploy-f2cf576f-1c05-4dfe-8d92-9e173bc74bd5`
+
+- sourceDraftId (staging): `2093` — https://staging.zentrylockers.com/?page_id=2093
+- targetPageId (produccion): (ninguno todavia -- pagina nueva)
+- deploymentType propuesto: `create_draft` (a confirmar manualmente, ver checklist)
+- seoMeta: title="Taquillas Colegios | Fabricante y venta directa - Zentry" | metaDescription="Taquillas Colegios: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry."
+- media incluida: (ninguna)
+- approvalRequestId: (pendiente de crear)
+
+**Checklist antes de produccion:**
+- [ ] Revisar visualmente el draft en staging antes de nada: https://staging.zentrylockers.com/?page_id=2093
+- [ ] Confirmar que el Staging QA esta en PASA (con o sin warning) -- nunca desplegar un draft que FALLA QA.
+- [ ] Confirmar el titulo y meta description definitivos (seoMeta de este plan) -- no son necesariamente los finales de marketing/SEO.
+- [ ] Confirmar que no queda ningun texto de prueba/placeholder visible en el contenido.
+- [ ] Este draft no tiene ninguna imagen optimizada asociada todavia -- decidir si hace falta antes de desplegar.
+- [ ] Decidir manualmente el deploymentType real: pagina NUEVA en produccion (create_draft) o actualizacion de una pagina YA existente (update_existing_draft) -- este plan no lo decide solo.
+- [ ] Si es una actualizacion de pagina existente: guardar un snapshot del contenido actual de produccion ANTES de tocar nada (ver rollbackPlan de este plan).
+- [ ] Aprobar el DISENO del plan primero (Telegram/chat) -- esto NO autoriza todavia ninguna escritura real.
+- [ ] Aprobar DESPUES, por separado, la AUTORIZACION DE EJECUCION (segunda pregunta de Telegram/chat, distinta de la anterior) ANTES de cualquier accion real en produccion.
+- [ ] Aplicar el cambio en produccion siempre como DRAFT primero (nunca publish directo) -- revisar de nuevo en produccion antes de publicar.
+- [ ] Confirmar que la URL/slug final en produccion es la correcta (puede diferir del slug usado en staging).
+- [ ] Este draft paso el QA CON warning(s) no bloqueante(s) -- revisar el informe de Staging QA para ver el detalle antes de decidir.
+
+**Riesgos:**
+- Este sistema NO tiene todavia capacidad de escritura real contra produccion -- aplicar este plan hoy es siempre una accion manual fuera de este proyecto (ver docs/manual-production-publish.md).
+- Actualizar una pagina YA existente en produccion puede pisar contenido/SEO ya indexado si no se revisa con cuidado antes de guardar.
+- El slug/URL final en produccion puede no coincidir con el de staging -- cambiarlo despues de indexado tiene coste SEO.
+- Las credenciales/entorno de produccion son distintos de staging -- cualquier automatizacion futura debe volver a verificar `WORDPRESS_ENV` antes de escribir.
+- El Staging QA reporto al menos un warning no bloqueante para este draft -- revisar antes de decidir si bloquea el deploy o no.
+
+**Plan de rollback:**
+- Produccion no se toca por este sistema en esta fase -- no hay nada que revertir automaticamente hoy.
+- Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
+- Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
+- Snapshot de origen disponible: draft de staging `2093` (https://staging.zentrylockers.com/?page_id=2093), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
+
+### [cancelled] taquilla para el personal (https://zentrylockers.com/taquillas-para-empresas/) — `prod-deploy-b9b6c9c6-77af-44e5-834a-0609fd973d60`
+
+- sourceDraftId (staging): `2094` — https://staging.zentrylockers.com/?page_id=2094
+- targetPageId (produccion): (ninguno todavia -- pagina nueva)
+- deploymentType propuesto: `create_draft` (a confirmar manualmente, ver checklist)
+- seoMeta: title="Taquilla Para El Personal | Fabricante y venta directa - Ze…" | metaDescription="Taquilla Para El Personal: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry."
+- media incluida: (ninguna)
+- approvalRequestId: (pendiente de crear)
+
+**Checklist antes de produccion:**
+- [ ] Revisar visualmente el draft en staging antes de nada: https://staging.zentrylockers.com/?page_id=2094
+- [ ] Confirmar que el Staging QA esta en PASA (con o sin warning) -- nunca desplegar un draft que FALLA QA.
+- [ ] Confirmar el titulo y meta description definitivos (seoMeta de este plan) -- no son necesariamente los finales de marketing/SEO.
+- [ ] Confirmar que no queda ningun texto de prueba/placeholder visible en el contenido.
+- [ ] Este draft no tiene ninguna imagen optimizada asociada todavia -- decidir si hace falta antes de desplegar.
+- [ ] Decidir manualmente el deploymentType real: pagina NUEVA en produccion (create_draft) o actualizacion de una pagina YA existente (update_existing_draft) -- este plan no lo decide solo.
+- [ ] Si es una actualizacion de pagina existente: guardar un snapshot del contenido actual de produccion ANTES de tocar nada (ver rollbackPlan de este plan).
+- [ ] Aprobar el DISENO del plan primero (Telegram/chat) -- esto NO autoriza todavia ninguna escritura real.
+- [ ] Aprobar DESPUES, por separado, la AUTORIZACION DE EJECUCION (segunda pregunta de Telegram/chat, distinta de la anterior) ANTES de cualquier accion real en produccion.
+- [ ] Aplicar el cambio en produccion siempre como DRAFT primero (nunca publish directo) -- revisar de nuevo en produccion antes de publicar.
+- [ ] Confirmar que la URL/slug final en produccion es la correcta (puede diferir del slug usado en staging).
+- [ ] Este draft paso el QA CON warning(s) no bloqueante(s) -- revisar el informe de Staging QA para ver el detalle antes de decidir.
+
+**Riesgos:**
+- Este sistema NO tiene todavia capacidad de escritura real contra produccion -- aplicar este plan hoy es siempre una accion manual fuera de este proyecto (ver docs/manual-production-publish.md).
+- Actualizar una pagina YA existente en produccion puede pisar contenido/SEO ya indexado si no se revisa con cuidado antes de guardar.
+- El slug/URL final en produccion puede no coincidir con el de staging -- cambiarlo despues de indexado tiene coste SEO.
+- Las credenciales/entorno de produccion son distintos de staging -- cualquier automatizacion futura debe volver a verificar `WORDPRESS_ENV` antes de escribir.
+- El Staging QA reporto al menos un warning no bloqueante para este draft -- revisar antes de decidir si bloquea el deploy o no.
+
+**Plan de rollback:**
+- Produccion no se toca por este sistema en esta fase -- no hay nada que revertir automaticamente hoy.
+- Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
+- Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
+- Snapshot de origen disponible: draft de staging `2094` (https://staging.zentrylockers.com/?page_id=2094), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
+
+### [cancelled] taquillas fenólicas en palencia (https://zentrylockers.com/taquillas-fenolicas/) — `prod-deploy-79755187-8172-41fa-9582-7bdb20fbf2fb`
+
+- sourceDraftId (staging): `2095` — https://staging.zentrylockers.com/?page_id=2095
+- targetPageId (produccion): (ninguno todavia -- pagina nueva)
+- deploymentType propuesto: `create_draft` (a confirmar manualmente, ver checklist)
+- seoMeta: title="Taquillas Fenólicas En Palencia | Fabricante y venta direct…" | metaDescription="Taquillas Fenólicas En Palencia: fabricante directo, entrega rapida y presupuesto sin compromiso. Descubre modelos, materiales y precios con Zentry."
+- media incluida: (ninguna)
+- approvalRequestId: (pendiente de crear)
+
+**Checklist antes de produccion:**
+- [ ] Revisar visualmente el draft en staging antes de nada: https://staging.zentrylockers.com/?page_id=2095
+- [ ] Confirmar que el Staging QA esta en PASA (con o sin warning) -- nunca desplegar un draft que FALLA QA.
+- [ ] Confirmar el titulo y meta description definitivos (seoMeta de este plan) -- no son necesariamente los finales de marketing/SEO.
+- [ ] Confirmar que no queda ningun texto de prueba/placeholder visible en el contenido.
+- [ ] Este draft no tiene ninguna imagen optimizada asociada todavia -- decidir si hace falta antes de desplegar.
+- [ ] Decidir manualmente el deploymentType real: pagina NUEVA en produccion (create_draft) o actualizacion de una pagina YA existente (update_existing_draft) -- este plan no lo decide solo.
+- [ ] Si es una actualizacion de pagina existente: guardar un snapshot del contenido actual de produccion ANTES de tocar nada (ver rollbackPlan de este plan).
+- [ ] Aprobar el DISENO del plan primero (Telegram/chat) -- esto NO autoriza todavia ninguna escritura real.
+- [ ] Aprobar DESPUES, por separado, la AUTORIZACION DE EJECUCION (segunda pregunta de Telegram/chat, distinta de la anterior) ANTES de cualquier accion real en produccion.
+- [ ] Aplicar el cambio en produccion siempre como DRAFT primero (nunca publish directo) -- revisar de nuevo en produccion antes de publicar.
+- [ ] Confirmar que la URL/slug final en produccion es la correcta (puede diferir del slug usado en staging).
+- [ ] Este draft paso el QA CON warning(s) no bloqueante(s) -- revisar el informe de Staging QA para ver el detalle antes de decidir.
+
+**Riesgos:**
+- Este sistema NO tiene todavia capacidad de escritura real contra produccion -- aplicar este plan hoy es siempre una accion manual fuera de este proyecto (ver docs/manual-production-publish.md).
+- Actualizar una pagina YA existente en produccion puede pisar contenido/SEO ya indexado si no se revisa con cuidado antes de guardar.
+- El slug/URL final en produccion puede no coincidir con el de staging -- cambiarlo despues de indexado tiene coste SEO.
+- Las credenciales/entorno de produccion son distintos de staging -- cualquier automatizacion futura debe volver a verificar `WORDPRESS_ENV` antes de escribir.
+- El Staging QA reporto al menos un warning no bloqueante para este draft -- revisar antes de decidir si bloquea el deploy o no.
+
+**Plan de rollback:**
+- Produccion no se toca por este sistema en esta fase -- no hay nada que revertir automaticamente hoy.
+- Si en el futuro se aplica MANUALMENTE via wp-admin: copiar/guardar el HTML del editor de la pagina de produccion ANTES de pegar el contenido nuevo (snapshot manual), y no publicar hasta confirmar visualmente el resultado.
+- Si en el futuro existe un adapter de escritura selectiva a produccion (Opcion B, REST): debe seguir el mismo patron ya usado en staging -- snapshot completo del contenido anterior antes de escribir (ver src/core/draft-image-insertions.ts / src/core/staging-executions.ts), y una funcion de rollback que restaure ese snapshot tal cual.
+- Snapshot de origen disponible: draft de staging `2095` (https://staging.zentrylockers.com/?page_id=2095), que en si mismo queda intacto y sigue sirviendo de referencia pase lo que pase en produccion.
 
 ## Confirmacion de seguridad
 

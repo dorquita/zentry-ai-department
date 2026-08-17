@@ -1,7 +1,7 @@
 # WordPress Draft Agent — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T103833Z`
-- **Generado:** 2026-08-17T10:40:11.029Z
+- **departmentRunId:** `dept-2026-08-17T201809Z`
+- **Generado:** 2026-08-17T20:19:29.033Z
 - **WORDPRESS_DRAFTS_ENABLED:** false
 - **WORDPRESS_BACKEND:** local_preview
 - **WORDPRESS_ENV:** staging

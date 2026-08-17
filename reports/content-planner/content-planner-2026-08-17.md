@@ -1,7 +1,7 @@
 # Plan de contenido — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T103833Z`
-- **Generado:** 2026-08-17T10:39:55.795Z
+- **departmentRunId:** `dept-2026-08-17T201809Z`
+- **Generado:** 2026-08-17T20:19:28.462Z
 - **Propuestas de contenido:** 53
 
 ## Resumen ejecutivo
@@ -170,40 +170,10 @@ Se generaron **53** propuesta(s) de contenido a partir de las oportunidades del 
 - **Por que:** La competencia (Marmataquillas, Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
 - **Origen:** competitor_intelligence
 
-### [medium] Articulo nuevo — Contenido nuevo para "comprar taquillas"
+### [medium] Landing nueva — Landing para "colegios" (sector)
 
-- **Keyword relacionada:** comprar taquillas
-- **Por que:** La competencia (Marmataquillas, Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
-- **Origen:** competitor_intelligence
-
-### [medium] Articulo nuevo — Contenido nuevo para "soluciones de taquillas"
-
-- **Keyword relacionada:** soluciones de taquillas
-- **Por que:** La competencia (Taquiblok (Taquillas Blok), Setroc, Ojmar) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
-- **Origen:** competitor_intelligence
-
-### [medium] Articulo nuevo — Contenido nuevo para "taquillas para vestuarios"
-
-- **Keyword relacionada:** taquillas para vestuarios
-- **Por que:** La competencia (Marmataquillas, Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
-- **Origen:** competitor_intelligence
-
-### [medium] Articulo nuevo — Contenido nuevo para "metalicas taquillas"
-
-- **Keyword relacionada:** metalicas taquillas
-- **Por que:** La competencia (Marmataquillas, Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry. Material/categoria detectado: metalica, metalicas.
-- **Origen:** competitor_intelligence
-
-### [medium] Articulo nuevo — Contenido nuevo para "oficinas taquillas"
-
-- **Keyword relacionada:** oficinas taquillas
-- **Por que:** La competencia (Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry. Senal B2B detectada: oficina, oficinas.
-- **Origen:** competitor_intelligence
-
-### [medium] Articulo nuevo — Contenido nuevo para "comprar taquillas para"
-
-- **Keyword relacionada:** comprar taquillas para
-- **Por que:** La competencia (Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
+- **Keyword relacionada:** colegios
+- **Por que:** La competencia (Setroc) cubre este sector y Zentry no tiene keyword objetivo equivalente todavia.
 - **Origen:** competitor_intelligence
 
 ### [medium] Landing nueva — Landing para "industrial" (sector)
@@ -212,16 +182,22 @@ Se generaron **53** propuesta(s) de contenido a partir de las oportunidades del 
 - **Por que:** La competencia (Marmataquillas, Taquiblok (Taquillas Blok)) cubre este sector y Zentry no tiene keyword objetivo equivalente todavia.
 - **Origen:** competitor_intelligence
 
-### [medium] Landing nueva — Landing para "oficina" (sector)
+### [medium] Articulo nuevo — Contenido nuevo para "comprar taquillas"
 
-- **Keyword relacionada:** oficina
-- **Por que:** La competencia (Taquiblok (Taquillas Blok), Ojmar) cubre este sector y Zentry no tiene keyword objetivo equivalente todavia.
+- **Keyword relacionada:** comprar taquillas
+- **Por que:** La competencia (Marmataquillas, Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
 - **Origen:** competitor_intelligence
 
-### [medium] Landing nueva — Landing para "oficinas" (sector)
+### [medium] Articulo nuevo — Contenido nuevo para "oficinas taquillas"
 
-- **Keyword relacionada:** oficinas
-- **Por que:** La competencia (Taquiblok (Taquillas Blok), Ojmar) cubre este sector y Zentry no tiene keyword objetivo equivalente todavia.
+- **Keyword relacionada:** oficinas taquillas
+- **Por que:** La competencia (Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry. Senal B2B detectada: oficina, oficinas.
+- **Origen:** competitor_intelligence
+
+### [medium] Articulo nuevo — Contenido nuevo para "metalicas taquillas"
+
+- **Keyword relacionada:** metalicas taquillas
+- **Por que:** La competencia (Marmataquillas, Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry. Material/categoria detectado: metalica, metalicas.
 - **Origen:** competitor_intelligence
 
 ### [medium] Landing nueva — Landing para "fenolico" (material)
@@ -230,16 +206,40 @@ Se generaron **53** propuesta(s) de contenido a partir de las oportunidades del 
 - **Por que:** La competencia (Taquiblok (Taquillas Blok)) cubre este material y Zentry no tiene keyword objetivo equivalente todavia.
 - **Origen:** competitor_intelligence
 
+### [medium] Articulo nuevo — Contenido nuevo para "comprar taquillas para"
+
+- **Keyword relacionada:** comprar taquillas para
+- **Por que:** La competencia (Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
+- **Origen:** competitor_intelligence
+
+### [medium] Articulo nuevo — Contenido nuevo para "taquillas para vestuarios"
+
+- **Keyword relacionada:** taquillas para vestuarios
+- **Por que:** La competencia (Marmataquillas, Taquiblok (Taquillas Blok)) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
+- **Origen:** competitor_intelligence
+
+### [medium] Landing nueva — Landing para "oficina" (sector)
+
+- **Keyword relacionada:** oficina
+- **Por que:** La competencia (Taquiblok (Taquillas Blok), Ojmar) cubre este sector y Zentry no tiene keyword objetivo equivalente todavia.
+- **Origen:** competitor_intelligence
+
+### [medium] Articulo nuevo — Contenido nuevo para "soluciones de taquillas"
+
+- **Keyword relacionada:** soluciones de taquillas
+- **Por que:** La competencia (Taquiblok (Taquillas Blok), Setroc, Ojmar) trabaja esta keyword y no esta cubierta hoy. Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry.
+- **Origen:** competitor_intelligence
+
 ### [medium] Landing nueva — Landing para "colegio" (sector)
 
 - **Keyword relacionada:** colegio
 - **Por que:** La competencia (Setroc) cubre este sector y Zentry no tiene keyword objetivo equivalente todavia.
 - **Origen:** competitor_intelligence
 
-### [medium] Landing nueva — Landing para "colegios" (sector)
+### [medium] Landing nueva — Landing para "oficinas" (sector)
 
-- **Keyword relacionada:** colegios
-- **Por que:** La competencia (Setroc) cubre este sector y Zentry no tiene keyword objetivo equivalente todavia.
+- **Keyword relacionada:** oficinas
+- **Por que:** La competencia (Taquiblok (Taquillas Blok), Ojmar) cubre este sector y Zentry no tiene keyword objetivo equivalente todavia.
 - **Origen:** competitor_intelligence
 
 ### [medium] Landing nueva — Landing para "universidad" (sector)
@@ -268,12 +268,6 @@ Se generaron **53** propuesta(s) de contenido a partir de las oportunidades del 
 
 ## Contenido para Tukandado (3)
 
-### [medium] Articulo nuevo — Contenido nuevo para "cerradura para"
-
-- **Keyword relacionada:** cerradura para
-- **Por que:** La competencia (Ojmar) trabaja esta keyword y no esta cubierta hoy. Menciona cerradura/control de acceso sin mencionar taquillas ni mobiliario: intencion principal de compra de cerradura, corresponde a Tukandado. Puede derivar a Zentry si el cliente termina queriendo el mueble completo.
-- **Origen:** competitor_intelligence
-
 ### [medium] Articulo nuevo — Contenido nuevo para "sistemas de cierre"
 
 - **Keyword relacionada:** sistemas de cierre
@@ -283,6 +277,12 @@ Se generaron **53** propuesta(s) de contenido a partir de las oportunidades del 
 ### [medium] Articulo nuevo — Contenido nuevo para "cerradura para cada"
 
 - **Keyword relacionada:** cerradura para cada
+- **Por que:** La competencia (Ojmar) trabaja esta keyword y no esta cubierta hoy. Menciona cerradura/control de acceso sin mencionar taquillas ni mobiliario: intencion principal de compra de cerradura, corresponde a Tukandado. Puede derivar a Zentry si el cliente termina queriendo el mueble completo.
+- **Origen:** competitor_intelligence
+
+### [medium] Articulo nuevo — Contenido nuevo para "cerradura para"
+
+- **Keyword relacionada:** cerradura para
 - **Por que:** La competencia (Ojmar) trabaja esta keyword y no esta cubierta hoy. Menciona cerradura/control de acceso sin mencionar taquillas ni mobiliario: intencion principal de compra de cerradura, corresponde a Tukandado. Puede derivar a Zentry si el cliente termina queriendo el mueble completo.
 - **Origen:** competitor_intelligence
 

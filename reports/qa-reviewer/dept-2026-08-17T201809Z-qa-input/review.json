@@ -1,0 +1,93 @@
+{
+  "reviewedArtifact": {
+    "sourceEmployee": "unknown",
+    "artifactType": "generic_json_artifact",
+    "artifactId": "dept-2026-08-17T201809Z-qa-input",
+    "artifactPath": "reports/department/dept-2026-08-17T201809Z/dept-2026-08-17T201809Z-qa-input.json"
+  },
+  "generatedAt": "2026-08-17T20:37:15.111Z",
+  "result": {
+    "status": "executed",
+    "output": {
+      "reviewStatus": "fail",
+      "reviewedArtifact": {
+        "sourceEmployee": "unknown",
+        "artifactType": "generic_json_artifact",
+        "artifactId": "dept-2026-08-17T201809Z-qa-input",
+        "artifactPath": "reports/department/dept-2026-08-17T201809Z/dept-2026-08-17T201809Z-qa-input.json"
+      },
+      "findings": [
+        {
+          "category": "unsupported_claims",
+          "severity": "critical",
+          "description": "5 de las 7 entradas de growth.output.recommendedPriorities afirman como hecho consumado 'Aprobado por un humano el 2026-08-16' (melamina, /cerraduras/, bundle de quick wins, reescritura de metas, validacion de click_phone), pero ninguna de esas afirmaciones tiene una entrada correspondiente en growth.output.evidence. Esto contrasta directamente con el unico caso de decision humana que SI esta documentada en el artifact (human-decision-staging-rejection), que incluye fecha exacta, run de origen y cita textual del motivo. Sin evidencia equivalente, estas 5 afirmaciones de aprobacion no se pueden verificar dentro de este artifact."
+        },
+        {
+          "category": "evidence_coverage",
+          "severity": "warning",
+          "description": "growth.output.evidence solo define 3 entradas ('gap-changepacks-workorders', 'sem-watcher-signal', 'human-decision-staging-rejection'), pero growth.output usa decenas de evidenceRefs adicionales no definidos en ese array (p.ej. 'actions-live', 'dept-seo-summary', 'workorders-ready', 'changepacks-ready', 'approvals-pending', 'dept-seo-action-1' a 'dept-seo-action-5', 'dept-analytics-action-1', 'dept-analytics-action-2', 'dept-analytics-tracking-issue-1', 'dept-analytics-tracking-issue-2', 'dept-content-risks', 'dept-content-summary', 'dept-content-cta', 'dept-seo-opportunity-1', 'dept-seo-opportunity-5', 'actions-top', 'dept-sem-unavailable'). Como consecuencia, cifras concretas citadas en growthSummary y currentSignals (105 acciones vivas / 8 high / 97 medium; 113 de 114 work orders; 5 de 77 change packs; 1 aprobacion critica pendiente) no aparecen respaldadas en ninguna salida de seo-specialist, content-strategist o analytics-specialist incluida en este artifact."
+        },
+        {
+          "category": "contradictions",
+          "severity": "warning",
+          "description": "growth.output.recommendedPriorities[0].rationale afirma que un humano ya aprobo el 2026-08-16 cerrar la canibalizacion de melamina, pero growth.output.bottlenecks[0].description y growth.output.currentSignals[4] senalan que sigue existiendo '1 aprobacion critica pendiente' sobre 'taquillas melamina' (production_deployment_plan). La explicacion dada ('la decision aprobada aun no se ha materializado del todo') no aclara si se trata de la misma solicitud sin resolver o de un paso distinto, dejando ambigua la relacion entre 'ya aprobado' y 'pendiente critico'."
+        },
+        {
+          "category": "approval_requirements",
+          "severity": "warning",
+          "description": "growth.output.recommendedPriorities[0].dependsOn incluye literalmente 'Aprobacion humana ya concedida el 2026-08-16' como dependencia ya satisfecha para una accion que implica ejecutar scripts/o291-resolve-melamina-cannibalization.ts. Al tratar esa aprobacion como un hecho cerrado sin evidencia trazable en el artifact, se reduce la senal de que un humano debe re-verificar la aprobacion antes de ejecutar el script sobre produccion."
+        },
+        {
+          "category": "evidence_coverage",
+          "severity": "info",
+          "description": "content-strategist.output.supportingEvidence justifica decisiones citando campos de contexto ('currentAssumptions', 'clusterNote', 'brandRationale', 'secondaryKeywords') que no aparecen como datos crudos en este artifact, a diferencia del formato de evidence con IDs usado por seo-specialist y analytics-specialist. No hay motivo para pensar que sean inventados (el propio empleado los declara como asunciones, no como hechos verificados), pero no son verificables de forma independiente dentro de este artifact."
+        }
+      ],
+      "unsupportedClaims": [
+        "growth.output.recommendedPriorities[0].rationale: 'Un humano ya aprobo el 2026-08-16 cerrar los actionItems de canibalizacion de \"taquillas melamina\" y revisar la aprobacion critica relacionada' -- sin entrada de evidencia en growth.output.evidence.",
+        "growth.output.recommendedPriorities[1].rationale: 'Aprobado por un humano el 2026-08-16.' (correccion de destino de /cerraduras/) -- sin evidencia trazable.",
+        "growth.output.recommendedPriorities[2].rationale: 'Aprobado por un humano el 2026-08-16 para el caso principal;' (bundle de quick wins) -- sin evidencia trazable.",
+        "growth.output.recommendedPriorities[3].rationale: 'Aprobado por un humano el 2026-08-16.' (reescritura de metas CTR 0%) -- sin evidencia trazable.",
+        "growth.output.recommendedPriorities[4].rationale: '...Aprobado por un humano el 2026-08-16.' (validacion de click_phone) -- sin evidencia trazable.",
+        "growth.output.currentSignals[0].description cita '105 acciones vivas (8 high, 97 medium)' con evidenceRefs 'actions-live' y 'dept-seo-summary', ninguno definido en growth.output.evidence ni presente en las salidas de los especialistas.",
+        "growth.output.currentSignals[1].description cita '113 de 114 work orders' y 'solo 5 de 77 change packs' con evidenceRefs 'workorders-ready' y 'changepacks-ready', no definidos en growth.output.evidence.",
+        "growth.output.currentSignals[4].description cita '1 solicitud de aprobacion pendiente marcada como riesgo critico' con evidenceRef 'approvals-pending', no definido en growth.output.evidence."
+      ],
+      "contradictions": [
+        "growth.output.recommendedPriorities[0] afirma aprobacion humana ya concedida el 2026-08-16 para la canibalizacion de melamina, mientras que growth.output.bottlenecks[0] y currentSignals[4] senalan que sigue existiendo 1 aprobacion critica pendiente sobre el mismo tema ('taquillas melamina'), sin que quede claro si son la misma solicitud."
+      ],
+      "safetyConcerns": [
+        "Cinco de las siete prioridades en growth.output.recommendedPriorities se etiquetan como 'Aprobado por un humano el 2026-08-16' sin evidencia trazable en el artifact (a diferencia del caso de rechazo de staging, documentado con cita textual). Entre esas prioridades esta ejecutar scripts/o291-resolve-melamina-cannibalization.ts y corregir destinos de URL/metas en produccion. Tratar estas prioridades como pre-aprobadas sin verificar la aprobacion real podria llevar a saltarse el control humano requerido antes de escribir en sistemas externos (WordPress/rutas, GTM, Search Console via cambios de contenido)."
+      ],
+      "requiredCorrections": [
+        "Anadir a growth.output.evidence una entrada trazable (fecha, decisionId o cita textual, siguiendo el modelo de 'human-decision-staging-rejection') para cada afirmacion de aprobacion humana del 2026-08-16 citada en recommendedPriorities, o reformular esas rationale como 'pendiente de confirmar aprobacion' en vez de hecho consumado.",
+        "Aclarar explicitamente la relacion entre 'aprobacion humana ya concedida el 2026-08-16' para melamina y la '1 aprobacion critica pendiente' sobre el mismo tema: si es la misma solicitud sin materializar o un paso adicional distinto.",
+        "Definir en growth.output.evidence los evidenceRefs usados extensamente en currentSignals, bottlenecks, opportunities, experiments y recommendedPriorities que hoy no tienen entrada asociada (p.ej. 'actions-live', 'dept-seo-summary', 'workorders-ready', 'changepacks-ready', 'approvals-pending', 'dept-seo-action-1' a 'dept-seo-action-5', 'dept-analytics-action-1', 'dept-analytics-action-2', 'dept-analytics-tracking-issue-1', 'dept-analytics-tracking-issue-2', 'dept-content-risks', 'dept-content-summary', 'dept-content-cta', 'dept-seo-opportunity-1', 'dept-seo-opportunity-5', 'actions-top'), para permitir verificar las cifras citadas."
+      ],
+      "approvalRecommendation": {
+        "recommendedStatus": "pending",
+        "riskLevel": "high",
+        "rationale": "El contenido de seo-specialist, content-strategist y analytics-specialist esta, en general, bien evidenciado y correctamente separado en hechos/observaciones/hipotesis. Sin embargo, la capa de sintesis de growth-director presenta como hechos consumados varias 'aprobaciones humanas del 2026-08-16' sin ninguna evidencia trazable dentro de este mismo artifact, en contraste con el unico caso de decision humana que si esta bien documentado (rechazo de staging). Dado que esas supuestas aprobaciones cubren acciones que tocarian produccion (script de reenrutado de melamina, correccion de destinos de URL, reescritura de metas, confirmacion de version de GTM), un humano debe verificar si esas aprobaciones existen realmente antes de que cualquiera de estas prioridades avance a ingenieria."
+      },
+      "evidence": [
+        "growth.output.recommendedPriorities[0].rationale: 'Un humano ya aprobo el 2026-08-16 cerrar los actionItems de canibalizacion de \"taquillas melamina\"...'",
+        "growth.output.recommendedPriorities[1].rationale: 'Aprobado por un humano el 2026-08-16. seo-specialist confirma con evidencia que 2 actionItems de alta prioridad...'",
+        "growth.output.recommendedPriorities[3].rationale: 'Aprobado por un humano el 2026-08-16. seo-specialist identifica el problema como sistemico...'",
+        "growth.output.evidence contiene exactamente 3 entradas: 'gap-changepacks-workorders', 'sem-watcher-signal', 'human-decision-staging-rejection'.",
+        "growth.output.evidence[2] (ref human-decision-staging-rejection) SI cita textualmente: 'Las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias. Necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion.' -- unico caso de decision humana bien documentada en el artifact.",
+        "growth.output.currentSignals[0].evidenceRefs = ['actions-live','dept-seo-summary'], ninguno presente en growth.output.evidence.",
+        "growth.output.bottlenecks[0].description menciona '1 aprobacion critica pendiente relacionada con \"taquillas melamina\"' con evidenceRefs ['dept-seo-action-1','approvals-pending'], ninguno definido en growth.output.evidence.",
+        "content-strategist.output.supportingEvidence cita 'currentAssumptions confirma que...' y 'clusterNote indica explicitamente...' sin que esos campos aparezcan como datos crudos en este artifact."
+      ],
+      "summary": "Los tres especialistas (seo-specialist, content-strategist, analytics-specialist) presentan salidas bien evidenciadas, con distincion clara entre hechos, observaciones e hipotesis, y con hallazgos internamente consistentes (canibalizacion de melamina, URL en papelera, discrepancia de click_phone, riesgo de canibalizacion de la landing 'Colegio'). El problema critico esta en la capa de sintesis de growth-director-v2: cinco de sus siete recommendedPriorities afirman que un humano ya aprobo la accion el 2026-08-16, pero ninguna de esas afirmaciones tiene respaldo en growth.output.evidence, a diferencia del unico caso (rechazo de staging) que si esta documentado con cita textual. Ademas, decenas de evidenceRefs usados en currentSignals, bottlenecks, opportunities, experiments y recommendedPriorities no tienen entrada definida en el array de evidence, dejando sin verificar cifras clave del backlog (105 acciones, 113/114 work orders, 5/77 change packs, 1 aprobacion critica pendiente). Esto exige revision humana antes de tratar cualquiera de esas prioridades como lista para pasar a ingenieria."
+    },
+    "summaryCounts": {
+      "overallPass": false,
+      "hasWarnings": true,
+      "criticalFindingsCount": 1,
+      "warningFindingsCount": 3,
+      "infoFindingsCount": 1
+    }
+  },
+  "note": "Artefacto de solo lectura/revision. qa-reviewer no vuelve a hacer el trabajo original ni aplica ninguna correccion -- solo evalua el artifact ya producido. La decision de aplicar/rechazar cualquier correccion la toma un humano."
+}

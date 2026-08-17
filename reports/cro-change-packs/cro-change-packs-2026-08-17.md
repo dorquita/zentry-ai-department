@@ -1,7 +1,7 @@
 # CRO Change Packs — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T103833Z`
-- **Generado:** 2026-08-17T10:40:10.838Z
+- **departmentRunId:** `dept-2026-08-17T201809Z`
+- **Generado:** 2026-08-17T20:19:29.020Z
 
 ## Resumen ejecutivo
 
