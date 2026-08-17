@@ -643,6 +643,64 @@ export function runMongoAuthorityCutoverTests(): TestCase[] {
     },
 
     // ---------------------------------------------------------------
+    // La proyeccion colapsa versiones, NO pierde informacion
+    // ---------------------------------------------------------------
+    {
+      name: "la proyeccion deja una linea por entidad (clase A) y todas las lineas (clase B)",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          const repository = newRepository();
+
+          // Clase A: tres versiones de la MISMA accion. En el historico
+          // append-only son tres lineas; el estado actual es una.
+          for (const [status, at] of [
+            ["pending", "2026-08-10T00:00:00.000Z"],
+            ["in_progress", "2026-08-11T00:00:00.000Z"],
+            ["done", "2026-08-12T00:00:00.000Z"],
+          ]) {
+            await repository.entities.saveEntity({
+              kind: "action",
+              entityId: "a-1",
+              status,
+              recordUpdatedAt: at,
+              payload: { actionId: "a-1", status, updatedAt: at },
+            });
+          }
+
+          // Clase B: tres eventos DISTINTOS. Ninguno sustituye a otro.
+          for (const n of [1, 2, 3]) {
+            await repository.events.appendEvent({
+              kind: "department_event",
+              eventId: `evt-${n}`,
+              occurredAt: `2026-08-1${n}T00:00:00.000Z`,
+              payload: { eventId: `evt-${n}` },
+            });
+          }
+
+          const report = await hydrateStateFromMongo(repository, dataDir, "2026-08-17T12:00:00.000Z");
+
+          assert.equal(
+            report.files.find((f) => f.kind === "action")?.documents,
+            1,
+            "las tres versiones de la misma accion colapsan en su estado actual"
+          );
+          assert.equal(
+            report.files.find((f) => f.kind === "department_event")?.documents,
+            3,
+            "los eventos NO colapsan: cada uno es un hecho distinto"
+          );
+
+          // La version que sobrevive es la ultima, no una cualquiera.
+          const projected = fs
+            .readFileSync(path.join(dataDir, "action-backlog.jsonl"), "utf-8")
+            .trim();
+          assert.ok(projected.includes('"status":"done"'));
+          assert.ok(!projected.includes('"status":"pending"'));
+        });
+      },
+    },
+
+    // ---------------------------------------------------------------
     // Continuidad del brief sin `reports/` (criterio 6)
     // ---------------------------------------------------------------
     {

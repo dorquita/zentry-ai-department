@@ -1128,7 +1128,11 @@ jobs:
         if: ${{ always() && inputs.skipLegacyRestore != true }}
         run: |
           set -o pipefail
-          npm run state:verify -- --before "$RUNNER_TEMP/state-before.json" 2>&1 | tee state-verify.log
+          ARGS=(--before "$RUNNER_TEMP/state-before.json")
+          if [ "$MONGODB_CONFIGURED" = "true" ]; then
+            ARGS+=(--projection)
+          fi
+          npm run state:verify -- "${ARGS[@]}" 2>&1 | tee state-verify.log
           {
             echo ""
             sed -n '/^## Verificacion del estado/,/^STATE_VERIFY_JSON=/p' state-verify.log | grep -v '^STATE_VERIFY_JSON='
@@ -1139,13 +1143,25 @@ jobs:
       # esta guarda, un `reports/` casi vacio (no se restauro) se
       # force-pusharia sobre la rama de estado y BORRARIA el historico.
       # La prueba de la seccion 11 es no destructiva justo por esto.
+      # CRITICO — que se exporta a la rama y que no:
+      #
+      #   `reports/`  SIEMPRE. Son artifacts (clase D), MongoDB no es su
+      #               fuente y la rama es el unico sitio donde se acumulan.
+      #
+      #   `data/`     SOLO en modo legacy. En modo `mongo` los ficheros de
+      #               clase A son una PROYECCION del estado actual: subirlos
+      #               force-pusharia 105 lineas encima de las 6.271 del
+      #               historico append-only de la rama y BORRARIA versiones
+      #               antiguas que ya no existen en ningun otro sitio.
+      #               La rama conserva ese historico congelado e intacto;
+      #               el estado vivo esta en MongoDB.
       - name: "[STATE] Empaquetar el estado para el job de persistencia"
+        id: pack_state
         if: ${{ always() && steps.verify_state.outcome == 'success' && inputs.skipLegacyRestore != true }}
         uses: actions/upload-artifact@v4
         with:
           name: department-state-${{ github.run_id }}
           path: |
-            data
             reports
           if-no-files-found: error
           retention-days: 7
@@ -1291,16 +1307,38 @@ jobs:
             echo "Creando la rama de estado \"$STATE_BRANCH\" por primera vez."
           fi
 
-          # El working tree puede traer restos del checkout de main:
-          # solo deben quedar los directorios de estado.
+          # El working tree puede traer restos del checkout de main: se
+          # limpia todo MENOS los directorios de estado, que ya vienen del
+          # checkout de la rama y solo se sustituyen si el artifact los trae.
           find . -mindepth 1 -maxdepth 1 \
             -not -name '.git' -not -name 'incoming-state' \
+            -not -name 'data' -not -name 'reports' \
             -exec rm -rf {} +
-          mv incoming-state/data ./data
-          mv incoming-state/reports ./reports
+
+          # CRITICO: solo se reemplaza lo que el artifact TRAE. Desde el
+          # cutover a MongoDB, `data/` no viaja en el artifact -- sus
+          # ficheros de clase A son una proyeccion del estado ACTUAL (105
+          # acciones) y sobrescribirian el historico append-only de la rama
+          # (6.271 lineas), que es el unico sitio donde quedan las versiones
+          # antiguas. Si no viene, el `data/` de la rama se queda intacto.
+          PATHS=()
+          for dir in data reports; do
+            if [ -d "incoming-state/$dir" ]; then
+              rm -rf "./$dir"
+              mv "incoming-state/$dir" "./$dir"
+              PATHS+=("$dir")
+            elif [ -d "./$dir" ]; then
+              echo "El artifact no trae \"$dir/\": la rama conserva el suyo, sin tocar."
+            fi
+          done
           rmdir incoming-state 2>/dev/null || true
 
-          git add -A data reports
+          if [ ${#PATHS[@]} -eq 0 ]; then
+            echo "::error::El artifact no traia ningun directorio de estado. No se commitea nada."
+            exit 1
+          fi
+
+          git add -A "${PATHS[@]}"
           if git diff --cached --quiet; then
             echo "El estado no ha cambiado en esta pasada: no se crea ningun commit vacio."
             exit 0

@@ -70,6 +70,10 @@ function main(): void {
         `No existe el manifiesto previo "${beforePath}". Sin el no se puede demostrar que no se ha perdido nada: fail-closed.`
       );
     }
+    // `--projection` lo pone el workflow cuando la pasada corre en modo
+    // `mongo`. No se deduce del entorno a proposito: relajar un guard
+    // tiene que ser una decision explicita y visible en el comando.
+    const projection = args.projection === "true";
     const before = JSON.parse(fs.readFileSync(path.resolve(beforePath), "utf-8")) as StateManifest;
     const after = captureStateManifest(PROJECT_ROOT, new Date().toISOString());
     const regressions = detectStateRegressions(before, after);
@@ -101,6 +105,29 @@ function main(): void {
         ok: classified.state.length === 0,
       })}`
     );
+
+    // Fase O57 — cuando MongoDB es la fuente de verdad, `data/` NO es un
+    // log append-only: es una PROYECCION que se regenera en cada pasada,
+    // y por construccion tiene una linea por entidad en vez de una por
+    // version. `action-backlog.jsonl` pasa de 6.271 lineas a 105 sin que
+    // se pierda absolutamente nada -- las 6.166 restantes son versiones
+    // antiguas de esas mismas 105 acciones, y el historico completo sigue
+    // en `action-audit.jsonl` (clase B, que si es append-only) y en la
+    // rama de estado, congelada e intacta.
+    //
+    // Aplicar aqui la regla append-only seria medir la proyeccion con la
+    // vara del log. La invariante que SI aplica en ese modo es la de
+    // MongoDB (`state:verify-mongodb`), que corre igualmente y es la que
+    // decide. Esto no relaja el guard legacy: en modo legacy sigue
+    // bloqueando exactamente igual que antes.
+    if (projection) {
+      console.log(
+        `Modo proyeccion (MongoDB es la fuente de verdad): las ${classified.state.length} diferencia(s) en ` +
+          "`data/` son el resultado de proyectar el estado actual, no una perdida. La invariante que decide " +
+          "en este modo es `npm run state:verify-mongodb`."
+      );
+      return;
+    }
 
     if (classified.state.length > 0) {
       console.error(
