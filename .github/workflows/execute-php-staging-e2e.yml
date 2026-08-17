@@ -32,9 +32,19 @@ on:
         type: choice
         options: ["list", "ability-info", "run"]
       postId:
-        description: "ID de la pagina de staging (solo para mode=run)"
+        description: "ID de la pagina de staging (solo para mode=run y para certifyDepartmentPath)"
         required: false
         type: string
+      certifyDepartmentPath:
+        description: >-
+          En vez del E2E del executor, certificar el CAMINO COMPLETO del
+          departamento: recomendacion -> ChangePlan -> resolucion contra el
+          inventario real -> contrato de apply -> apply en staging ->
+          read-back -> revert por el mismo camino. Usa un ChangePlan
+          controlado y reversible; no toca ninguna recomendacion real.
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: execute-php-staging-e2e
@@ -88,7 +98,23 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Modo resuelto: $MODE (postId=$POST_ID)."
 
+      # ESTE workflow tiene dos modos, y son complementarios, no
+      # redundantes:
+      #
+      #   E2E                      certifica el EXECUTOR: que
+      #                            `novamira/execute-php` sabe escribir en
+      #                            staging y revertir.
+      #   certifyDepartmentPath    certifica el CAMINO del departamento
+      #                            HASTA ese executor -- que es justo
+      #                            donde estaban los cortes: un ChangePlan
+      #                            que se construia bien y despues se
+      #                            descartaba en silencio en la fase de
+      #                            apply.
+      #
+      # Tener el executor probado no demuestra lo segundo, y por eso hace
+      # falta el segundo modo.
       - name: E2E
+        if: ${{ !inputs.certifyDepartmentPath }}
         run: |
           set -o pipefail
           if [ "$MODE" = "ability-info" ] && [ -n "$ABILITY" ]; then
@@ -111,6 +137,48 @@ jobs:
           WP_API_URL: ${{ secrets.WP_API_URL }}
           WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
           WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+
+      - name: Certificar el camino COMPLETO del departamento (ChangePlan -> apply en staging)
+        if: ${{ inputs.certifyDepartmentPath }}
+        run: |
+          set -o pipefail
+          if [ -n "$POST_ID" ]; then
+            npx ts-node scripts/certify-department-changeplan-apply.ts --postId "$POST_ID"
+          else
+            npx ts-node scripts/certify-department-changeplan-apply.ts
+          fi
+        env:
+          POST_ID: ${{ inputs.postId }}
+          # Estado autoritativo: el cambio tiene que quedar REGISTRADO. Sin
+          # sitio donde registrarlo, la fase de apply se niega a escribir.
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+          DEPARTMENT_PERSISTENCE_MODE: ${{ secrets.MONGODB_URI != '' && 'mongo' || 'legacy' }}
+          # Entorno: STAGING y nada mas, igual que el E2E.
+          WORDPRESS_ENV: staging
+          NOVAMIRA_STAGING_WRITES_ENABLED: "true"
+          NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED: "true"
+          WORDPRESS_DRAFTS_ENABLED: "true"
+          DEPARTMENT_STAGING_APPLY_ENABLED: "true"
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
+          WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+          # Lectura por REST: via DISTINTA de la de escritura, que es lo
+          # que hace que el read-back signifique algo.
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+
+      - name: Subir el informe de la certificacion del camino
+        if: ${{ always() && inputs.certifyDepartmentPath }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: department-changeplan-certification
+          path: |
+            reports/department-apply-certification/
+            reports/department/cert-*/
+          if-no-files-found: warn
+          retention-days: 90
 
       - name: Subir el informe del E2E
         if: always()
