@@ -701,6 +701,64 @@ export function runMongoAuthorityCutoverTests(): TestCase[] {
     },
 
     // ---------------------------------------------------------------
+    // La proyeccion nunca vacia un fichero que tenia contenido
+    // ---------------------------------------------------------------
+    {
+      name: "si MongoDB no tiene un tipo pero el fichero si, NO se sobrescribe con vacio",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          const filePath = path.join(dataDir, "action-backlog.jsonl");
+          writeJsonl(filePath, [
+            { actionId: "a-1", status: "pending", updatedAt: "2026-08-10T00:00:00.000Z" },
+            { actionId: "a-2", status: "done", updatedAt: "2026-08-11T00:00:00.000Z" },
+          ]);
+
+          // MongoDB vacio: simula un tipo que no se llego a migrar.
+          const repository = newRepository();
+          const report = await hydrateStateFromMongo(repository, dataDir, "2026-08-17T12:00:00.000Z");
+
+          assert.ok(
+            report.skipped.some((entry) => entry.startsWith("action-backlog.jsonl")),
+            "se avisa del tipo que falta en MongoDB"
+          );
+          const after = fs.readFileSync(filePath, "utf-8");
+          assert.ok(after.includes("a-1") && after.includes("a-2"), "el fichero conserva sus lineas");
+        });
+      },
+    },
+    {
+      name: "si MongoDB no tiene decisiones humanas pero el fichero si, la hidratacion FALLA",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          writeJsonl(path.join(dataDir, "department-human-decisions.jsonl"), [
+            { decisionId: "d-1", action: "approve", recommendationId: "r-1", decidedAt: "2026-08-16T00:00:00.000Z" },
+          ]);
+          const repository = newRepository();
+          await assert.rejects(
+            () => hydrateStateFromMongo(repository, dataDir, "2026-08-17T12:00:00.000Z"),
+            /decision humana|decisiones humanas/i,
+            "no se vacia el unico dato que no se puede reconstruir"
+          );
+          assert.equal(
+            readHumanDecisions(path.join(dataDir, "department-human-decisions.jsonl")).length,
+            1,
+            "y el fichero sigue intacto"
+          );
+        });
+      },
+    },
+    {
+      name: "un fichero que NO existia y que MongoDB tampoco tiene no genera aviso",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          const repository = newRepository();
+          const report = await hydrateStateFromMongo(repository, dataDir, "2026-08-17T12:00:00.000Z");
+          assert.deepEqual(report.skipped, [], "no hay nada que proteger si no habia nada");
+        });
+      },
+    },
+
+    // ---------------------------------------------------------------
     // La prueba sin legacy: borrar y reconstruir desde MongoDB
     // ---------------------------------------------------------------
     {

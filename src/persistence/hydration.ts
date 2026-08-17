@@ -61,6 +61,8 @@ export interface HydrationReport {
   humanDecisions: number;
   /** Ficheros borrados ANTES de proyectar, si se pidio `purgeFirst`. */
   purged: string[];
+  /** Ficheros NO sobrescritos porque MongoDB no tenia nada y el fichero si. */
+  skipped: string[];
   totals: {
     filesWritten: number;
     documentsProjected: number;
@@ -131,6 +133,7 @@ export async function hydrateStateFromMongo(
   // Los ficheros de clase C y D no se tocan -- MongoDB no es su fuente y
   // borrarlos si seria perder datos.
   const purged: string[] = [];
+  const skipped: string[] = [];
   if (options.purgeFirst) {
     for (const descriptor of migratableDescriptors()) {
       const filePath = path.join(dataDir, descriptor.file);
@@ -162,6 +165,25 @@ export async function hydrateStateFromMongo(
       .map((document) => document.payload as Record<string, unknown>)
       .filter((payload): payload is Record<string, unknown> => typeof payload === "object" && payload !== null);
 
+    // SALVAGUARDA: la proyeccion nunca vacia un fichero que tenia
+    // contenido. Si MongoDB no tiene ningun documento de este tipo pero
+    // el fichero si tiene lineas, lo mas probable es que ese tipo no se
+    // llegara a migrar -- y sobrescribirlo con vacio destruiria la unica
+    // copia que queda. Se deja como esta y se avisa: que falte un tipo en
+    // MongoDB es un problema que hay que ver, no uno que hay que tapar
+    // borrando el original.
+    if (records.length === 0 && previousLines !== null && previousLines > 0) {
+      skipped.push(`${descriptor.file} (${previousLines} lineas en fichero, 0 documentos en MongoDB)`);
+      files.push({
+        file: descriptor.file,
+        kind: descriptor.kind,
+        stateClass: descriptor.stateClass,
+        documents: 0,
+        previousLines,
+      });
+      continue;
+    }
+
     writeJsonl(filePath, sortRecords(descriptor, records));
     documentsProjected += records.length;
     files.push({
@@ -178,6 +200,15 @@ export async function hydrateStateFromMongo(
   const decisionsPath = path.join(dataDir, HUMAN_DECISIONS_FILE);
   const decisionsPrevious = countExistingLines(decisionsPath);
   const decisions = await repository.decisions.listAll();
+  // Misma salvaguarda para las decisiones humanas, que es el dato que
+  // menos se puede permitir perder de todo el sistema.
+  if (decisions.length === 0 && decisionsPrevious !== null && decisionsPrevious > 0) {
+    throw new Error(
+      `MongoDB no tiene ninguna decision humana pero ${HUMAN_DECISIONS_FILE} tiene ` +
+        `${decisionsPrevious} linea(s). No se proyecta nada: vaciar ese fichero seria destruir ` +
+        "el unico dato del sistema que no se puede reconstruir."
+    );
+  }
   const decisionRecords = decisions.map((decision) => ({
     decisionId: decision.decisionId,
     departmentRunId: decision.departmentRunId,
@@ -209,6 +240,7 @@ export async function hydrateStateFromMongo(
     dataDirName: path.basename(dataDir),
     files,
     purged,
+    skipped,
     humanDecisions: decisionRecords.length,
     totals: { filesWritten: files.length, documentsProjected },
     notProjected: ENTITY_REGISTRY.filter((d) => d.stateClass === "C" || d.stateClass === "D").map(
@@ -247,5 +279,14 @@ export function renderHydrationReport(report: HydrationReport): string {
     `Los ${report.notProjected.length} fichero(s) de clase C/D no se proyectan: MongoDB no es su fuente ` +
       `y sobrescribirlos seria destruir datos que solo existen en fichero.`
   );
+  if (report.skipped.length > 0) {
+    lines.push("");
+    lines.push(
+      `**Atencion:** ${report.skipped.length} fichero(s) NO se han sobrescrito porque MongoDB no tiene ` +
+        "ningun documento de ese tipo y el fichero si tiene lineas. Se conserva el fichero (vaciarlo " +
+        "destruiria la unica copia), pero eso apunta a un tipo que no se llego a migrar:"
+    );
+    for (const entry of report.skipped) lines.push(`- \`${entry}\``);
+  }
   return lines.join("\n");
 }
