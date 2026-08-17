@@ -397,6 +397,47 @@ export class EventRepository extends BaseRepository {
   }
 
   /**
+   * REPARACION: rellena el `occurredAt` de un evento que se escribio sin el.
+   *
+   * Existe por un fallo real: dos descriptores del registro declaraban un
+   * campo de fecha que no existia en los registros historicos
+   * (`editedAt`/`insertedAt` en vez de `createdAt`), asi que 6 eventos se
+   * migraron con `occurredAt` vacio. Lo detecto la certificacion
+   * independiente contra Atlas.
+   *
+   * Usa `upsertIfNewer` sobre `occurredAt`: una fecha real siempre es
+   * "mas nueva" que la cadena vacia, asi que rellena el hueco; y si el
+   * documento ya tiene una fecha buena, la reparacion no la pisa. No
+   * borra nada y repetirla no cambia nada.
+   */
+  async repairOccurredAt(input: {
+    kind: string;
+    eventId: string;
+    departmentRunId?: string | null;
+    occurredAt: string;
+    payload: Record<string, unknown>;
+  }): Promise<WriteOutcome> {
+    if (!input.occurredAt || input.occurredAt.trim().length === 0) {
+      throw new Error("No se repara un evento con una fecha vacia: no arreglaria nada.");
+    }
+    const document: DepartmentEventDocument = {
+      kind: input.kind,
+      eventId: input.eventId,
+      departmentRunId: input.departmentRunId ?? null,
+      occurredAt: input.occurredAt,
+      payload: input.payload,
+      contractVersion: STATE_CONTRACT_VERSION,
+    };
+    return this.write("events.repairOccurredAt", () =>
+      this.collection.upsertIfNewer(
+        { kind: input.kind, eventId: input.eventId },
+        document,
+        "occurredAt"
+      )
+    );
+  }
+
+  /**
    * Todos los eventos de un tipo, del mas antiguo al mas reciente.
    *
    * Es lo que necesita la hidratacion para reconstruir un `.jsonl` de

@@ -25,6 +25,8 @@ import {
   MigrationMode,
   migrateStateToMongo,
   renderMigrationReport,
+  renderRepairReport,
+  repairEventTimestamps,
 } from "../src/persistence/migration";
 import { openPersistenceSession } from "../src/persistence/runtime";
 import { DepartmentStateRepository } from "../src/persistence/repositories";
@@ -113,6 +115,24 @@ async function main(): Promise<void> {
 
     console.log(renderMigrationReport(report));
     console.log("");
+
+    // Fase O57 — reparacion de los eventos que se migraron sin fecha por
+    // un descriptor mal declarado. Solo rellena huecos: no borra ni pisa
+    // ninguna fecha buena, y repetirla no cambia nada.
+    if (mode === "apply" && !report.aborted) {
+      const repair = await repairEventTimestamps(dataDir, repository);
+      if (repair.repaired > 0 || repair.unrepairable.length > 0) {
+        console.log(renderRepairReport(repair));
+        console.log("");
+      }
+      console.log(
+        `REPAIR_JSON=${JSON.stringify({
+          repaired: repair.repaired,
+          alreadyCorrect: repair.alreadyCorrect,
+          unrepairable: repair.unrepairable.length,
+        })}`
+      );
+    }
 
     // Bitacora de la ejecucion. No es estado del departamento; sirve para
     // demostrar que dos ejecuciones producen el mismo resultado.

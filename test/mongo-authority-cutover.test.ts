@@ -13,6 +13,8 @@ import { renderPreviousHumanFeedback } from "../src/approvals/human-feedback-con
 import { readHumanDecisions } from "../src/approvals/manual/decision-store";
 import { hydrateStateFromMongo } from "../src/persistence/hydration";
 import { buildSubjectKey } from "../src/persistence/decision-identity";
+import { ENTITY_REGISTRY } from "../src/persistence/entity-registry";
+import { repairEventTimestamps } from "../src/persistence/migration";
 import {
   loadPreviousRunSummaryFromState,
   recordRunBriefSummary,
@@ -34,6 +36,9 @@ export interface TestCase {
   name: string;
   fn: () => void | Promise<void>;
 }
+
+/** `data/` del propio repositorio: los registros REALES, no datos de mentira. */
+const REPO_DATA_DIR = path.join(__dirname, "..", "data");
 
 function newRepository(): DepartmentStateRepository {
   return new DepartmentStateRepository(new InMemoryStateDatabase());
@@ -696,6 +701,111 @@ export function runMongoAuthorityCutoverTests(): TestCase[] {
             .trim();
           assert.ok(projected.includes('"status":"done"'));
           assert.ok(!projected.includes('"status":"pending"'));
+        });
+      },
+    },
+
+    // ---------------------------------------------------------------
+    // Reparacion de las fechas que un descriptor mal declarado dejo vacias
+    // ---------------------------------------------------------------
+    {
+      name: "el registro declara campos que EXISTEN en los registros reales",
+      fn: () => {
+        // Regresion directa del fallo que encontro la certificacion: dos
+        // descriptores declaraban `editedAt`/`insertedAt`, campos que no
+        // existen en ningun registro. Los tests no lo cazaron porque
+        // usaban datos de mentira que si los llevaban. Este test mira los
+        // ficheros REALES del repositorio.
+        const problems: string[] = [];
+        for (const descriptor of ENTITY_REGISTRY) {
+          const filePath = path.join(REPO_DATA_DIR, descriptor.file);
+          if (!fs.existsSync(filePath)) continue;
+          const first = fs
+            .readFileSync(filePath, "utf-8")
+            .split("\n")
+            .find((line) => line.trim().length > 0);
+          if (!first) continue;
+          const record = JSON.parse(first) as Record<string, unknown>;
+          for (const field of descriptor.idFields) {
+            if (!(field in record)) problems.push(`${descriptor.file}: idField "${field}" no existe`);
+          }
+          if (!(descriptor.freshnessField in record)) {
+            problems.push(`${descriptor.file}: freshnessField "${descriptor.freshnessField}" no existe`);
+          }
+          if (!(descriptor.occurredAtField in record)) {
+            problems.push(`${descriptor.file}: occurredAtField "${descriptor.occurredAtField}" no existe`);
+          }
+        }
+        assert.deepEqual(problems, [], problems.join("; "));
+      },
+    },
+    {
+      name: "la reparacion rellena un occurredAt vacio y no toca los que ya estan bien",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          const record = {
+            eventId: "evt-roto",
+            createdAt: "2026-08-10T00:00:00.000Z",
+            summary: "algo paso",
+          };
+          writeJsonl(path.join(dataDir, "department-events.jsonl"), [
+            record,
+            { eventId: "evt-bueno", createdAt: "2026-08-11T00:00:00.000Z", summary: "otra cosa" },
+          ]);
+
+          const repository = newRepository();
+          // Uno migrado MAL (sin fecha), como quedaron los 6 reales.
+          await repository.events.appendEvent({
+            kind: "department_event",
+            eventId: "evt-roto",
+            occurredAt: "",
+            payload: record,
+          });
+          // Y otro migrado bien.
+          await repository.events.appendEvent({
+            kind: "department_event",
+            eventId: "evt-bueno",
+            occurredAt: "2026-08-11T00:00:00.000Z",
+            payload: { eventId: "evt-bueno", createdAt: "2026-08-11T00:00:00.000Z" },
+          });
+
+          const report = await repairEventTimestamps(dataDir, repository);
+          assert.equal(report.repaired, 1);
+          assert.equal(
+            (await repository.events.getEvent("department_event", "evt-roto"))?.occurredAt,
+            "2026-08-10T00:00:00.000Z"
+          );
+
+          // Repetirla no cambia nada: es idempotente.
+          const again = await repairEventTimestamps(dataDir, repository);
+          assert.equal(again.repaired, 0);
+          assert.equal(await repository.events.countByKind("department_event"), 2, "no duplica");
+        });
+      },
+    },
+    {
+      name: "la reparacion NO se inventa una fecha cuando el registro tampoco la tiene",
+      fn: async () => {
+        await withTempDir(async (dataDir) => {
+          const record = { eventId: "evt-sin-fecha", summary: "sin createdAt" };
+          writeJsonl(path.join(dataDir, "department-events.jsonl"), [record]);
+
+          const repository = newRepository();
+          await repository.events.appendEvent({
+            kind: "department_event",
+            eventId: "evt-sin-fecha",
+            occurredAt: "",
+            payload: record,
+          });
+
+          const report = await repairEventTimestamps(dataDir, repository);
+          assert.equal(report.repaired, 0);
+          assert.deepEqual(report.unrepairable, ["department_event:evt-sin-fecha"]);
+          assert.equal(
+            (await repository.events.getEvent("department_event", "evt-sin-fecha"))?.occurredAt,
+            "",
+            "se deja como esta: inventar una fecha seria mentir sobre cuando ocurrio"
+          );
         });
       },
     },

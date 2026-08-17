@@ -58,8 +58,14 @@ jobs:
       # cronologico. Van escritas aqui a proposito: asi el commit deja
       # constancia de QUE se certifico, y no depende de lo que alguien
       # teclee al lanzar el workflow.
+      # Las CUATRO pasadas coordinadas que ocurrieron de verdad, en orden.
+      # La certificacion anterior fallo porque yo habia listado solo tres y
+      # me habia dejado `dept-2026-08-17T143047Z`, que tambien corrio y
+      # tambien escribio su estado (su gate quedo rojo por seo-specialist,
+      # pero la persistencia fue entera en verde). MongoDB tenia razon y la
+      # lista estaba mal.
       CERTIFY_RUNS: >-
-        dept-2026-08-17T140504Z,dept-2026-08-17T145905Z,dept-2026-08-17T152418Z
+        dept-2026-08-17T140504Z,dept-2026-08-17T143047Z,dept-2026-08-17T145905Z,dept-2026-08-17T152418Z
       CERTIFY_EXPECTED_DECISIONS: "7"
     steps:
       - name: Checkout

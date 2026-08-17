@@ -247,8 +247,13 @@ export const ENTITY_REGISTRY: readonly EntityDescriptor[] = [
     kind: "production_draft_edit",
     stateClass: "B",
     idFields: ["editId"],
-    freshnessField: "editedAt",
-    occurredAtField: "editedAt",
+    // Fase O57 — CORREGIDO. Antes decia `editedAt`, un campo que no existe
+    // en ningun registro real: los 4 que hay llevan `createdAt`/`updatedAt`.
+    // El resultado era que los 4 documentos se migraban con `occurredAt`
+    // vacio. Lo detecto la certificacion independiente, no los tests: los
+    // tests usaban datos de mentira que si tenian el campo.
+    freshnessField: "updatedAt",
+    occurredAtField: "createdAt",
     rationale: "Ediciones aplicadas sobre contenido ya publicado. Registro para rollback.",
   },
   {
@@ -256,8 +261,10 @@ export const ENTITY_REGISTRY: readonly EntityDescriptor[] = [
     kind: "draft_image_insertion",
     stateClass: "B",
     idFields: ["insertionId"],
-    freshnessField: "insertedAt",
-    occurredAtField: "insertedAt",
+    // Fase O57 — CORREGIDO por el mismo motivo que `production_draft_edit`:
+    // `insertedAt` no existe en los registros reales.
+    freshnessField: "updatedAt",
+    occurredAtField: "createdAt",
     rationale: "Imagenes insertadas en borradores. Registro para rollback.",
   },
   {

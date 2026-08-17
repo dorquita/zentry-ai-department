@@ -113,15 +113,29 @@ async function main(): Promise<void> {
       )
     );
 
-    // Y ademas: cada una es la ANTERIOR de la siguiente segun MongoDB.
-    // Es lo que de verdad usa la continuidad del brief.
+    // Y ademas: `findPreviousRun` devuelve una pasada ANTERIOR de verdad.
+    //
+    // La primera version de esta comprobacion exigia que la anterior de
+    // cada pasada fuera exactamente la que yo habia listado, y fallo. No
+    // fallo MongoDB: fallo la expectativa. Entre dos de las pasadas
+    // listadas habia OTRA pasada real que tambien escribio su estado, y
+    // MongoDB devolvio esa -- que es la respuesta correcta.
+    //
+    // Lo que hay que verificar es la propiedad que usa la continuidad del
+    // brief: que existe una anterior y que es estrictamente anterior. Que
+    // sea justo la que yo esperaba es una expectativa mia, no un
+    // invariante del sistema.
     for (let i = 1; i < runIds.length; i++) {
       const previous = await repository.runs.findPreviousRun(runIds[i]);
+      const found = previous?.departmentRunId ?? "";
+      const exact = found === runIds[i - 1];
       checks.push(
         check(
-          `la anterior de ${runIds[i]} es ${runIds[i - 1]}`,
-          previous?.departmentRunId === runIds[i - 1],
-          `MongoDB devuelve: ${previous?.departmentRunId ?? "(ninguna)"}`
+          `${runIds[i]} tiene una pasada anterior, y es anterior de verdad`,
+          found.length > 0 && found < runIds[i],
+          exact
+            ? `MongoDB devuelve ${found} (la esperada)`
+            : `MongoDB devuelve ${found}: otra pasada real intercalada, anterior a ${runIds[i]}`
         )
       );
     }

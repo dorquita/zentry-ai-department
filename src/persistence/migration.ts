@@ -34,7 +34,11 @@ import {
   readOccurredAt,
 } from "./entity-registry";
 import { JsonlParseError, scanJsonl } from "./jsonl-source";
-import { DepartmentStateRepository, RecordDecisionInput } from "./repositories";
+import {
+  DepartmentEventDocument,
+  DepartmentStateRepository,
+  RecordDecisionInput,
+} from "./repositories";
 import { buildDecisionKey } from "./decision-identity";
 
 export type MigrationMode = "dry-run" | "apply";
@@ -657,6 +661,112 @@ export interface EquivalenceReport {
  * fallo de equivalencia: significa que ya esta recibiendo escrituras
  * nuevas, que es justo lo que hace el modo shadow.
  */
+export interface RepairReport {
+  /** Ficheros de clase B revisados. */
+  filesScanned: number;
+  eventsScanned: number;
+  /** Eventos que estaban en MongoDB con `occurredAt` vacio y ya no. */
+  repaired: number;
+  /** Eventos que ya estaban bien: la reparacion no los toca. */
+  alreadyCorrect: number;
+  /** Registros del fichero que TAMPOCO tienen fecha: no hay nada con que reparar. */
+  unrepairable: string[];
+}
+
+/**
+ * Fase O57 — REPARA los eventos que se migraron sin `occurredAt`.
+ *
+ * Por que hace falta: dos descriptores del registro declaraban un campo de
+ * fecha que no existe en los registros historicos (`editedAt`/`insertedAt`
+ * en vez de `createdAt`). Los 6 eventos afectados se migraron con la fecha
+ * vacia. El `payload` conserva el registro original entero, asi que no se
+ * perdio nada -- pero el documento incumplia su propio contrato y no se
+ * podia ordenar por fecha.
+ *
+ * NO es destructiva: solo rellena huecos. Un evento que ya tiene una fecha
+ * buena no se toca (`upsertIfNewer` lo trata como mas nuevo), y repetir la
+ * reparacion no cambia nada. No borra ni un documento.
+ *
+ * Se detecto con la certificacion independiente contra Atlas, no con los
+ * tests: los tests usaban registros de mentira que SI llevaban el campo.
+ */
+export async function repairEventTimestamps(
+  dataDir: string,
+  repository: DepartmentStateRepository
+): Promise<RepairReport> {
+  const report: RepairReport = {
+    filesScanned: 0,
+    eventsScanned: 0,
+    repaired: 0,
+    alreadyCorrect: 0,
+    unrepairable: [],
+  };
+
+  for (const descriptor of migratableDescriptors()) {
+    if (descriptor.stateClass !== "B") continue;
+    const filePath = path.join(dataDir, descriptor.file);
+    if (!fs.existsSync(filePath)) continue;
+
+    const stored = await repository.events.listByKind(descriptor.kind);
+    const broken = new Map<string, DepartmentEventDocument>();
+    for (const document of stored) {
+      if (!document.occurredAt || document.occurredAt.trim().length === 0) {
+        broken.set(document.eventId, document);
+      }
+    }
+    report.filesScanned += 1;
+    report.eventsScanned += stored.length;
+    report.alreadyCorrect += stored.length - broken.size;
+    if (broken.size === 0) continue;
+
+    // Solo se recorre el fichero si hay algo que reparar en ese tipo.
+    const pending: { eventId: string; record: Record<string, unknown> }[] = [];
+    await scanJsonl(filePath, (line) => {
+      // Un registro sin identidad no se pudo migrar en su dia, asi que
+      // tampoco hay nada suyo que reparar.
+      const eventId = buildEntityId(descriptor, line.record);
+      if (eventId && broken.has(eventId)) pending.push({ eventId, record: line.record });
+    });
+
+    for (const item of pending) {
+      const occurredAt = readOccurredAt(descriptor, item.record);
+      if (!occurredAt || occurredAt.trim().length === 0) {
+        // El registro tampoco tiene fecha: reparar es imposible y
+        // inventarse una seria mentir sobre cuando ocurrio.
+        report.unrepairable.push(`${descriptor.kind}:${item.eventId}`);
+        continue;
+      }
+      const outcome = await repository.events.repairOccurredAt({
+        kind: descriptor.kind,
+        eventId: item.eventId,
+        departmentRunId: broken.get(item.eventId)?.departmentRunId ?? null,
+        occurredAt,
+        payload: item.record,
+      });
+      if (outcome.result === "updated" || outcome.result === "inserted") report.repaired += 1;
+    }
+  }
+
+  return report;
+}
+
+export function renderRepairReport(report: RepairReport): string {
+  const lines: string[] = [];
+  lines.push("## Reparacion de fechas de eventos");
+  lines.push("");
+  lines.push(`- **Ficheros de clase B revisados:** ${report.filesScanned}`);
+  lines.push(`- **Eventos revisados:** ${report.eventsScanned}`);
+  lines.push(`- **Reparados:** ${report.repaired}`);
+  lines.push(`- **Ya correctos (no se tocan):** ${report.alreadyCorrect}`);
+  if (report.unrepairable.length > 0) {
+    lines.push(
+      `- **Sin fecha tampoco en el fichero:** ${report.unrepairable.length}. ` +
+        "No se repara: inventarse una fecha seria mentir sobre cuando ocurrio."
+    );
+  }
+  return lines.join("\n");
+}
+
 export async function verifyLegacyEquivalence(
   dataDir: string,
   repository: DepartmentStateRepository,
