@@ -546,13 +546,31 @@ de un sitio que MongoDB no proyecta:
 
 | Lector | Problema real | Ahora |
 | --- | --- | --- |
-| `loadPreviousHumanFeedback()` | Se limitaba a los rechazos **con motivo**. De las 7 decisiones reales, 6 son aprobaciones: devolvía 0 entradas | `loadPreviousHumanFeedbackFromState()` lee `human_decisions` con las **tres** acciones |
+| `loadPreviousHumanFeedback()` | Se limitaba a los rechazos **con motivo**. De las 7 decisiones reales 6 son aprobaciones, así que devolvía **1** entrada de 7 | `loadPreviousHumanFeedbackFromState()` lee `human_decisions` con las **tres** acciones: devuelve **7** de 7 |
 | `loadPreviousRunSnapshot()` | Leía el brief anterior de `reports/`, que es un artifact (clase D) y no se migra: ataba la continuidad a restaurar la rama | `department_runs.briefSummary`, escrito por la propia fase del brief |
 
 Ninguno de los dos consulta el histórico de eventos: leen el **estado
 actual** de su colección. `human_decisions` son 7 documentos y crecen
 con el número de decisiones humanas, no con los 16.000 eventos. Cero
 N+1: una consulta indexada, no una por recomendación.
+
+### Rendimiento medido
+
+Sobre el histórico real (32.780 registros, 16.335 documentos de clase A/B):
+
+| Operación | Documentos | Coste |
+| --- | --- | --- |
+| Hidratación completa de `data/` | 16.335 proyectados a 23 ficheros | **11 s** contra Atlas (0,8 s en memoria) |
+| Lectura de decisiones humanas | 7 | **1 consulta indexada**, < 1 ms |
+| Continuidad del brief | 1 | **1 consulta** a `department_runs` |
+
+Cero N+1: ningún lector consulta por recomendación ni por entidad. La
+hidratación hace una lectura por *kind* (21 en total), no una por
+documento, y la colapsa a fichero en un único `writeFileSync`.
+
+El coste dominante de la pasada sigue siendo el mismo que antes — seis
+invocaciones de Claude, unos 20 minutos — así que 11 segundos de
+hidratación no mueven la aguja.
 
 ### `subjectKey`: qué responde y qué no
 

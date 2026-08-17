@@ -11,8 +11,10 @@
  *   - los APLAZAMIENTOS: "ahora no" tambien es una respuesta.
  *
  * De las 7 decisiones reales que hay hoy en el historico, 6 son
- * aprobaciones. El lector antiguo devolvia 0 entradas. No era que el
- * dato se perdiera: es que nadie lo leia.
+ * aprobaciones y 1 es un rechazo. El lector antiguo devolvia UNA sola
+ * entrada -- el rechazo. Las otras 6 estaban guardadas y nadie las leia.
+ * Medido, no estimado: `loadPreviousHumanFeedback()` = 1 entrada,
+ * `readPreviousHumanFeedbackFrom()` = 7.
  *
  * SIN DOBLE AUTORIDAD. No hay `try MongoDB / catch fichero`. En modo
  * `mongo` se lee de MongoDB y, si MongoDB no responde, esto LANZA y la
