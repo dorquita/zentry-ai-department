@@ -234,7 +234,6 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
           "uploadMediaToWordpress",
           "uploadMediaToProduction",
           "woocommerce",
-          "novamira",
           "production-draft-executor",
         ];
 
@@ -251,6 +250,56 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
         const runner = fs.readFileSync(wiringFiles[0], "utf-8");
         assert.ok(runner.includes("getWordpressPage"), "el apply necesita leer el estado previo (snapshot)");
         assert.ok(runner.includes("updateStagingPublishedPageContent"), "el apply de staging actualiza paginas ya publicadas, nunca borradores");
+      },
+    },
+    {
+      // AMPLIACION DELIBERADA DEL ALCANCE. Hasta ahora "novamira" estaba
+      // en la lista de prohibidos del test de arriba, porque el apply de
+      // la pasada diaria solo sabia hacer title/meta por REST. Esa
+      // prohibicion tenia un efecto que NO era el buscado: el
+      // departamento producia ChangePlans ejecutables y despues no los
+      // ejecutaba, porque el unico camino capaz de aplicarlos
+      // (`novamira/execute-php`) estaba vetado justo en el script que
+      // tenia que llamarlo. Se aplicaban a mano, o no se aplicaban.
+      //
+      // El veto se levanta, pero NO se afloja: lo que antes era "no lo
+      // menciones" pasa a ser "solo puedes usarlo asi", que es una
+      // condicion mas fuerte y comprobable. El executor es el MISMO que
+      // ya certifico el E2E controlado, con su guard determinista, su
+      // catalogo cerrado de operaciones y produccion bloqueada.
+      name: "El apply diario solo puede usar Novamira para execute-php en STAGING, nunca para otra cosa ni en otro entorno",
+      fn: () => {
+        const runner = fs.readFileSync(path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts"), "utf-8");
+
+        // 1. La UNICA ability invocable es execute-php.
+        const abilities = [...runner.matchAll(/abilityName:\s*"([^"]+)"/g)].map((m) => m[1]);
+        assert.ok(abilities.length > 0, "el apply debe declarar explicitamente que ability usa");
+        for (const ability of abilities) {
+          assert.equal(ability, "novamira/execute-php", `ability no permitida en el apply diario: "${ability}"`);
+        }
+
+        // 2. El UNICO entorno alcanzable desde aqui es staging.
+        const environments = [...runner.matchAll(/environment:\s*"([^"]+)"/g)].map((m) => m[1]);
+        assert.ok(environments.length > 0, "cada invocacion de execute-php debe declarar su entorno");
+        for (const environment of environments) {
+          assert.equal(environment, "staging", `el apply diario no puede invocar execute-php sobre "${environment}"`);
+        }
+
+        // 3. Se pasa por el executor guardado, no por el cliente MCP a pelo.
+        assert.ok(
+          runner.includes("runExecutableChangePlan"),
+          "el ChangePlan debe ejecutarse por el executor compartido (snapshot, read-back, validacion y rollback), nunca llamando al MCP directamente"
+        );
+        assert.ok(
+          !/callNovamiraExecutePhp\s*\(\s*\{[^}]*environment:\s*"production"/s.test(runner),
+          "ninguna invocacion de execute-php desde el apply diario puede apuntar a produccion"
+        );
+
+        // 4. La decision de ejecutar es de la capa de politica, no del bucle.
+        assert.ok(
+          runner.includes("decideChangePlanExecution"),
+          "ejecutar o no un ChangePlan debe decidirlo la funcion pura de politica, que es la que se puede testear sin red"
+        );
       },
     },
     {

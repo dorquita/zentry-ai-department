@@ -54,19 +54,32 @@ import { WebEngineerOutput } from "../src/employees/web-engineer/types";
 import { OwnedStagingPage } from "../src/department/apply/capability";
 import {
   buildChangeId,
+  buildStagingChangeId,
   DEPARTMENT_CHANGE_CONTRACT_VERSION,
   DepartmentChangeRequest,
+  EnvironmentApplyRecord,
 } from "../src/department/apply/change-types";
 import { createHttpApprovalStoreFromEnv } from "../src/approvals/http-store";
 import { isServerlessApprovalsEnabled, serverlessDisabledReason } from "../src/approvals/feature-flag";
 import { Approval, ApprovalStore } from "../src/approvals/store";
-import { flushRecordedTransitions, recordingTransitionPort } from "../src/approvals/executor-bridge";
+import { flushRecordedTransitions, RecordedTransition, recordingTransitionPort } from "../src/approvals/executor-bridge";
 import { checkStagingApplyGuards, StagingApplyGuards } from "../src/department/apply/guards";
 import { buildApplyPlan, projectChangesIntoSummary } from "../src/department/apply/plan";
 import { ResolvedChangePlan } from "../src/department/web-engineer-changeplan";
 import { computeVersionHash } from "../src/department/apply/version";
 import { sendChangeApprovalRequest } from "../src/department/apply/telegram-notifier";
 import { applyChangeToStaging } from "../src/department/apply/staging-executor";
+import {
+  ChangePlanExecutionFlags,
+  decideChangePlanExecution,
+  mapOutcomeToChangeStatus,
+  runExecutableChangePlan,
+} from "../src/department/apply/changeplan-staging-runner";
+import { appendExecutePhpAudit } from "../src/core/execute-php-audit";
+import { buildPhpForPlan } from "../src/core/execute-php-builder";
+import { callNovamiraExecutePhp, openSession } from "../src/adapters/novamira-mcp-client";
+import { readStagingPage } from "../src/adapters/staging-inventory-reader";
+import { PhpTargetState } from "../src/department/apply/execute-php-executor";
 import { readApplySummary, updateApplySummaryItems, writeApplySummary } from "../src/department/apply/store";
 import { DepartmentApplyItem, DepartmentApplySummary } from "../src/department/apply/types";
 import { DepartmentPromotionResult } from "../src/department/promotion";
@@ -101,6 +114,20 @@ function resolveStagingGuards(): StagingApplyGuards {
     stagingApplyEnabled: isEnabled("DEPARTMENT_STAGING_APPLY_ENABLED"),
     wordpressWritesEnabled: isWordpressDraftsEnabled(),
     wordpressBackend: resolveWordpressBackend(),
+    wordpressEnv: resolveWordpressEnv(),
+  };
+}
+
+/**
+ * Interruptores del camino de ChangePlan. Son DISTINTOS de los de
+ * `resolveStagingGuards()` a proposito: aquel gobierna el executor
+ * legacy de title/meta por REST, y este el camino `execute-php` via
+ * Novamira. Apagar uno no apaga el otro, y los dos se comprueban.
+ */
+function resolveChangePlanFlags(): ChangePlanExecutionFlags {
+  return {
+    executePhpFallbackEnabled: isEnabled("NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED"),
+    novamiraStagingWritesEnabled: isEnabled("NOVAMIRA_STAGING_WRITES_ENABLED"),
     wordpressEnv: resolveWordpressEnv(),
   };
 }
@@ -226,13 +253,19 @@ function syncSummaryWith(
 async function captureVersionAnchors(summary: DepartmentApplySummary): Promise<DepartmentApplySummary> {
   const items = [];
   for (const item of summary.items) {
-    const target = item.applyCapability.target;
-    if (!target || item.applyStatus !== "proposed") {
+    // El destino puede venir por DOS caminos: el ChangePlan ya resuelto
+    // contra el inventario real (preferente) o la capacidad legacy que
+    // interpreta prosa. Antes solo se miraba el legacy, asi que un
+    // elemento con ChangePlan se quedaba sin ancla de version -- y sin
+    // ancla no se puede afirmar despues "esto no ha cambiado desde que lo
+    // viste".
+    const targetPageId = item.executableChangePlan?.wordpressPageId ?? item.applyCapability.target?.wordpressPageId ?? null;
+    if (targetPageId === null || item.applyStatus !== "proposed") {
       items.push(item);
       continue;
     }
     try {
-      const page = await getWordpressPage(target.wordpressPageId);
+      const page = await getWordpressPage(targetPageId);
       const hash = computeVersionHash({ status: page.status, title: page.title, metaDescription: page.excerpt, contentHtml: page.contentHtml });
       items.push({
         ...item,
@@ -246,7 +279,7 @@ async function captureVersionAnchors(summary: DepartmentApplySummary): Promise<D
           {
             at: new Date().toISOString(),
             event: "version_anchor_unavailable",
-            detail: `No se pudo leer la pagina ${target.wordpressPageId} para anclar su version: ${err instanceof Error ? err.message : String(err)}. La sesion de aprobacion no podra verificar si cambia desde ahora.`,
+            detail: `No se pudo leer la pagina ${targetPageId} para anclar su version: ${err instanceof Error ? err.message : String(err)}. La sesion de aprobacion no podra verificar si cambia desde ahora.`,
           },
         ],
       });
@@ -350,8 +383,40 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
   let applied = 0;
   let criticalRollbacks = 0;
 
+  // Camino de ChangePlan: se resuelve UNA vez para toda la pasada, no por
+  // elemento, porque los interruptores no cambian a mitad de una pasada.
+  const changePlanFlags = resolveChangePlanFlags();
+  // La sesion MCP se abre PEREZOSAMENTE: si ningun elemento acaba
+  // teniendo un ChangePlan ejecutable, no se abre ninguna conexion con
+  // Novamira. Una pasada que no escribe no debe ni conectarse.
+  let novamiraSession: Awaited<ReturnType<typeof openSession>> | null = null;
+  const requireNovamiraSession = async () => {
+    if (!novamiraSession) novamiraSession = await openSession();
+    return novamiraSession;
+  };
+
   for (const item of summary.items) {
-    if (item.applyStatus !== "proposed" || !item.applyCapability.supported || !item.applyCapability.target) continue;
+    if (item.applyStatus !== "proposed") continue;
+
+    // ORDEN DELIBERADO: el ChangePlan ejecutable manda sobre la capacidad
+    // legacy. El legacy interpreta la PROSA de web-engineer buscando
+    // `page_id=N` y lineas `TITLE:`/`META:`; el ChangePlan viene ya
+    // resuelto contra el inventario REAL, con el BEFORE leido y el ancla
+    // de version. Cuando existen los dos, ejecutar el legacy seria
+    // preferir la adivinanza al dato.
+    const planDecision = decideChangePlanExecution({ executableChangePlan: item.executableChangePlan, flags: changePlanFlags });
+    const hasLegacyCapability = item.applyCapability.supported && item.applyCapability.target !== null;
+
+    if (!planDecision.executable && !hasLegacyCapability) {
+      // Esto ya NO es silencio: antes un elemento con ChangePlan pero sin
+      // capacidad legacy se descartaba sin decir nada, y la pasada
+      // terminaba diciendo "requiere implementacion manual" con la
+      // capacidad de ejecutarlo construida al lado.
+      if (item.executableChangePlan) {
+        console.log(`  - ${item.recommendationId}: tiene ChangePlan ejecutable pero NO se ejecuta. Motivo: ${planDecision.reason}`);
+      }
+      continue;
+    }
 
     // Idempotencia: si esta pasada ya creo una aprobacion para esta
     // recomendacion, no se crea otra. Una segunda ejecucion de la fase no
@@ -385,7 +450,132 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
       change = created.approval;
     }
 
+    if (planDecision.executable && item.executableChangePlan) {
+      // --- CAMINO CHANGEPLAN (execute-php via Novamira) ---------------
+      //
+      // Es EXACTAMENTE el mismo executor que ya usaba la sesion de
+      // aprobacion manual y que certifico el E2E controlado: snapshot ->
+      // ancla de version -> apply -> read-back por una via distinta a la
+      // de escritura -> validacion de scope -> rollback verificado.
+      const executable = item.executableChangePlan;
+      console.log(`  - ${item.recommendationId}: ${planDecision.reason}`);
+
+      const session = await requireNovamiraSession();
+      const outcome = await runExecutableChangePlan({
+        executable,
+        departmentRunId: item.departmentRunId,
+        recommendationId: item.recommendationId,
+        changeId: change.changeId,
+        qaStatus: item.qaStatus,
+        flags: changePlanFlags,
+        onAudit: (record) => appendExecutePhpAudit(record),
+        deps: {
+          getState: async (postId: number): Promise<PhpTargetState> => {
+            const page = await readStagingPage(postId);
+            return {
+              id: page.wordpressPageId,
+              status: page.status,
+              title: page.title,
+              contentHtml: page.contentHtml,
+              excerpt: page.excerpt,
+              link: page.stagingUrl,
+              slug: page.slug,
+              meta: page.meta,
+            };
+          },
+          runPhp: async (php: string) =>
+            callNovamiraExecutePhp(
+              {
+                actor: "department_daily_apply",
+                abilityName: "novamira/execute-php",
+                environment: "staging",
+                // El PHP de rollback NO es el del plan: distinguirlos por
+                // igualdad literal con el PHP del apply es lo que hace
+                // que la auditoria diga la fase correcta.
+                phase: php === buildPhpForPlan(executable.plan) ? "apply" : "rollback",
+                qaStatus: item.qaStatus,
+                departmentRunId: item.departmentRunId,
+                recommendationId: item.recommendationId,
+                changeId: change.changeId,
+                plan: executable.plan,
+                php,
+                capabilitySelection: executable.capability,
+                flags: changePlanFlags,
+                snapshotPreviousValue: executable.beforeValue,
+                snapshotPreviousExisted: true,
+              },
+              session
+            ),
+        },
+      });
+
+      const nextStatus = mapOutcomeToChangeStatus(outcome.status);
+      const nowIso = new Date().toISOString();
+      const stagingRecord: EnvironmentApplyRecord = {
+        environment: "staging",
+        applyId: buildStagingChangeId(change.changeId),
+        wordpressPageId: executable.wordpressPageId,
+        url: executable.stagingUrl,
+        // El slug no lo devuelve el executor de PHP. Se deja vacio a
+        // proposito en vez de derivarlo de la URL: es el UNICO campo con
+        // el que se empareja staging con produccion, y un slug adivinado
+        // ahi seria una forma de escribir en la pagina equivocada.
+        pageSlug: "",
+        startedAt: nowIso,
+        finishedAt: nowIso,
+        snapshot: null,
+        changedFields: [
+          {
+            field: executable.operation,
+            before: outcome.beforeValue ?? executable.beforeValue,
+            after: outcome.afterValue ?? executable.afterValue,
+            changed: outcome.status === "applied",
+          },
+        ],
+        validationStatus: outcome.validation as EnvironmentApplyRecord["validationStatus"],
+        validationDetail: outcome.detail,
+        rollbackStatus: outcome.rollback as EnvironmentApplyRecord["rollbackStatus"],
+        rollbackDetail: outcome.rollback === "not_needed" ? "" : outcome.detail,
+        resultingVersionHash: outcome.afterHash,
+        githubRunId: null,
+      };
+
+      // La transicion intermedia `staging_applying` se persiste tambien
+      // cuando el resultado final ya se conoce: la maquina de estados no
+      // tiene arista directa de `proposed` a `staging_applied`, y saltarsela
+      // dejaria un registro que no se puede reconstruir.
+      const transitions: RecordedTransition[] =
+        nextStatus === "proposed"
+          ? []
+          : [
+              {
+                from: "proposed",
+                to: "staging_applying",
+                updates: {},
+                audit: { event: "staging_applying", detail: `Apply de ChangePlan iniciado sobre el post ${executable.wordpressPageId} de staging.` },
+              },
+              {
+                from: "staging_applying",
+                to: nextStatus,
+                updates: { staging: stagingRecord },
+                audit: { event: outcome.status, detail: outcome.detail },
+              },
+            ];
+
+      const flushed = await flushRecordedTransitions(store, change.changeId, transitions, change.status, null, nowIso);
+      for (const problem of flushed.problems) console.error(`    ! ${problem}`);
+
+      if (outcome.stagingWritePerformed) externalWrites = true;
+      if (nextStatus === "staging_applied") applied += 1;
+      if (outcome.rollback === "rollback_failed") criticalRollbacks += 1;
+      console.log(`    -> ${outcome.status}: ${outcome.detail}`);
+      console.log(`       validacion=${outcome.validation} rollback=${outcome.rollback} url=${executable.stagingUrl}`);
+      continue;
+    }
+
+    // --- CAMINO LEGACY (title/meta por REST) --------------------------
     const target = item.applyCapability.target;
+    if (!target) continue;
     const { port, recorded } = recordingTransitionPort(() => new Date());
     const result = await applyChangeToStaging(
       change,
