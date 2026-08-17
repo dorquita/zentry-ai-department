@@ -467,13 +467,56 @@ quedan donde están; no se borra nada.
 
 ---
 
+## 13-bis. Tres pasadas coordinadas consecutivas
+
+Ejecutadas el 2026-08-17 sobre el cluster real:
+
+| # | run de Actions | veredicto del job | `[MONGO]` escribir | `[MONGO]` invariantes | `[STATE]` guard legacy | `persist-state` |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `32018733907` | ❌ gate | ✅ | ✅ | ✅ | **skipped** |
+| 2 | `32021075025` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 3 | `32023009376` | ❌ gate | ✅ | ✅ | ✅ | **skipped** |
+
+Verificación independiente después de las tres (run `32025087958`, otro
+workflow, otro runner, otro proceso):
+
+```text
+MONGO_STATE_VERIFY_JSON={"ok":true,"violations":0,"runs":3,"humanDecisions":7}
+```
+
+**Tres pasadas, cero violaciones de invariante, las 7 decisiones humanas
+intactas.**
+
+### Lo que enseñaron las pasadas 1 y 3
+
+Las dos acabaron en rojo, pero **no por MongoDB**: el veredicto del
+departamento marca la pasada como `degraded` porque `seo-specialist`
+falló la validación de su salida — un problema preexistente, ajeno a esta
+fase. Todos los pasos de estado pasaron en verde en las tres.
+
+La consecuencia es la interesante: como el job acabó en rojo, el job
+`persist-state` quedó **skipped** y **la rama `department-state` no
+avanzó**. En el sistema legacy, el trabajo de esas dos pasadas se habría
+perdido.
+
+MongoDB lo conservó igualmente. Es exactamente la pérdida de estado que
+motiva esta fase, ocurriendo sola en la primera pasada real y siendo
+absorbida por la arquitectura nueva.
+
+---
+
 ## 14. Estado de la transición
 
 - [x] **Fase 1 — shadow write.** Implementada.
 - [x] **Fase 2 — verificación.** `--mode equivalence` compara semántica
       (ids, cardinalidad, decisiones), nunca bytes.
-- [ ] **Fase 3 — lectores en MongoDB.** Bloqueada: nunca se ha llegado a
-      conectar (ver abajo).
+- [ ] **Fase 3 — lectores en MongoDB.** NO empezada. Es lo único que
+      separa el sistema de poder declarar MongoDB fuente de verdad, y es
+      la razón por la que todavía no se declara: hoy
+      `loadPreviousHumanFeedback()` sigue leyendo
+      `data/department-human-decisions.jsonl`, no MongoDB. La autoridad
+      fluye desde el fichero, aunque MongoDB sea un espejo fiel y
+      verificado.
 - [ ] **Fase 4 — MongoDB como fuente de verdad.**
 - [ ] **Fase 5 — exports.** Los JSON/Markdown pasan a ser proyecciones.
 
