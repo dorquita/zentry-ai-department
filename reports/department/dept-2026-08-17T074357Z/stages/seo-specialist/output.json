@@ -1,0 +1,446 @@
+```json
+{
+  "executiveSummary": "Datos live de Search Console de esta misma pasada (36 jobs, run seo-watcher-2026-08-17T074406Z). El backlog de action items es mayoritariamente solido, pero aparecen dos problemas de enrutado que conviene resolver antes de ejecutar nada: (1) dos keywords ('cerraduras inteligentes para centros deportivos' y 'cerraduras sostenibles para gimnasios') tienen tareas activas apuntando a https://zentrylockers.com/cerraduras/, pagina que el catalogo de clusters marca como en papelera con redireccion 301 real a /cerraduras-para-taquillas/; y (2) sigue habiendo action items de keywords genericas de melamina ('taquillas melamina', 'taquillas de melamina') apuntando a /taquillas-melamina-fenolico/ pese a que la decision O29.1 ya documenta esa combinacion como mal enrutada y con proceso de cierre definido. Ademas hay un patron sistemico de CTR 0% en la mayoria de oportunidades low_ctr, tres paginas nuevas ya aprobadas en staging (metalicas, vestuarios, universidades) listas para publicar, y dos keywords objetivo de alta prioridad ('taquillas para gimnasios', 'lockers inteligentes') sin ningun actionItem ni cluster que las cubra explicitamente. Se priorizan primero las correcciones de enrutado (bajo esfuerzo, alto impacto), luego los quick wins de posicion cercana a top10, y despues las mejoras de CTR y publicacion de contenido nuevo ya validado.",
+  "findings": [
+    {
+      "id": "F1",
+      "category": "technical",
+      "description": "La pagina https://zentrylockers.com/cerraduras/ esta marcada en el catalogo de clusters como obsoleta (en papelera desde O22, con redireccion 301 real a /cerraduras-para-taquillas/), pero el backlog de action items sigue generando/dirigiendo tareas activas hacia ella para dos keywords distintas ('cerraduras inteligentes para centros deportivos' y 'cerraduras sostenibles para gimnasios'). Ejecutar trabajo on-page o de contenido sobre una URL en papelera desperdicia esfuerzo.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV3", "EV4", "EV5", "EV6"]
+    },
+    {
+      "id": "F2",
+      "category": "cannibalization",
+      "description": "La decision O29.1 (ya aprobada) resuelve la canibalizacion entre /taquillas-melamina/ (generico) y /taquillas-melamina-fenolico/ (combinacion especifica), indicando que cualquier actionId con la keyword generica 'melamina' apuntando a la pagina fenolico esta mal enrutado y debe cerrarse via script (scripts/o291-resolve-melamina-cannibalization.ts). Sin embargo, en este run siguen apareciendo action items activos ('taquillas melamina' y 'taquillas de melamina', ~113 impresiones combinadas) apuntando a /taquillas-melamina-fenolico/, lo que sugiere que el cierre automatico no se ha aplicado a estos items o que han vuelto a generarse.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV9", "EV10", "EV11", "EV12"]
+    },
+    {
+      "id": "F3",
+      "category": "cannibalization",
+      "description": "'cerraduras sostenibles para gimnasios' no coincide con ningun matchPattern de los clusters catalogados y el pipeline la ha repartido entre dos paginas distintas (/cerraduras/, obsoleta, y /cerraduras-inteligentes-taquillas/, viva). Sin una decision de cluster explicita, existe riesgo de duplicar esfuerzo o de canibalizacion entre ambas paginas para la misma consulta.",
+      "basis": "inference",
+      "evidenceRefs": ["EV5", "EV6"]
+    },
+    {
+      "id": "F4",
+      "category": "structure",
+      "description": "La gran mayoria de las oportunidades marcadas como low_ctr en este run comparten CTR actual de 0.00% pese a tener impresiones reales (entre 20 y 86 por keyword), lo que apunta a un problema sistemico de snippets (title/meta description) poco atractivos en varias paginas de producto/sector, no a un caso aislado.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV7", "EV8", "EV9", "EV10", "EV13", "EV14", "EV22", "EV23", "EV24", "EV25", "EV26", "EV27", "EV28"]
+    },
+    {
+      "id": "F5",
+      "category": "keyword_strategy",
+      "description": "Las keywords objetivo de alta prioridad 'taquillas para gimnasios' y 'lockers inteligentes' (catalogo estatico, tipo commercial) no tienen ningun actionItem activo en este run ni un cluster catalogado con targetUrl definida que las cubra explicitamente -- hueco entre la estrategia de negocio declarada y la ejecucion SEO actual.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV15", "EV16"]
+    },
+    {
+      "id": "F6",
+      "category": "content",
+      "description": "Cuatro clusters con action new_page_candidate (taquillas_metalicas, taquillas_vestuarios, taquillas_universidad, taquillas_inteligentes_general) ya tienen paginas de staging creadas; tres estan visualmente aprobadas y listas para pasar a produccion, mientras que taquillas_inteligentes_general sigue pendiente de aprobacion visual real.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV18", "EV19", "EV20", "EV21"]
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "O1",
+      "keyword": "cerraduras inteligentes para taquillas",
+      "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "kind": "quick_win",
+      "priority": "high",
+      "recommendedAction": "Reforzar H1/H2, ampliar profundidad de contenido, mejorar enlazado interno y actualizar meta title/description para pasar de posicion ~20.5 a top 10. Target confirmado como correcto por el cluster cerraduras_inteligentes_taquillas.",
+      "rationale": "47 impresiones en el periodo; posicion actual 20.5, a un empujon de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV1", "EV2"]
+    },
+    {
+      "id": "O2",
+      "keyword": "cerraduras inteligentes para centros deportivos",
+      "page": "https://zentrylockers.com/cerraduras/",
+      "kind": "technical",
+      "priority": "high",
+      "recommendedAction": "No ejecutar el on-page tal cual: /cerraduras/ esta en papelera con redireccion 301 real a /cerraduras-para-taquillas/. Antes de cualquier trabajo de contenido, decidir con Pau el target correcto (posiblemente /cerraduras-para-taquillas/ o el cluster cerraduras_inteligentes_taquillas) y corregir el backlog.",
+      "rationale": "El cluster catalogado marca esta tarea como reject por apuntar a una URL obsoleta.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV3", "EV4"]
+    },
+    {
+      "id": "O3",
+      "keyword": "taquillas melamina",
+      "page": "https://zentrylockers.com/taquillas-melamina/",
+      "kind": "future_opportunity",
+      "priority": "medium",
+      "recommendedAction": "Reforzar contenido y snippet de /taquillas-melamina/ para 'taquillas melamina' (86 impresiones, CTR 0%); target correcto confirmado por el cluster taquillas_melamina.",
+      "rationale": "86 impresiones, posicion 30.1, lejos de primera pagina pero con volumen real.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV7", "EV11"]
+    },
+    {
+      "id": "O4",
+      "keyword": "taquillas de melamina",
+      "page": "https://zentrylockers.com/taquillas-melamina/",
+      "kind": "quick_win",
+      "priority": "medium",
+      "recommendedAction": "Reforzar H1/H2, contenido y meta title/description en /taquillas-melamina/ para pasar de posicion 28.7 a top 10.",
+      "rationale": "74 impresiones, posicion actual 28.7, a un empujon de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV8", "EV11"]
+    },
+    {
+      "id": "O5",
+      "keyword": "taquillas melamina",
+      "page": "https://zentrylockers.com/taquillas-melamina-fenolico/",
+      "kind": "cannibalization",
+      "priority": "medium",
+      "recommendedAction": "No ejecutar como landing nueva: segun la decision O29.1 esta keyword generica esta mal enrutada a esta URL de combinacion especifica. Cerrar/reasignar este actionId a /taquillas-melamina/ via el proceso ya definido.",
+      "rationale": "62 impresiones; el cluster taquillas_melamina_fenolico documenta que la keyword generica melamina no debe apuntar aqui.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV9", "EV11", "EV12"]
+    },
+    {
+      "id": "O6",
+      "keyword": "taquillas de melamina",
+      "page": "https://zentrylockers.com/taquillas-melamina-fenolico/",
+      "kind": "cannibalization",
+      "priority": "medium",
+      "recommendedAction": "No ejecutar como landing nueva: mismo caso de mal enrutado que 'taquillas melamina'; cerrar/reasignar a /taquillas-melamina/.",
+      "rationale": "51 impresiones; misma logica de canibalizacion resuelta documentada en el cluster.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV10", "EV11", "EV12"]
+    },
+    {
+      "id": "O7",
+      "keyword": "taquilla madera",
+      "page": "https://zentrylockers.com/taquillas-melamina/",
+      "kind": "future_opportunity",
+      "priority": "medium",
+      "recommendedAction": "Crear o ampliar seccion de contenido de soporte en /taquillas-melamina/ para 'taquilla madera' (acabado melamina que imita madera), alineado con la decision del cluster taquillas_melamina.",
+      "rationale": "50 impresiones, posicion 43.2, lejos de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV13", "EV11"]
+    },
+    {
+      "id": "O8",
+      "keyword": "taquillas colegios",
+      "page": "https://zentrylockers.com/taquillas-para-colegios/",
+      "kind": "quick_win",
+      "priority": "medium",
+      "recommendedAction": "Reforzar H1/H2, contenido y meta title/description en /taquillas-para-colegios/ para pasar de posicion 25.1 a top 10.",
+      "rationale": "40 impresiones, posicion 25.1, a un empujon de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV22"]
+    },
+    {
+      "id": "O9",
+      "keyword": "taquillas escolares",
+      "page": "https://zentrylockers.com/taquillas-para-colegios/",
+      "kind": "future_opportunity",
+      "priority": "medium",
+      "recommendedAction": "Reforzar contenido de soporte para 'taquillas escolares' dentro de /taquillas-para-colegios/, cubierta por el mismo cluster que 'taquillas colegios'.",
+      "rationale": "32 impresiones, posicion 33.8.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV23"]
+    },
+    {
+      "id": "O10",
+      "keyword": "taquilla para el personal",
+      "page": "https://zentrylockers.com/taquillas-para-empresas/",
+      "kind": "future_opportunity",
+      "priority": "medium",
+      "recommendedAction": "Reforzar contenido y snippet de /taquillas-para-empresas/ para 'taquilla para el personal', intencion comercial equivalente segun el cluster taquillas_empresas_personal.",
+      "rationale": "34 impresiones, posicion 65.7, lejos de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV24"]
+    },
+    {
+      "id": "O11",
+      "keyword": "cerraduras electrónicas taquillas",
+      "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "kind": "future_opportunity",
+      "priority": "medium",
+      "recommendedAction": "Reforzar contenido de /cerraduras-inteligentes-taquillas/ para esta variante, ya cubierta por el cluster cerraduras_inteligentes_taquillas.",
+      "rationale": "32 impresiones, posicion 34.6.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV25", "EV2"]
+    },
+    {
+      "id": "O12",
+      "keyword": "cerraduras electronicas para taquillas",
+      "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "kind": "quick_win",
+      "priority": "medium",
+      "recommendedAction": "Reforzar H1/H2, contenido y meta title/description para pasar de posicion 24.5 a top 10.",
+      "rationale": "27 impresiones, posicion 24.5, a un empujon de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV26", "EV2"]
+    },
+    {
+      "id": "O13",
+      "keyword": "taquillas fenólicas en palencia",
+      "page": "https://zentrylockers.com/taquillas-fenolicas/",
+      "kind": "future_opportunity",
+      "priority": "medium",
+      "recommendedAction": "Tratar como cluster generico de fenolicas (sin angulo geografico especifico, segun el catalogo) reforzando el contenido de /taquillas-fenolicas/, no crear una pagina geografica aparte.",
+      "rationale": "29 impresiones, posicion 73.7, lejos de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV27"]
+    },
+    {
+      "id": "O14",
+      "keyword": "fabricante de taquillas fenólicas en badajoz",
+      "page": "https://zentrylockers.com/taquillas-fenolicas/",
+      "kind": "future_opportunity",
+      "priority": "medium",
+      "recommendedAction": "Mismo tratamiento que la variante Palencia: reforzar /taquillas-fenolicas/ sin crear pagina geografica dedicada.",
+      "rationale": "23 impresiones, posicion 83.3, muy lejos de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV28"]
+    },
+    {
+      "id": "O15",
+      "keyword": "taquillas vestuarios de melamina",
+      "page": "https://zentrylockers.com/taquillas-melamina/",
+      "kind": "quick_win",
+      "priority": "medium",
+      "recommendedAction": "Reforzar H1/H2, contenido y meta title/description en /taquillas-melamina/ para pasar de posicion 27.8 a top 10.",
+      "rationale": "28 impresiones, posicion 27.8, a un empujon de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV14", "EV11"]
+    },
+    {
+      "id": "O16",
+      "keyword": "taquillas para hospital",
+      "page": "https://zentrylockers.com/taquillas-para-hospitales/",
+      "kind": "quick_win",
+      "priority": "medium",
+      "recommendedAction": "Reforzar H1/H2, contenido y meta title/description para pasar de posicion 17.1 a top 10.",
+      "rationale": "22 impresiones, posicion 17.1, a un empujon de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV29"]
+    },
+    {
+      "id": "O17",
+      "keyword": "comprar taquillas para hospitales",
+      "page": "https://zentrylockers.com/taquillas-para-hospitales/",
+      "kind": "quick_win",
+      "priority": "medium",
+      "recommendedAction": "Reforzar H1/H2 y contenido comercial en /taquillas-para-hospitales/ para pasar de posicion 10.6 a top 10.",
+      "rationale": "21 impresiones, posicion 10.6, muy cerca de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV30"]
+    },
+    {
+      "id": "O18",
+      "keyword": "cerraduras sostenibles para gimnasios",
+      "page": "https://zentrylockers.com/cerraduras/",
+      "kind": "cannibalization",
+      "priority": "medium",
+      "recommendedAction": "No ejecutar directamente: pagina destino en papelera. Ademas la misma keyword tambien aparece apuntando a /cerraduras-inteligentes-taquillas/ en este mismo run. Decidir un cluster/target unico antes de actuar.",
+      "rationale": "21 impresiones, posicion 30.9; keyword no catalogada en ningun cluster existente.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV5", "EV4", "EV6"]
+    },
+    {
+      "id": "O19",
+      "keyword": "cerraduras sostenibles para gimnasios",
+      "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "kind": "future_opportunity",
+      "priority": "medium",
+      "recommendedAction": "Si se confirma este target como el correcto tras resolver la duplicidad con /cerraduras/, crear contenido de soporte sobre sostenibilidad aplicada a cerraduras de vestuarios/gimnasios.",
+      "rationale": "20 impresiones, posicion 45.7, lejos de primera pagina.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV6", "EV2"]
+    }
+  ],
+  "technicalIssues": [
+    {
+      "id": "T1",
+      "page": "https://zentrylockers.com/cerraduras/",
+      "issue": "Pagina en papelera con redireccion 301 activa a /cerraduras-para-taquillas/, pero sigue siendo el target de tareas SEO activas en el backlog (2 keywords, 51 impresiones combinadas) -- riesgo de trabajar sobre una URL muerta.",
+      "severity": "high",
+      "basis": "evidence",
+      "evidenceRefs": ["EV3", "EV4", "EV5", "EV6"]
+    },
+    {
+      "id": "T2",
+      "page": "https://zentrylockers.com/taquillas-melamina/, https://zentrylockers.com/taquillas-para-colegios/, https://zentrylockers.com/taquillas-para-empresas/, https://zentrylockers.com/taquillas-fenolicas/, https://zentrylockers.com/taquillas-para-hospitales/",
+      "issue": "CTR 0.00% sistematico en multiples paginas de producto/sector pese a impresiones reales -- indica snippets (title/meta description) poco atractivos a nivel de varias plantillas, no solo de una pagina puntual.",
+      "severity": "medium",
+      "basis": "inference",
+      "evidenceRefs": ["EV7", "EV8", "EV22", "EV24", "EV27", "EV29"]
+    }
+  ],
+  "contentGaps": [
+    {
+      "id": "C1",
+      "topic": "Taquillas para gimnasios",
+      "relatedKeyword": "taquillas para gimnasios",
+      "rationale": "Keyword objetivo comercial de prioridad alta en el catalogo estatico sin actionItem activo ni cluster catalogado con targetUrl -- no hay evidencia de contenido dedicado en este contexto.",
+      "basis": "inference",
+      "evidenceRefs": ["EV15"]
+    },
+    {
+      "id": "C2",
+      "topic": "Lockers inteligentes (terminologia 'locker')",
+      "relatedKeyword": "lockers inteligentes",
+      "rationale": "Keyword objetivo comercial de prioridad alta; el cluster mas cercano (taquillas_inteligentes_general) solo cubre explicitamente la variante 'taquillas inteligentes', no 'lockers' -- posible gap terminologico no resuelto.",
+      "basis": "inference",
+      "evidenceRefs": ["EV16", "EV18"]
+    },
+    {
+      "id": "C3",
+      "topic": "Digitalizacion de taquillas (contenido informativo)",
+      "relatedKeyword": "digitalizacion de taquillas",
+      "rationale": "Keyword informativa de prioridad media en el catalogo estatico sin cluster ni actionItem asociado -- posible pieza de contenido informativo/blog no cubierta todavia.",
+      "basis": "inference",
+      "evidenceRefs": ["EV17"]
+    },
+    {
+      "id": "C4",
+      "topic": "Publicacion de paginas nuevas ya aprobadas en staging (metalicas, vestuarios, universidades)",
+      "rationale": "Tres clusters new_page_candidate ya tienen staging visualmente aprobado (taquillas_metalicas, taquillas_vestuarios, taquillas_universidad), pendientes solo de pasar a produccion.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV19", "EV20", "EV21"]
+    }
+  ],
+  "internalLinkRecommendations": [
+    {
+      "id": "L1",
+      "fromPage": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+      "toPage": "https://zentrylockers.com/cerraduras-para-taquillas/",
+      "anchorTextSuggestion": "ver catalogo de cerraduras ARES, ORBIS, BOXIS y NEO",
+      "rationale": "El cluster documenta que esta pagina informativa se diferencia deliberadamente de /cerraduras-para-taquillas/ (catalogo comercial); enlazar desde la version informativa a la comercial completa el recorrido de usuario sin fusionar contenido.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV2", "EV31"]
+    },
+    {
+      "id": "L2",
+      "fromPage": "https://zentrylockers.com/taquillas-melamina/",
+      "toPage": "https://zentrylockers.com/taquillas-melamina-fenolico/",
+      "anchorTextSuggestion": "taquillas de melamina con puertas fenolicas",
+      "rationale": "Ambas paginas conviven deliberadamente como landings diferenciadas (generico vs combinacion especifica); un enlace contextual claro entre ambas refuerza la diferenciacion frente a la confusion/canibalizacion que se detecta en algunos action items actuales.",
+      "basis": "inference",
+      "evidenceRefs": ["EV11", "EV12"]
+    },
+    {
+      "id": "L3",
+      "fromPage": "https://zentrylockers.com/taquillas-para-empresas/",
+      "toPage": "https://zentrylockers.com/taquillas-para-oficinas/",
+      "anchorTextSuggestion": "taquillas para oficinas",
+      "rationale": "Ambos clusters comparten cliente final B2B pero distinto entorno fisico (empresa generica vs oficina); un enlace cruzado ayuda a la navegacion sin fusionar los clusters, tal como documenta el catalogo.",
+      "basis": "evidence",
+      "evidenceRefs": ["EV32"]
+    }
+  ],
+  "prioritizedActions": [
+    {
+      "rank": 1,
+      "title": "Corregir el enrutado de tareas hacia la pagina obsoleta /cerraduras/ (en papelera, con 301 a /cerraduras-para-taquillas/)",
+      "relatedIds": ["F1", "O2", "O18", "T1"],
+      "priority": "high",
+      "effort": "low",
+      "impact": "high"
+    },
+    {
+      "rank": 2,
+      "title": "Cerrar/reenrutar los action items de melamina generica mal enrutados a /taquillas-melamina-fenolico/ segun la decision O29.1 ya aprobada",
+      "relatedIds": ["F2", "O5", "O6"],
+      "priority": "high",
+      "effort": "low",
+      "impact": "high"
+    },
+    {
+      "rank": 3,
+      "title": "Decidir un cluster/target unico para 'cerraduras sostenibles para gimnasios' antes de crear contenido",
+      "relatedIds": ["F3", "O18", "O19"],
+      "priority": "medium",
+      "effort": "low",
+      "impact": "medium"
+    },
+    {
+      "rank": 4,
+      "title": "Ejecutar los quick wins de on-page en paginas cercanas a top10 (cerraduras inteligentes para taquillas, taquillas colegios, cerraduras electronicas para taquillas, taquillas vestuarios de melamina, taquillas de melamina, taquillas para hospital, comprar taquillas para hospitales)",
+      "relatedIds": ["O1", "O4", "O8", "O12", "O15", "O16", "O17"],
+      "priority": "high",
+      "effort": "medium",
+      "impact": "medium"
+    },
+    {
+      "rank": 5,
+      "title": "Revisar y reescribir meta titles/descriptions en las paginas con CTR 0% sistematico",
+      "relatedIds": ["F4", "T2"],
+      "priority": "medium",
+      "effort": "medium",
+      "impact": "medium"
+    },
+    {
+      "rank": 6,
+      "title": "Publicar a produccion las paginas nuevas ya aprobadas en staging (taquillas metalicas, vestuarios, universidades)",
+      "relatedIds": ["F6", "C4"],
+      "priority": "medium",
+      "effort": "medium",
+      "impact": "high"
+    },
+    {
+      "rank": 7,
+      "title": "Evaluar cobertura de contenido para keywords objetivo de alta prioridad sin cluster/actionItem (taquillas para gimnasios, lockers inteligentes)",
+      "relatedIds": ["F5", "C1", "C2"],
+      "priority": "medium",
+      "effort": "high",
+      "impact": "medium"
+    },
+    {
+      "rank": 8,
+      "title": "Implementar el enlazado interno recomendado entre paginas diferenciadas (cerraduras informativo-comercial, melamina generico-fenolico, empresas-oficinas)",
+      "relatedIds": ["L1", "L2", "L3"],
+      "priority": "low",
+      "effort": "low",
+      "impact": "medium"
+    }
+  ],
+  "evidence": [
+    { "id": "EV1", "source": "job_data", "keyword": "cerraduras inteligentes para taquillas", "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/", "description": "quick_win, priority high, posicion actual 20.5, objetivo 10, 47 impresiones" },
+    { "id": "EV2", "source": "cluster_catalog", "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/", "description": "Cluster cerraduras_inteligentes_taquillas, action update_existing_page, decision O27.2 de no fusionar con /cerraduras-para-taquillas/" },
+    { "id": "EV3", "source": "job_data", "keyword": "cerraduras inteligentes para centros deportivos", "page": "https://zentrylockers.com/cerraduras/", "description": "future_opportunity+low_ctr, priority high, posicion 37.6, 31 impresiones, CTR 0%" },
+    { "id": "EV4", "source": "cluster_catalog", "page": "https://zentrylockers.com/cerraduras/", "description": "Cluster cerraduras_inteligentes_centros_deportivos, action reject: pagina en papelera desde O22 con redireccion 301 real a /cerraduras-para-taquillas/ (2060); la tarea del backlog apunta a una URL obsoleta" },
+    { "id": "EV5", "source": "job_data", "keyword": "cerraduras sostenibles para gimnasios", "page": "https://zentrylockers.com/cerraduras/", "description": "future_opportunity+low_ctr, 21 impresiones, posicion 30.9" },
+    { "id": "EV6", "source": "job_data", "keyword": "cerraduras sostenibles para gimnasios", "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/", "description": "future_opportunity+low_ctr, 20 impresiones, posicion 45.7" },
+    { "id": "EV7", "source": "job_data", "keyword": "taquillas melamina", "page": "https://zentrylockers.com/taquillas-melamina/", "description": "future_opportunity+low_ctr, 86 impresiones, posicion 30.1" },
+    { "id": "EV8", "source": "job_data", "keyword": "taquillas de melamina", "page": "https://zentrylockers.com/taquillas-melamina/", "description": "quick_win+low_ctr, 74 impresiones, posicion 28.7" },
+    { "id": "EV9", "source": "job_data", "keyword": "taquillas melamina", "page": "https://zentrylockers.com/taquillas-melamina-fenolico/", "description": "future_opportunity+low_ctr, 62 impresiones, posicion 43.1" },
+    { "id": "EV10", "source": "job_data", "keyword": "taquillas de melamina", "page": "https://zentrylockers.com/taquillas-melamina-fenolico/", "description": "future_opportunity+low_ctr, 51 impresiones, posicion 43.1" },
+    { "id": "EV11", "source": "cluster_catalog", "page": "https://zentrylockers.com/taquillas-melamina/", "description": "Cluster taquillas_melamina, decision O29.1 aprobada por Pau: la keyword generica de melamina apunta aqui; cualquier actionId con esta keyword generica apuntando a /taquillas-melamina-fenolico/ se considera mal enrutado y se cierra via scripts/o291-resolve-melamina-cannibalization.ts" },
+    { "id": "EV12", "source": "cluster_catalog", "page": "https://zentrylockers.com/taquillas-melamina-fenolico/", "description": "Cluster taquillas_melamina_fenolico, action differentiate: pagina especifica de combinacion melamina+fenolico; la keyword generica melamina ya NO debe apuntar aqui" },
+    { "id": "EV13", "source": "job_data", "keyword": "taquilla madera", "page": "https://zentrylockers.com/taquillas-melamina/", "description": "future_opportunity+low_ctr, 50 impresiones, posicion 43.2" },
+    { "id": "EV14", "source": "job_data", "keyword": "taquillas vestuarios de melamina", "page": "https://zentrylockers.com/taquillas-melamina/", "description": "quick_win+low_ctr, 28 impresiones, posicion 27.8" },
+    { "id": "EV15", "source": "target_keyword_catalog", "keyword": "taquillas para gimnasios", "description": "commercial, priority high, catalogo estatico de keywords objetivo" },
+    { "id": "EV16", "source": "target_keyword_catalog", "keyword": "lockers inteligentes", "description": "commercial, priority high, catalogo estatico de keywords objetivo" },
+    { "id": "EV17", "source": "target_keyword_catalog", "keyword": "digitalizacion de taquillas", "description": "informational, priority medium, catalogo estatico de keywords objetivo" },
+    { "id": "EV18", "source": "cluster_catalog", "description": "Cluster taquillas_inteligentes_general, action new_page_candidate, staging 2103 corregida en O28.6, pendiente de aprobacion visual real" },
+    { "id": "EV19", "source": "cluster_catalog", "description": "Cluster taquillas_metalicas, action new_page_candidate, staging 2105 ya creada y visualmente aprobada" },
+    { "id": "EV20", "source": "cluster_catalog", "description": "Cluster taquillas_vestuarios, action new_page_candidate, staging 2104 ya creada y visualmente aprobada" },
+    { "id": "EV21", "source": "cluster_catalog", "description": "Cluster taquillas_universidad, action new_page_candidate, staging 2110 ya creada y visualmente aprobada" },
+    { "id": "EV22", "source": "job_data", "keyword": "taquillas colegios", "page": "https://zentrylockers.com/taquillas-para-colegios/", "description": "quick_win+low_ctr, 40 impresiones, posicion 25.1" },
+    { "id": "EV23", "source": "job_data", "keyword": "taquillas escolares", "page": "https://zentrylockers.com/taquillas-para-colegios/", "description": "future_opportunity+low_ctr, 32 impresiones, posicion 33.8" },
+    { "id": "EV24", "source": "job_data", "keyword": "taquilla para el personal", "page": "https://zentrylockers.com/taquillas-para-empresas/", "description": "future_opportunity+low_ctr, 34 impresiones, posicion 65.7" },
+    { "id": "EV25", "source": "job_data", "keyword": "cerraduras electrónicas taquillas", "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/", "description": "future_opportunity+low_ctr, 32 impresiones, posicion 34.6" },
+    { "id": "EV26", "source": "job_data", "keyword": "cerraduras electronicas para taquillas", "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/", "description": "quick_win+low_ctr, 27 impresiones, posicion 24.5" },
+    { "id": "EV27", "source": "job_data", "keyword": "taquillas fenólicas en palencia", "page": "https://zentrylockers.com/taquillas-fenolicas/", "description": "future_opportunity+low_ctr, 29 impresiones, posicion 73.7" },
+    { "id": "EV28", "source": "job_data", "keyword": "fabricante de taquillas fenólicas en badajoz", "page": "https://zentrylockers.com/taquillas-fenolicas/", "description": "future_opportunity+low_ctr, 23 impresiones, posicion 83.3" },
+    { "id": "EV29", "source": "job_data", "keyword": "taquillas para hospital", "page": "https://zentrylockers.com/taquillas-para-hospitales/", "description": "quick_win+low_ctr, 22 impresiones, posicion 17.1" },
+    { "id": "EV30", "source": "job_data", "keyword": "comprar taquillas para hospitales", "page": "https://zentrylockers.com/taquillas-para-hospitales/", "description": "quick_win, 21 impresiones, posicion 10.6" },
+    { "id": "EV31", "source": "cluster_catalog", "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/", "description": "El reason del cluster cerraduras_inteligentes_taquillas menciona /cerraduras-para-taquillas/ (id 2060) como pagina de catalogo comercial ARES/ORBIS/BOXIS/NEO, distinta de la version informativa" },
+    { "id": "EV32", "source": "cluster_catalog", "description": "Clusters taquillas_empresas_personal (update_existing_page) y taquillas_oficinas (update_existing_page): mismo cliente final B2B pero entornos distintos, mantenidos como clusters separados" }
+  ],
+  "unknowns": [
+    "No se dispone de cifras exactas de clics por keyword mas alla de lo indicado en el rationale de cada action item (solo impresiones y posicion media); no puedo confirmar CTR exacto mas alla del 0.00% citado en algunos rationale.",
+    "No hay informacion en este contexto sobre si el script scripts/o291-resolve-melamina-cannibalization.ts ya se ejecuto sobre los action items de este run concreto -- no puedo confirmar si O5/O6 estan realmente pendientes de cierre o son residuales de una ejecucion anterior.",
+    "No tengo acceso al contenido real de los informes en las rutas indicadas (seo-director-2026-08-17.md, seo-watcher-2026-08-17.md) mas alla de lo ya resumido en este contexto estructurado.",
+    "No hay evidencia en este contexto sobre el estado de aprobacion final o fecha de publicacion prevista para las paginas de staging listadas (2103, 2104, 2105, 2110)."
+  ]
+}
+```

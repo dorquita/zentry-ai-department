@@ -1,0 +1,141 @@
+{
+  "departmentRunId": "dept-2026-08-17T074357Z",
+  "departmentQaStatus": "BLOCKED",
+  "qaReviewStatus": "fail",
+  "globalBlockReason": "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer.",
+  "promoted": [],
+  "blocked": [
+    {
+      "rank": 1,
+      "title": "Corregir el enrutado tecnico de tareas SEO mal dirigidas (pagina obsoleta /cerraduras/ y melamina generica mal enrutada)",
+      "rationale": "Impacto alto porque afecta a tareas activas sobre URLs incorrectas u obsoletas; confianza alta porque el propio catalogo de clusters documenta ambos casos con evidencia (pagina en papelera con 301, decision O29.1 ya aprobada); esfuerzo bajo porque es una correccion de enrutado, no creacion de contenido nuevo. Depende de una decision humana sobre el target correcto para las dos keywords de /cerraduras/ y de confirmar si el script de cierre de melamina ya se aplico.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Confirmacion humana del target correcto para /cerraduras/",
+        "Verificar si scripts/o291-resolve-melamina-cannibalization.ts ya se ejecuto sobre estos action items"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-action-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 2,
+      "title": "Cerrar las brechas de medicion en Analytics antes de fiarse de las metricas de conversion CTA",
+      "rationale": "Impacto alto porque afecta a la fiabilidad de todos los datos de conversion usados para priorizar otras decisiones de growth; confianza media porque las causas concretas (click_phone sin disparos, version de GTM con nombre ambiguo) son hipotesis del propio analytics-specialist pendientes de validacion, no hechos cerrados; esfuerzo bajo-medio porque son verificaciones puntuales en GA4/GTM.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Validacion en GA4 DebugView de click_phone",
+        "Confirmacion del estado real de publicacion de la version live de GTM O44"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-3"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Ejecutar una segunda iteracion visual y de contenido en las paginas de staging antes de replantear su publicacion",
+      "rationale": "Impacto alto porque desbloquea contenido ya trabajado (metalicas, vestuarios, universidades) que hoy esta parado; confianza alta porque existe una decision humana explicita y reciente que rechazo la publicacion inmediata por motivos concretos (falta de imagenes/fotografias, necesidad de segunda iteracion); esfuerzo medio porque implica trabajo visual/de contenido adicional, no solo aprobacion. Esta prioridad sustituye directamente a la recomendacion de seo-specialist de publicar ya, que queda descartada por el criterio humano ya registrado.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Nueva iteracion visual con mas imagenes/fotografias segun el motivo textual del rechazo humano",
+        "Aprobacion humana posterior de esa segunda iteracion"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-6",
+        "human-decision-staging-reject-v1"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "Ejecutar los quick wins de on-page en keywords cercanas a top10",
+      "rationale": "Impacto medio-alto porque son siete keywords a un empujon de primera pagina segun datos live de Search Console; confianza media porque depende de que los cambios de contenido/meta se ejecuten correctamente sin tocar las paginas con problemas de enrutado; esfuerzo medio porque implica trabajo de contenido en varias paginas. Conviene secuenciarlo despues de resolver el enrutado para no mezclar esfuerzo con URLs incorrectas.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Corregir el enrutado tecnico de tareas SEO mal dirigidas (pagina obsoleta /cerraduras/ y melamina generica mal enrutada)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-4"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 5,
+      "title": "Enriquecer /taquillas-fenolicas/ para la keyword local 'taquillas fenolicas en palencia'",
+      "rationale": "Impacto medio porque es una keyword de nicho local sobre una pagina ya indexada, de bajo riesgo; confianza media porque el propio content-strategist declara varios riesgos no confirmados (cobertura/logistica en Palencia, precios); esfuerzo bajo porque es una actualizacion de contenido existente, no una pagina nueva.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Coordinar el enlazado interno hacia melamina/colegios/comprar-taquillas para evitar canibalizacion, segun dept-content-risks"
+      ],
+      "evidenceRefs": [
+        "dept-content-summary",
+        "dept-content-structure"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "Revisar la solicitud de aprobacion critica pendiente sobre 'taquillas melamina' antes de avanzar en ese cluster",
+      "rationale": "Impacto alto porque es la unica aprobacion pendiente marcada con riesgo critico y coincide con el cluster de melamina que ya tiene un problema de enrutado detectado por seo-specialist; confianza media porque el contexto no detalla el contenido exacto del plan de despliegue, solo su existencia y nivel de riesgo; esfuerzo bajo porque es una revision, no una ejecucion.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Revision humana directa de la solicitud pendiente de riesgo critico"
+      ],
+      "evidenceRefs": [
+        "approvals-pending"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    }
+  ],
+  "unattributedBlockingSignals": [],
+  "qaSummary": {
+    "criticalFindings": 1,
+    "warningFindings": 3,
+    "safetyConcerns": 0,
+    "contradictions": 1,
+    "unsupportedClaims": 3,
+    "requiredCorrections": 4
+  }
+}

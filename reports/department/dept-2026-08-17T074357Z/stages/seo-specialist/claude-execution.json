@@ -1,0 +1,12 @@
+{
+  "contractVersion": "claude-execution-record/v1",
+  "employee": "seo-specialist",
+  "model": "claude-sonnet-5",
+  "durationMs": 241882,
+  "costUsd": 0.6520840000000001,
+  "numTurns": 1,
+  "outputSource": "execution_file_fallback",
+  "outcome": "success",
+  "note": "",
+  "recordedAt": "2026-08-17T07:50:03.976Z"
+}

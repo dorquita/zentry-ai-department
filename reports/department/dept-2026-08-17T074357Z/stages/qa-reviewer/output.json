@@ -1,0 +1,67 @@
+```json
+{
+  "reviewStatus": "fail",
+  "reviewedArtifact": {
+    "sourceEmployee": "unknown",
+    "artifactType": "generic_json_artifact",
+    "artifactId": "dept-2026-08-17T074357Z-qa-input",
+    "artifactPath": "reports/department/dept-2026-08-17T074357Z/dept-2026-08-17T074357Z-qa-input.json"
+  },
+  "findings": [
+    {
+      "category": "fabrication_risk",
+      "severity": "critical",
+      "description": "La prioridad de growth 'Ejecutar una segunda iteracion visual y de contenido en las paginas de staging antes de replantear su publicacion' se justifica integramente en el evidenceRef 'human-decision-staging-reject-v1', una decision humana del 2026-08-16 con motivo textual citado ('las paginas de staging se ven demasiado basicas y sin suficientes imagenes/fotografias'). El propio growth.output.evidence aclara: 'Esta decision proviene de la seccion 3 del contexto entregado a este agente, no de un ref del evidenceCatalog original'. Esa seccion 3 no forma parte del artifact que se me ha suministrado ni de los specialistOutputs (seo-specialist, content-strategist, analytics-specialist) incluidos aqui; no hay forma de verificar dentro de este artifact que dicha decision humana exista realmente con ese contenido. Esta afirmacion no verificable se usa para descartar explicitamente la recomendacion de seo-specialist.prioritizedActions rank 6 ('Publicar a produccion las paginas nuevas ya aprobadas en staging (taquillas metalicas, vestuarios, universidades)'), que si esta respaldada por evidencia interna real (EV19, EV20, EV21)."
+    },
+    {
+      "category": "evidence_coverage",
+      "severity": "warning",
+      "description": "growth.output.growthSummary y currentSignals[channel=ops] afirman cifras operativas concretas ('105 acciones vivas, 113 work orders listas, 5 change packs listos, 1 aprobacion critica pendiente') asociadas a evidenceRefs 'actions-live', 'workorders-ready', 'changepacks-ready', 'approvals-pending'. Ninguno de estos refs tiene una entrada correspondiente en growth.output.evidence (que solo contiene 'human-decision-staging-reject-v1' y 'changepack-cluster-gate-blocked'), por lo que estas cifras no son verificables dentro de este mismo artifact."
+    },
+    {
+      "category": "evidence_coverage",
+      "severity": "warning",
+      "description": "growth.output.bottlenecks (evidenceRef 'changepack-cluster-gate-blocked') cita cifras exactas por canal ('2 en SEO, 10 en contenido, 1 en CRO' bloqueados por cluster gate) atribuidas a 'campos lastSummary de agentActivity[] en el contexto entregado', pero ese detalle de agentActivity no aparece en ninguna parte de los specialistOutputs incluidos en este artifact -- no es verificable con lo suministrado, aunque growth lo declara de forma transparente."
+    },
+    {
+      "category": "contradictions",
+      "severity": "warning",
+      "description": "seo-specialist.output.prioritizedActions rank 6 recomienda 'Publicar a produccion las paginas nuevas ya aprobadas en staging (taquillas metalicas, vestuarios, universidades)' basandose en F6/C4 (staging visualmente aprobado, EV19-EV21), mientras growth.output.bottlenecks y recommendedPriorities bloquean explicitamente esa misma accion citando una decision humana ('human-decision-staging-reject-v1') no verificable dentro de este artifact (ver finding de fabrication_risk anterior)."
+    },
+    {
+      "category": "missing_assumptions",
+      "severity": "info",
+      "description": "growth.output.recommendedPriorities[].dependsOn incluye explicitamente pasos de validacion/aprobacion humana en las prioridades 1, 2, 3, 5 y 6, pero la prioridad 'Ejecutar los quick wins de on-page en keywords cercanas a top10' solo declara como dependencia 'Corregir el enrutado tecnico...', sin mencionar aprobacion humana antes de publicar cambios de contenido/meta en produccion, a diferencia del resto de prioridades del mismo array."
+    }
+  ],
+  "unsupportedClaims": [
+    "growth.output.evidence['human-decision-staging-reject-v1']: decision humana del 2026-08-16 que rechazo publicar las paginas de staging por 'demasiado basicas y sin suficientes imagenes/fotografias' -- no aparece en ningun specialistOutput de este artifact y growth admite que proviene de una seccion de contexto no incluida aqui.",
+    "growth.output.growthSummary: '105 acciones vivas, 113 work orders listas, 5 change packs listos, 1 aprobacion critica pendiente' -- sin entradas de evidencia correspondientes en growth.output.evidence.",
+    "growth.output.bottlenecks['changepack-cluster-gate-blocked']: '2 en SEO, 10 en contenido, 1 en CRO' change packs bloqueados por cluster gate -- sin entrada de evidencia verificable dentro de este artifact."
+  ],
+  "contradictions": [
+    "seo-specialist.prioritizedActions rank 6 ('Publicar a produccion las paginas nuevas ya aprobadas en staging...') vs growth.output.bottlenecks/recommendedPriorities que bloquean esa misma publicacion citando 'human-decision-staging-reject-v1', dato no verificable dentro de este artifact."
+  ],
+  "safetyConcerns": [],
+  "requiredCorrections": [
+    "Incluir dentro de este mismo artifact el contenido verificable de la decision humana referenciada como 'human-decision-staging-reject-v1' (o un ref real del evidenceCatalog) antes de usarla para descartar la recomendacion de seo-specialist sobre publicar las paginas de staging.",
+    "Anadir a growth.output.evidence entradas concretas que respalden las cifras operativas citadas via 'actions-live', 'workorders-ready', 'changepacks-ready' y 'approvals-pending', o retirar esas cifras del resumen si no son verificables en este contexto.",
+    "Anadir a growth.output.evidence una entrada que respalde las cifras de change packs bloqueados por cluster gate citadas en 'changepack-cluster-gate-blocked'.",
+    "Anadir explicitamente aprobacion humana como dependsOn en la prioridad 'Ejecutar los quick wins de on-page en keywords cercanas a top10', igual que en el resto de recommendedPriorities."
+  ],
+  "approvalRecommendation": {
+    "recommendedStatus": "pending",
+    "riskLevel": "medium",
+    "rationale": "El backlog de los tres especialistas ejecutados (seo-specialist, content-strategist, analytics-specialist) esta mayoritariamente bien evidenciado y con buena disciplina de claimType/basis. Sin embargo, la sintesis de growth-director se apoya en al menos una afirmacion factual concreta (decision humana de rechazo de staging) que no puede verificarse con los datos incluidos en este artifact y que se usa para anular una recomendacion de otro especialista si respaldada por evidencia interna. Ninguna accion propuesta escribe directamente en un sistema externo sin aprobacion humana declarada, por lo que el riesgo de seguridad inmediato es bajo, pero el riesgo de tomar decisiones de negocio (bloquear publicacion de 3 paginas ya trabajadas) sobre una premisa no verificable es real y requiere confirmacion humana antes de avanzar."
+  },
+  "evidence": [
+    "growth.output.evidence[0].description: \"Decision humana registrada el 2026-08-16 (version 1, rechazada)... Esta decision proviene de la seccion 3 del contexto entregado a este agente, no de un ref del evidenceCatalog original.\"",
+    "seo-specialist.output.prioritizedActions[5].title: \"Publicar a produccion las paginas nuevas ya aprobadas en staging (taquillas metalicas, vestuarios, universidades)\", relatedIds [\"F6\",\"C4\"], evidenceRefs EV19-EV21.",
+    "growth.output.recommendedPriorities[2].title: \"Ejecutar una segunda iteracion visual y de contenido en las paginas de staging antes de replantear su publicacion\", evidenceRefs [\"dept-seo-action-6\",\"human-decision-staging-reject-v1\"].",
+    "growth.output.growthSummary: \"Backlog del departamento robusto (105 acciones vivas, 113 work orders listas, 1 aprobacion critica pendiente)...\" sin correspondencia en growth.output.evidence.",
+    "growth.output.bottlenecks[2].description cita '2 en SEO, 10 en contenido, 1 en CRO' con evidenceRef 'changepack-cluster-gate-blocked', cuya descripcion en evidence dice explicitamente que los datos 'provienen literalmente de los campos lastSummary de agentActivity[] en el contexto entregado', no incluidos en este artifact.",
+    "content-strategist.output.risksAndUnknowns declara explicitamente: \"No hay ningun dato en currentAssumptions sobre cobertura o logistica especifica para Palencia; no se debe afirmar 'servicio en Palencia' ni plazos de entrega concretos\" -- buena practica de no fabricar datos de negocio."
+  ],
+  "summary": "Los tres outputs de especialistas (seo-specialist, content-strategist, analytics-specialist) estan bien evidenciados internamente, con distincion clara entre FACT/OBSERVATION/HYPOTHESIS/RECOMMENDATION y referencias cruzadas a su propio catalogo de evidencia. El problema critico esta en la capa de sintesis de growth-director: usa una decision humana muy especifica ('human-decision-staging-reject-v1') para anular la recomendacion de seo-specialist de publicar tres paginas de staging ya aprobadas visualmente, pero el propio growth admite que esa decision proviene de una seccion de contexto no incluida en este artifact, por lo que no es verificable aqui. Ademas, varias cifras operativas del resumen de growth (acciones vivas, work orders, change packs bloqueados) se citan via evidenceRefs sin entradas de respaldo en growth.output.evidence. No se detectan acciones inseguras de escritura directa en sistemas externos ni saltos de guardas deterministas; todas las prioridades se presentan como propuestas de solo lectura. Se recomienda revision humana antes de promover, en particular, la prioridad de staging citada."
+}
+```
