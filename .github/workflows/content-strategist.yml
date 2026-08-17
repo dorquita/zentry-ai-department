@@ -65,10 +65,11 @@ jobs:
     # timeout-minutes propio. El step del WORKFLOW CALLER que invoca
     # `uses: ./.github/actions/claude-employee-runtime` SI admite
     # timeout-minutes -- ver mas abajo, step "[RUNTIME] Ejecutar
-    # content-strategist". Este timeout-minutes: 20 de aqui es el limite
+    # content-strategist". Este timeout-minutes: 35 de aqui es el limite
     # del JOB completo (incluye los pasos de dominio antes y despues del
     # runtime).
-    timeout-minutes: 20
+    # 20 -> 35: ver el timeout del step [RUNTIME] mas abajo.
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -149,9 +150,9 @@ jobs:
         # timeout-minutes SI es valido aqui (step normal del workflow
         # caller, no un step interno de la composite action) -- limita
         # TODA la composite action (auth + preflights + claude-code-action
-        # + resolucion de salida) a 10 min. Copiado tal cual del template
+        # + resolucion de salida, mas el reintento clasificado) a 20 min. Copiado tal cual del template
         # de ux-ui-landing-architect-v2 (ver docs/claude-employee-runtime.md).
-        timeout-minutes: 10
+        timeout-minutes: 20  # 10 -> 20: con StructuredOutput concedido el SDK valida contra el schema y re-pregunta (2-4 turnos en vez de 1), y este presupuesto cubre ademas el reintento clasificado del runtime comun
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: content-strategist

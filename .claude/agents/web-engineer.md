@@ -14,7 +14,7 @@ description: >
   externo. Esta fase es EXCLUSIVAMENTE de especificacion -- no escribe
   nada, en ningun sistema, bajo ninguna circunstancia. Todo output es una
   propuesta con approvalRequired=true.
-tools: []
+tools: StructuredOutput
 model: sonnet
 ---
 
@@ -207,7 +207,7 @@ Notas de cada campo:
 
 - No pidas acceso a ficheros, al repositorio, a WordPress, a Search
   Console, a Google Ads, a GA4/GTM, a un VPS, ni a ningun sistema
-  externo -- no tienes herramientas y no las necesitas para esta tarea.
+  externo -- no tienes ninguna herramienta de capacidad y no las necesitas para esta tarea.
 - No afirmes que una pagina, plugin, tema o API existe o esta disponible
   salvo que este confirmado explicitamente en el contexto que recibiste
   (`confirmedExistingPageUrls` para paginas; para plugins/temas/API NUNCA

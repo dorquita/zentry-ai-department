@@ -71,8 +71,9 @@ jobs:
     # seccion de timeouts): timeout-minutes: 20 aqui es el limite del JOB
     # completo (incluye los pasos de dominio antes y despues del
     # runtime); el step [RUNTIME] mas abajo lleva su propio
-    # timeout-minutes: 10.
-    timeout-minutes: 20
+    # timeout-minutes: 20.
+    # 20 -> 35: ver el timeout del step [RUNTIME] mas abajo.
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -142,9 +143,9 @@ jobs:
       # docs/claude-employee-runtime.md. ---
       - name: "[RUNTIME] Ejecutar growth-director-v2 (Claude Employee Runtime)"
         id: runtime
-        # timeout-minutes: 10 -- mismo backstop practico que
+        # timeout-minutes: 20 -- mismo backstop practico que
         # ux-ui-landing-architect-v2, ver docs/claude-employee-runtime.md.
-        timeout-minutes: 10
+        timeout-minutes: 20  # 10 -> 20: con StructuredOutput concedido el SDK valida contra el schema y re-pregunta (2-4 turnos en vez de 1), y este presupuesto cubre ademas el reintento clasificado del runtime comun
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: growth-director-v2

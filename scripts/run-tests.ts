@@ -38,6 +38,7 @@ import { runSeoSpecialistDomainTests } from "../test/seo-specialist-domain.test"
 import { runSeoSpecialistContextTests } from "../test/seo-specialist-context.test";
 import { runSeoSpecialistRuntimeReliabilityTests } from "../test/seo-specialist-runtime-reliability.test";
 import { runClaudeEmployeeRetryTests } from "../test/claude-employee-retry.test";
+import { runClaudeEmployeeStructuredOutputTests } from "../test/claude-employee-structured-output.test";
 import { runAnalyticsSpecialistOutputSchemaTests } from "../test/analytics-specialist-output-schema.test";
 import { runAnalyticsSpecialistReportParserTests } from "../test/analytics-specialist-report-parser.test";
 import { runAnalyticsSpecialistContextTests } from "../test/analytics-specialist-context.test";
@@ -131,6 +132,7 @@ async function main(): Promise<void> {
     { suiteName: "seo-specialist-context", cases: runSeoSpecialistContextTests() },
     { suiteName: "seo-specialist-runtime-reliability", cases: runSeoSpecialistRuntimeReliabilityTests() },
     { suiteName: "claude-employee-retry", cases: runClaudeEmployeeRetryTests() },
+    { suiteName: "claude-employee-structured-output", cases: runClaudeEmployeeStructuredOutputTests() },
     { suiteName: "analytics-specialist-output-schema", cases: runAnalyticsSpecialistOutputSchemaTests() },
     { suiteName: "analytics-specialist-report-parser", cases: runAnalyticsSpecialistReportParserTests() },
     { suiteName: "analytics-specialist-context", cases: runAnalyticsSpecialistContextTests() },

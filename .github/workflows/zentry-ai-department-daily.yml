@@ -98,7 +98,13 @@ jobs:
     # la Fase O52, el pipeline determinista de 26 agentes que antes solo
     # corria en el VPS (hasta 30 min propios). 120 min es el backstop del
     # JOB completo.
-    timeout-minutes: 120
+    # 120 -> 160: los seis steps de empleado pasaron de 10 a 20 min de
+    # backstop cada uno al conceder StructuredOutput (6 x 20 = 120 solo
+    # en Claude), asi que 120 para el job entero ya no dejaba margen para
+    # los pasos deterministas, las lecturas en vivo ni la escritura en
+    # MongoDB. No cambia cuanto tarda una pasada sana (~25 min medidos):
+    # solo el techo.
+    timeout-minutes: 160
     # Fase O56: el contexto `secrets` no esta disponible en el `if` de un
     # step, asi que la presencia de la credencial se materializa aqui como
     # un flag de entorno. El VALOR del secreto no entra en este env: solo
@@ -547,7 +553,11 @@ jobs:
         id: content_runtime
         continue-on-error: true
         if: steps.content_prompt.outcome == 'success' && steps.content1.outputs.status == 'pending_execution'
-        timeout-minutes: 10
+        # 10 -> 20: con StructuredOutput concedido, --json-schema esta
+        # operativo y el SDK re-pregunta al modelo cuando la salida no
+        # cumple el schema (2-4 turnos en vez de 1). Cubre ademas el
+        # reintento clasificado del runtime comun.
+        timeout-minutes: 20
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: content-strategist
@@ -649,7 +659,11 @@ jobs:
         id: analytics_runtime
         continue-on-error: true
         if: steps.analytics_prompt.outcome == 'success' && steps.analytics1.outputs.status == 'pending_execution'
-        timeout-minutes: 10
+        # 10 -> 20: con StructuredOutput concedido, --json-schema esta
+        # operativo y el SDK re-pregunta al modelo cuando la salida no
+        # cumple el schema (2-4 turnos en vez de 1). Cubre ademas el
+        # reintento clasificado del runtime comun.
+        timeout-minutes: 20
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: analytics-specialist
@@ -767,7 +781,11 @@ jobs:
         id: growth_runtime
         continue-on-error: true
         if: steps.growth_prompt.outcome == 'success' && steps.growth_prep.outputs.claudeRequired == 'true'
-        timeout-minutes: 10
+        # 10 -> 20: con StructuredOutput concedido, --json-schema esta
+        # operativo y el SDK re-pregunta al modelo cuando la salida no
+        # cumple el schema (2-4 turnos en vez de 1). Cubre ademas el
+        # reintento clasificado del runtime comun.
+        timeout-minutes: 20
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: growth-director-v2
@@ -850,7 +868,11 @@ jobs:
         id: qa_runtime
         continue-on-error: true
         if: steps.qa_prompt.outcome == 'success' && steps.qa1.outputs.qaStatus == 'pending_execution'
-        timeout-minutes: 10
+        # 10 -> 20: con StructuredOutput concedido, --json-schema esta
+        # operativo y el SDK re-pregunta al modelo cuando la salida no
+        # cumple el schema (2-4 turnos en vez de 1). Cubre ademas el
+        # reintento clasificado del runtime comun.
+        timeout-minutes: 20
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: qa-reviewer
@@ -965,7 +987,11 @@ jobs:
         id: web_runtime
         continue-on-error: true
         if: steps.web_prompt.outcome == 'success' && steps.web_prep.outputs.claudeRequired == 'true'
-        timeout-minutes: 10
+        # 10 -> 20: con StructuredOutput concedido, --json-schema esta
+        # operativo y el SDK re-pregunta al modelo cuando la salida no
+        # cumple el schema (2-4 turnos en vez de 1). Cubre ademas el
+        # reintento clasificado del runtime comun.
+        timeout-minutes: 20
         uses: ./.github/actions/claude-employee-runtime
         with:
           agent-name: web-engineer
