@@ -103,7 +103,25 @@ export function resolveStageDir(departmentRunId: string, stage: DepartmentStageN
   return round > 0 ? path.join(base, "rounds", String(round)) : base;
 }
 
-/** Registro del bucle de QA de la pasada (rondas, correcciones, veredicto final). */
+/**
+ * Bundle que revisa qa-reviewer en una ronda del bucle de GROWTH. La
+ * ronda 0 conserva la ruta de siempre (`qaInputPath`) para no mover nada
+ * de lo que ya funciona; las rondas de correccion llevan su propia
+ * identidad, que es lo que hace que la re-QA sea demostrablemente sobre
+ * el artifact NUEVO y no sobre el anterior.
+ */
+export function resolveGrowthQaInputPath(departmentRunId: string, round: number): string {
+  const paths = resolveDepartmentRunPaths(departmentRunId);
+  if (round <= 0) return paths.qaInputPath;
+  return path.join(paths.runDir, `${departmentRunId}-qa-input-round-${round}.json`);
+}
+
+/** Registro del bucle de QA de GROWTH (rondas, correcciones, veredicto final). */
+export function resolveGrowthQaLoopPath(departmentRunId: string): string {
+  return path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "qa-loop-growth.json");
+}
+
+/** Registro del bucle de QA del PLAN (rondas, correcciones, veredicto final). */
 export function resolveQaLoopPath(departmentRunId: string): string {
   return path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "qa-loop.json");
 }

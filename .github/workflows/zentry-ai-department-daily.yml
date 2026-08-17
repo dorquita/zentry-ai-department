@@ -831,7 +831,7 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          npm run department:run -- --phase prepare-qa --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-qa-prepare.log
+          npm run department:run -- --phase prepare-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 0 2>&1 | tee coord-qa-prepare.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
 
@@ -921,7 +921,7 @@ jobs:
         if: always() && steps.qa_prep.outputs.claudeRequired == 'true'
         run: |
           set -o pipefail
-          ARGS=(--phase complete-qa --departmentRunId "$DEPARTMENT_RUN_ID")
+          ARGS=(--phase complete-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 0)
           if [ -n "$REVIEW_JSON_PATH" ]; then ARGS+=(--qa-review "$REVIEW_JSON_PATH"); fi
           if [ -n "$EXPECTED_OUTPUT_PATH" ]; then ARGS+=(--qa-output "$EXPECTED_OUTPUT_PATH"); fi
           ARGS+=(--runtime-note "$RUNTIME_NOTE")
@@ -937,6 +937,344 @@ jobs:
         continue-on-error: true
         if: steps.qa_done.outcome == 'success'
         run: npm run department:parse-runner-result-for-ci -- coord-qa-complete.log
+
+
+      # =====================================================================
+      # BUCLE DE CORRECCION DE LA SINTESIS DE GROWTH
+      #
+      #     Growth -> QA -> FAIL -> requiredCorrections[] -> Growth corrige
+      #                                                   -> re-QA (output NUEVO)
+      #
+      # POR QUE AQUI Y NO SOLO SOBRE EL PLAN. El bucle se construyo primero
+      # sobre el PLAN (la salida de web-engineer), porque es lo que se
+      # escribe en staging. La primera pasada fresca real demostro que ese
+      # no es el punto donde el departamento se para: QA bloqueo en ESTA
+      # puerta -- las recomendaciones de Growth -- por una cifra de SEM sin
+      # respaldo. Y con la puerta cerrada, web-engineer ni se invoca, asi
+      # que el bucle del plan no llegaba a existir.
+      #
+      # La correccion tipica aqui es barata y concreta: quitar o respaldar
+      # una afirmacion. No exige rehacer el analisis ni reejecutar a los
+      # especialistas.
+      # =====================================================================
+
+      - name: "[CORR-GROWTH] Preparar correccion dirigida de la sintesis (ronda 1)"
+        id: gcorr1_prep_run
+        continue-on-error: true
+        if: steps.qa_gate.outputs.correctionRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-growth-correction --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 2>&1 | tee coord-growth-correction-prepare-1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      - name: "[CORR-GROWTH] Parsear RUNNER_RESULT_JSON (prepare-growth-correction ronda 1)"
+        id: gcorr1_prep
+        continue-on-error: true
+        if: steps.gcorr1_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-growth-correction-prepare-1.log
+
+      - name: "[CORR-GROWTH] Leer prompt de correccion (ronda 1)"
+        id: gcorr1_prompt
+        continue-on-error: true
+        if: steps.gcorr1_prep.outputs.claudeRequired == 'true'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.gcorr1_prep.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Ejecutar growth-director-v2 en modo CORRECCION (ronda 1)"
+        id: gcorr1_runtime
+        continue-on-error: true
+        if: steps.gcorr1_prompt.outcome == 'success' && steps.gcorr1_prep.outputs.claudeRequired == 'true'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: growth-director-v2
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/growth-director-v2/rounds/1/claude-execution.json
+          prompt: ${{ steps.gcorr1_prompt.outputs.content }}
+          output-schema-path: config/growth-director-v2-output.schema.json
+          expected-output-path: ${{ steps.gcorr1_prep.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[CORR-GROWTH] Validar la correccion de la sintesis (ronda 1)"
+        id: gcorr1_done
+        continue-on-error: true
+        if: always() && steps.gcorr1_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase complete-growth --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-growth-correction-complete-1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.gcorr1_runtime.outcome }}, claude=${{ steps.gcorr1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.gcorr1_runtime.outputs.output-source }}"
+
+      - name: "[QA] Preparar bundle de re-revision (ronda 1)"
+        id: qa1_prep_run
+        continue-on-error: true
+        if: steps.gcorr1_done.outcome == 'success' && steps.gcorr1_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 2>&1 | tee coord-qa-prepare-1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+
+      - name: "[QA] Parsear RUNNER_RESULT_JSON (prepare-qa ronda 1)"
+        id: qa1_prep
+        continue-on-error: true
+        if: steps.qa1_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-qa-prepare-1.log
+
+      - name: "[QA] Runner paso 1 (ronda 1)"
+        id: qa1_r1_run
+        continue-on-error: true
+        if: steps.qa1_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" 2>&1 | tee qa-step1-round-1.log
+        env:
+          QA_INPUT_PATH: ${{ steps.qa1_prep.outputs.qaInputPath }}
+
+      - name: "[QA] Parsear RUNNER_RESULT_JSON (paso 1 ronda 1)"
+        id: qa1_r1
+        continue-on-error: true
+        if: steps.qa1_r1_run.outcome == 'success'
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- qa-step1-round-1.log
+
+      - name: "[QA] Leer prompt (ronda 1)"
+        id: qa1_prompt
+        continue-on-error: true
+        if: steps.qa1_r1.outputs.qaStatus == 'pending_execution'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.qa1_r1.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Re-ejecutar qa-reviewer sobre la sintesis CORREGIDA (ronda 1)"
+        id: qa1_runtime
+        continue-on-error: true
+        if: steps.qa1_prompt.outcome == 'success' && steps.qa1_r1.outputs.qaStatus == 'pending_execution'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: qa-reviewer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/qa-reviewer/rounds/1/claude-execution.json
+          prompt: ${{ steps.qa1_prompt.outputs.content }}
+          output-schema-path: config/qa-reviewer-output.schema.json
+          expected-output-path: ${{ steps.qa1_r1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[QA] Runner paso 2 (ronda 1)"
+        id: qa1_r2_run
+        continue-on-error: true
+        if: steps.qa1_runtime.outcome == 'success'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" --qa-reviewer-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee qa-step2-round-1.log
+        env:
+          QA_INPUT_PATH: ${{ steps.qa1_prep.outputs.qaInputPath }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.qa1_r1.outputs.expectedOutputPath }}
+
+      - name: "[QA] Parsear RUNNER_RESULT_JSON (paso 2 ronda 1)"
+        id: qa1_r2
+        continue-on-error: true
+        if: steps.qa1_r2_run.outcome == 'success' || steps.qa1_r2_run.outcome == 'failure'
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- qa-step2-round-1.log
+
+      - name: "[QA] Resolver la puerta con la sintesis corregida (ronda 1)"
+        id: qa1_done
+        continue-on-error: true
+        if: always() && steps.qa1_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          ARGS=(--phase complete-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 1)
+          if [ -n "$REVIEW_JSON_PATH" ]; then ARGS+=(--qa-review "$REVIEW_JSON_PATH"); fi
+          if [ -n "$EXPECTED_OUTPUT_PATH" ]; then ARGS+=(--qa-output "$EXPECTED_OUTPUT_PATH"); fi
+          ARGS+=(--runtime-note "$RUNTIME_NOTE")
+          npm run department:run -- "${ARGS[@]}" 2>&1 | tee coord-qa-complete-1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.qa1_runtime.outcome }}, claude=${{ steps.qa1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa1_runtime.outputs.output-source }}"
+          REVIEW_JSON_PATH: ${{ steps.qa1_r2.outputs.reviewJsonPath || steps.qa1_r1.outputs.reviewJsonPath }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.qa1_r1.outputs.expectedOutputPath }}
+
+      - name: "[QA] Parsear RUNNER_RESULT_JSON (complete-qa ronda 1)"
+        id: qa_gate1
+        continue-on-error: true
+        if: always() && steps.qa1_done.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-qa-complete-1.log
+
+      - name: "[CORR-GROWTH] Preparar correccion dirigida de la sintesis (ronda 2)"
+        id: gcorr2_prep_run
+        continue-on-error: true
+        if: steps.qa_gate1.outputs.correctionRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-growth-correction --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 2>&1 | tee coord-growth-correction-prepare-2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      - name: "[CORR-GROWTH] Parsear RUNNER_RESULT_JSON (prepare-growth-correction ronda 2)"
+        id: gcorr2_prep
+        continue-on-error: true
+        if: steps.gcorr2_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-growth-correction-prepare-2.log
+
+      - name: "[CORR-GROWTH] Leer prompt de correccion (ronda 2)"
+        id: gcorr2_prompt
+        continue-on-error: true
+        if: steps.gcorr2_prep.outputs.claudeRequired == 'true'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.gcorr2_prep.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Ejecutar growth-director-v2 en modo CORRECCION (ronda 2)"
+        id: gcorr2_runtime
+        continue-on-error: true
+        if: steps.gcorr2_prompt.outcome == 'success' && steps.gcorr2_prep.outputs.claudeRequired == 'true'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: growth-director-v2
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/growth-director-v2/rounds/2/claude-execution.json
+          prompt: ${{ steps.gcorr2_prompt.outputs.content }}
+          output-schema-path: config/growth-director-v2-output.schema.json
+          expected-output-path: ${{ steps.gcorr2_prep.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[CORR-GROWTH] Validar la correccion de la sintesis (ronda 2)"
+        id: gcorr2_done
+        continue-on-error: true
+        if: always() && steps.gcorr2_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase complete-growth --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-growth-correction-complete-2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.gcorr2_runtime.outcome }}, claude=${{ steps.gcorr2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.gcorr2_runtime.outputs.output-source }}"
+
+      - name: "[QA] Preparar bundle de re-revision (ronda 2)"
+        id: qa2_prep_run
+        continue-on-error: true
+        if: steps.gcorr2_done.outcome == 'success' && steps.gcorr2_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 2>&1 | tee coord-qa-prepare-2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+
+      - name: "[QA] Parsear RUNNER_RESULT_JSON (prepare-qa ronda 2)"
+        id: qa2_prep
+        continue-on-error: true
+        if: steps.qa2_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-qa-prepare-2.log
+
+      - name: "[QA] Runner paso 1 (ronda 2)"
+        id: qa2_r1_run
+        continue-on-error: true
+        if: steps.qa2_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" 2>&1 | tee qa-step1-round-2.log
+        env:
+          QA_INPUT_PATH: ${{ steps.qa2_prep.outputs.qaInputPath }}
+
+      - name: "[QA] Parsear RUNNER_RESULT_JSON (paso 1 ronda 2)"
+        id: qa2_r1
+        continue-on-error: true
+        if: steps.qa2_r1_run.outcome == 'success'
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- qa-step1-round-2.log
+
+      - name: "[QA] Leer prompt (ronda 2)"
+        id: qa2_prompt
+        continue-on-error: true
+        if: steps.qa2_r1.outputs.qaStatus == 'pending_execution'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.qa2_r1.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Re-ejecutar qa-reviewer sobre la sintesis CORREGIDA (ronda 2)"
+        id: qa2_runtime
+        continue-on-error: true
+        if: steps.qa2_prompt.outcome == 'success' && steps.qa2_r1.outputs.qaStatus == 'pending_execution'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: qa-reviewer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/qa-reviewer/rounds/2/claude-execution.json
+          prompt: ${{ steps.qa2_prompt.outputs.content }}
+          output-schema-path: config/qa-reviewer-output.schema.json
+          expected-output-path: ${{ steps.qa2_r1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[QA] Runner paso 2 (ronda 2)"
+        id: qa2_r2_run
+        continue-on-error: true
+        if: steps.qa2_runtime.outcome == 'success'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" --qa-reviewer-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee qa-step2-round-2.log
+        env:
+          QA_INPUT_PATH: ${{ steps.qa2_prep.outputs.qaInputPath }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.qa2_r1.outputs.expectedOutputPath }}
+
+      - name: "[QA] Parsear RUNNER_RESULT_JSON (paso 2 ronda 2)"
+        id: qa2_r2
+        continue-on-error: true
+        if: steps.qa2_r2_run.outcome == 'success' || steps.qa2_r2_run.outcome == 'failure'
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- qa-step2-round-2.log
+
+      - name: "[QA] Resolver la puerta con la sintesis corregida (ronda 2)"
+        id: qa2_done
+        continue-on-error: true
+        if: always() && steps.qa2_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          ARGS=(--phase complete-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 2)
+          if [ -n "$REVIEW_JSON_PATH" ]; then ARGS+=(--qa-review "$REVIEW_JSON_PATH"); fi
+          if [ -n "$EXPECTED_OUTPUT_PATH" ]; then ARGS+=(--qa-output "$EXPECTED_OUTPUT_PATH"); fi
+          ARGS+=(--runtime-note "$RUNTIME_NOTE")
+          npm run department:run -- "${ARGS[@]}" 2>&1 | tee coord-qa-complete-2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.qa2_runtime.outcome }}, claude=${{ steps.qa2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa2_runtime.outputs.output-source }}"
+          REVIEW_JSON_PATH: ${{ steps.qa2_r2.outputs.reviewJsonPath || steps.qa2_r1.outputs.reviewJsonPath }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.qa2_r1.outputs.expectedOutputPath }}
+
+      - name: "[QA] Parsear RUNNER_RESULT_JSON (complete-qa ronda 2)"
+        id: qa_gate2
+        continue-on-error: true
+        if: always() && steps.qa2_done.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-qa-complete-2.log
 
       # =====================================================================
       # FASE 4 -- WEB ENGINEER: SOLO lo que sobrevivio Growth + QA.

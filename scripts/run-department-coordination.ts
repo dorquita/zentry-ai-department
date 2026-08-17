@@ -58,11 +58,13 @@ import {
   appendQaLoopRound,
   decideQaLoop,
   emptyQaLoopRecord,
+  QaLoopDecision,
   QaLoopRecord,
   renderQaLoopSummary,
   reviewIsBlocking,
 } from "../src/department/qa-correction";
 import { buildWebEngineerCorrectionContext, buildWebEngineerCorrectionPrompt } from "../src/department/web-engineer-correction-input";
+import { buildGrowthCorrectionContext, buildGrowthCorrectionPrompt } from "../src/department/growth-correction-input";
 import { DepartmentPromotionResult, resolvePromotion } from "../src/department/promotion";
 import {
   DEPARTMENT_RUNNER_PHASES,
@@ -80,6 +82,8 @@ import {
   readStageOutput,
   recordStage,
   resolveDepartmentRunPaths,
+  resolveGrowthQaInputPath,
+  resolveGrowthQaLoopPath,
   resolvePlanQaInputPath,
   resolveQaLoopPath,
   resolveStageDir,
@@ -152,8 +156,8 @@ function readModelOutput(filePath: string): unknown {
 }
 
 /** Mueve una salida invalida a `output-raw-invalid.json` para inspeccion humana y deja la ruta canonica VACIA (nunca se registra como salida buena). */
-function quarantineInvalidOutput(departmentRunId: string, stage: DepartmentStageName, content: string): string {
-  const { stageDir, outputPath } = resolveStageFilePaths(departmentRunId, stage);
+function quarantineInvalidOutput(departmentRunId: string, stage: DepartmentStageName, content: string, round = 0): string {
+  const { stageDir, outputPath } = resolveStageFilePaths(departmentRunId, stage, round);
   fs.mkdirSync(stageDir, { recursive: true });
   const quarantinePath = path.join(stageDir, "output-raw-invalid.json");
   fs.writeFileSync(quarantinePath, content, "utf-8");
@@ -289,7 +293,13 @@ async function phasePrepareGrowth(args: Record<string, string>): Promise<Departm
 function phaseCompleteGrowth(args: Record<string, string>): DepartmentRunnerResultSummary {
   const departmentRunId = requireDepartmentRunId(args);
   const manifest = readManifest(departmentRunId);
-  const { contextPath, outputPath } = resolveStageFilePaths(departmentRunId, "growth-director-v2");
+  const growthRound = parseRound(args);
+  const { outputPath } = resolveStageFilePaths(departmentRunId, "growth-director-v2", growthRound);
+  // La auditoria de dominio se hace SIEMPRE contra el contexto de la
+  // ronda 0: es el que tiene el catalogo de evidencia real contra el que
+  // se validan las `evidenceRefs`. Una correccion no cambia la evidencia
+  // disponible, solo lo que se afirma sobre ella.
+  const contextPath = resolveStageFilePaths(departmentRunId, "growth-director-v2", 0).contextPath;
   const outputArg = args.output && args.output !== "true" ? args.output : outputPath;
 
   if (!fs.existsSync(outputArg)) {
@@ -306,7 +316,7 @@ function phaseCompleteGrowth(args: Record<string, string>): DepartmentRunnerResu
     output = validateGrowthDirectorV2Output(readModelOutput(outputArg));
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    const quarantinePath = quarantineInvalidOutput(departmentRunId, "growth-director-v2", rawText);
+    const quarantinePath = quarantineInvalidOutput(departmentRunId, "growth-director-v2", rawText, growthRound);
     const reason = withRuntimeNote(`Salida de growth-director-v2 invalida (fail-closed, no se reinterpreta): ${error}. Copia cruda en ${toRepoRelative(quarantinePath)}.`, args);
     recordStage({ departmentRunId, stage: "growth-director-v2", status: "invalid_output", reason });
     console.error(reason);
@@ -316,8 +326,9 @@ function phaseCompleteGrowth(args: Record<string, string>): DepartmentRunnerResu
 
   const context = JSON.parse(fs.readFileSync(contextPath, "utf-8")) as DepartmentGrowthContext;
   const auditWarnings = auditGrowthDirectorV2Output(context, output);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), "utf-8");
-  writeDepartmentJson(resolveStageFilePaths(departmentRunId, "growth-director-v2").artifactPath, {
+  writeDepartmentJson(resolveStageFilePaths(departmentRunId, "growth-director-v2", growthRound).artifactPath, {
     generatedAt: new Date().toISOString(),
     departmentRunId,
     employee: "growth-director-v2",
@@ -330,11 +341,15 @@ function phaseCompleteGrowth(args: Record<string, string>): DepartmentRunnerResu
     departmentRunId,
     stage: "growth-director-v2",
     status: "executed",
-    reason: `Sintesis valida sobre ${loadSpecialistInputs(manifest).executedCount} especialista(s) ejecutado(s). ${output.recommendedPriorities.length} prioridad(es) propuesta(s), ${auditWarnings.length} aviso(s) de auditoria de dominio.`,
+    reason:
+      growthRound === 0
+        ? `Sintesis valida sobre ${loadSpecialistInputs(manifest).executedCount} especialista(s) ejecutado(s). ${output.recommendedPriorities.length} prioridad(es) propuesta(s), ${auditWarnings.length} aviso(s) de auditoria de dominio.`
+        : `Correccion (ronda ${growthRound}) valida: ${output.recommendedPriorities.length} prioridad(es), ${auditWarnings.length} aviso(s). Las versiones anteriores se conservan en stages/growth-director-v2/rounds/.`,
     auditWarningCount: auditWarnings.length,
+    sourceOutputPath: growthRound > 0 ? outputPath : undefined,
   });
 
-  console.log(`growth-director-v2: salida valida. Prioridades: ${output.recommendedPriorities.length}. Avisos de auditoria: ${auditWarnings.length}.`);
+  console.log(`growth-director-v2 (ronda ${growthRound}): salida valida. Prioridades: ${output.recommendedPriorities.length}. Avisos de auditoria: ${auditWarnings.length}.`);
   for (const warning of auditWarnings) console.log(`  [audit] ${warning}`);
   return {
     ...baseResult("complete-growth", departmentRunId, "executed", "Sintesis de Growth validada y registrada."),
@@ -349,9 +364,16 @@ function phasePrepareQa(args: Record<string, string>): DepartmentRunnerResultSum
   assertSubagentIsToolless("qa-reviewer");
   const manifest = readManifest(departmentRunId);
   const specialists = loadSpecialistInputs(manifest);
+  const round = parseRound(args);
   const growthStage = stageStatusOf(manifest, "growth-director-v2");
-  const growthOutput = readStageOutputTyped(manifest, "growth-director-v2", validateGrowthDirectorV2Output);
-  const paths = resolveDepartmentRunPaths(departmentRunId);
+  // En una ronda de correccion se revisa la sintesis DE ESA RONDA, no la
+  // que tenga registrada el manifiesto: revisar la anterior convertiria
+  // la re-QA en un adorno.
+  const growthOutput =
+    round > 0
+      ? readGrowthOutputForRound(departmentRunId, round)
+      : readStageOutputTyped(manifest, "growth-director-v2", validateGrowthDirectorV2Output);
+  const bundlePath = resolveGrowthQaInputPath(departmentRunId, round);
 
   const bundle = buildDepartmentQaInputBundle(
     manifest,
@@ -367,11 +389,11 @@ function phasePrepareQa(args: Record<string, string>): DepartmentRunnerResultSum
     return baseResult("prepare-qa", departmentRunId, "not_available", reason);
   }
 
-  writeDepartmentJson(paths.qaInputPath, bundle);
-  console.log(`qa-reviewer: bundle de revision escrito en ${toRepoRelative(paths.qaInputPath)}.`);
+  writeDepartmentJson(bundlePath, bundle);
+  console.log(`qa-reviewer (ronda ${round}): bundle de revision escrito en ${toRepoRelative(bundlePath)}.`);
   return {
-    ...baseResult("prepare-qa", departmentRunId, "prepared", `Bundle de QA listo (${specialists.executedCount} especialista(s) + growth=${growthStage.status}).`),
-    qaInputPath: toRepoRelative(paths.qaInputPath),
+    ...baseResult("prepare-qa", departmentRunId, "prepared", `Bundle de QA listo para la ronda ${round} (${specialists.executedCount} especialista(s) + growth=${growthStage.status}).`),
+    qaInputPath: toRepoRelative(bundlePath),
     claudeRequired: true,
   };
 }
@@ -383,8 +405,10 @@ interface QaReviewArtifactShape {
 
 function phaseCompleteQa(args: Record<string, string>): DepartmentRunnerResultSummary {
   const departmentRunId = requireDepartmentRunId(args);
+  const round = parseRound(args);
   const manifest = readManifest(departmentRunId);
   const paths = resolveDepartmentRunPaths(departmentRunId);
+  const bundlePath = resolveGrowthQaInputPath(departmentRunId, round);
   const reviewArg = args["qa-review"];
 
   let qaOutput: QaReviewerOutput | undefined;
@@ -396,7 +420,7 @@ function phaseCompleteQa(args: Record<string, string>): DepartmentRunnerResultSu
   } else {
     const review = JSON.parse(fs.readFileSync(path.resolve(reviewArg), "utf-8")) as QaReviewArtifactShape;
     const reviewedPath = review.reviewedArtifact?.artifactPath ?? "";
-    const expectedPath = toRepoRelative(paths.qaInputPath);
+    const expectedPath = toRepoRelative(bundlePath);
     if (reviewedPath !== expectedPath) {
       // Misma regla fail-closed que `assertReviewedArtifactMatches()` del
       // propio empleado, aplicada aqui a nivel de pasada: una revision
@@ -429,23 +453,65 @@ function phaseCompleteQa(args: Record<string, string>): DepartmentRunnerResultSu
 
   const updated = readManifest(departmentRunId);
   const growthStage = stageStatusOf(updated, "growth-director-v2");
+  const growthForPromotion =
+    round > 0 ? readGrowthOutputForRound(departmentRunId, round) : readStageOutputTyped(updated, "growth-director-v2", validateGrowthDirectorV2Output);
   const promotion = resolvePromotion({
     departmentRunId,
-    growth: { status: growthStage.status, output: readStageOutputTyped(updated, "growth-director-v2", validateGrowthDirectorV2Output) },
+    growth: { status: growthStage.status, output: growthForPromotion },
     qa: { status: qaStatus, output: qaOutput },
   });
   writeDepartmentJson(paths.promotionPath, promotion);
 
-  console.log(`qa-reviewer: status=${qaStatus}. Estado QA de departamento: ${promotion.departmentQaStatus}. Promovidas: ${promotion.promoted.length}. Bloqueadas: ${promotion.blocked.length}.`);
+  console.log(`qa-reviewer (ronda ${round}): status=${qaStatus}. Estado QA de departamento: ${promotion.departmentQaStatus}. Promovidas: ${promotion.promoted.length}. Bloqueadas: ${promotion.blocked.length}.`);
   if (promotion.globalBlockReason) console.log(`  [gate] ${promotion.globalBlockReason}`);
+
+  // --- BUCLE DE CORRECCION DE GROWTH -------------------------------
+  //
+  // Aqui es donde el departamento se paraba de verdad. El bucle de
+  // correccion se construyo primero sobre el PLAN, pero la primera
+  // pasada fresca real demostro que la puerta que se cierra es ESTA: QA
+  // bloqueo las recomendaciones de Growth por una cifra sin respaldo, y
+  // con la puerta cerrada web-engineer ni se invoca -- asi que el bucle
+  // del plan no llegaba a existir.
+  //
+  // Solo se evalua con una revision VALIDA. Sin revision no hay
+  // correccion que pedir: eso es un fallo de la etapa, no un veredicto.
+  let loop = readGrowthQaLoopRecord(departmentRunId);
+  let decision: QaLoopDecision | null = null;
+  if (qaStatus === "executed" && qaOutput) {
+    decision = decideQaLoop({ review: qaOutput, round });
+    loop = appendQaLoopRound(loop, {
+      revision: round,
+      qaAttempt: round + 1,
+      employee: "growth-director-v2",
+      reviewStatus: qaOutput.reviewStatus,
+      blocking: reviewIsBlocking(qaOutput),
+      action: decision.action,
+      corrections: decision.corrections,
+      reason: decision.reason,
+      reviewedOutputPath: toRepoRelative(resolveStageFilePaths(departmentRunId, "growth-director-v2", round).outputPath),
+      reviewOutputPath: reviewArg && reviewArg !== "true" ? toRepoRelative(path.resolve(reviewArg)) : "",
+      at: new Date().toISOString(),
+    });
+    writeDepartmentJson(resolveGrowthQaLoopPath(departmentRunId), loop);
+    for (const line of renderQaLoopSummary(loop)) console.log(line);
+    if (decision.action === "request_correction") {
+      for (const correction of decision.corrections) {
+        console.log(`  [correccion] ${correction.field || "(campo no concretado)"}: ${correction.problem}`);
+      }
+    }
+  }
 
   return {
     ...baseResult("complete-qa", departmentRunId, qaStatus, reason),
-    qaInputPath: toRepoRelative(paths.qaInputPath),
+    qaInputPath: toRepoRelative(bundlePath),
     promotionPath: toRepoRelative(paths.promotionPath),
     promotedCount: promotion.promoted.length,
     blockedCount: promotion.blocked.length,
     departmentQaStatus: promotion.departmentQaStatus,
+    qaLoopStatus: decision ? loop.finalStatus : "",
+    correctionRequired: decision?.action === "request_correction",
+    nextRound: decision?.nextRound ?? 0,
   };
 }
 
@@ -671,6 +737,87 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
     ...baseResult("complete-web-engineer", departmentRunId, "executed", "Especificacion tecnica validada y registrada."),
     expectedOutputPath: toRepoRelative(outputPath),
     auditWarningCount: auditWarnings.length,
+  };
+}
+
+
+/** Lee la sintesis de Growth de una ronda concreta. `undefined` si no existe o no valida. */
+function readGrowthOutputForRound(departmentRunId: string, round: number): GrowthDirectorV2Output | undefined {
+  const { outputPath } = resolveStageFilePaths(departmentRunId, "growth-director-v2", round);
+  if (!fs.existsSync(outputPath)) return undefined;
+  try {
+    return validateGrowthDirectorV2Output(JSON.parse(fs.readFileSync(outputPath, "utf-8")));
+  } catch {
+    return undefined;
+  }
+}
+
+function readGrowthQaLoopRecord(departmentRunId: string): QaLoopRecord {
+  const filePath = resolveGrowthQaLoopPath(departmentRunId);
+  if (!fs.existsSync(filePath)) return emptyQaLoopRecord(departmentRunId, "growth-director-v2");
+  return JSON.parse(fs.readFileSync(filePath, "utf-8")) as QaLoopRecord;
+}
+
+/**
+ * Construye el encargo de correccion de la sintesis de Growth: su
+ * propuesta anterior integra, el veredicto de QA y las correcciones
+ * accionables. No se vuelve a ejecutar a los especialistas para corregir
+ * una afirmacion sin respaldo.
+ */
+async function phasePrepareGrowthCorrection(args: Record<string, string>): Promise<DepartmentRunnerResultSummary> {
+  const departmentRunId = requireDepartmentRunId(args);
+  const round = parseRound(args);
+  if (round < 1) throw new Error("Una correccion es siempre la ronda 1 o posterior: --round 0 es la sintesis original.");
+
+  const loop = readGrowthQaLoopRecord(departmentRunId);
+  const lastRound = loop.rounds[loop.rounds.length - 1];
+  if (!lastRound || lastRound.action !== "request_correction") {
+    const reason = `El bucle de QA de Growth no ha pedido ninguna correccion (estado: ${loop.finalStatus}). No se prepara nada.`;
+    console.log(reason);
+    return { ...baseResult("prepare-growth-correction", departmentRunId, "not_available", reason), claudeRequired: false };
+  }
+
+  const previousOutput = readGrowthOutputForRound(departmentRunId, round - 1);
+  if (!previousOutput) {
+    const reason = `No se encuentra la sintesis de la ronda ${round - 1}. Sin la propuesta anterior, "corregir" seria "analizar de cero": no se pide.`;
+    console.error(reason);
+    return { ...baseResult("prepare-growth-correction", departmentRunId, "not_available", reason), claudeRequired: false };
+  }
+
+  const original = JSON.parse(
+    fs.readFileSync(resolveStageFilePaths(departmentRunId, "growth-director-v2", 0).contextPath, "utf-8")
+  ) as DepartmentGrowthContext;
+
+  const context = buildGrowthCorrectionContext({
+    departmentRunId,
+    round,
+    maxRounds: loop.maxRounds,
+    original,
+    previousOutput,
+    qaVerdict: {
+      reviewStatus: lastRound.reviewStatus,
+      summary: lastRound.reason,
+      safetyConcerns: [],
+      unsupportedClaims: [],
+      contradictions: [],
+    },
+    corrections: lastRound.corrections,
+  });
+
+  const prompt = buildGrowthCorrectionPrompt(context, await loadPreviousHumanFeedbackFromState());
+  const paths = resolveStageFilePaths(departmentRunId, "growth-director-v2", round);
+  fs.mkdirSync(paths.stageDir, { recursive: true });
+  writeDepartmentJson(paths.contextPath, context);
+  fs.writeFileSync(paths.promptPath, prompt, "utf-8");
+
+  console.log(
+    `Correccion dirigida de Growth (ronda ${round} de ${loop.maxRounds}): ${lastRound.corrections.length} correccion(es), con su sintesis anterior integra.`
+  );
+  return {
+    ...baseResult("prepare-growth-correction", departmentRunId, "prepared", `Encargo de correccion de Growth listo (ronda ${round}).`),
+    promptFilePath: toRepoRelative(paths.promptPath),
+    expectedOutputPath: toRepoRelative(paths.outputPath),
+    claudeRequired: true,
   };
 }
 
@@ -1132,6 +1279,7 @@ const PHASES: Record<DepartmentRunnerPhase, (args: Record<string, string>) => De
   "complete-qa": phaseCompleteQa,
   "prepare-web-engineer": phasePrepareWebEngineer,
   "complete-web-engineer": phaseCompleteWebEngineer,
+  "prepare-growth-correction": phasePrepareGrowthCorrection,
   "prepare-plan-qa": phasePreparePlanQa,
   "complete-plan-qa": phaseCompletePlanQa,
   "prepare-web-engineer-correction": phasePrepareWebEngineerCorrection,

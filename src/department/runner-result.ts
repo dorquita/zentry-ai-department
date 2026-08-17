@@ -28,6 +28,7 @@ export type DepartmentRunnerPhase =
   | "complete-web-engineer"
   // Bucle QA -> correccion -> re-QA sobre el PLAN (lo unico que se
   // escribe de verdad en staging, y lo unico que antes no revisaba nadie).
+  | "prepare-growth-correction"
   | "prepare-plan-qa"
   | "complete-plan-qa"
   | "prepare-web-engineer-correction"
@@ -43,6 +44,7 @@ export const DEPARTMENT_RUNNER_PHASES: DepartmentRunnerPhase[] = [
   "complete-qa",
   "prepare-web-engineer",
   "complete-web-engineer",
+  "prepare-growth-correction",
   "prepare-plan-qa",
   "complete-plan-qa",
   "prepare-web-engineer-correction",
