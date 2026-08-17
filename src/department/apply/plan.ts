@@ -145,6 +145,7 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
             afterValue: resolvedPlan.afterValue,
             operation: resolvedPlan.operation,
             rationale: resolvedPlan.rationale,
+            ...(resolvedPlan.executablePlan ? { executableChangePlan: resolvedPlan.executablePlan } : {}),
           }
         : null;
 
@@ -180,6 +181,10 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
       },
       applyCapability: capability,
       executableChangePlan,
+      changePlanStatus: blockedByQa ? "BLOCKED_BY_QA" : (resolvedPlan?.executionStatus ?? null),
+      changePlanReason: blockedByQa
+        ? "Recomendacion bloqueada por QA en esta pasada: no se construye ningun plan de cambio para ella."
+        : (resolvedPlan?.reason ?? ""),
       applyStatus,
       validationStatus: "not_run",
       rollbackStatus: "not_needed",
@@ -188,7 +193,7 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
         {
           at: nowIso,
           event: "planned",
-          detail: `Elemento de apply construido a partir de la recomendacion #${recommendation.rank} de esta pasada. QA=${blockedByQa ? "BLOCKED" : input.promotion.departmentQaStatus}. Capacidad de apply: ${capability.supported ? String(capability.id) : "ninguna"} (${capability.reason})`,
+          detail: `Elemento de apply construido a partir de la recomendacion #${recommendation.rank} de esta pasada. QA=${blockedByQa ? "BLOCKED" : input.promotion.departmentQaStatus}. Capacidad de apply: ${capability.supported ? String(capability.id) : "ninguna"} (${capability.reason}) ChangePlan: ${resolvedPlan ? `${resolvedPlan.executionStatus} -- ${resolvedPlan.reason}` : "ninguno declarado para esta recomendacion en esta pasada."}`,
         },
       ],
       createdAt: nowIso,

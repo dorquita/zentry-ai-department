@@ -537,15 +537,24 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
   const { drafts, rejected } = parseChangePlanDrafts((output as { changePlans?: unknown }).changePlans);
   const resolvedPlans = drafts.map((draft) => buildChangePlanFromDraft({ draft, inventory: stagingInventory }));
   const actionable = resolvedPlans.filter((r) => r.status === "ACTIONABLE");
+  // Desglose por CAUSA, no solo "ejecutable / no ejecutable": saber que
+  // 3 planes fallaron por destino sin resolver y 1 por falta de AFTER
+  // concreto lleva a acciones distintas.
+  const byCause: Record<string, number> = {};
+  for (const resolved of resolvedPlans) byCause[resolved.executionStatus] = (byCause[resolved.executionStatus] ?? 0) + 1;
   writeDepartmentJson(path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "change-plans.json"), {
     departmentRunId,
     generatedAt: new Date().toISOString(),
     draftsDeclared: drafts.length,
     draftsRejected: rejected,
+    statusCounts: byCause,
     resolved: resolvedPlans,
+    note: "Fase de PLANIFICACION: ninguno de estos planes se ha ejecutado. Los READY_TO_EXECUTE estan listos, no aplicados.",
   });
   console.log(
-    `ChangePlans: ${drafts.length} declarado(s) por web-engineer, ${actionable.length} resuelto(s) como EJECUTABLE contra el inventario real, ${resolvedPlans.length - actionable.length} sin resolver (quedan manuales).`
+    `ChangePlans: ${drafts.length} declarado(s) por web-engineer, ${actionable.length} READY_TO_EXECUTE contra el inventario real, ${resolvedPlans.length - actionable.length} sin resolver. Por causa: ${Object.entries(byCause)
+      .map(([status, count]) => `${status}=${count}`)
+      .join(", ") || "(ninguna)"}.`
   );
   fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), "utf-8");
   writeDepartmentJson(artifactPath, {

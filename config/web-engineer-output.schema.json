@@ -74,7 +74,7 @@
     },
     "changePlans": {
       "type": "array",
-      "description": "Planes de cambio EJECUTABLES, uno por recomendacion que puedas resolver con evidencia real del inventario de staging que se te ha dado. NUNCA inventes un pageId ni un hash: no los pongas aqui, el sistema los resuelve por su cuenta. Si no puedes citar la pagina con su URL de staging o su slug EXACTOS, no incluyas la recomendacion en este array: quedara como implementacion manual, que es el resultado correcto.",
+      "description": "Planes de cambio EJECUTABLES. UN plan escribe en UNA sola pagina: si una recomendacion afecta a varias, declara un plan por pagina, cada uno con su propio newValue. NUNCA inventes un pageId, un hash ni el estado actual del campo: no van aqui, el sistema los resuelve leyendo el sitio. Si no puedes citar la pagina con su URL de staging o su slug EXACTOS, o no puedes decidir el valor final exacto, no incluyas la recomendacion en este array: quedara como implementacion manual, que es el resultado correcto.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -92,7 +92,7 @@
           },
           "targetPage": {
             "type": "string",
-            "description": "URL de staging EXACTA o slug EXACTO de la pagina objetivo, copiados del inventario que se te ha dado. Nada aproximado."
+            "description": "URL de staging EXACTA o slug EXACTO de UNA sola pagina objetivo, copiados del inventario que se te ha dado. Nada aproximado y nunca una lista: una referencia que enumere varias paginas se rechaza entera."
           },
           "operation": {
             "type": "string",
@@ -106,7 +106,7 @@
           },
           "newValue": {
             "type": "string",
-            "description": "Contenido NUEVO y COMPLETO del campo. Para update_post_content, el post_content entero resultante, no un fragmento."
+            "description": "Valor FINAL y COMPLETO del campo, tal cual debe quedar escrito -- nunca una instruccion (optimizar el meta title NO es un meta title). Para update_post_content, el post_content entero resultante, no un fragmento."
           },
           "metaKey": {
             "type": "string",

@@ -32,6 +32,7 @@
  */
 
 import { CapabilitySelection, ExecutePhpChangePlan } from "../../core/execute-php-operations";
+import { ChangePlanExecutionStatus, ExecutableChangePlan } from "../executable-change-plan";
 import { DepartmentChangeCapabilityId } from "./change-types";
 import { DEPARTMENT_CHANGE_STATUSES, DepartmentChangeStatus, isDepartmentChangeStatus } from "./state-machine";
 
@@ -76,6 +77,13 @@ export interface ExecutablePlanRecord {
   afterValue: string;
   operation: string;
   rationale: string;
+  /**
+   * Sobre ejecutable completo (target, before, after, preconditions,
+   * validation, rollback) tal como lo construyo
+   * `buildChangePlanFromDraft`. Opcional por compatibilidad con pasadas
+   * ya persistidas antes de que existiera.
+   */
+  executableChangePlan?: ExecutableChangePlan;
 }
 
 export interface DepartmentApplyCapability {
@@ -181,6 +189,19 @@ export interface DepartmentApplyItem {
    * accionable, por muy bien redactada que este.
    */
   executableChangePlan: ExecutablePlanRecord | null;
+  /**
+   * POR QUE esta recomendacion es o no es ejecutable, con la causa
+   * exacta (destino sin resolver, ambiguo, AFTER sin concretar,
+   * operacion no soportada...). Existe para que un informe pueda decir
+   * el motivo en vez del generico "REQUIRES MANUAL STAGING
+   * IMPLEMENTATION", que no distinguia entre causas muy distintas.
+   *
+   * `null` cuando esta pasada ni siquiera declaro un plan para la
+   * recomendacion (p.ej. web-engineer no la incluyo en `changePlans[]`).
+   */
+  changePlanStatus: ChangePlanExecutionStatus | null;
+  /** Motivo textual del `changePlanStatus`. Vacio si no hay plan declarado. */
+  changePlanReason: string;
   applyStatus: DepartmentApplyStatus;
   validationStatus: DepartmentApplyValidationStatus;
   rollbackStatus: DepartmentApplyRollbackStatus;

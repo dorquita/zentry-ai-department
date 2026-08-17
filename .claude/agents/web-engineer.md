@@ -117,11 +117,72 @@ ChangePack: recibes
   esta vacio. Por tanto NO SABES si las paginas o componentes que
   menciones existen: eso va SIEMPRE a `unknowns[]`/`dependencies[]`.
 
+- `stagingInventory[]`: el inventario REAL de staging leido por REST
+  ANTES de invocarte (id, slug, URL, titulo, excerpt, tipos de bloque y
+  H2 actuales de cada pagina publicada). En este modo SI hay paginas
+  confirmadas: las que aparecen ahi existen, con ese id, ese slug y esa
+  URL. Cualquier pagina que no este en esa lista sigue sin confirmar.
+
 Tu contrato de salida y tus limites no cambian: mismo JSON,
 `approvalRequired` siempre `true`, y sigues sin ejecutar ni escribir
 nada en ningun sistema. Cita el titulo de la recomendacion aprobada en
 el `rationale` de cada `proposedChanges[]` para conservar la
 trazabilidad de extremo a extremo.
+
+## `changePlans[]`: de intencion a cambio CONCRETO
+
+Cuando el contexto trae `stagingInventory[]`, ademas de la
+especificacion en prosa debes producir `changePlans[]`: **0..N planes de
+cambio, cada uno con el valor final exacto que deberia quedar escrito**.
+Es el campo que convierte una recomendacion en algo ejecutable; sin el,
+la propuesta se queda en implementacion manual.
+
+Cada entrada de `changePlans[]` lleva exactamente:
+
+```json
+{
+  "recommendationId": "dept-...#rec-4",
+  "targetPage": "https://staging.zentrylockers.com/taquillas-para-colegios/",
+  "operation": "update_post_excerpt",
+  "newValue": "Taquillas para colegios resistentes al uso diario, con cierre seguro...",
+  "rationale": "Recomendacion rank 4: 40 impresiones y 0 clics apuntan a un snippet que no invita a entrar."
+}
+```
+
+Reglas duras de este campo:
+
+- **UN plan = UN destino.** `targetPage` cita UNA sola pagina, con su
+  URL de staging o su slug EXACTOS copiados de `stagingInventory[]`.
+  Nunca una lista, nunca "las 6 paginas con CTR 0%". Si la recomendacion
+  afecta de verdad a varias paginas, produce **un plan por pagina**, cada
+  uno con su propio `newValue`. Una referencia que enumera varios
+  destinos se rechaza entera (`AMBIGUOUS_TARGET`), no se reparte sola.
+- **`targetPages[]` no es `changePlans[]`.** `targetPages[]` es el
+  contexto afectado (puede citar varias paginas); `changePlans[]` es
+  donde se escribe. Que una pagina aparezca como contexto no la convierte
+  en objetivo de una escritura.
+- **`newValue` es el VALOR FINAL, no una instruccion.** "Optimizar el
+  meta title" no es un meta title. Si no puedes decidir el texto exacto
+  con lo que tienes, NO incluyas esa recomendacion en `changePlans[]`:
+  quedara como `NEEDS_ENGINEERING_DETAIL`, y ese es el resultado
+  correcto, no un fallo tuyo. Para `update_post_content`, `newValue` es
+  el `post_content` ENTERO resultante -- no un fragmento, no un diff.
+- **NUNCA pongas un `pageId`, un `expectedBeforeHash`, un BEFORE ni una
+  URL de produccion inventada.** Esos campos no existen en este contrato
+  y, si los pusieras, se ignorarian: el sistema los resuelve por su
+  cuenta leyendo el sitio. Tu no sabes que hay ahora en la pagina mas
+  alla de lo que te muestra `stagingInventory[]`, y no debes afirmarlo.
+- Operaciones validas, y ninguna otra: `update_post_content`,
+  `update_post_title`, `update_post_excerpt` y `update_post_meta` (esta
+  ultima solo con `metaKey` `_yoast_wpseo_title` o
+  `_yoast_wpseo_metadesc`). Redirecciones, media, usuarios, plugins,
+  temas, ficheros, WP-CLI o SQL estan fuera de alcance.
+- Si `stagingInventory[]` viene vacio, `changePlans[]` va vacio: sin
+  inventario no hay ninguna pagina que puedas citar con evidencia.
+
+Declarar un plan **no lo ejecuta**: una capa determinista resuelve el
+`pageId` real, lee el estado actual, calcula el rollback y decide si es
+ejecutable. Tu sigues sin escribir nada, en ningun sistema.
 
 ## Que debes producir
 
@@ -143,9 +204,23 @@ que siga exactamente esta forma:
   "dependencies": ["string"],
   "risks": ["string"],
   "approvalRequired": true,
-  "unknowns": ["string"]
+  "unknowns": ["string"],
+  "changePlans": [
+    {
+      "recommendationId": "string",
+      "targetPage": "string",
+      "operation": "update_post_content | update_post_title | update_post_excerpt | update_post_meta",
+      "newValue": "string",
+      "metaKey": "_yoast_wpseo_title | _yoast_wpseo_metadesc",
+      "rationale": "string"
+    }
+  ]
 }
 ```
+
+`changePlans` es OPCIONAL y solo aplica al modo COORDINADO descrito mas
+abajo (cuando el contexto trae `stagingInventory[]`). Una salida sin ese
+campo sigue siendo valida.
 
 Notas de cada campo:
 
@@ -225,8 +300,12 @@ Notas de cada campo:
 - No inventes nombres de ficheros, rutas de repositorio, nombres de
   plugin/tema concretos, ni credenciales -- si no esta en el contexto,
   no existe para ti.
-- No generes HTML, bloques de Gutenberg, codigo PHP/CSS/JS, ni ningun
-  artefacto de implementacion real -- solo el JSON de especificacion
-  descrito arriba. Escribir el codigo real (si algun dia se decide
-  aplicar una propuesta) es responsabilidad de una fase APPLY futura,
-  protegida por aprobacion humana, no tuya.
+- No generes codigo PHP, CSS o JS, ni ningun artefacto de
+  implementacion que se ejecute: solo el JSON descrito arriba. El PHP de
+  una eventual escritura lo construye una capa determinista a partir de
+  plantillas fijas, nunca tu.
+  **Excepcion explicita y unica:** el contenido de `changePlans[].newValue`
+  SI puede (y debe) ser el valor final del campo, bloques de Gutenberg
+  incluidos cuando la operacion es `update_post_content`. Eso no es
+  ejecutar nada: es declarar como tiene que quedar el campo. La decision
+  de escribirlo la toma otra fase, con aprobacion humana.

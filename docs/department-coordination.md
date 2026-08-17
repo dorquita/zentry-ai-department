@@ -198,11 +198,17 @@ npm run department:run -- --phase gate --departmentRunId <id>
 
 - `sem-specialist` (siempre `not_available` en el informe; nunca
   bloquea).
-- El puente entre la especificacion de `web-engineer` y el registro de
-  capacidades del APPLY: hoy el agente no recibe el catalogo de paginas
-  de staging ni se le pide el bloque `TITLE:`/`META:`, asi que sus
-  propuestas salen como `requires_manual_implementation` salvo que la
-  especificacion cite la pagina y los valores a mano. Ver
-  `docs/department-apply.md`.
+- ~~El puente entre la especificacion de `web-engineer` y el registro de
+  capacidades del APPLY~~ — **resuelto**: el agente recibe el inventario
+  REAL de staging y declara `changePlans[]` (destino unico + valor
+  final); el `pageId`, el BEFORE, las preconditions, la validacion y el
+  rollback los resuelve codigo determinista, y cada propuesta que no sale
+  ejecutable dice POR QUE (`UNRESOLVED_TARGET`, `AMBIGUOUS_TARGET`,
+  `NEEDS_ENGINEERING_DETAIL`, `UNSUPPORTED_OPERATION`,
+  `BEFORE_UNAVAILABLE`, `STALE`) en vez del generico "requiere
+  implementacion manual". Ver
+  [`docs/executable-change-plan.md`](executable-change-plan.md). Lo que
+  sigue pendiente es CONECTAR los `READY_TO_EXECUTE` con el executor de
+  staging.
 - Executors para cualquier tipo de cambio que no sea title/meta de un
   borrador de staging ya existente.

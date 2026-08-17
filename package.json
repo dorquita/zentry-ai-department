@@ -55,6 +55,7 @@
     "claude-employee:resolve-output-for-ci": "ts-node scripts/resolve-claude-employee-output-for-ci.ts",
     "claude-employee:assert-safety-for-ci": "ts-node scripts/assert-claude-employee-safety-for-ci.ts",
     "claude-employee:assert-schema-supported-for-ci": "ts-node scripts/assert-json-schema-lite-compatible-for-ci.ts",
+    "change-plans:demo": "ts-node scripts/demo-executable-change-plans.ts",
     "web-engineer:run": "ts-node scripts/run-web-engineer.ts",
     "web-engineer:parse-runner-result-for-ci": "ts-node scripts/parse-web-engineer-runner-result-for-ci.ts",
     "web-engineer:print-capability-warnings-for-ci": "ts-node scripts/print-web-engineer-capability-warnings-for-ci.ts",

@@ -29,6 +29,7 @@ interface RestPage {
   status: string;
   slug: string;
   link: string;
+  type?: string;
   title?: { raw?: string; rendered?: string };
   content?: { raw?: string; rendered?: string };
   excerpt?: { raw?: string; rendered?: string };
@@ -51,6 +52,20 @@ function metaOf(page: RestPage): Record<string, string | undefined> {
   return out;
 }
 
+/**
+ * Claves de la allowlist que esta lectura REALMENTE observo. Es lo que
+ * distingue "la clave existe y vale vacio" de "la clave no vino en la
+ * respuesta", que no es lo mismo ni de lejos: el REST del core solo
+ * expone en `meta` las claves registradas con `show_in_rest`, y las de
+ * Yoast no lo estan por defecto. Sin esta lista, un `meta: {}` se leeria
+ * como "el SEO title actual es vacio" y el rollback borraria un valor
+ * que si existia.
+ */
+function metaObservedKeysOf(page: RestPage): string[] {
+  const raw = (page.meta ?? {}) as Record<string, unknown>;
+  return ALLOWED_POST_META_KEYS.filter((key) => typeof raw[key] === "string");
+}
+
 export function toSnapshot(page: RestPage): StagingPageSnapshot {
   return {
     wordpressPageId: page.id,
@@ -61,6 +76,8 @@ export function toSnapshot(page: RestPage): StagingPageSnapshot {
     excerpt: page.excerpt?.raw ?? page.excerpt?.rendered ?? "",
     contentHtml: page.content?.raw ?? page.content?.rendered ?? "",
     meta: metaOf(page),
+    postType: typeof page.type === "string" && page.type.trim().length > 0 ? page.type : "page",
+    metaObservedKeys: metaObservedKeysOf(page),
   };
 }
 

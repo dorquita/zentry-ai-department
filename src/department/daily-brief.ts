@@ -83,6 +83,16 @@ export interface DailyBriefApplySection {
     applyStatusLabel: string;
     capability: string;
     capabilityReason: string;
+    /**
+     * Causa EXACTA de que la recomendacion sea o no ejecutable
+     * (`READY_TO_EXECUTE`, `UNRESOLVED_TARGET`, `AMBIGUOUS_TARGET`,
+     * `NEEDS_ENGINEERING_DETAIL`...). Vacio cuando esta pasada no
+     * declaro ningun plan de cambio para ella. Existe para que el
+     * informe pueda decir POR QUE en vez del generico "requiere
+     * implementacion manual".
+     */
+    changePlanStatus: string;
+    changePlanReason: string;
     humanApproval: string;
     humanApprovalReason: string;
     validationStatus: string;
@@ -425,6 +435,8 @@ function buildApplySection(apply: DepartmentApplySummary | null | undefined): Da
       applyStatusLabel: APPLY_STATUS_LABEL[item.applyStatus],
       capability: item.applyCapability.supported ? String(item.applyCapability.id) : "ninguna",
       capabilityReason: item.applyCapability.reason,
+      changePlanStatus: item.changePlanStatus ?? "",
+      changePlanReason: item.changePlanReason ?? "",
       humanApproval: item.humanApproval.status,
       humanApprovalReason: item.humanApproval.reason,
       validationStatus: item.validationStatus,
@@ -586,7 +598,9 @@ export function renderDepartmentDailyBriefMarkdown(brief: DepartmentDailyBrief):
     }
     lines.push("");
     for (const item of brief.apply.items) {
-      lines.push(`- **#${item.rank}** ${truncate(item.title, 120)} -- \`${item.applyStatus}\`: ${truncate(item.capabilityReason, 260)} Aprobacion: ${truncate(item.humanApprovalReason, 220)}`);
+      lines.push(
+        `- **#${item.rank}** ${truncate(item.title, 120)} -- \`${item.applyStatus}\`${item.changePlanStatus ? ` / \`${item.changePlanStatus}\`` : ""}: ${truncate(item.changePlanReason || item.capabilityReason, 260)} Aprobacion: ${truncate(item.humanApprovalReason, 220)}`
+      );
       if (item.productionUrl) lines.push(`  - Publicado en produccion: ${item.productionUrl}`);
       if (item.rejectionReason) lines.push(`  - Motivo del rechazo (feedback humano, disponible para las siguientes propuestas): ${truncate(item.rejectionReason, 300)}`);
     }

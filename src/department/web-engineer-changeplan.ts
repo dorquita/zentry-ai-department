@@ -9,7 +9,20 @@ import {
   selectExecutionPath,
   validateExecutePhpChangePlan,
 } from "../core/execute-php-operations";
-import { PageResolution, resolveStagingPage, StagingInventory, StagingPageSnapshot, versionHashOfPage } from "./staging-inventory";
+import {
+  ExecutionTargetResolution,
+  metaValueObserved,
+  resolveExecutionTarget,
+  StagingInventory,
+  StagingPageSnapshot,
+  versionHashOfPage,
+} from "./staging-inventory";
+import {
+  assessAfterValue,
+  buildExecutableChangePlan,
+  ChangePlanExecutionStatus,
+  ExecutableChangePlan,
+} from "./executable-change-plan";
 
 /**
  * DE PROSA A CHANGEPLAN EJECUTABLE.
@@ -25,7 +38,9 @@ import { PageResolution, resolveStagingPage, StagingInventory, StagingPageSnapsh
  *     - `wordpressPageId`,
  *     - el BEFORE real,
  *     - el `expectedBeforeHash`,
- *     - la capability y el `executionPath`.
+ *     - la capability y el `executionPath`,
+ *     - las preconditions, la validacion y el rollback
+ *       (`executable-change-plan.ts`, derivados del BEFORE leido).
  *
  * Claude NUNCA aporta pageId ni hash. No puede: no tiene herramientas y
  * este constructor los ignora aunque vinieran. Si la pagina no se
@@ -56,11 +71,42 @@ export interface WebEngineerChangePlanDraft {
 
 export type ProposalStatus = "ACTIONABLE" | "BLOCKED" | "MANUAL" | "STALE";
 
+/**
+ * Proyeccion del estado PRECISO al vocabulario grueso que ya usan el
+ * Daily Brief, el email y la capa de apply. Dos ejes a proposito:
+ *
+ *   - `status` (grueso) responde "¿que hago con esto?" y no cambia de
+ *     vocabulario para no romper lo que ya lo lee.
+ *   - `executionStatus` (preciso) responde "¿POR QUE?" -- que es
+ *     exactamente lo que faltaba cuando todo acababa en un generico
+ *     "requiere implementacion manual".
+ *
+ * `ACTIONABLE` y `READY_TO_EXECUTE` son el MISMO estado visto con los
+ * dos vocabularios; esta funcion es la unica fuente de esa equivalencia.
+ */
+export function toProposalStatus(executionStatus: ChangePlanExecutionStatus): ProposalStatus {
+  if (executionStatus === "READY_TO_EXECUTE") return "ACTIONABLE";
+  if (executionStatus === "BLOCKED_BY_QA") return "BLOCKED";
+  if (executionStatus === "STALE") return "STALE";
+  return "MANUAL";
+}
+
 export interface ResolvedChangePlan {
   recommendationId: string;
   status: ProposalStatus;
+  /**
+   * Causa EXACTA del estado. `READY_TO_EXECUTE` equivale a
+   * `status: "ACTIONABLE"`; el resto explica que falta concretamente.
+   */
+  executionStatus: ChangePlanExecutionStatus;
   /** El plan real, listo para ejecutar. `null` salvo en ACTIONABLE. */
   plan: ExecutePhpChangePlan | null;
+  /**
+   * Sobre ejecutable completo (target, before, after, preconditions,
+   * validation, rollback). `null` salvo en READY_TO_EXECUTE: un plan a
+   * medias no se publica como si fuera un plan.
+   */
+  executablePlan: ExecutableChangePlan | null;
   capability: CapabilitySelection | null;
   /** Pagina resuelta contra el inventario real. `null` si no se resolvio. */
   page: StagingPageSnapshot | null;
@@ -90,14 +136,26 @@ export function beforeValueFor(page: StagingPageSnapshot, operation: ExecutePhpO
   }
 }
 
-function manual(draft: WebEngineerChangePlanDraft, reason: string, page: StagingPageSnapshot | null = null): ResolvedChangePlan {
+/**
+ * Resultado NO ejecutable, con su causa exacta. Ni plan a medias, ni
+ * pageId adivinado, ni BEFORE inventado: solo el motivo.
+ */
+function notExecutable(
+  draft: WebEngineerChangePlanDraft,
+  executionStatus: ChangePlanExecutionStatus,
+  reason: string,
+  page: StagingPageSnapshot | null = null,
+  beforeValue = ""
+): ResolvedChangePlan {
   return {
     recommendationId: draft.recommendationId,
-    status: "MANUAL",
+    status: toProposalStatus(executionStatus),
+    executionStatus,
     plan: null,
+    executablePlan: null,
     capability: null,
     page,
-    beforeValue: "",
+    beforeValue,
     afterValue: typeof draft.newValue === "string" ? draft.newValue : "",
     operation: String(draft.operation ?? ""),
     rationale: String(draft.rationale ?? ""),
@@ -119,30 +177,35 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
   const { draft, inventory } = input;
 
   if (typeof draft.recommendationId !== "string" || draft.recommendationId.trim().length === 0) {
-    return manual(draft, "El draft no cita ninguna recommendationId. Sin trazabilidad no se construye plan.");
+    return notExecutable(draft, "NEEDS_ENGINEERING_DETAIL", "El draft no cita ninguna recommendationId. Sin trazabilidad no se construye plan.");
   }
 
   // 1. OPERACION: del catalogo cerrado y habilitada.
   const operation = String(draft.operation ?? "");
   const spec = (EXECUTE_PHP_OPERATIONS as Record<string, { enabled: boolean; reason: string; scopeFields: string[] }>)[operation];
   if (!spec) {
-    return manual(draft, `Operacion "${operation}" desconocida. Solo existen: ${Object.keys(EXECUTE_PHP_OPERATIONS).join(", ")}.`);
+    return notExecutable(
+      draft,
+      "UNSUPPORTED_OPERATION",
+      `Operacion "${operation}" desconocida. Solo existen: ${Object.keys(EXECUTE_PHP_OPERATIONS).join(", ")}.`
+    );
   }
   if (!spec.enabled) {
-    return manual(draft, `La operacion "${operation}" no esta habilitada en esta fase. ${spec.reason}`);
+    return notExecutable(draft, "UNSUPPORTED_OPERATION", `La operacion "${operation}" no esta habilitada en esta fase. ${spec.reason}`);
   }
 
-  // 2. PAGINA: resuelta contra el inventario REAL. Aqui es donde se deja
-  //    de adivinar.
-  const resolution: PageResolution = resolveStagingPage(draft.targetPage ?? "", inventory);
-  if (!resolution.page) {
-    return manual(draft, `No se pudo resolver la pagina objetivo. ${resolution.reason}`);
+  // 2. DESTINO: resuelto contra el inventario REAL. Aqui es donde se deja
+  //    de adivinar. La causa (no existe / hay varias) viaja como dato.
+  const resolution: ExecutionTargetResolution = resolveExecutionTarget(draft.targetPage ?? "", inventory);
+  if (resolution.page === null) {
+    return notExecutable(draft, resolution.outcome === "AMBIGUOUS_TARGET" ? "AMBIGUOUS_TARGET" : "UNRESOLVED_TARGET", `No se pudo resolver la pagina objetivo. ${resolution.reason}`);
   }
   const page = resolution.page;
 
   if (page.status !== "publish") {
-    return manual(
+    return notExecutable(
       draft,
+      "TARGET_NOT_EXECUTABLE",
       `La pagina ${page.wordpressPageId} tiene status "${page.status}" y no "publish". Este flujo solo actua sobre paginas de staging publicadas (tienen que ser revisables abriendo una URL normal).`,
       page
     );
@@ -150,22 +213,43 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
 
   // 3. PAYLOAD.
   if (typeof draft.newValue !== "string" || draft.newValue.trim().length === 0) {
-    return manual(draft, "El draft no trae contenido nuevo (`newValue`). Sin valor propuesto no hay nada que escribir.", page);
+    return notExecutable(
+      draft,
+      "NEEDS_ENGINEERING_DETAIL",
+      "El draft no trae contenido nuevo (`newValue`). Sin valor propuesto no hay nada que escribir.",
+      page
+    );
   }
   if (operation === "update_post_meta" && !isAllowedPostMetaKey(String(draft.metaKey))) {
-    return manual(
+    return notExecutable(
       draft,
+      "UNSUPPORTED_OPERATION",
       `metaKey "${String(draft.metaKey)}" no esta en la allowlist (${ALLOWED_POST_META_KEYS.join(", ")}). Una clave libre seria una puerta para escribir en cualquier metadato del sitio.`,
       page
     );
   }
 
-  const beforeValue = beforeValueFor(page, operation as ExecutePhpOperation, draft.metaKey);
-  if (beforeValue === draft.newValue) {
-    return manual(draft, "El valor propuesto es identico al actual: no hay ningun cambio que aplicar.", page);
+  // 4. BEFORE REAL. Para meta, "la clave no vino en la lectura" NO es
+  //    "la clave vale vacio": sin BEFORE real no hay rollback fiable, y
+  //    un rollback a cadena vacia borraria un valor que si existia.
+  if (operation === "update_post_meta" && !metaValueObserved(page, String(draft.metaKey))) {
+    return notExecutable(
+      draft,
+      "BEFORE_UNAVAILABLE",
+      `La lectura del inventario NO observo la clave de meta "${String(draft.metaKey)}" en el post ${page.wordpressPageId}, asi que no se puede afirmar su valor actual. El REST del core solo expone en \`meta\` las claves registradas con \`show_in_rest\`, y las de Yoast no lo estan por defecto. Sin BEFORE real el rollback no seria fiable (revertir a "" borraria un valor que quiza si existe), asi que este plan NO se ejecuta.`,
+      page
+    );
   }
 
-  // 4. ANCLA DE VERSION: leida, nunca declarada.
+  const beforeValue = beforeValueFor(page, operation as ExecutePhpOperation, draft.metaKey);
+
+  // 5. AFTER CONCRETO: un valor final, no una instruccion.
+  const afterAssessment = assessAfterValue(operation as ExecutePhpOperation, draft.newValue, beforeValue);
+  if (!afterAssessment.concrete) {
+    return notExecutable(draft, "NEEDS_ENGINEERING_DETAIL", afterAssessment.reason, page, beforeValue);
+  }
+
+  // 6. ANCLA DE VERSION: leida, nunca declarada.
   const expectedBeforeHash = versionHashOfPage(page);
 
   const plan: ExecutePhpChangePlan = {
@@ -182,23 +266,42 @@ export function buildChangePlanFromDraft(input: BuildChangePlanInput): ResolvedC
 
   const validation = validateExecutePhpChangePlan(plan);
   if (!validation.ok) {
-    return manual(draft, `El plan construido no valida contra el contrato: ${validation.reason}`, page);
+    return notExecutable(draft, "INVALID_PLAN", `El plan construido no valida contra el contrato: ${validation.reason}`, page, beforeValue);
   }
 
-  // 5. CAPABILITY: derivada del plan (tipos de bloque reales incluidos).
+  // 7. CAPABILITY: derivada del plan (tipos de bloque reales incluidos).
   const capability = selectExecutionPath({ plan });
+
+  const reason = `Ejecutable: ${resolution.reason} Operacion "${operation}" sobre el post ${page.wordpressPageId}, anclada a la version ${expectedBeforeHash.slice(0, 12)}. Camino: ${capability.executionPath}.`;
+
+  const executablePlan = buildExecutableChangePlan({
+    recommendationId: draft.recommendationId,
+    page,
+    operation: operation as ExecutePhpOperation,
+    metaKey: draft.metaKey,
+    beforeValue,
+    afterValue: draft.newValue,
+    executePhpPlan: plan,
+    resolvedBy: resolution.reason,
+    observedAt: inventory.capturedAt,
+    status: "READY_TO_EXECUTE",
+    reason,
+    targetExistedBefore: operation !== "update_post_meta" || typeof page.meta[String(draft.metaKey)] === "string",
+  });
 
   return {
     recommendationId: draft.recommendationId,
     status: "ACTIONABLE",
+    executionStatus: "READY_TO_EXECUTE",
     plan,
+    executablePlan,
     capability,
     page,
     beforeValue,
     afterValue: draft.newValue,
     operation,
     rationale: String(draft.rationale ?? ""),
-    reason: `Ejecutable: ${resolution.reason} Operacion "${operation}" sobre el post ${page.wordpressPageId}, anclada a la version ${expectedBeforeHash.slice(0, 12)}. Camino: ${capability.executionPath}.`,
+    reason,
   };
 }
 

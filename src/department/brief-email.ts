@@ -469,6 +469,9 @@ export function renderDailyBriefEmailText(input: DailyBriefEmailInput): string {
       for (const item of items) {
         lines.push(`  - #${item.recommendationRank} ${shorten(item.title, 160)}`);
         lines.push(`    Capacidad de apply: ${item.applyCapability.supported ? String(item.applyCapability.id) : "ninguna"} -- ${shorten(item.applyCapability.reason, 260)}`);
+        if (item.changePlanStatus) {
+          lines.push(`    ChangePlan: ${item.changePlanStatus} -- ${shorten(item.changePlanReason, 260)}`);
+        }
         lines.push(`    Aprobacion humana: ${item.humanApproval.status} -- ${shorten(item.humanApproval.reason, 220)}`);
         if (item.traceability.stagingUrl) lines.push(`    Staging: ${item.traceability.stagingUrl}`);
         if (item.traceability.productionUrl) lines.push(`    Produccion: ${item.traceability.productionUrl}`);
