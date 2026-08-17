@@ -23,6 +23,18 @@ on:
         required: false
         default: "7"
         type: string
+  # Un `workflow_dispatch` solo es invocable si el fichero existe en la
+  # rama por defecto, y esta todavia no esta en main. El trigger de push
+  # permite ejecutarlo desde la propia rama mientras tanto, con las
+  # pasadas a certificar declaradas abajo en `CERTIFY_RUNS` -- escritas en
+  # el commit, no elegidas en tiempo de ejecucion, para que quede
+  # auditable exactamente que se certifico.
+  push:
+    branches:
+      - claude/department-state-mongodb-6h23ib
+    paths:
+      - ".github/workflows/mongodb-final-certification.yml"
+      - "scripts/certify-state-mongodb.ts"
 
 concurrency:
   group: mongodb-final-certification
@@ -42,6 +54,13 @@ jobs:
       # Fail-closed: este script existe para hablar con Atlas. Sin
       # credenciales no dice "todo bien", dice que no puede certificar.
       DEPARTMENT_PERSISTENCE_MODE: mongo
+      # Las tres pasadas coordinadas de la certificacion, en orden
+      # cronologico. Van escritas aqui a proposito: asi el commit deja
+      # constancia de QUE se certifico, y no depende de lo que alguien
+      # teclee al lanzar el workflow.
+      CERTIFY_RUNS: >-
+        dept-2026-08-17T140504Z,dept-2026-08-17T145905Z,dept-2026-08-17T152418Z
+      CERTIFY_EXPECTED_DECISIONS: "7"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -85,8 +104,8 @@ jobs:
             grep '^CERTIFY_JSON=' certify.log || true
           } >> "$GITHUB_STEP_SUMMARY"
         env:
-          RUNS: ${{ inputs.runs }}
-          EXPECTED_DECISIONS: ${{ inputs.expectedDecisions }}
+          RUNS: ${{ inputs.runs || env.CERTIFY_RUNS }}
+          EXPECTED_DECISIONS: ${{ inputs.expectedDecisions || env.CERTIFY_EXPECTED_DECISIONS }}
 
       # El log lleva recuentos e identificadores de pasada, nunca la URI:
       # todo lo que se imprime pasa por el saneador.
