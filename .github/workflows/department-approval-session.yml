@@ -164,10 +164,11 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
-          # Sin la variable, el modo por defecto es "shadow" si hay
-          # credenciales y "legacy" si no. Poner "mongo" hace que este step
-          # falle cerrado cuando no puede persistir.
-          DEPARTMENT_PERSISTENCE_MODE: ${{ vars.DEPARTMENT_PERSISTENCE_MODE }}
+          # Fase O57: con credenciales el modo es "mongo", asi que este
+          # step FALLA CERRADO si no puede persistir. Es la decision humana:
+          # perderla en silencio es lo peor que puede pasar en este sistema.
+          # Sin credenciales el modo es "legacy" y el step no hace nada.
+          DEPARTMENT_PERSISTENCE_MODE: ${{ secrets.MONGODB_URI != '' && 'mongo' || 'legacy' }}
 
       - name: Subir el resultado de la sesion
         if: always()

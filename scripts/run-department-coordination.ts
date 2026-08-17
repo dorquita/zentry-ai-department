@@ -38,7 +38,12 @@ import { GrowthDirectorV2Output } from "../src/employees/growth-director-v2/type
 import { QaReviewerOutput, validateQaReviewerOutput } from "../src/employees/qa-reviewer/output";
 import { auditWebEngineerOutputForUnconfirmedCapabilities, validateWebEngineerOutput } from "../src/employees/web-engineer/validator";
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
-import { loadPreviousHumanFeedback } from "../src/approvals/manual/decision-store";
+import { loadPreviousHumanFeedbackFromState } from "../src/approvals/manual/state-decision-reader";
+import {
+  loadPreviousRunSummaryFromState,
+  recordRunBriefSummary,
+} from "../src/persistence/run-continuity";
+import { resolvePersistenceMode } from "../src/persistence/runtime";
 import { emptyStagingInventory, StagingInventory, summarizeInventoryForPrompt } from "../src/department/staging-inventory";
 import { buildChangePlanFromDraft, parseChangePlanDrafts } from "../src/department/web-engineer-changeplan";
 import { readApplySummary } from "../src/department/apply/store";
@@ -73,11 +78,15 @@ import { loadSpecialistInputs } from "../src/department/specialist-inputs";
 import {
   buildDepartmentCoordinationRunId,
   DepartmentRunManifest,
+  DepartmentQaStatus,
   DepartmentStageName,
   DepartmentStageStatus,
   isDepartmentStageName,
   isDepartmentStageStatus,
 } from "../src/department/types";
+
+/** Vocabulario de QA del departamento, para validar lo que vuelve de MongoDB. */
+const DEPARTMENT_QA_STATUSES: DepartmentQaStatus[] = ["PASS", "PASS_WITH_WARNINGS", "BLOCKED", "NOT_AVAILABLE"];
 import { buildDepartmentWebEngineerContext, buildDepartmentWebEngineerPrompt, DepartmentWebEngineerContext, toWebEngineerAuditContext } from "../src/department/web-engineer-input";
 
 function parseArgs(argv: string[]): Record<string, string> {
@@ -225,13 +234,13 @@ function phaseRecordStage(args: Record<string, string>): DepartmentRunnerResultS
   };
 }
 
-function phasePrepareGrowth(args: Record<string, string>): DepartmentRunnerResultSummary {
+async function phasePrepareGrowth(args: Record<string, string>): Promise<DepartmentRunnerResultSummary> {
   const departmentRunId = requireDepartmentRunId(args);
   assertSubagentIsToolless("growth-director-v2");
   const manifest = readManifest(departmentRunId);
   const specialists = loadSpecialistInputs(manifest);
   const context = buildDepartmentGrowthContext(departmentRunId, specialists, args.eventBusRunId && args.eventBusRunId !== "true" ? args.eventBusRunId : undefined);
-  const prompt = buildDepartmentGrowthPrompt(context, loadPreviousHumanFeedback());
+  const prompt = buildDepartmentGrowthPrompt(context, await loadPreviousHumanFeedbackFromState());
 
   writeStageContext(departmentRunId, "growth-director-v2", context);
   const promptPath = writeStagePrompt(departmentRunId, "growth-director-v2", prompt);
@@ -425,7 +434,7 @@ function loadStagingInventoryFile(departmentRunId: string): StagingInventory {
   }
 }
 
-function phasePrepareWebEngineer(args: Record<string, string>): DepartmentRunnerResultSummary {
+async function phasePrepareWebEngineer(args: Record<string, string>): Promise<DepartmentRunnerResultSummary> {
   const departmentRunId = requireDepartmentRunId(args);
   assertSubagentIsToolless("web-engineer");
   const manifest = readManifest(departmentRunId);
@@ -480,7 +489,7 @@ function phasePrepareWebEngineer(args: Record<string, string>): DepartmentRunner
     stagingInventory: summarizeInventoryForPrompt(stagingInventory),
     stagingInventoryUnavailableReason: stagingInventory.unavailableReason,
   });
-  const prompt = buildDepartmentWebEngineerPrompt(context, loadPreviousHumanFeedback());
+  const prompt = buildDepartmentWebEngineerPrompt(context, await loadPreviousHumanFeedbackFromState());
   writeStageContext(departmentRunId, "web-engineer", context);
   const promptPath = writeStagePrompt(departmentRunId, "web-engineer", prompt);
   const { outputPath } = resolveStageFilePaths(departmentRunId, "web-engineer");
@@ -574,6 +583,35 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
   };
 }
 
+/**
+ * Fase O57 — la pasada anterior, desde MongoDB cuando es la fuente de
+ * verdad y desde `reports/` cuando no lo es.
+ *
+ * NO es un fallback silencioso: `loadPreviousRunSummaryFromState`
+ * devuelve `null` SOLO cuando el modo no es `mongo`. En modo `mongo`, si
+ * MongoDB no responde, lanza y la pasada se para; y si responde pero no
+ * hay pasada anterior, eso es un arranque en frio legitimo que el brief
+ * ya sabe contar.
+ */
+async function loadPreviousRunSnapshotFromState(
+  departmentRunId: string
+): Promise<PreviousRunSnapshot | null> {
+  if (resolvePersistenceMode() === "mongo") {
+    const summary = await loadPreviousRunSummaryFromState(departmentRunId);
+    if (!summary) return null;
+    // La capa de persistencia guarda el estado de QA como texto a
+    // proposito: no tiene por que conocer el vocabulario del
+    // departamento. La traduccion al tipo del dominio se hace aqui, y un
+    // valor que no reconozcamos se lee como NOT_AVAILABLE en vez de
+    // colarse como si fuera un PASS.
+    const qaStatus = DEPARTMENT_QA_STATUSES.includes(summary.departmentQaStatus as DepartmentQaStatus)
+      ? (summary.departmentQaStatus as DepartmentQaStatus)
+      : "NOT_AVAILABLE";
+    return { ...summary, departmentQaStatus: qaStatus };
+  }
+  return loadPreviousRunSnapshot(departmentRunId);
+}
+
 function loadPreviousRunSnapshot(departmentRunId: string): PreviousRunSnapshot | null {
   const previousBriefPath = findPreviousDepartmentRunBriefPath(departmentRunId);
   if (!previousBriefPath) return null;
@@ -590,7 +628,7 @@ function loadPreviousRunSnapshot(departmentRunId: string): PreviousRunSnapshot |
   }
 }
 
-function phaseBrief(args: Record<string, string>): DepartmentRunnerResultSummary {
+async function phaseBrief(args: Record<string, string>): Promise<DepartmentRunnerResultSummary> {
   const departmentRunId = requireDepartmentRunId(args);
   const manifest = readManifest(departmentRunId);
   const paths = resolveDepartmentRunPaths(departmentRunId);
@@ -638,7 +676,7 @@ function phaseBrief(args: Record<string, string>): DepartmentRunnerResultSummary
     qa: { status: qaStage.status, reason: qaStage.reason, output: qaOutput },
     webEngineer: { status: webStage.status, reason: webStage.reason, output: webOutput, auditWarnings: webAuditWarnings },
     promotion,
-    previousRun: loadPreviousRunSnapshot(departmentRunId),
+    previousRun: await loadPreviousRunSnapshotFromState(departmentRunId),
     apply: applySummary,
     cost: cost.runs.length > 0 ? cost : null,
   });
@@ -646,6 +684,22 @@ function phaseBrief(args: Record<string, string>): DepartmentRunnerResultSummary
   writeDepartmentJson(paths.briefJsonPath, brief);
   fs.writeFileSync(paths.briefMdPath, renderDepartmentDailyBriefMarkdown(brief), "utf-8");
   fs.writeFileSync(paths.stepSummaryPath, renderDepartmentStepSummary(brief), "utf-8");
+
+  // El resumen que leera la pasada de MANANA. Con esto la continuidad
+  // del brief deja de necesitar que se restaure `reports/` desde la rama
+  // de estado: en modo `mongo` vive en `department_runs`.
+  const summaryRecorded = await recordRunBriefSummary(
+    {
+      departmentRunId,
+      priorityCount: brief.topPriorities.length,
+      departmentQaStatus: brief.departmentQaStatus,
+      executedStages: brief.stageStatuses.filter((s) => s.status === "executed").length,
+    },
+    new Date().toISOString()
+  );
+  if (summaryRecorded) {
+    console.log("Resumen de la pasada guardado en MongoDB para la continuidad de la siguiente.");
+  }
 
   console.log(`Daily Brief generado: ${toRepoRelative(paths.briefMdPath)}`);
   console.log(`Prioridades: ${brief.topPriorities.length}. Decisiones pendientes: ${brief.approvalsNeeded.length}. QA: ${brief.departmentQaStatus}.`);

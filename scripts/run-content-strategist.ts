@@ -43,7 +43,7 @@ dotenv.config();
 import * as fs from "fs";
 import * as path from "path";
 import { renderPreviousHumanFeedback } from "../src/approvals/human-feedback-context";
-import { loadPreviousHumanFeedback } from "../src/approvals/manual/decision-store";
+import { loadPreviousHumanFeedbackFromState } from "../src/approvals/manual/state-decision-reader";
 import { readCurrentChangePacks, findChangePackById } from "../src/core/change-packs";
 import { buildContentStrategistContext, ContentStrategistContext } from "../src/employees/content-strategist/context";
 import { ELIGIBLE_CHANGE_TYPES_FOR_CONTENT_STRATEGY, isContentChangePack, selectRandomEligibleChangePackForContentStrategy } from "../src/employees/content-strategist/selection";
@@ -94,7 +94,7 @@ function resolveTargetChangePack(changePackId: string | undefined): ChangePack |
   return selectRandomEligibleChangePackForContentStrategy(readCurrentChangePacks());
 }
 
-function buildPromptMarkdown(context: ContentStrategistContext): string {
+async function buildPromptMarkdown(context: ContentStrategistContext): Promise<string> {
   const projectRoot = path.join(__dirname, "..");
   const skillPath = path.join(projectRoot, ".claude", "skills", "zentry-brand", "SKILL.md");
   const agentPath = path.join(projectRoot, ".claude", "agents", `${AGENT_NAME}.md`);
@@ -127,7 +127,7 @@ function buildPromptMarkdown(context: ContentStrategistContext): string {
   // Rechazos humanos anteriores, LITERALES. Van delante del contexto: si
   // una persona ya dijo por que no le valia una propuesta, eso se lee
   // antes de volver a redactar sobre lo mismo.
-  const feedbackBlock = renderPreviousHumanFeedback(loadPreviousHumanFeedback());
+  const feedbackBlock = renderPreviousHumanFeedback(await loadPreviousHumanFeedbackFromState());
   if (feedbackBlock) {
     lines.push(feedbackBlock.replace(/^## /, "## 3. ").trimEnd());
     lines.push("");
@@ -147,13 +147,13 @@ function buildPromptMarkdown(context: ContentStrategistContext): string {
   return lines.join("\n");
 }
 
-function resolveContentStrategistResult(
+async function resolveContentStrategistResult(
   outputArg: string | undefined,
   paths: { promptFilePath: string; expectedOutputPath: string; rawOutputPath: string },
   context: ContentStrategistContext
-): ContentStrategistResult {
+): Promise<ContentStrategistResult> {
   if (!outputArg) {
-    fs.writeFileSync(paths.promptFilePath, buildPromptMarkdown(context), "utf-8");
+    fs.writeFileSync(paths.promptFilePath, await buildPromptMarkdown(context), "utf-8");
     console.log(`content-strategist: prompt preparado en ${paths.promptFilePath}.`);
     console.log(`Siguiente paso: invocar el subagente ${AGENT_NAME} con ese prompt (herramienta Agent), guardar su respuesta JSON en ${paths.expectedOutputPath}, y volver a llamar con --content-strategist-output ${paths.expectedOutputPath}.`);
     return { status: "pending_execution", promptFilePath: paths.promptFilePath };
@@ -222,7 +222,7 @@ async function main(): Promise<void> {
     rawOutputPath: path.join(outDir, "output-raw-invalid.json"),
   };
 
-  const result = resolveContentStrategistResult(args["content-strategist-output"], paths, context);
+  const result = await resolveContentStrategistResult(args["content-strategist-output"], paths, context);
 
   const artifact = buildBriefArtifact(context, result);
   const jsonPath = path.join(outDir, "brief.json");

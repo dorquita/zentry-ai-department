@@ -27,6 +27,16 @@ import { HumanFeedbackEntry } from "./store";
 /** Maximo de motivos por recomendacion que entran en el prompt: lo reciente manda, y un prompt no es un archivo historico. */
 export const MAX_FEEDBACK_ENTRIES_PER_RECOMMENDATION = 5;
 
+/**
+ * Fase O57 — la accion humana, cuando se conoce.
+ *
+ * El lector legacy (fichero) solo sabe extraer rechazos, asi que deja
+ * este campo sin poner. El lector de MongoDB si conoce las tres
+ * acciones. Que sea opcional es lo que permite que ambos convivan sin
+ * cambiar el comportamiento del camino antiguo.
+ */
+export type PreviousHumanAction = "approve" | "reject" | "defer";
+
 export interface PreviousHumanFeedback {
   recommendationId: string;
   recommendationTitle: string;
@@ -34,25 +44,62 @@ export interface PreviousHumanFeedback {
   /** Literal, tal cual lo escribio la persona. Nunca reescrito. */
   rejectionReason: string;
   rejectedAt: string;
+
+  // ---------------------------------------------------------------
+  // Fase O57 — campos que SOLO rellena el lector de MongoDB.
+  //
+  // Son opcionales a proposito: las entradas construidas por el lector
+  // de fichero no los llevan, y para ellas todo se comporta exactamente
+  // igual que antes. Asi el cutover no cambia ni una linea de los tres
+  // constructores de prompt ni de sus tests.
+  // ---------------------------------------------------------------
+  /** Que decidio la persona. Sin esto se asume rechazo (comportamiento legacy). */
+  action?: PreviousHumanAction;
+  /** Continuidad logica entre pasadas: el `recommendationId` no se repite. */
+  subjectKey?: string;
+  /** Pasada en la que se tomo la decision. */
+  departmentRunId?: string;
+  /** Quien decidio. */
+  decidedBy?: string;
+  /** Destino sobre el que se decidio (staging / production). */
+  target?: string;
+}
+
+/** `true` si la entrada aporta algo al prompt. */
+function carriesSignal(entry: HumanFeedbackEntry & { action?: PreviousHumanAction }): boolean {
+  const hasReason = typeof entry.rejectionReason === "string" && entry.rejectionReason.trim().length > 0;
+  if (hasReason) return true;
+  // Una aprobacion o un aplazamiento NO llevan motivo, y aun asi son
+  // informacion valiosa: "esto ya se aprobo" evita volver a proponerlo
+  // como si fuera nuevo. Solo el rechazo exige motivo para entrar.
+  return entry.action === "approve" || entry.action === "defer";
 }
 
 /**
  * Ordena por version descendente (lo mas reciente primero) y recorta.
- * Descarta entradas sin motivo real: un rechazo sin texto no aporta
- * nada y ocuparia sitio en el prompt.
+ * Descarta entradas sin senal: un rechazo sin texto no aporta nada y
+ * ocuparia sitio en el prompt.
  */
 export function selectPreviousHumanFeedback(entries: HumanFeedbackEntry[]): PreviousHumanFeedback[] {
   return entries
-    .filter((entry) => typeof entry.rejectionReason === "string" && entry.rejectionReason.trim().length > 0)
+    .filter((entry) => carriesSignal(entry))
     .sort((a, b) => b.version - a.version)
     .slice(0, MAX_FEEDBACK_ENTRIES_PER_RECOMMENDATION)
-    .map((entry) => ({
-      recommendationId: entry.recommendationId,
-      recommendationTitle: entry.recommendationTitle,
-      version: entry.version,
-      rejectionReason: entry.rejectionReason.trim(),
-      rejectedAt: entry.rejectedAt,
-    }));
+    .map((entry) => {
+      const extra = entry as HumanFeedbackEntry & Partial<PreviousHumanFeedback>;
+      return {
+        recommendationId: entry.recommendationId,
+        recommendationTitle: entry.recommendationTitle,
+        version: entry.version,
+        rejectionReason: (entry.rejectionReason ?? "").trim(),
+        rejectedAt: entry.rejectedAt,
+        ...(extra.action ? { action: extra.action } : {}),
+        ...(extra.subjectKey ? { subjectKey: extra.subjectKey } : {}),
+        ...(extra.departmentRunId ? { departmentRunId: extra.departmentRunId } : {}),
+        ...(extra.decidedBy ? { decidedBy: extra.decidedBy } : {}),
+        ...(extra.target ? { target: extra.target } : {}),
+      };
+    });
 }
 
 /**
@@ -84,18 +131,43 @@ export function selectPreviousHumanFeedbackByRecommendation(entries: HumanFeedba
  */
 export function renderPreviousHumanFeedback(feedback: PreviousHumanFeedback[]): string {
   if (feedback.length === 0) return "";
-  const lines: string[] = [
-    "## DECISIONES HUMANAS ANTERIORES SOBRE ESTAS MISMAS PROPUESTAS",
-    "",
-    "Estas propuestas ya se plantearon antes y una persona las RECHAZO, indicando por que.",
-    "El motivo aparece LITERAL, entre comillas, tal como se escribio: no lo reinterpretes,",
-    "no lo generalices a una regla y no asumas nada que no diga el texto.",
-    "Trata cada uno como evidencia de una preferencia humana ya expresada.",
-    "",
-  ];
+
+  // Si TODAS las entradas son rechazos (o vienen del lector legacy, que
+  // no sabe distinguir accion), el bloque es exactamente el de siempre.
+  // Solo cuando hay aprobaciones o aplazamientos cambia la explicacion,
+  // porque decir "una persona las RECHAZO" seria falso.
+  const onlyRejections = feedback.every((entry) => (entry.action ?? "reject") === "reject");
+
+  const lines: string[] = ["## DECISIONES HUMANAS ANTERIORES SOBRE ESTAS MISMAS PROPUESTAS", ""];
+  if (onlyRejections) {
+    lines.push(
+      "Estas propuestas ya se plantearon antes y una persona las RECHAZO, indicando por que.",
+      "El motivo aparece LITERAL, entre comillas, tal como se escribio: no lo reinterpretes,",
+      "no lo generalices a una regla y no asumas nada que no diga el texto.",
+      "Trata cada uno como evidencia de una preferencia humana ya expresada."
+    );
+  } else {
+    lines.push(
+      "Estas propuestas ya se plantearon antes y una persona YA DECIDIO sobre ellas:",
+      "aprobandolas, rechazandolas o aplazandolas. Cuando hay motivo, aparece LITERAL,",
+      "entre comillas, tal como se escribio: no lo reinterpretes, no lo generalices a una",
+      "regla y no asumas nada que no diga el texto.",
+      "Lo ya APROBADO no hace falta volver a proponerlo como si fuera nuevo.",
+      "Trata cada entrada como evidencia de una decision humana ya tomada."
+    );
+  }
+  lines.push("");
+
   for (const entry of feedback) {
-    lines.push(`- "${entry.recommendationTitle}" (version ${entry.version}, rechazada el ${entry.rejectedAt}):`);
-    lines.push(`  Motivo textual: "${entry.rejectionReason}"`);
+    const action = entry.action ?? "reject";
+    const verb = action === "approve" ? "aprobada" : action === "defer" ? "aplazada" : "rechazada";
+    const origin = entry.departmentRunId ? `, pasada ${entry.departmentRunId}` : "";
+    lines.push(`- "${entry.recommendationTitle}" (version ${entry.version}, ${verb} el ${entry.rejectedAt}${origin}):`);
+    if (entry.rejectionReason.length > 0) {
+      lines.push(`  Motivo textual: "${entry.rejectionReason}"`);
+    } else {
+      lines.push(`  Sin motivo escrito: la persona ${verb === "aprobada" ? "la aprobo" : "la aplazo"} sin añadir texto.`);
+    }
   }
   lines.push("");
   return lines.join("\n");

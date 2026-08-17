@@ -59,6 +59,17 @@ export interface DepartmentRunDocument extends PersistedDocument {
   status: DepartmentRunStatus;
   contractVersion: number;
   updatedAt: string;
+  /**
+   * Fase O57 — resumen de la pasada que la SIGUIENTE necesita para su
+   * seccion "que ha cambiado".
+   *
+   * Antes ese dato solo existia dentro de
+   * `reports/department/<runId>/department-daily-brief.json`, y por eso
+   * la continuidad del brief dependia de restaurar `reports/` desde la
+   * rama de estado. Guardarlo aqui no es un dominio nuevo: es estado de
+   * la pasada, en la coleccion de pasadas.
+   */
+  briefSummary?: Record<string, unknown> | null;
 }
 
 export interface DepartmentEntityDocument extends PersistedDocument {
@@ -196,7 +207,13 @@ export class RunRepository extends BaseRepository {
     finishedAt: string;
     status: DepartmentRunStatus;
     observability?: Record<string, unknown>;
+    /** Si no se pasa, se conserva el que ya tuviera la pasada. */
+    briefSummary?: Record<string, unknown> | null;
   }): Promise<WriteOutcome> {
+    // Cerrar la pasada no puede borrar el resumen que escribio la fase
+    // del brief: se lee lo que hay y solo se sustituye si llega uno nuevo.
+    const existing = await this.getRun(input.departmentRunId);
+    const briefSummary = input.briefSummary ?? existing?.briefSummary ?? null;
     const document: DepartmentRunDocument = {
       departmentRunId: input.departmentRunId,
       runKind: input.runKind,
@@ -206,6 +223,7 @@ export class RunRepository extends BaseRepository {
       contractVersion: STATE_CONTRACT_VERSION,
       updatedAt: input.finishedAt,
       ...(input.observability ? { observability: input.observability } : {}),
+      ...(briefSummary ? { briefSummary } : {}),
     };
     return this.write("runs.finishRun", () =>
       this.collection.upsertIfNewer(
@@ -243,6 +261,36 @@ export class RunRepository extends BaseRepository {
       previous = run;
     }
     return previous;
+  }
+
+  /**
+   * Guarda el resumen que la pasada SIGUIENTE leera como "la anterior".
+   *
+   * Se escribe cuando el brief ya esta calculado, con la pasada todavia
+   * abierta. Conserva lo que ya hubiera en el documento (hora de inicio,
+   * estado) para que anotar el resumen no parezca un cierre.
+   */
+  async recordBriefSummary(input: {
+    departmentRunId: string;
+    runKind: string;
+    briefSummary: Record<string, unknown>;
+    at: string;
+  }): Promise<WriteOutcome> {
+    const existing = await this.getRun(input.departmentRunId);
+    const document: DepartmentRunDocument = {
+      departmentRunId: input.departmentRunId,
+      runKind: input.runKind,
+      startedAt: existing?.startedAt ?? input.at,
+      finishedAt: existing?.finishedAt ?? null,
+      status: existing?.status ?? "running",
+      contractVersion: STATE_CONTRACT_VERSION,
+      updatedAt: input.at,
+      ...(existing?.observability ? { observability: existing.observability } : {}),
+      briefSummary: input.briefSummary,
+    };
+    return this.write("runs.recordBriefSummary", () =>
+      this.collection.upsertIfNewer({ departmentRunId: input.departmentRunId }, document, "updatedAt")
+    );
   }
 
   async count(): Promise<number> {
@@ -343,6 +391,20 @@ export class EventRepository extends BaseRepository {
     const found = await this.read("events.listForRun", () =>
       this.collection.find({ departmentRunId })
     );
+    return (found as DepartmentEventDocument[]).sort((a, b) =>
+      a.occurredAt < b.occurredAt ? -1 : a.occurredAt > b.occurredAt ? 1 : 0
+    );
+  }
+
+  /**
+   * Todos los eventos de un tipo, del mas antiguo al mas reciente.
+   *
+   * Es lo que necesita la hidratacion para reconstruir un `.jsonl` de
+   * clase B: los ficheros historicos estan en orden cronologico y los
+   * lectores existentes cuentan con ello.
+   */
+  async listByKind(kind: string): Promise<DepartmentEventDocument[]> {
+    const found = await this.read("events.listByKind", () => this.collection.find({ kind }));
     return (found as DepartmentEventDocument[]).sort((a, b) =>
       a.occurredAt < b.occurredAt ? -1 : a.occurredAt > b.occurredAt ? 1 : 0
     );

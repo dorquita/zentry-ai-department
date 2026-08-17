@@ -96,6 +96,12 @@ jobs:
     # el booleano "esta puesto o no".
     env:
       MONGODB_CONFIGURED: ${{ secrets.MONGODB_URI != '' }}
+      # Fase O57 -- CUTOVER. Con credenciales, MongoDB ES la fuente de
+      # verdad: los lectores criticos leen de ahi y fallan CERRADOS si no
+      # responde. Sin credenciales el modo sigue siendo `legacy` y el
+      # comportamiento es exactamente el de antes, sin medias tintas.
+      # Aqui solo viaja el MODO, nunca la credencial.
+      DEPARTMENT_PERSISTENCE_MODE: ${{ secrets.MONGODB_URI != '' && 'mongo' || 'legacy' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -164,6 +170,32 @@ jobs:
       - name: "[MONGO] Foto del estado autoritativo ANTES de la pasada"
         if: ${{ env.MONGODB_CONFIGURED == 'true' }}
         run: npm run state:snapshot-mongodb -- --out "$RUNNER_TEMP/mongo-state-before.json"
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      # =====================================================================
+      # Fase O57 -- HIDRATACION: se invierte la direccion de la autoridad.
+      #
+      # Hasta aqui `data/` venia de la rama `department-state`. A partir de
+      # este paso viene de MongoDB: la proyeccion SOBRESCRIBE los ficheros
+      # de clase A y B con el estado autoritativo. Los derivados (clase C)
+      # y los artifacts (clase D, `reports/`) no se tocan -- MongoDB no es
+      # su fuente y sobrescribirlos seria destruir datos.
+      #
+      # Falla CERRADO: si MongoDB no responde, la pasada no arranca. Correr
+      # sobre un `data/` de procedencia desconocida es peor que no correr.
+      # =====================================================================
+      - name: "[MONGO] Hidratar data/ desde el estado autoritativo"
+        if: ${{ env.MONGODB_CONFIGURED == 'true' }}
+        run: |
+          set -o pipefail
+          npm run state:hydrate-mongodb 2>&1 | tee mongo-hydrate.log
+          {
+            echo "## Hidratacion del estado desde MongoDB"
+            echo ""
+            sed -n '/^| fichero /,/^$/p' mongo-hydrate.log
+          } >> "$GITHUB_STEP_SUMMARY"
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
@@ -457,6 +489,9 @@ jobs:
         run: |
           set -o pipefail
           npm run content-strategist:run 2>&1 | tee content-step1.log
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
 
       - name: "[CONTENT] Parsear RUNNER_RESULT_JSON (paso 1)"
         id: content1
@@ -663,6 +698,8 @@ jobs:
           npm run department:run -- --phase prepare-growth --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-growth-prepare.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
 
       - name: "[COORD] Parsear RUNNER_RESULT_JSON (prepare-growth)"
         id: growth_prep
@@ -863,6 +900,8 @@ jobs:
           npm run department:run -- --phase prepare-web-engineer --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-web-prepare.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
 
       - name: "[COORD] Parsear RUNNER_RESULT_JSON (prepare-web-engineer)"
         id: web_prep
@@ -957,6 +996,8 @@ jobs:
           npm run department:run -- --phase brief --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-brief.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
 
       - name: "[COORD] Parsear RUNNER_RESULT_JSON (brief)"
         id: brief
@@ -1042,7 +1083,6 @@ jobs:
           RUN_STATUS: ${{ job.status == 'success' && 'succeeded' || 'failed' }}
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
-          DEPARTMENT_PERSISTENCE_MODE: ${{ vars.DEPARTMENT_PERSISTENCE_MODE }}
 
       - name: "[MONGO] Verificar invariantes del estado autoritativo"
         id: verify_mongo_state

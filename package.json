@@ -117,6 +117,7 @@
     "state:snapshot-mongodb": "ts-node scripts/verify-state-mongodb.ts --mode snapshot",
     "state:verify-mongodb": "ts-node scripts/verify-state-mongodb.ts",
     "state:sync-mongodb": "ts-node scripts/sync-state-to-mongodb.ts",
+    "state:hydrate-mongodb": "ts-node scripts/hydrate-state-from-mongodb.ts",
     "staging:inventory": "ts-node scripts/read-staging-inventory.ts",
     "approvals:record-decisions": "ts-node scripts/o46-record-daily-brief-decisions.ts"
   },

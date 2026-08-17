@@ -83,6 +83,7 @@ import { runStatePersistenceTests } from "../test/state-persistence.test";
 import { runStateArtifactClassificationTests } from "../test/state-artifact-classification.test";
 import { runMongoPersistenceTests } from "../test/mongo-persistence.test";
 import { runMongoStateMigrationTests } from "../test/mongo-state-migration.test";
+import { runMongoAuthorityCutoverTests } from "../test/mongo-authority-cutover.test";
 import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
 
 interface TestCase {
@@ -174,6 +175,7 @@ async function main(): Promise<void> {
     { suiteName: "state-artifact-classification", cases: runStateArtifactClassificationTests() },
     { suiteName: "mongo-persistence", cases: runMongoPersistenceTests() },
     { suiteName: "mongo-state-migration", cases: runMongoStateMigrationTests() },
+    { suiteName: "mongo-authority-cutover", cases: runMongoAuthorityCutoverTests() },
   ];
 
   let passed = 0;
