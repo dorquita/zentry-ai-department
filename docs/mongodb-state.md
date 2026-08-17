@@ -235,6 +235,36 @@ que se expone hacia fuera es `renderMongoTarget()`, que produce
 `esquema=… hosts=N db=… credenciales=si (no se muestran)` — sin host, sin
 usuario, sin password. Todo mensaje de error pasa por `sanitizeMongoText()`.
 
+### La trampa de `authSource` (nos ha pasado)
+
+Por especificacion, `authSource` **no es siempre `admin`**: por defecto es
+**la base que venga en la ruta de la URI**, y solo cae a `admin` si la
+ruta no trae ninguna. Atlas, en cambio, crea los usuarios en `admin`.
+
+Asi que esta URI falla:
+
+```text
+mongodb+srv://usuario:clave@cluster0.xxxxx.mongodb.net/zentry_ai_department
+```
+
+El driver intenta autenticar contra `zentry_ai_department`, donde ese
+usuario no existe, y el servidor responde con un escueto
+`bad auth : authentication failed` que no menciona nada de esto. La forma
+correcta es:
+
+```text
+mongodb+srv://usuario:clave@cluster0.xxxxx.mongodb.net/zentry_ai_department?authSource=admin&retryWrites=true&w=majority
+```
+
+**Ojo:** poner la variable `MONGODB_DB_NAME` NO arregla esto. Esa variable
+solo decide contra que base se opera; el `authSource` sale de la URI. Hay
+que editar la URI.
+
+La sonda detecta la combinacion sospechosa (base en la ruta + sin
+`authSource`) y avisa antes de conectar. Deliberadamente **no** la
+corrige por detras: adivinar el `authSource` seria cambiar la semantica de
+autenticacion en silencio.
+
 ### Los tres modos
 
 | Modo | Fuente de verdad | Fallo de MongoDB |
@@ -442,9 +472,28 @@ quedan donde están; no se borra nada.
 - [x] **Fase 1 — shadow write.** Implementada.
 - [x] **Fase 2 — verificación.** `--mode equivalence` compara semántica
       (ids, cardinalidad, decisiones), nunca bytes.
-- [ ] **Fase 3 — lectores en MongoDB.** No empezada. Requiere un cluster
-      real y varias pasadas verdes en shadow.
+- [ ] **Fase 3 — lectores en MongoDB.** Bloqueada: nunca se ha llegado a
+      conectar (ver abajo).
 - [ ] **Fase 4 — MongoDB como fuente de verdad.**
 - [ ] **Fase 5 — exports.** Los JSON/Markdown pasan a ser proyecciones.
+
+### Bloqueo actual
+
+Primeros intentos reales contra Atlas, workflow `MongoDB state migration`:
+
+| run | resultado |
+| --- | --- |
+| `32013161621` | `[mongo:auth_failure] connect: bad auth : authentication failed` |
+| `32013758714` | igual, ya con la lista de causas |
+| `32013992701` | igual, y confirma la sospecha estructural |
+
+La sonda reporta `esquema=mongodb+srv hosts=1 db=zentry_ai_department
+credenciales=si (no se muestran)`: la URI **trae la base en la ruta y no
+fija `authSource`**, que es exactamente la trampa descrita arriba.
+
+El SRV resuelve y se llega a la fase de autenticación, así que **la red y
+Network Access están bien**. Lo que falta es corregir la URI del secret
+`MONGODB_URI` (o el usuario de Database Access). Hasta entonces no se
+puede migrar nada, y el sistema sigue en shadow/legacy sin degradarse.
 
 **SOURCE OF TRUTH: LEGACY — MONGODB SHADOW MODE**
