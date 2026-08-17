@@ -298,7 +298,22 @@ runs:
       id: attempt1
       if: steps.claude-auth.outputs.method != 'none'
       shell: bash
-      run: echo "started-ms=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+      run: |
+        echo "started-ms=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+        # Tamano del prompt AL LOG (no solo al Step Summary): un prompt
+        # desmesurado hace que el step de claude-code-action muera en 1-2
+        # segundos SIN escribir execution_file, y con solo el Step Summary
+        # eso es indiagnosticable desde la API de logs (GitHub solo retiene
+        # las ultimas ~5.000 lineas de un job largo). Observado en
+        # growth-director-v2 dentro de la pasada coordinada (runs
+        # 32060162770 y 32072490978, 24 s de step y dos intentos sin
+        # execution_file). Solo la LONGITUD -- el contenido no se imprime.
+        echo "[runtime] ${AGENT_NAME}: prompt=${#PROMPT} bytes, schema=$(wc -c < "$OUTPUT_SCHEMA_PATH") bytes, max-turns=${MAX_TURNS}."
+      env:
+        AGENT_NAME: ${{ inputs.agent-name }}
+        PROMPT: ${{ inputs.prompt }}
+        OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
+        MAX_TURNS: ${{ inputs.max-turns }}
 
     - name: Ejecutar empleado Claude
       id: claude

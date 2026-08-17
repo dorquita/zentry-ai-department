@@ -1,0 +1,421 @@
+{
+  "generatedAt": "2026-08-17T21:04:50.319Z",
+  "departmentRunId": "growth-department-2026-08-14T111247Z",
+  "input": {
+    "departmentRunId": "growth-department-2026-08-14T111247Z",
+    "hasDepartmentRunData": true,
+    "generatedAt": "2026-08-17T21:04:50.317Z",
+    "agentActivity": [
+      {
+        "agent": "seo-watcher",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "SEO Watcher Agent finalizado: 31 oportunidad(es) detectada(s)"
+      },
+      {
+        "agent": "seo-director",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "SEO Director Agent finalizado: 16 accion(es) recomendada(s)"
+      },
+      {
+        "agent": "competitor-intelligence",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Competitor Intelligence Agent finalizado: 12 gap(s) de keyword, 10 gap(s) de contenido"
+      },
+      {
+        "agent": "content-planner",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Content Planner Agent finalizado: 50 propuesta(s) de contenido"
+      },
+      {
+        "agent": "cro-landing-reviewer",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "CRO / Landing Reviewer Agent finalizado: 7 landing(s) revisada(s)"
+      },
+      {
+        "agent": "sem-watcher",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "SEM Watcher Agent finalizado. Conectado=true. Candidatas SEM: 70."
+      },
+      {
+        "agent": "analytics-watcher",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Analytics Watcher Agent finalizado. GA4=true GTM=true."
+      },
+      {
+        "agent": "approval-queue",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Approval Queue Agent finalizado: 86 auto-aprobada(s) para planificacion, 0 pendiente(s) de aprobacion"
+      },
+      {
+        "agent": "approved-action-planner",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Approved Action Planner Agent finalizado: 0 work order(s) nueva(s)"
+      },
+      {
+        "agent": "seo-work-order-builder",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "SEO Work Order Builder finalizado: 0 work order(s) lista(s) para revisar"
+      },
+      {
+        "agent": "content-work-order-builder",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Content Work Order Builder finalizado: 0 brief(s) listo(s)"
+      },
+      {
+        "agent": "cro-work-order-builder",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "CRO Work Order Builder finalizado: 0 propuesta(s) lista(s)"
+      },
+      {
+        "agent": "seo-change-pack-builder",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "SEO Change Pack Builder finalizado: 0 change pack(s) nuevo(s), 2 bloqueado(s) por cluster gate"
+      },
+      {
+        "agent": "content-change-pack-builder",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Content Change Pack Builder finalizado: 0 change pack(s) nuevo(s), 10 bloqueado(s) por cluster gate"
+      },
+      {
+        "agent": "cro-change-pack-builder",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "CRO Change Pack Builder finalizado: 0 change pack(s) nuevo(s), 1 bloqueado(s) por cluster gate"
+      },
+      {
+        "agent": "ux-ui-landing-architect",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "UX/UI Landing Architect finalizado: 0 blueprint(s) nuevo(s), 77 en total."
+      },
+      {
+        "agent": "wordpress-draft-agent",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "WordPress Draft Agent finalizado: 0 preview(s) nuevo(s), 0 borrador(es) real(es) nuevo(s)"
+      },
+      {
+        "agent": "visual-template-builder",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Visual Template Builder Agent finalizado: 0 preview(s) visual(es) nuevo(s)"
+      },
+      {
+        "agent": "visual-asset-planner",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Visual Asset Planner Agent finalizado: 0 peticion(es) nueva(s), n8n NO se ha ejecutado"
+      },
+      {
+        "agent": "staging-executor",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Staging Executor Agent finalizado: 0 ejecucion(es) aplicada(s), 0 pendiente(s) de aprobacion"
+      },
+      {
+        "agent": "staging-qa-agent",
+        "status": "completado",
+        "warningCount": 2,
+        "lastSummary": "Staging QA Agent finalizado: 20/21 borrador(es) pasan (20 con warning)"
+      },
+      {
+        "agent": "approval-gateway",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Approval Gateway Agent finalizado: 0 solicitud(es) nueva(s), 0 enviada(s) por Telegram"
+      },
+      {
+        "agent": "production-deployment-planner",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Production Deployment Planner finalizado: 0 plan(es) nuevo(s), 22 en total. Produccion no tocada."
+      },
+      {
+        "agent": "production-draft-executor",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Production Draft Executor finalizado: 0 pendiente(s) nueva(s), 0 aplicada(s), canAttemptRealWrites=false."
+      },
+      {
+        "agent": "growth-director",
+        "status": "completado",
+        "warningCount": 0,
+        "lastSummary": "Growth Director Agent finalizado: informes diarios consolidados (ejecutivo + tecnico)"
+      }
+    ],
+    "warnings": [
+      "[staging-qa-agent] Staging QA detecto 1 borrador(es) con problemas",
+      "[staging-qa-agent] Staging QA detecto 1 borrador(es) con problemas"
+    ],
+    "actionsSummary": {
+      "totalActions": 105,
+      "liveActionCount": 95,
+      "byStatus": {
+        "approved": 6,
+        "snoozed": 4,
+        "auto_approved_for_planning": 89,
+        "rejected": 6
+      },
+      "byPriority": {
+        "high": 8,
+        "medium": 87
+      },
+      "topOpenActions": [
+        {
+          "actionId": "19599263-9e05-4bca-8d6a-761cf54f3aad",
+          "title": "SEO: \"cerraduras inteligentes para taquillas\" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)",
+          "priority": "high",
+          "status": "approved",
+          "keyword": "cerraduras inteligentes para taquillas",
+          "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "targetBrand": "both",
+          "brandIntent": "zentry_smart_locker"
+        },
+        {
+          "actionId": "ed5b4c93-0841-43bd-b881-c662e668f201",
+          "title": "Competencia: keyword no cubierta \"taquillas inteligentes\"",
+          "priority": "high",
+          "status": "auto_approved_for_planning",
+          "keyword": "taquillas inteligentes",
+          "targetBrand": "both",
+          "brandIntent": "zentry_smart_locker"
+        },
+        {
+          "actionId": "4bdbbe6e-743a-40df-822f-615935e57cfa",
+          "title": "Mejorar title/meta de https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "priority": "high",
+          "status": "approved",
+          "keyword": "cerraduras inteligentes para taquillas",
+          "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "targetBrand": "both",
+          "brandIntent": "zentry_smart_locker"
+        },
+        {
+          "actionId": "ef7a3825-b95f-4942-a4dc-46faed0d825e",
+          "title": "Reforzar enlazado interno hacia https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "priority": "high",
+          "status": "approved",
+          "keyword": "cerraduras inteligentes para taquillas",
+          "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "targetBrand": "both",
+          "brandIntent": "zentry_smart_locker"
+        },
+        {
+          "actionId": "b8632ce3-723c-4aca-b355-56beee9c10b5",
+          "title": "Contenido nuevo para \"taquillas inteligentes\"",
+          "priority": "high",
+          "status": "auto_approved_for_planning",
+          "keyword": "taquillas inteligentes",
+          "targetBrand": "both",
+          "brandIntent": "zentry_smart_locker"
+        },
+        {
+          "actionId": "25d36c60-b32a-4fd0-8de5-b910cb886507",
+          "title": "CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "priority": "high",
+          "status": "approved",
+          "keyword": "cerraduras electronicas para taquillas",
+          "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "targetBrand": "both",
+          "brandIntent": "zentry_smart_locker"
+        },
+        {
+          "actionId": "1a0e540c-8785-482b-9be2-217c5d6fe818",
+          "title": "SEO: \"cerraduras inteligentes para taquillas\" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)",
+          "priority": "high",
+          "status": "approved",
+          "keyword": "cerraduras inteligentes para taquillas",
+          "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "targetBrand": "both",
+          "brandIntent": "zentry_smart_locker"
+        },
+        {
+          "actionId": "b764c03e-3b88-441f-aa88-117d45d97e21",
+          "title": "CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "priority": "high",
+          "status": "approved",
+          "keyword": "cerraduras inteligentes para taquillas",
+          "page": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/",
+          "targetBrand": "both",
+          "brandIntent": "zentry_smart_locker"
+        }
+      ]
+    },
+    "workOrdersSummary": {
+      "total": 104,
+      "readyForReviewCount": 103,
+      "byCategory": {
+        "cro": 9,
+        "seo": 19,
+        "competitor_gap": 21,
+        "sem": 2,
+        "content": 52,
+        "analytics": 1
+      },
+      "byBrand": {
+        "both": 41,
+        "zentry": 53,
+        "tukandado": 10
+      }
+    },
+    "changePacksSummary": {
+      "total": 77,
+      "readyForReviewCount": 5,
+      "byType": {
+        "seo_on_page_update": 18,
+        "content_update": 31,
+        "new_content_page": 19,
+        "cro_conversion_update": 9
+      }
+    },
+    "approvalRequestsSummary": {
+      "pendingCount": 1,
+      "byRiskLevel": {
+        "critical": 1
+      },
+      "topPending": [
+        {
+          "title": "taquillas melamina (https://zentrylockers.com/taquillas-melamina-fenolico/)",
+          "riskLevel": "critical",
+          "relatedType": "production_deployment_plan"
+        }
+      ]
+    },
+    "jobsSummary": {
+      "totalJobSnapshots": 1965,
+      "latestRunId": "seo-watcher-2026-08-14T111247Z",
+      "latestRunJobCount": 31
+    },
+    "knownDependencies": [
+      {
+        "name": "seo-specialist",
+        "status": "available",
+        "note": ".claude/agents/seo-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "name": "content-strategist",
+        "status": "available",
+        "note": ".claude/agents/content-strategist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "name": "sem-specialist",
+        "status": "available",
+        "note": ".claude/agents/sem-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "name": "analytics-specialist",
+        "status": "available",
+        "note": ".claude/agents/analytics-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "name": "qa-reviewer",
+        "status": "available",
+        "note": ".claude/agents/qa-reviewer.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "name": "web-engineer",
+        "status": "available",
+        "note": ".claude/agents/web-engineer.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "name": "sem-watcher (V1 deterministico)",
+        "status": "available",
+        "note": "Ultimo agent_finished de sem-watcher en este departmentRunId: connected=true."
+      },
+      {
+        "name": "analytics-watcher (V1 deterministico)",
+        "status": "available",
+        "note": "Ultimo agent_finished de analytics-watcher en este departmentRunId: ga4Connected=true, gtmConnected=true."
+      }
+    ],
+    "evidenceCatalog": [
+      {
+        "ref": "department-run",
+        "description": "departmentRunId mas reciente: \"growth-department-2026-08-14T111247Z\" (196 evento(s) registrados en data/department-events.jsonl para esta pasada)."
+      },
+      {
+        "ref": "agent-activity",
+        "description": "Actividad de agentes en esta pasada: 25 agente(s) con eventos (25 completados). Detalle completo en agentActivity[] del contexto."
+      },
+      {
+        "ref": "department-warnings",
+        "description": "2 warning(s) emitidos por agentes del departamento en esta pasada. Ver warnings[] del contexto."
+      },
+      {
+        "ref": "actions-live",
+        "description": "95 accion(es) vivas en el backlog (por prioridad: high=8, medium=87). Total historico (todos los estados): 105. Por estado: approved=6, snoozed=4, auto_approved_for_planning=89, rejected=6."
+      },
+      {
+        "ref": "actions-top",
+        "description": "Top 8 acciones vivas por prioridad: \"SEO: \"cerraduras inteligentes para taquillas\" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)\" (high, approved); \"Competencia: keyword no cubierta \"taquillas inteligentes\"\" (high, auto_approved_for_planning); \"Mejorar title/meta de https://zentrylockers.com/cerraduras-inteligentes-taquillas/\" (high, approved); \"Reforzar enlazado interno hacia https://zentrylockers.com/cerraduras-inteligentes-taquillas/\" (high, approved); \"Contenido nuevo para \"taquillas inteligentes\"\" (high, auto_approved_for_planning); \"CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/\" (high, approved); \"SEO: \"cerraduras inteligentes para taquillas\" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)\" (high, approved); \"CRO: https://zentrylockers.com/cerraduras-inteligentes-taquillas/\" (high, approved)."
+      },
+      {
+        "ref": "workorders-ready",
+        "description": "103 work order(s) listas para revisar de 104 totales. Por categoria: cro=9, seo=19, competitor_gap=21, sem=2, content=52, analytics=1. Por marca: both=41, zentry=53, tukandado=10."
+      },
+      {
+        "ref": "changepacks-ready",
+        "description": "5 change pack(s) listos para revisar de 77 totales. Por tipo: seo_on_page_update=18, content_update=31, new_content_page=19, cro_conversion_update=9."
+      },
+      {
+        "ref": "approvals-pending",
+        "description": "1 solicitud(es) de aprobacion pendientes. Por riesgo: critical=1."
+      },
+      {
+        "ref": "jobs-latest-run",
+        "description": "Ultima ejecucion de SEO Watcher (runId \"seo-watcher-2026-08-14T111247Z\"): 31 job(s) propuestos. Total historico en data/jobs.jsonl: 1965."
+      },
+      {
+        "ref": "dependency-seo-specialist",
+        "description": "seo-specialist: available. .claude/agents/seo-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "ref": "dependency-content-strategist",
+        "description": "content-strategist: available. .claude/agents/content-strategist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "ref": "dependency-sem-specialist",
+        "description": "sem-specialist: available. .claude/agents/sem-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "ref": "dependency-analytics-specialist",
+        "description": "analytics-specialist: available. .claude/agents/analytics-specialist.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "ref": "dependency-qa-reviewer",
+        "description": "qa-reviewer: available. .claude/agents/qa-reviewer.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "ref": "dependency-web-engineer",
+        "description": "web-engineer: available. .claude/agents/web-engineer.md existe en este checkout -- puede que ya produzca artifacts propios (no verificado aqui mas alla de la existencia de la definicion del agente)."
+      },
+      {
+        "ref": "dependency-sem-watcher-v1-deterministico",
+        "description": "sem-watcher (V1 deterministico): available. Ultimo agent_finished de sem-watcher en este departmentRunId: connected=true."
+      },
+      {
+        "ref": "dependency-analytics-watcher-v1-deterministico",
+        "description": "analytics-watcher (V1 deterministico): available. Ultimo agent_finished de analytics-watcher en este departmentRunId: ga4Connected=true, gtmConnected=true."
+      }
+    ]
+  },
+  "result": {
+    "status": "pending_execution",
+    "promptFilePath": "/home/user/zentry-ai-department/reports/growth-director-v2/growth-department-2026-08-14T111247Z/prompt.md"
+  },
+  "note": "Artefacto de solo lectura/propuesta. growth-director-v2 no ejecuta ni aplica nada -- ni a WordPress, ni a staging, ni a produccion, ni a Google Ads/GA4/GTM/Search Console/n8n, ni escribe en el propio repositorio. Prioriza y sintetiza sobre datos ya persistidos; la decision final sobre que hacer es siempre humana. No sustituye a src/agents/growth-director.ts (v1), que sigue siendo el unico que genera reports/daily/*.md."
+}
