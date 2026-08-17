@@ -50,6 +50,8 @@ import { readApplySummary } from "../src/department/apply/store";
 import { buildDepartmentDailyBrief, DepartmentDailyBrief, PreviousRunSnapshot, renderDepartmentDailyBriefMarkdown, renderDepartmentStepSummary } from "../src/department/daily-brief";
 import { summarizeDepartmentRunCost } from "../src/department/employee-runs";
 import { buildDepartmentGrowthContext, buildDepartmentGrowthPrompt, DepartmentGrowthContext } from "../src/department/growth-input";
+import { buildGrowthDirectorV2Context } from "../src/employees/growth-director-v2/context";
+import { describeFreshBacklogExclusion, isFreshBacklogRequested } from "../src/department/fresh-backlog";
 import { buildDepartmentQaInputBundle } from "../src/department/qa-input";
 import { buildPlanQaInputBundle } from "../src/department/plan-qa-input";
 import {
@@ -254,7 +256,21 @@ async function phasePrepareGrowth(args: Record<string, string>): Promise<Departm
   assertSubagentIsToolless("growth-director-v2");
   const manifest = readManifest(departmentRunId);
   const specialists = loadSpecialistInputs(manifest);
-  const context = buildDepartmentGrowthContext(departmentRunId, specialists, args.eventBusRunId && args.eventBusRunId !== "true" ? args.eventBusRunId : undefined);
+  // Pasada FRESCA: el backlog operativo acumulado no entra en la cola de
+  // hoy. El historico se conserva intacto -- solo deja de alimentar esta
+  // pasada, para que lo que se genere salga de los datos LIVE y no de
+  // reciclar trabajo pendiente. Ver src/department/fresh-backlog.ts.
+  const freshBacklog = args.freshBacklog === "true" || isFreshBacklogRequested();
+  if (freshBacklog) {
+    const historic = buildGrowthDirectorV2Context(args.eventBusRunId && args.eventBusRunId !== "true" ? args.eventBusRunId : undefined);
+    for (const line of describeFreshBacklogExclusion(historic)) console.log(line);
+  }
+  const context = buildDepartmentGrowthContext(
+    departmentRunId,
+    specialists,
+    args.eventBusRunId && args.eventBusRunId !== "true" ? args.eventBusRunId : undefined,
+    { freshBacklog }
+  );
   const prompt = buildDepartmentGrowthPrompt(context, await loadPreviousHumanFeedbackFromState());
 
   writeStageContext(departmentRunId, "growth-director-v2", context);

@@ -72,6 +72,17 @@ on:
         required: false
         default: false
         type: boolean
+      freshBacklog:
+        description: >-
+          Empezar la pasada con el BACKLOG OPERATIVO VACIO. El historico se
+          conserva intacto (no se borra nada): simplemente el trabajo
+          pendiente acumulado no entra en la cola de hoy, para que las
+          recomendaciones salgan de los datos LIVE y no de reciclar
+          propuestas antiguas. Las decisiones humanas previas SI se
+          conservan: son restricciones permanentes, no trabajo pendiente.
+        required: false
+        default: false
+        type: boolean
 
 # Una sola pasada coordinada a la vez: dos pasadas simultaneas podrian
 # leer/escribir a la vez sobre los mismos registros del departamento.
@@ -117,6 +128,10 @@ jobs:
       # comportamiento es exactamente el de antes, sin medias tintas.
       # Aqui solo viaja el MODO, nunca la credencial.
       DEPARTMENT_PERSISTENCE_MODE: ${{ secrets.MONGODB_URI != '' && 'mongo' || 'legacy' }}
+      # Pasada FRESCA (opt-in). La lee scripts/run-department-coordination.ts
+      # en la fase prepare-growth. Sin el input vale "false", y entonces la
+      # pasada se comporta exactamente como siempre.
+      DEPARTMENT_FRESH_BACKLOG: ${{ inputs.freshBacklog && 'true' || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -1504,22 +1519,34 @@ jobs:
           npm run department:apply -- --phase stage --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-stage.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          # Estado autoritativo donde se registra el cambio. MISMA
+          # expresion que el resto de la pasada (`env:` del job): si se
+          # leyera de una `vars.` que nadie ha definido, el modo caeria a
+          # legacy y el cambio se aplicaria sin quedar registrado.
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
-          DEPARTMENT_PERSISTENCE_MODE: ${{ vars.DEPARTMENT_PERSISTENCE_MODE }}
-          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
-          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
-          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          DEPARTMENT_PERSISTENCE_MODE: ${{ secrets.MONGODB_URI != '' && 'mongo' || 'legacy' }}
+          # Novamira / execute-php. Son las MISMAS credenciales que usa el
+          # E2E ya certificado (WP_API_*): un endpoint distinto aqui seria
+          # ejecutar por un camino que nadie ha probado.
           WP_API_URL: ${{ secrets.WP_API_URL }}
           WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
           WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+          # Lectura del estado BEFORE/AFTER por REST -- via DISTINTA de la
+          # de escritura, que es lo que hace que el read-back signifique
+          # algo. Ninguna credencial de produccion.
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
           WORDPRESS_ENV: staging
-          WORDPRESS_DRAFTS_ENABLED: ${{ vars.WORDPRESS_DRAFTS_ENABLED }}
-          DEPARTMENT_STAGING_APPLY_ENABLED: ${{ vars.DEPARTMENT_STAGING_APPLY_ENABLED }}
-          NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED: ${{ vars.NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED }}
-          NOVAMIRA_STAGING_WRITES_ENABLED: ${{ vars.NOVAMIRA_STAGING_WRITES_ENABLED }}
-          NOVAMIRA_MCP_URL: ${{ secrets.NOVAMIRA_MCP_URL }}
-          NOVAMIRA_MCP_TOKEN: ${{ secrets.NOVAMIRA_MCP_TOKEN }}
+          # Interruptores de escritura. Van literales, igual que en el E2E
+          # certificado: el alcance no lo acota una variable de repo que
+          # se puede cambiar sin revision, lo acotan el entorno (staging),
+          # el catalogo cerrado de operaciones y el guard determinista.
+          WORDPRESS_DRAFTS_ENABLED: "true"
+          DEPARTMENT_STAGING_APPLY_ENABLED: "true"
+          NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED: "true"
+          NOVAMIRA_STAGING_WRITES_ENABLED: "true"
 
       - name: "[APPLY] Proyectar el resultado real sobre el contrato de la pasada"
         id: apply_sync
@@ -1532,7 +1559,7 @@ jobs:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
-          DEPARTMENT_PERSISTENCE_MODE: ${{ vars.DEPARTMENT_PERSISTENCE_MODE }}
+          DEPARTMENT_PERSISTENCE_MODE: ${{ secrets.MONGODB_URI != '' && 'mongo' || 'legacy' }}
 
       # =====================================================================
       # FASE 5 -- DAILY BRIEF (ensamblado determinista, sin Claude)

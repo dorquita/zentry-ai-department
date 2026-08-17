@@ -67,6 +67,7 @@ import { runDepartmentDailyBriefTests } from "../test/department-daily-brief.tes
 import { runDepartmentCoordinationSafetyTests } from "../test/department-coordination-safety.test";
 import { runChangePlanStagingRunnerTests } from "../test/changeplan-staging-runner.test";
 import { runQaCorrectionLoopTests } from "../test/qa-correction-loop.test";
+import { runFreshBacklogTests } from "../test/fresh-backlog.test";
 import { runDepartmentApplyApprovalTests } from "../test/department-apply-approval.test";
 import { runDepartmentApplyStateMachineTests } from "../test/department-apply-state-machine.test";
 import { runDepartmentApplyStagingTests } from "../test/department-apply-staging.test";
@@ -165,6 +166,7 @@ async function main(): Promise<void> {
     { suiteName: "department-coordination-safety", cases: runDepartmentCoordinationSafetyTests() },
     { suiteName: "changeplan-staging-runner", cases: runChangePlanStagingRunnerTests() },
     { suiteName: "qa-correction-loop", cases: runQaCorrectionLoopTests() },
+    { suiteName: "fresh-backlog", cases: runFreshBacklogTests() },
     { suiteName: "department-employee-runs", cases: runDepartmentEmployeeRunsTests() },
     { suiteName: "department-apply-approval", cases: runDepartmentApplyApprovalTests() },
     { suiteName: "department-apply-state-machine", cases: runDepartmentApplyStateMachineTests() },

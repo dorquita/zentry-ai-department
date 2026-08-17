@@ -1,6 +1,7 @@
 import { PreviousHumanFeedback } from "../approvals/human-feedback-context";
 import { buildGrowthDirectorV2Context, GrowthDirectorV2Context } from "../employees/growth-director-v2/context";
 import { buildDepartmentPrompt } from "./prompt";
+import { withFreshOperationalBacklog } from "./fresh-backlog";
 import { DepartmentSpecialistInput, LoadedSpecialistInputs } from "./specialist-inputs";
 
 /**
@@ -42,8 +43,18 @@ export const GROWTH_COORDINATION_RULES: string[] = [
   "Esta fase es READ / ANALYZE / PROPOSE. Ninguna prioridad tuya se aplica automaticamente a ningun sistema: son propuestas para revision humana.",
 ];
 
-export function buildDepartmentGrowthContext(departmentCoordinationRunId: string, specialists: LoadedSpecialistInputs, eventBusDepartmentRunId?: string): DepartmentGrowthContext {
-  const base = buildGrowthDirectorV2Context(eventBusDepartmentRunId);
+export function buildDepartmentGrowthContext(
+  departmentCoordinationRunId: string,
+  specialists: LoadedSpecialistInputs,
+  eventBusDepartmentRunId?: string,
+  options: { freshBacklog?: boolean } = {}
+): DepartmentGrowthContext {
+  const historic = buildGrowthDirectorV2Context(eventBusDepartmentRunId);
+  // Con `freshBacklog`, el trabajo pendiente acumulado NO entra en esta
+  // pasada: la pregunta que se le hace al agente es "que merece hacerse
+  // AHORA con los datos de hoy", no "que quedaba por hacer". El historico
+  // no se borra -- solo deja de alimentar la cola de esta pasada.
+  const base = options.freshBacklog ? withFreshOperationalBacklog(historic) : historic;
   return {
     ...base,
     contextKind: "department_coordination_v1",

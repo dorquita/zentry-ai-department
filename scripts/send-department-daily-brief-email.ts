@@ -32,6 +32,7 @@ import { sendReportEmail } from "../src/core/mailer";
 import { readApplySummary } from "../src/department/apply/store";
 import { DepartmentApplySummary } from "../src/department/apply/types";
 import { buildDailyBriefEmail } from "../src/department/brief-email";
+import { buildHumanDailyBriefEmail } from "../src/department/human-brief-email";
 import { containsSecretValue, REQUIRED_SMTP_VARS, resolveDailyBriefEmailConfig } from "../src/department/email-config";
 import { DepartmentDailyBrief } from "../src/department/daily-brief";
 import { summarizeDepartmentRunCost } from "../src/department/employee-runs";
@@ -99,13 +100,28 @@ async function main(): Promise<void> {
   const brief = JSON.parse(fs.readFileSync(paths.briefJsonPath, "utf-8")) as DepartmentDailyBrief;
 
   const cost = summarizeDepartmentRunCost(readDepartmentEmployeeRuns(departmentRunId));
-  const email = buildDailyBriefEmail({
+  const emailInput = {
     brief,
     apply: loadApplySummary(departmentRunId),
     cost,
     runUrl: args.runUrl && args.runUrl !== "true" ? args.runUrl : "",
     stagingInventoryUnavailableReason: loadStagingInventoryUnavailableReason(departmentRunId),
-  });
+  };
+
+  // QUE SE ENVIA Y QUE SE GUARDA, que no es lo mismo.
+  //
+  // Lo que llega al correo es el resumen HUMANO: 150-250 palabras, sin
+  // ids internos, sin ChangePlans, sin JSON ni nombres de fichero. El
+  // email tecnico completo (~3000 palabras, nueve secciones) se sigue
+  // construyendo y se guarda como artifact de la pasada -- ahi es donde
+  // tiene sentido, no en la bandeja de entrada de una persona que
+  // necesita entender en un minuto si algo requiere su atencion.
+  //
+  // `--technical-email` fuerza el antiguo, para poder comparar los dos
+  // sin tocar codigo.
+  const useTechnicalEmail = args["technical-email"] === "true";
+  const technicalEmail = buildDailyBriefEmail(emailInput);
+  const email = useTechnicalEmail ? technicalEmail : buildHumanDailyBriefEmail(emailInput);
 
   const config = resolveDailyBriefEmailConfig({
     env: process.env,
@@ -115,7 +131,7 @@ async function main(): Promise<void> {
   // Defensa en profundidad: el correo se guarda y (en dry-run) se puede
   // volcar, asi que se comprueba que no arrastra el valor de ninguna
   // variable sensible antes de escribirlo en ningun sitio.
-  const leak = containsSecretValue(`${email.subject}\n${email.text}\n${email.html}`, process.env, SENSITIVE_VARS);
+  const leak = containsSecretValue(`${email.subject}\n${email.text}\n${email.html}\n${technicalEmail.text}`, process.env, SENSITIVE_VARS);
   if (leak) {
     throw new Error(`Abortado antes de enviar: el correo construido contiene el valor de la variable sensible ${leak}. Esto nunca debe ocurrir -- no se envia ni se guarda nada.`);
   }
@@ -123,7 +139,21 @@ async function main(): Promise<void> {
   fs.mkdirSync(paths.runDir, { recursive: true });
   fs.writeFileSync(
     paths.emailPath,
-    JSON.stringify({ departmentRunId, subject: email.subject, text: email.text, html: email.html, builtAt: new Date().toISOString() }, null, 2),
+    JSON.stringify(
+      {
+        departmentRunId,
+        subject: email.subject,
+        text: email.text,
+        html: email.html,
+        // El detalle tecnico no se pierde: se guarda al lado del que se
+        // envia, para que "el email no lo cuenta todo" no signifique "eso
+        // no esta escrito en ningun sitio".
+        technicalDetail: { subject: technicalEmail.subject, text: technicalEmail.text },
+        builtAt: new Date().toISOString(),
+      },
+      null,
+      2
+    ),
     "utf-8"
   );
   console.log(`Email del Daily Brief construido y guardado en ${toRepoRelative(paths.emailPath)}.`);
