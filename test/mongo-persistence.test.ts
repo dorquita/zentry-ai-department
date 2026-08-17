@@ -18,7 +18,11 @@ import {
   renderMongoTarget,
   sanitizeMongoText,
 } from "../src/persistence/mongo-config";
-import { MongoPersistenceError, classifyMongoError } from "../src/persistence/mongo-errors";
+import {
+  MongoPersistenceError,
+  classifyMongoError,
+  troubleshootingHints,
+} from "../src/persistence/mongo-errors";
 import { COLLECTION_SPECS } from "../src/persistence/collections";
 import { ENTITY_REGISTRY, buildEntityId } from "../src/persistence/entity-registry";
 import {
@@ -886,6 +890,53 @@ export function runMongoPersistenceTests(): TestCase[] {
         const network = new MongoPersistenceError("network_failure", "connect", "ECONNREFUSED");
         assert.equal(auth.retryable, false, "reintentar credenciales malas solo gasta tiempo");
         assert.equal(network.retryable, true);
+      },
+    },
+    {
+      name: "un fallo de auth explica que la red esta bien y que hay que revisar",
+      fn: () => {
+        // Caso real: Atlas devolvio "bad auth : authentication failed". El
+        // SRV habia resuelto, asi que la red no era el problema — y sin
+        // esta pista lo primero que se toca es Network Access, que no es.
+        assert.equal(
+          classifyMongoError(new Error("bad auth : authentication failed")),
+          "auth_failure"
+        );
+        const hints = troubleshootingHints("auth_failure").join(" ");
+        assert.match(hints, /RED esta bien/i);
+        assert.match(hints, /PERCENT-ENCODED/i, "la contrasena sin escapar es la causa mas comun");
+        assert.match(hints, /authSource/);
+        assert.match(hints, /readWrite/);
+      },
+    },
+    {
+      name: "un fallo de red apunta a Network Access, que es otra cosa distinta",
+      fn: () => {
+        const hints = troubleshootingHints("network_failure").join(" ");
+        assert.match(hints, /Network Access/i);
+        assert.match(hints, /no tienen IP\s+fija|no tienen IP fija/i);
+        assert.equal(
+          troubleshootingHints("auth_failure").join(" ").includes("Network Access"),
+          false,
+          "no mandar a Network Access a quien tiene un problema de credenciales"
+        );
+      },
+    },
+    {
+      name: "SEGURIDAD: las pistas de diagnostico no contienen ningun valor, solo que mirar",
+      fn: () => {
+        const kinds: Parameters<typeof troubleshootingHints>[0][] = [
+          "auth_failure",
+          "network_failure",
+          "unavailable",
+          "timeout",
+          "not_configured",
+        ];
+        for (const kind of kinds) {
+          const text = troubleshootingHints(kind).join(" ");
+          assert.doesNotMatch(text, /mongodb(\+srv)?:\/\//, `las pistas de ${kind} no llevan URIs`);
+          assert.equal(text, sanitizeMongoText(text), `las pistas de ${kind} ya estan saneadas`);
+        }
       },
     },
     {

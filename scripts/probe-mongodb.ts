@@ -24,6 +24,11 @@
 import { MIGRATIONS_COLLECTION } from "../src/persistence/collections";
 import { describeMongoTarget, loadMongoConfig, renderMongoTarget, sanitizeMongoText } from "../src/persistence/mongo-config";
 import { connectStateDatabase } from "../src/persistence/mongo-database";
+import {
+  MongoPersistenceError,
+  classifyMongoError,
+  troubleshootingHints,
+} from "../src/persistence/mongo-errors";
 import { COLLECTION_SPECS } from "../src/persistence/collections";
 import { MongoStateDatabase } from "../src/persistence/mongo-database";
 
@@ -98,5 +103,23 @@ async function main(): Promise<void> {
 main().catch((err) => {
   console.error(`[probe] MONGODB_PROBE=fail`);
   console.error(sanitizeMongoText(err));
+
+  // El mensaje del servidor dice QUE ha fallado, no POR QUE. Las causas
+  // reales de cada tipo son pocas y concretas, asi que se enumeran aqui
+  // en vez de dejar que el siguiente las vuelva a deducir.
+  const kind = err instanceof MongoPersistenceError ? err.kind : classifyMongoError(err);
+  const hints = troubleshootingHints(kind);
+  if (hints.length > 0) {
+    console.error("");
+    console.error(`[probe] Fallo de tipo "${kind}". Que comprobar:`);
+    for (const hint of hints) console.error(`[probe]   ${hint}`);
+  }
+  if (kind === "auth_failure") {
+    console.error("");
+    console.error(
+      "[probe] Este fallo NO se reintenta: reintentar con las mismas credenciales da el mismo resultado."
+    );
+  }
+
   process.exit(1);
 });

@@ -132,6 +132,53 @@ export function toMongoPersistenceError(
   return new MongoPersistenceError(kind, operation, err instanceof Error ? err.message : String(err));
 }
 
+/**
+ * Pistas accionables por tipo de fallo.
+ *
+ * Existe porque el mensaje del servidor ("bad auth : authentication
+ * failed") dice QUE ha fallado pero no POR QUE, y las causas reales son
+ * pocas y concretas. Sin esto, el siguiente que se lo encuentre tiene que
+ * volver a deducirlas.
+ *
+ * Ninguna pista menciona ningun valor: solo nombres de variables y cosas
+ * que comprobar en la consola de Atlas.
+ */
+export function troubleshootingHints(kind: MongoFailureKind): string[] {
+  switch (kind) {
+    case "auth_failure":
+      return [
+        "El SRV se resolvio y se llego a autenticar: la RED esta bien. Lo que Atlas rechaza son las credenciales.",
+        "1. El usuario de base de datos existe en ESTE cluster y proyecto de Atlas (Database Access), no en otro.",
+        "2. La contrasena esta PERCENT-ENCODED dentro de la URI. Si lleva @ : / ? # [ ] % o espacios, en crudo " +
+          "no vale: @ es %40, # es %23, / es %2F, : es %3A, % es %25.",
+        "3. El usuario tiene rol readWrite sobre la base indicada, no solo sobre otra.",
+        // Ojo al redactar: el texto se escribe SIN pares `clave=valor`, para
+        // que el saneador no lo confunda con una credencial y lo redacte.
+        "4. Si el usuario se creo con una base de autenticacion distinta de `admin`, la URI necesita el " +
+          "parametro authSource apuntando a esa base.",
+        "5. Regenerar la contrasena en Atlas y volver a pegar la URI completa suele ser mas rapido que " +
+          "adivinar cual de las cuatro es.",
+      ];
+    case "network_failure":
+      return [
+        "1. La IP del runner esta permitida en Network Access de Atlas. Los runners de GitHub no tienen IP " +
+          "fija: hace falta 0.0.0.0/0 o una lista de rangos de GitHub.",
+        "2. El nombre del cluster en la URI es el correcto (un SRV que no resuelve da este mismo error).",
+      ];
+    case "unavailable":
+      return [
+        "1. El cluster no esta pausado en Atlas (los gratuitos se pausan solos tras dias sin uso).",
+        "2. Puede ser un failover en curso: reintentar en unos minutos.",
+      ];
+    case "timeout":
+      return ["1. Reintentar. Si se repite, revisar Network Access y el estado del cluster."];
+    case "not_configured":
+      return [`1. Definir ${"MONGODB_URI"} como secret del repositorio.`];
+    default:
+      return [];
+  }
+}
+
 /** `true` si un choque contra indice unico corresponde a este error. */
 export function isDuplicateKeyError(err: unknown): boolean {
   const code = readCode(err);
