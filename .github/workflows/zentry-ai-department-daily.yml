@@ -1163,14 +1163,36 @@ jobs:
       #               antiguas que ya no existen en ningun otro sitio.
       #               La rama conserva ese historico congelado e intacto;
       #               el estado vivo esta en MongoDB.
-      - name: "[STATE] Empaquetar el estado para el job de persistencia"
+      # `upload-artifact` recorta la raiz comun de los paths que recibe: con
+      # un unico directorio, su CONTENIDO acaba en la raiz del artifact y el
+      # nombre de la carpeta se pierde. Por eso se monta antes un
+      # `state-export/` explicito -- asi la raiz comun es esa carpeta y los
+      # directorios de dentro conservan su nombre, venga uno o vengan dos.
+      - name: "[STATE] Montar el paquete de estado a exportar"
         id: pack_state
         if: ${{ always() && steps.verify_state.outcome == 'success' && inputs.skipLegacyRestore != true }}
+        run: |
+          set -euo pipefail
+          rm -rf state-export
+          mkdir -p state-export
+          cp -r reports state-export/reports
+          if [ "$MONGODB_CONFIGURED" != "true" ]; then
+            cp -r data state-export/data
+            echo "Modo legacy: se exportan data/ y reports/."
+          else
+            echo "MongoDB es la fuente de verdad: se exporta SOLO reports/."
+            echo "El data/ de la rama conserva su historico append-only sin tocar."
+          fi
+          echo "Contenido del paquete:"
+          ls -1 state-export
+
+      - name: "[STATE] Subir el paquete de estado"
+        if: ${{ always() && steps.pack_state.outcome == 'success' && inputs.skipLegacyRestore != true }}
         uses: actions/upload-artifact@v4
         with:
           name: department-state-${{ github.run_id }}
           path: |
-            reports
+            state-export
           if-no-files-found: error
           retention-days: 7
           include-hidden-files: false
