@@ -1,0 +1,100 @@
+# Fase O57 — CERTIFICACION FINAL de la persistencia en MongoDB.
+#
+# POR QUE UN WORKFLOW APARTE Y NO UN PASO MAS DE LA PASADA:
+# Una verificacion que corre DENTRO de la pasada que verifica es el
+# sistema diciendo que el sistema esta bien. Este job arranca en un runner
+# limpio, NO restaura la rama `department-state`, NO hidrata nada y NO
+# tiene ningun `data/` del departamento a la vista: todo lo que afirma
+# sale de consultar Atlas.
+#
+# Es de SOLO LECTURA. No escribe ni un documento en MongoDB, no toca
+# ninguna rama y no genera estado. Relanzarlo es gratis y seguro.
+name: MongoDB final certification
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: "departmentRunId de las pasadas a certificar, separados por comas y en orden cronologico"
+        required: true
+        type: string
+      expectedDecisions:
+        description: "Cuantas decisiones humanas deben seguir existiendo"
+        required: false
+        default: "7"
+        type: string
+
+concurrency:
+  group: mongodb-final-certification
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    name: Certificacion independiente contra Atlas
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+      # Fail-closed: este script existe para hablar con Atlas. Sin
+      # credenciales no dice "todo bien", dice que no puede certificar.
+      DEPARTMENT_PERSISTENCE_MODE: mongo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # A PROPOSITO no hay ningun paso que restaure `data/` de la rama de
+      # estado ni que hidrate desde MongoDB. Si algo de lo que se afirma
+      # aqui dependiera de un fichero local, fallaria -- y eso es
+      # exactamente lo que se quiere poder demostrar.
+      - name: "Comprobar que el runner no tiene estado local del departamento"
+        run: |
+          set -euo pipefail
+          if [ -d data ] && ls data/*.jsonl >/dev/null 2>&1; then
+            echo "Hay $(ls data/*.jsonl | wc -l) fichero(s) .jsonl commiteados en main."
+            echo "Se listan sus lineas solo para dejar constancia de que NO se usan:"
+            wc -l data/*.jsonl | tail -1
+          else
+            echo "No hay ningun .jsonl de estado en el checkout."
+          fi
+          echo "Este job NO restaura la rama de estado y NO hidrata: todo sale de Atlas."
+
+      - name: "[CERTIFY] Verificar el estado autoritativo contra Atlas"
+        run: |
+          set -o pipefail
+          npm run state:certify-mongodb -- \
+            --runs "$RUNS" \
+            --expected-decisions "$EXPECTED_DECISIONS" 2>&1 | tee certify.log
+          {
+            echo "## Certificacion independiente del estado en MongoDB"
+            echo ""
+            sed -n '/^| comprobacion /,/^$/p' certify.log
+            echo ""
+            grep '^CERTIFY_JSON=' certify.log || true
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          RUNS: ${{ inputs.runs }}
+          EXPECTED_DECISIONS: ${{ inputs.expectedDecisions }}
+
+      # El log lleva recuentos e identificadores de pasada, nunca la URI:
+      # todo lo que se imprime pasa por el saneador.
+      - name: Subir el informe de certificacion
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mongodb-certification-${{ github.run_id }}
+          path: certify.log
+          if-no-files-found: warn
+          retention-days: 90
