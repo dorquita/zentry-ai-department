@@ -52,7 +52,13 @@ jobs:
   mongodb-state:
     name: Migracion y verificacion del estado en MongoDB
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # La migracion completa son ~14.600 documentos y se ejecuta DOS veces
+    # (la segunda es la prueba de idempotencia). Con escrituras en paralelo
+    # baja a pocos minutos, pero el margen se deja amplio: quedarse sin
+    # tiempo a mitad no corrompe nada -- cada escritura es atomica e
+    # idempotente y la reejecucion completa lo que falte -- pero deja el
+    # informe sin terminar, que es justo lo que se quiere evitar.
+    timeout-minutes: 60
     env:
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
       MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}

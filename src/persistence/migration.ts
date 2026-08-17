@@ -124,6 +124,58 @@ export interface MigrationReport {
   abortReason: string;
 }
 
+/**
+ * Cuantas escrituras se mantienen en vuelo a la vez durante la migracion.
+ *
+ * POR QUE NO SECUENCIAL: el historico son ~14.600 documentos y cada
+ * escritura es un round-trip a Atlas con `w:majority`, unos 90 ms desde un
+ * runner de GitHub. En serie eso son mas de 20 minutos, que agotan el
+ * timeout del job y hacen impracticable repetir la migracion — y repetirla
+ * es justamente como se demuestra que es idempotente.
+ *
+ * POR QUE ESTO ES SEGURO: cada documento se escribe UNA sola vez por
+ * pasada (el mapa de ganadores esta indexado por id, asi que no hay dos
+ * operaciones sobre la misma clave), y las primitivas del puerto son
+ * atomicas por documento. Paralelizar no cambia el resultado, solo el
+ * tiempo. Cada operacion sigue devolviendo su propio `WriteOutcome`, asi
+ * que los recuentos del informe no pierden precision.
+ *
+ * POR QUE 25 Y NO 500: el pool de conexiones del driver tiene un maximo
+ * (100 por defecto) y Atlas limita conexiones por cluster. Pasarse
+ * convierte el paralelismo en cola y empieza a dar timeouts.
+ */
+export const MIGRATION_WRITE_CONCURRENCY = 25;
+
+/**
+ * Recorre `items` invocando `worker` con como mucho `limit` operaciones en
+ * vuelo, y devuelve los resultados EN EL ORDEN DE ENTRADA.
+ *
+ * No usa `Promise.all` sobre todo el array a proposito: con 14.600
+ * elementos eso abre 14.600 operaciones a la vez y tumba el pool.
+ */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+
+  async function runner(): Promise<void> {
+    for (;;) {
+      const index = next;
+      next += 1;
+      if (index >= items.length) return;
+      results[index] = await worker(items[index], index);
+    }
+  }
+
+  const runners: Promise<void>[] = [];
+  for (let i = 0; i < Math.min(limit, items.length); i++) runners.push(runner());
+  await Promise.all(runners);
+  return results;
+}
+
 /** Serializacion estable para comparar dos registros por contenido. */
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
@@ -258,14 +310,17 @@ async function applyFilePlan(
     collisions: plan.collisions,
   };
 
-  for (const [entityId, winner] of plan.winners) {
-    const record = winner.record;
-    const departmentRunId =
-      typeof record.departmentRunId === "string" ? record.departmentRunId : null;
+  const entries = [...plan.winners.entries()];
+  const outcomes = await mapWithConcurrency(
+    entries,
+    MIGRATION_WRITE_CONCURRENCY,
+    async ([entityId, winner]) => {
+      const record = winner.record;
+      const departmentRunId =
+        typeof record.departmentRunId === "string" ? record.departmentRunId : null;
 
-    try {
-      const outcome =
-        descriptor.stateClass === "B"
+      try {
+        return descriptor.stateClass === "B"
           ? await repository.events.appendEvent({
               kind: descriptor.kind,
               eventId: entityId,
@@ -284,26 +339,33 @@ async function applyFilePlan(
               recordUpdatedAt: winner.freshness,
               payload: record,
             });
-
-      switch (outcome.result) {
-        case "inserted":
-          result.inserted += 1;
-          break;
-        case "updated":
-          result.updated += 1;
-          break;
-        case "duplicate_prevented":
-          result.duplicatesPrevented += 1;
-          break;
-        case "stale_ignored":
-          result.staleIgnored += 1;
-          break;
+      } catch {
+        // El detalle ya viaja en el error clasificado; aqui solo se cuenta,
+        // para que un fallo puntual no impida migrar el resto y quede
+        // reflejado en el informe.
+        return null;
       }
-    } catch {
-      // El detalle ya viaja en el error clasificado; aqui solo se cuenta,
-      // para que un fallo puntual no impida migrar el resto y quede
-      // reflejado en el informe.
+    }
+  );
+
+  for (const outcome of outcomes) {
+    if (outcome === null) {
       result.failed += 1;
+      continue;
+    }
+    switch (outcome.result) {
+      case "inserted":
+        result.inserted += 1;
+        break;
+      case "updated":
+        result.updated += 1;
+        break;
+      case "duplicate_prevented":
+        result.duplicatesPrevented += 1;
+        break;
+      case "stale_ignored":
+        result.staleIgnored += 1;
+        break;
     }
   }
 
@@ -404,14 +466,22 @@ export async function migrateHumanDecisions(
 
   if (mode === "dry-run") return result;
 
-  for (const input of byKey.values()) {
-    try {
-      const outcome = await repository.decisions.recordDecision(input);
-      if (outcome.result === "inserted") result.inserted += 1;
-      else result.duplicatesPrevented += 1;
-    } catch {
-      result.failed += 1;
+  const outcomes = await mapWithConcurrency(
+    [...byKey.values()],
+    MIGRATION_WRITE_CONCURRENCY,
+    async (input) => {
+      try {
+        return await repository.decisions.recordDecision(input);
+      } catch {
+        return null;
+      }
     }
+  );
+
+  for (const outcome of outcomes) {
+    if (outcome === null) result.failed += 1;
+    else if (outcome.result === "inserted") result.inserted += 1;
+    else result.duplicatesPrevented += 1;
   }
 
   return result;
