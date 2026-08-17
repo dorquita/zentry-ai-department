@@ -1,7 +1,7 @@
 # Plan de contenido — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T074357Z`
-- **Generado:** 2026-08-17T07:45:13.096Z
+- **departmentRunId:** `dept-2026-08-17T103833Z`
+- **Generado:** 2026-08-17T10:39:55.795Z
 - **Propuestas de contenido:** 53
 
 ## Resumen ejecutivo

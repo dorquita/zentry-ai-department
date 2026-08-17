@@ -1,8 +1,8 @@
 # Plan de accion SEO — 2026-08-17
 
-- **Basado en:** SEO Watcher runId `seo-watcher-2026-08-17T074406Z`
+- **Basado en:** SEO Watcher runId `seo-watcher-2026-08-17T103842Z`
 - **Informe base:** /home/runner/work/zentry-ai-department/zentry-ai-department/reports/seo/seo-watcher-2026-08-17.md
-- **Generado:** 2026-08-17T07:44:37.399Z
+- **Generado:** 2026-08-17T10:39:12.976Z
 
 ## Resumen ejecutivo
 

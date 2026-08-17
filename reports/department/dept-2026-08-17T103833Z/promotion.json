@@ -1,0 +1,169 @@
+{
+  "departmentRunId": "dept-2026-08-17T103833Z",
+  "departmentQaStatus": "BLOCKED",
+  "qaReviewStatus": "fail",
+  "globalBlockReason": "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=4, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.",
+  "promoted": [],
+  "blocked": [
+    {
+      "rank": 1,
+      "title": "Resolver la situacion de /cerraduras/ y la canibalizacion de 'cerraduras sostenibles para gimnasios' antes de invertir mas esfuerzo",
+      "rationale": "Impacto alto porque dos action items en vivo apuntan a una URL en papelera con redireccion 301, desperdiciando esfuerzo si se ejecutan tal cual; confianza alta porque el propio catalogo de clusters documenta la situacion con evidencia directa; esfuerzo bajo porque es una decision de enrutado, no de produccion de contenido nuevo.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Decision humana (Pau) sobre destino unico de la keyword"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-opportunity-5",
+        "dept-seo-opportunity-6"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=4, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 2,
+      "title": "Ejecutar el quick win ya aprobado en cerraduras-inteligentes-taquillas (SEO + CRO + enlazado interno)",
+      "rationale": "Impacto alto porque es la pagina con mas acciones de alta prioridad ya aprobadas en el backlog (SEO, CRO, enlazado interno); confianza alta porque combina datos reales de Search Console con acciones ya en estado 'approved'; esfuerzo medio porque implica trabajo de contenido y enlazado, no solo un ajuste de metadatos.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Ninguna aprobacion adicional: las acciones relevantes ya estan en estado approved"
+      ],
+      "evidenceRefs": [
+        "dept-seo-opportunity-1",
+        "actions-top",
+        "dept-seo-action-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=4, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Realinear el enrutado de la keyword generica 'melamina' y reforzar /taquillas-melamina/ con la estructura de content-strategist",
+      "rationale": "Impacto medio: corrige un enrutado ya decidido (O29.1) pero no propagado al backlog vivo, y aprovecha que content-strategist ya entrego estructura, CTA y enlazado listos para esa misma pagina en esta pasada; confianza alta porque dos fuentes independientes (seo-specialist y content-strategist) coinciden en la misma pagina; esfuerzo bajo-medio porque es mayormente realineo de backlog mas aplicar una estructura ya definida.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Realineo de action items segun decision O29.1",
+        "Revision humana de la propuesta de content-strategist"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-4",
+        "dept-seo-opportunity-8",
+        "dept-content-summary",
+        "dept-content-structure"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=4, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "Resolver la deuda de medicion en Analytics antes de tomar mas decisiones apoyadas en GA4/GTM",
+      "rationale": "Impacto alto porque la version live de GTM se autodescribe como pendiente de aprobacion, lo que pone en duda la fiabilidad de todo el analisis de tracking, y porque click_phone (evento clave de contacto) no se disparo ni una vez en cuatro semanas; confianza alta porque son hechos directos de GA4/GTM de esta misma pasada; esfuerzo bajo-medio porque son validaciones puntuales, no una reconstruccion del tracking.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Confirmacion de Pau sobre el estado real de publicacion de la version de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=4, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 5,
+      "title": "No republicar aun los 4 content gaps de staging: planificar segunda iteracion visual/de contenido antes de reintentar la aprobacion",
+      "rationale": "Impacto medio porque desbloquearia 4 huecos de contenido ya identificados por seo-specialist, pero confianza baja para publicar 'tal cual' porque esta misma propuesta ya fue rechazada explicitamente por una persona el 2026-08-16 citando falta de imagenes/calidad visual, y visual-asset-planner confirma en esta pasada que 'n8n NO se ha ejecutado' para generar assets visuales -- es decir, la causa raiz del rechazo previo sigue sin resolverse. Esfuerzo medio porque implica trabajo visual y de contenido adicional, no solo republicar.",
+      "impact": "medium",
+      "confidence": "low",
+      "effort": "medium",
+      "dependsOn": [
+        "Resolver el bloqueo de visual-asset-planner (n8n no ejecutado)",
+        "Nueva revision humana de calidad visual/de contenido antes de reintentar publicacion"
+      ],
+      "evidenceRefs": [
+        "dept-seo-opportunity-7",
+        "dept-seo-action-5",
+        "human-decision-staging-quality-2026-08-16",
+        "dept-content-risks"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=4, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "Revisar sin demora la solicitud de aprobacion pendiente de riesgo critico",
+      "rationale": "Impacto alto porque es la unica aprobacion pendiente del departamento y esta clasificada como riesgo critico (plan de despliegue a produccion de taquillas melamina); confianza alta porque el dato viene directo del resumen de aprobaciones pendientes; esfuerzo bajo porque es una revision, no una ejecucion.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Revision humana directa de la solicitud"
+      ],
+      "evidenceRefs": [
+        "approvals-pending"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=4, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 7,
+      "title": "Investigar el cuello de botella del cluster gate en change packs",
+      "rationale": "Impacto medio porque solo 5 de 77 change packs estan listos pese a 113 work orders listas para revisar, lo que limita cuanto de lo priorizado por SEO y contenido llega a ser accionable a corto plazo; confianza media porque se basa en los conteos agregados del propio departamento, sin detalle de la logica interna del cluster gate; esfuerzo medio porque requiere revisar la logica de bloqueo, no solo el backlog.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Revision tecnica del cluster gate (posiblemente por web-engineer, sin datos en esta pasada)"
+      ],
+      "evidenceRefs": [
+        "workorders-ready",
+        "changepacks-ready",
+        "agent-activity"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=4, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    }
+  ],
+  "unattributedBlockingSignals": [],
+  "qaSummary": {
+    "criticalFindings": 4,
+    "warningFindings": 3,
+    "safetyConcerns": 1,
+    "contradictions": 2,
+    "unsupportedClaims": 7,
+    "requiredCorrections": 5
+  }
+}

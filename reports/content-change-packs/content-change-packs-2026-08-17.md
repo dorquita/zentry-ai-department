@@ -1,7 +1,7 @@
 # Content Change Packs — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T074357Z`
-- **Generado:** 2026-08-17T07:45:28.842Z
+- **departmentRunId:** `dept-2026-08-17T103833Z`
+- **Generado:** 2026-08-17T10:40:10.641Z
 
 ## Resumen ejecutivo
 

@@ -1,7 +1,7 @@
 # Informe SEO Watcher — 2026-08-17
 
-- **runId:** `seo-watcher-2026-08-17T074406Z`
-- **Generado:** 2026-08-17T07:44:07.486Z
+- **runId:** `seo-watcher-2026-08-17T103842Z`
+- **Generado:** 2026-08-17T10:38:43.587Z
 - **Fuente de datos:** `search_console`
 - **Sitio:** `sc-domain:zentrylockers.com`
 - **Rango analizado:** 2026-07-19 a 2026-08-16

@@ -1,7 +1,7 @@
 # Approval Gateway — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T074357Z`
-- **Generado:** 2026-08-17T07:45:38.177Z
+- **departmentRunId:** `dept-2026-08-17T103833Z`
+- **Generado:** 2026-08-17T10:40:18.715Z
 - **Telegram activo (TELEGRAM_APPROVALS_ENABLED):** no
 - **Telegram configurado (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID presentes):** no
 

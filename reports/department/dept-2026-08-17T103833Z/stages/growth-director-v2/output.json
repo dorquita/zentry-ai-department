@@ -1,0 +1,379 @@
+{
+  "growthSummary": "Esta pasada coordinada aporta datos reales y ejecutados de seo-specialist, content-strategist y analytics-specialist sobre el mismo negocio (Zentry Lockers), mas los resumenes deterministas del backlog (105 acciones vivas, 114 work orders, 77 change packs, 1 aprobacion critica pendiente). El foco cross-channel mas claro es la pagina/cluster de 'cerraduras inteligentes para taquillas': tiene multiples acciones ya aprobadas en el backlog (SEO, CRO, enlazado interno) y es el quick win de mayor prioridad segun seo-specialist. En paralelo hay dos problemas de gobernanza de contenido que llevan tiempo sin resolverse del todo (la pagina /cerraduras/ en papelera que sigue recibiendo recomendaciones, y el enrutado de la keyword generica 'melamina' que deberia ir a /taquillas-melamina/ y no a /taquillas-melamina-fenolico/): este segundo punto conecta directamente con la propuesta de content-strategist de reforzar precisamente /taquillas-melamina/, lo que da una sinergia SEO+contenido clara. Analytics aporta una senal de riesgo transversal: la version live de GTM se llama explicitamente 'sin publicar, pendiente aprobacion Pau', lo que pone en duda la fiabilidad de cualquier decision basada en el tracking actual (incluido el evento clave click_phone, que no se disparo nunca en el periodo). Por ultimo, existe una contradiccion relevante entre lo que propone seo-specialist (publicar ya a produccion los 4 content gaps aprobados en staging) y una decision humana anterior que RECHAZO exactamente esa misma propuesta el 2026-08-16 por falta de imagenes/calidad visual; el agente visual-asset-planner de esta pasada confirma ademas que 'n8n NO se ha ejecutado' para generar assets visuales, lo que explica en parte por que ese requisito humano sigue sin resolverse. sem-specialist esta fuera de esta fase, por lo que no hay ninguna lectura cualitativa de SEM mas alla de que sem-watcher V1 esta conectado y genero 70 candidatas sin analizar.",
+  "currentSignals": [
+    {
+      "channel": "seo",
+      "description": "105 acciones vivas en el backlog SEO/CRO/contenido (8 de prioridad alta, 97 de prioridad media); el top de acciones abiertas esta dominado por la pagina https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (SEO, CRO y enlazado interno, todas ya en estado approved o auto_approved_for_planning).",
+      "evidenceRefs": [
+        "actions-live",
+        "actions-top"
+      ]
+    },
+    {
+      "channel": "seo",
+      "description": "seo-specialist confirma con datos reales de Search Console (run seo-watcher-2026-08-17T103842Z) que 'cerraduras inteligentes para taquillas' esta en posicion 20.5 con 47 impresiones, el quick win de mayor prioridad de esta pasada.",
+      "evidenceRefs": [
+        "dept-seo-opportunity-1"
+      ]
+    },
+    {
+      "channel": "content",
+      "description": "57 de los 114 work orders del departamento son de contenido, y content-strategist entrega en esta pasada una propuesta detallada (estructura, CTA, enlazado) para reforzar /taquillas-melamina/, coincidente con la oportunidad SEO de la misma pagina.",
+      "evidenceRefs": [
+        "workorders-ready",
+        "dept-content-summary",
+        "dept-content-structure"
+      ]
+    },
+    {
+      "channel": "ops",
+      "description": "De 77 change packs totales solo 5 estan listos para revisar; el resto esta mayormente bloqueado por cluster gate segun la actividad de los change-pack-builders (SEO, contenido y CRO) de esta misma pasada.",
+      "evidenceRefs": [
+        "changepacks-ready",
+        "agent-activity"
+      ]
+    },
+    {
+      "channel": "analytics",
+      "description": "GA4 y GTM estan conectados en vivo; 6 de 7 eventos clave se dispararon en el periodo, pero click_phone registro 0 disparos pese a tener tag y trigger activos, y la version live de GTM se describe a si misma como 'sin publicar, pendiente aprobacion Pau'.",
+      "evidenceRefs": [
+        "dept-analytics-summary",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-2"
+      ]
+    },
+    {
+      "channel": "ops",
+      "description": "Hay 1 solicitud de aprobacion pendiente y esta clasificada como riesgo critico (plan de despliegue a produccion de la pagina de taquillas melamina).",
+      "evidenceRefs": [
+        "approvals-pending"
+      ]
+    },
+    {
+      "channel": "sem",
+      "description": "sem-watcher V1 (deterministico) esta conectado y genero 70 candidatas SEM y 2 work orders de categoria SEM en esta pasada, pero no hay ninguna lectura cualitativa de sem-specialist: su ausencia no debe interpretarse como que SEM va bien ni mal.",
+      "evidenceRefs": [
+        "dept-sem-unavailable",
+        "workorders-ready"
+      ]
+    }
+  ],
+  "bottlenecks": [
+    {
+      "channel": "ops",
+      "description": "El pipeline de contenido/SEO/CRO tiene 114 work orders (113 listas para revisar) pero solo 5 change packs listos de 77 totales -- el cluster gate esta reteniendo la mayoria del trabajo antes de que llegue a un change pack accionable, lo que limita cuanto de lo priorizado por SEO/contenido puede materializarse a corto plazo.",
+      "evidenceRefs": [
+        "workorders-ready",
+        "changepacks-ready",
+        "agent-activity"
+      ]
+    },
+    {
+      "channel": "seo",
+      "description": "Dos action items en vivo siguen apuntando a https://zentrylockers.com/cerraduras/, una URL que el propio catalogo de clusters marca en papelera con redireccion 301 desde una decision anterior (O22) -- ejecutar esas acciones tal cual desperdicia esfuerzo.",
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-opportunity-6"
+      ]
+    },
+    {
+      "channel": "content",
+      "description": "La keyword generica 'melamina' sigue enrutando trafico y action items del backlog hacia /taquillas-melamina-fenolico/ en vez de /taquillas-melamina/, pese a que una decision anterior (O29.1) ya resolvio ese enrutado -- la resolucion documentada no se ha propagado al backlog vivo.",
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-8"
+      ]
+    },
+    {
+      "channel": "content",
+      "description": "CONTRADICCION detectada: seo-specialist propone (accion #5 de su ranking) publicar a produccion los 4 content gaps ya aprobados en staging (universidades, metalicas, vestuarios, taquillas inteligentes general). Sin embargo, esta misma propuesta ya fue planteada y RECHAZADA por una persona el 2026-08-16, con el motivo textual de que 'las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias' y necesitan una segunda iteracion antes de publicarse. seo-specialist no tenia visibilidad de esa decision. content-strategist si la menciona como riesgo en su propia salida.",
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "dept-seo-opportunity-7",
+        "human-decision-staging-quality-2026-08-16",
+        "dept-content-risks"
+      ]
+    },
+    {
+      "channel": "analytics",
+      "description": "La version live del contenedor GTM se autodescribe como 'sin publicar, pendiente aprobacion Pau', lo que introduce duda sobre si la configuracion de tags/triggers analizada por analytics-specialist es realmente la que esta sirviendo al sitio en produccion.",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-2",
+        "dept-analytics-action-2"
+      ]
+    }
+  ],
+  "opportunities": [
+    {
+      "channel": "seo",
+      "description": "Quick win de alta prioridad ya con multiples acciones aprobadas en el backlog: reforzar H1/H2, contenido, enlazado interno y meta title/description de 'cerraduras inteligentes para taquillas' para pasar de posicion 20.5 a top 10.",
+      "evidenceRefs": [
+        "dept-seo-opportunity-1",
+        "actions-top"
+      ]
+    },
+    {
+      "channel": "content",
+      "description": "Sinergia directa entre SEO y contenido en /taquillas-melamina/: seo-specialist pide reforzar on-page (CTR 0% pese a 74 impresiones) y content-strategist entrega ya una estructura completa (H1, 6 secciones, CTA, enlazado interno) para esa misma pagina.",
+      "evidenceRefs": [
+        "dept-seo-opportunity-4",
+        "dept-content-summary",
+        "dept-content-structure",
+        "dept-content-cta"
+      ]
+    },
+    {
+      "channel": "seo",
+      "description": "Multiples paginas con impresiones reales y CTR 0% (colegios, melamina, fenolicas) representan un patron sistemico de bajo coste de correccion (reescritura de meta title/description).",
+      "evidenceRefs": [
+        "dept-seo-action-4"
+      ]
+    },
+    {
+      "channel": "analytics",
+      "description": "El canal Direct concentra 172 de 183 sesiones y 81 de 86 conversiones reportadas -- una vez resueltas las dudas de medicion, hay margen para entender mejor que esta impulsando ese canal antes de invertir en adquisicion adicional.",
+      "evidenceRefs": [
+        "dept-analytics-summary"
+      ]
+    },
+    {
+      "channel": "cro",
+      "description": "Ya existen 11 work orders de categoria CRO y varias acciones CRO aprobadas concentradas en la misma pagina de mayor prioridad SEO (cerraduras-inteligentes-taquillas), lo que permite abordar SEO y CRO de forma coordinada sobre una unica pagina.",
+      "evidenceRefs": [
+        "workorders-ready",
+        "actions-top"
+      ]
+    }
+  ],
+  "experiments": [
+    {
+      "title": "Quick win on-page en cerraduras-inteligentes-taquillas",
+      "hypothesis": "Reforzar H1/H2, ampliar contenido, mejorar enlazado interno y actualizar meta title/description hara subir la keyword 'cerraduras inteligentes para taquillas' de posicion 20.5 a top 10 en las siguientes lecturas de Search Console.",
+      "channel": "seo",
+      "successMetric": "Posicion media de la keyword 'cerraduras inteligentes para taquillas' en Search Console y CTR de la pagina.",
+      "evidenceRefs": [
+        "dept-seo-opportunity-1",
+        "actions-top"
+      ]
+    },
+    {
+      "title": "Reescritura de meta titles/descriptions en paginas con CTR 0%",
+      "hypothesis": "Reescribir title/meta de paginas con impresiones reales pero CTR 0.00% (colegios, melamina, fenolicas) elevara su CTR por encima de 0% sin requerir cambios de contenido profundos.",
+      "channel": "seo",
+      "successMetric": "CTR en Search Console de las paginas afectadas tras la reescritura.",
+      "evidenceRefs": [
+        "dept-seo-action-4"
+      ]
+    },
+    {
+      "title": "Validacion manual del disparo de click_phone",
+      "hypothesis": "Si se prueba manualmente un clic real en el enlace/boton de telefono, el tag/trigger de GTM 'click_phone' se disparara correctamente, indicando que el evento clave solo carecia de trafico real y no de un fallo de configuracion.",
+      "channel": "analytics",
+      "successMetric": "Occurrences de click_phone > 0 en GA4 tras la prueba manual y en el siguiente periodo de medicion.",
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-tracking-issue-1"
+      ]
+    }
+  ],
+  "recommendedPriorities": [
+    {
+      "title": "Resolver la situacion de /cerraduras/ y la canibalizacion de 'cerraduras sostenibles para gimnasios' antes de invertir mas esfuerzo",
+      "rationale": "Impacto alto porque dos action items en vivo apuntan a una URL en papelera con redireccion 301, desperdiciando esfuerzo si se ejecutan tal cual; confianza alta porque el propio catalogo de clusters documenta la situacion con evidencia directa; esfuerzo bajo porque es una decision de enrutado, no de produccion de contenido nuevo.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Decision humana (Pau) sobre destino unico de la keyword"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-opportunity-5",
+        "dept-seo-opportunity-6"
+      ]
+    },
+    {
+      "title": "Ejecutar el quick win ya aprobado en cerraduras-inteligentes-taquillas (SEO + CRO + enlazado interno)",
+      "rationale": "Impacto alto porque es la pagina con mas acciones de alta prioridad ya aprobadas en el backlog (SEO, CRO, enlazado interno); confianza alta porque combina datos reales de Search Console con acciones ya en estado 'approved'; esfuerzo medio porque implica trabajo de contenido y enlazado, no solo un ajuste de metadatos.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Ninguna aprobacion adicional: las acciones relevantes ya estan en estado approved"
+      ],
+      "evidenceRefs": [
+        "dept-seo-opportunity-1",
+        "actions-top",
+        "dept-seo-action-2"
+      ]
+    },
+    {
+      "title": "Realinear el enrutado de la keyword generica 'melamina' y reforzar /taquillas-melamina/ con la estructura de content-strategist",
+      "rationale": "Impacto medio: corrige un enrutado ya decidido (O29.1) pero no propagado al backlog vivo, y aprovecha que content-strategist ya entrego estructura, CTA y enlazado listos para esa misma pagina en esta pasada; confianza alta porque dos fuentes independientes (seo-specialist y content-strategist) coinciden en la misma pagina; esfuerzo bajo-medio porque es mayormente realineo de backlog mas aplicar una estructura ya definida.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Realineo de action items segun decision O29.1",
+        "Revision humana de la propuesta de content-strategist"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-4",
+        "dept-seo-opportunity-8",
+        "dept-content-summary",
+        "dept-content-structure"
+      ]
+    },
+    {
+      "title": "Resolver la deuda de medicion en Analytics antes de tomar mas decisiones apoyadas en GA4/GTM",
+      "rationale": "Impacto alto porque la version live de GTM se autodescribe como pendiente de aprobacion, lo que pone en duda la fiabilidad de todo el analisis de tracking, y porque click_phone (evento clave de contacto) no se disparo ni una vez en cuatro semanas; confianza alta porque son hechos directos de GA4/GTM de esta misma pasada; esfuerzo bajo-medio porque son validaciones puntuales, no una reconstruccion del tracking.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Confirmacion de Pau sobre el estado real de publicacion de la version de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-2"
+      ]
+    },
+    {
+      "title": "No republicar aun los 4 content gaps de staging: planificar segunda iteracion visual/de contenido antes de reintentar la aprobacion",
+      "rationale": "Impacto medio porque desbloquearia 4 huecos de contenido ya identificados por seo-specialist, pero confianza baja para publicar 'tal cual' porque esta misma propuesta ya fue rechazada explicitamente por una persona el 2026-08-16 citando falta de imagenes/calidad visual, y visual-asset-planner confirma en esta pasada que 'n8n NO se ha ejecutado' para generar assets visuales -- es decir, la causa raiz del rechazo previo sigue sin resolverse. Esfuerzo medio porque implica trabajo visual y de contenido adicional, no solo republicar.",
+      "impact": "medium",
+      "confidence": "low",
+      "effort": "medium",
+      "dependsOn": [
+        "Resolver el bloqueo de visual-asset-planner (n8n no ejecutado)",
+        "Nueva revision humana de calidad visual/de contenido antes de reintentar publicacion"
+      ],
+      "evidenceRefs": [
+        "dept-seo-opportunity-7",
+        "dept-seo-action-5",
+        "human-decision-staging-quality-2026-08-16",
+        "dept-content-risks"
+      ]
+    },
+    {
+      "title": "Revisar sin demora la solicitud de aprobacion pendiente de riesgo critico",
+      "rationale": "Impacto alto porque es la unica aprobacion pendiente del departamento y esta clasificada como riesgo critico (plan de despliegue a produccion de taquillas melamina); confianza alta porque el dato viene directo del resumen de aprobaciones pendientes; esfuerzo bajo porque es una revision, no una ejecucion.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Revision humana directa de la solicitud"
+      ],
+      "evidenceRefs": [
+        "approvals-pending"
+      ]
+    },
+    {
+      "title": "Investigar el cuello de botella del cluster gate en change packs",
+      "rationale": "Impacto medio porque solo 5 de 77 change packs estan listos pese a 113 work orders listas para revisar, lo que limita cuanto de lo priorizado por SEO y contenido llega a ser accionable a corto plazo; confianza media porque se basa en los conteos agregados del propio departamento, sin detalle de la logica interna del cluster gate; esfuerzo medio porque requiere revisar la logica de bloqueo, no solo el backlog.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Revision tecnica del cluster gate (posiblemente por web-engineer, sin datos en esta pasada)"
+      ],
+      "evidenceRefs": [
+        "workorders-ready",
+        "changepacks-ready",
+        "agent-activity"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "seo-specialist",
+      "status": "available",
+      "note": "Ejecutado con exito en esta misma pasada coordinada; su salida completa se uso como base de varias prioridades."
+    },
+    {
+      "name": "content-strategist",
+      "status": "available",
+      "note": "Ejecutado con exito en esta misma pasada coordinada; su propuesta sobre /taquillas-melamina/ se cruzo con la de seo-specialist."
+    },
+    {
+      "name": "analytics-specialist",
+      "status": "available",
+      "note": "Ejecutado con exito en esta misma pasada coordinada, sobre datos live de GA4/GTM del mismo departmentRunId."
+    },
+    {
+      "name": "sem-specialist",
+      "status": "missing",
+      "note": "Status 'not_available' en specialistInputs de esta pasada: sem-specialist queda explicitamente fuera de esta fase. Aunque el fichero de definicion del agente existe en el checkout, no hay ninguna salida cualitativa suya en esta pasada -- no se ha inferido ningun dato de SEM/Google Ads."
+    },
+    {
+      "name": "qa-reviewer",
+      "status": "partial",
+      "note": "No aparece en specialistInputs de esta pasada coordinada (solo estan wireados seo-specialist, content-strategist, analytics-specialist y sem-specialist). El fichero de definicion existe pero no hay salida suya que sintetizar en esta pasada."
+    },
+    {
+      "name": "web-engineer",
+      "status": "partial",
+      "note": "No aparece en specialistInputs de esta pasada coordinada. El fichero de definicion existe pero no hay salida suya; es relevante para el cuello de botella de cluster gate y para el bloqueo de assets visuales, pero no hay datos directos de este agente en esta pasada."
+    },
+    {
+      "name": "sem-watcher (V1 deterministico)",
+      "status": "available",
+      "note": "Conectado en esta pasada (connected=true), genero 70 candidatas SEM y 2 work orders de categoria sem, pero sin analisis cualitativo (eso corresponde a sem-specialist, ausente)."
+    },
+    {
+      "name": "analytics-watcher (V1 deterministico)",
+      "status": "available",
+      "note": "GA4 y GTM conectados en esta pasada (ga4Connected=true, gtmConnected=true); es la fuente de datos sobre la que trabajo analytics-specialist."
+    }
+  ],
+  "risks": [
+    {
+      "description": "Hay 1 solicitud de aprobacion pendiente clasificada como riesgo critico (plan de despliegue a produccion de la pagina de taquillas melamina) sin resolver en esta pasada.",
+      "severity": "high",
+      "evidenceRefs": [
+        "approvals-pending"
+      ]
+    },
+    {
+      "description": "Republicar los 4 content gaps de staging sin resolver la falta de imagenes/calidad visual repetiria un rechazo humano ya registrado el 2026-08-16, y el bloqueo de generacion de assets visuales (n8n no ejecutado) sugiere que la causa raiz sigue sin resolverse.",
+      "severity": "medium",
+      "evidenceRefs": [
+        "dept-seo-opportunity-7",
+        "human-decision-staging-quality-2026-08-16"
+      ]
+    },
+    {
+      "description": "Continuar trabajando acciones sobre https://zentrylockers.com/cerraduras/ (pagina en papelera con 301) desperdiciaria esfuerzo de SEO/contenido si no se corrige primero el enrutado.",
+      "severity": "medium",
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-opportunity-6"
+      ]
+    },
+    {
+      "description": "Las decisiones basadas en la configuracion actual de GTM podrian estar apoyadas en una version que el propio contenedor describe como no publicada ('pendiente aprobacion Pau'), lo que reduce la fiabilidad de cualquier conclusion de tracking hasta confirmarlo.",
+      "severity": "medium",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-2",
+        "dept-analytics-action-2"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "ref": "human-decision-staging-quality-2026-08-16",
+      "description": "Decision humana registrada en el prompt de esta pasada (seccion 3): propuesta 'Publicar en produccion las paginas nuevas ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general)' fue RECHAZADA el 2026-08-16T09:32:20.630Z con el motivo textual 'Las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias. Necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion.'"
+    }
+  ],
+  "unknowns": [
+    "No hay confirmacion de si el script de resolucion de canibalizacion de melamina (decision O29.1) ya se ejecuto sobre los jobs concretos de esta pasada o si son entradas nuevas aun no barridas (declarado por seo-specialist).",
+    "No hay ninguna lectura de sem-specialist en esta pasada: no se puede evaluar el estado de SEM/Google Ads mas alla de que sem-watcher V1 esta conectado y genero 70 candidatas sin analizar.",
+    "No hay confirmacion de si la version live de GTM ('O44 - Eventos CTA nuevos, sin publicar, pendiente aprobacion Pau') esta realmente publicada o sigue pendiente, lo que afecta la fiabilidad de todo el analisis de tracking de esta pasada.",
+    "No hay evidencia en esta pasada de que se haya realizado la segunda iteracion visual/de contenido que la decision humana del 2026-08-16 exigio para las 4 paginas de staging; visual-asset-planner reporta que n8n no se ha ejecutado, pero no se puede confirmar si esto explica completamente el bloqueo.",
+    "No hay salida de qa-reviewer ni de web-engineer en esta pasada coordinada, por lo que no se puede evaluar su estado ni cruzar sus hallazgos con los de SEO/contenido/analytics.",
+    "No se dispone de cifras de clics/conversion post-clic mas alla del CTR 0.00% reportado por seo-specialist, ni de un periodo de comparacion historico en los datos de analytics-specialist."
+  ]
+}

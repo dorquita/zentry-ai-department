@@ -1,0 +1,144 @@
+{
+  "changePackId": "d4a5d3ac-7ba1-4909-be69-8838d288aa8d",
+  "generatedAt": "2026-08-17T10:45:23.741Z",
+  "input": {
+    "changePackId": "d4a5d3ac-7ba1-4909-be69-8838d288aa8d",
+    "workOrderId": "d6118ff3-66bc-4c44-8f54-dfd06a0335be",
+    "keyword": "taquillas melamina",
+    "page": "https://zentrylockers.com/taquillas-melamina/",
+    "changeType": "content_update",
+    "priority": "medium",
+    "status": "approved_to_execute",
+    "targetBrand": "zentry",
+    "brandIntent": "zentry_locker_core",
+    "contentTypeHint": "Mejora de title/meta",
+    "recommendedTitleHint": "Taquillas Melamina",
+    "primaryKeyword": "taquillas melamina",
+    "secondaryKeywords": [
+      "taquillas de melamina",
+      "taquillas colegios",
+      "taquillas escolares",
+      "taquillas fenólicas en palencia",
+      "comprar taquillas"
+    ],
+    "proposedStructureHint": [
+      "H2: ¿Que es taquillas melamina?",
+      "H2: Tipos y materiales disponibles",
+      "H3: Metalica vs fenolica vs melamina",
+      "H2: Como elegir la medida correcta",
+      "H2: Precios y presupuesto",
+      "H2: Preguntas frecuentes sobre taquillas melamina"
+    ],
+    "intentHint": "Zentry principal — mobiliario/taquillas/lockers",
+    "brandRationale": "Menciona mobiliario/taquillas sin mencionar cerraduras: intencion principal de compra de mueble, corresponde a Zentry. Material/categoria detectado: melamina.",
+    "recommendedCtaHint": "CTA: \"Solicitar presupuesto sin compromiso\"",
+    "internalLinkHints": [
+      "Enlazar hacia la landing/categoria principal relacionada"
+    ],
+    "clusterNote": "Posible cluster SEO con: taquillas de melamina, taquillas colegios, taquillas escolares, taquillas fenólicas en palencia, comprar taquillas. Considerar enlazado interno entre estas paginas.",
+    "currentAssumptions": [
+      "Se asume que \"taquillas melamina\" sigue siendo relevante para zentry.",
+      "Se asume que el brief sigue vigente (no ha cambiado la estrategia de contenido desde que se genero la work order origen).",
+      "Se asume que la pagina https://zentrylockers.com/taquillas-melamina/ sigue existiendo en esa URL."
+    ],
+    "risks": [
+      "Posible cluster SEO con: taquillas de melamina, taquillas colegios, taquillas escolares, taquillas fenólicas en palencia, comprar taquillas. Considerar enlazado interno entre estas paginas.",
+      "Publicar contenido nuevo sin revisar el cluster SEO puede generar canibalizacion con paginas ya existentes."
+    ]
+  },
+  "result": {
+    "status": "executed",
+    "output": {
+      "contentOpportunity": {
+        "title": "Actualizar y ampliar la pagina de taquillas de melamina para captar busquedas de colegios/oficinas",
+        "summary": "La keyword \"taquillas melamina\" ya tiene pagina propia y trafico potencial en un cluster con terminos de colegios/escolares, por lo que conviene reforzar su contenido y enlazado antes de que otras paginas del cluster le resten relevancia."
+      },
+      "targetAudience": "Responsable de compras o direccion de un centro educativo (colegio/instituto) u oficina que necesita equipar o renovar taquillas en un entorno seco, buscando un material con buena relacion calidad-precio antes de pedir presupuesto.",
+      "searchIntent": "commercial",
+      "commercialIntent": "El usuario que busca \"taquillas melamina\" esta evaluando si este material encaja con su espacio (colegio, oficina, vestuario seco) antes de contactar; la pagina debe resolver esa duda y convertir esa evaluacion en una solicitud de presupuesto.",
+      "angle": "Centrar el contenido en cuando la melamina es la eleccion correcta frente a fenolica/metalica, usando como referencia los entornos de uso reales (colegios, oficinas, vestuarios secos) en vez de listar caracteristicas de producto de forma generica.",
+      "contentType": "landing_block",
+      "targetBrand": "zentry",
+      "recommendedStructure": {
+        "h1": "Taquillas de melamina: la opcion equilibrada para colegios y oficinas",
+        "sections": [
+          {
+            "heading": "Que son las taquillas de melamina",
+            "level": "H2",
+            "purpose": "Explicar el material (acabado tipo madera, buena relacion calidad-precio, resistencia media a la humedad) y en que espacios encaja mejor, segun el catalogo confirmado."
+          },
+          {
+            "heading": "Tipos y materiales disponibles",
+            "level": "H2",
+            "purpose": "Presentar melamina, fenolica y metalica en bloques/cards diferenciados, mostrando para que entorno sirve cada uno sin mezclar los tres en texto corrido."
+          },
+          {
+            "heading": "Metalica vs fenolica vs melamina",
+            "level": "H3",
+            "purpose": "Tabla comparativa (exigida por la guia de marca cuando se comparan opciones) que ayude a decidir segun humedad, impacto y presupuesto del espacio del comprador."
+          },
+          {
+            "heading": "Como elegir la medida correcta",
+            "level": "H2",
+            "purpose": "Guiar con preguntas practicas (numero de usuarios, espacio disponible, tipo de cierre) sin inventar medidas o modelos concretos que no esten en el contexto."
+          },
+          {
+            "heading": "Solicita tu presupuesto personalizado",
+            "level": "H2",
+            "purpose": "Cerrar la decision de compra remitiendo a presupuesto a medida, sin afirmar precios ni plazos que no vienen dados."
+          },
+          {
+            "heading": "Preguntas frecuentes sobre taquillas de melamina",
+            "level": "H2",
+            "purpose": "Resolver objeciones tipicas (durabilidad en entornos humedos vs secos, diferencia con fenolica) sin afirmar garantia ni fabricante directo salvo que se confirme en el pedido."
+          }
+        ]
+      },
+      "ctaStrategy": {
+        "primaryCta": "Solicitar presupuesto sin compromiso",
+        "secondaryCta": "Consultar con el equipo dudas sobre medidas o personalizacion",
+        "rationale": "La intencion es comercial pero de evaluacion, no de compra inmediata: el CTA principal debe ser de bajo compromiso (presupuesto) y el secundario da salida a quien aun necesita resolver dudas tecnicas antes de pedir precio, sin prometer ninguna cifra en la propia pagina."
+      },
+      "internalLinks": [
+        {
+          "anchorIdea": "taquillas para colegios",
+          "targetDescription": "landing o categoria de taquillas escolares, keywords relacionadas: taquillas colegios, taquillas escolares",
+          "isRealLink": false
+        },
+        {
+          "anchorIdea": "taquillas fenolicas para vestuarios humedos",
+          "targetDescription": "pagina sobre taquillas fenolicas, keyword relacionada: taquillas fenolicas en palencia",
+          "isRealLink": false
+        },
+        {
+          "anchorIdea": "ver todo el catalogo de taquillas",
+          "targetDescription": "landing o categoria principal de taquillas (segun internalLinkHints: enlazar hacia la landing/categoria principal relacionada)",
+          "isRealLink": false
+        }
+      ],
+      "supportingEvidence": [
+        "currentAssumptions confirma que 'taquillas melamina' sigue siendo relevante para zentry y que la pagina https://zentrylockers.com/taquillas-melamina/ sigue existiendo en esa URL.",
+        "clusterNote senala solapamiento con taquillas de melamina, taquillas colegios, taquillas escolares, taquillas fenolicas en palencia y comprar taquillas -- justifica el enlazado interno propuesto y el enfoque diferenciador hacia colegios/oficinas.",
+        "El catalogo confirmado de zentry-brand indica que la melamina es adecuada para oficinas, colegios y vestuarios secos, lo que respalda directamente el angulo y la audiencia elegidos.",
+        "brandRationale del contexto confirma que la intencion principal es de mobiliario (Zentry), sin mencion de cerraduras."
+      ],
+      "priority": "medium",
+      "risksAndUnknowns": [
+        "Riesgo de canibalizacion SEO con otras paginas del cluster (taquillas colegios, taquillas escolares, taquillas fenolicas en palencia, comprar taquillas) si no se cuida el enlazado interno y la diferenciacion de intencion entre paginas.",
+        "No hay datos de precio, plazo de entrega ni garantia en currentAssumptions, por lo que la seccion de presupuesto no puede incluir cifras y debe remitir siempre a solicitar presupuesto.",
+        "No se dispone del contenido actual de la pagina (solo el hint de estructura previa), por lo que no se puede confirmar cuanto de esta propuesta ya existe o cuanto es realmente nuevo.",
+        "Una decision humana anterior rechazo publicar paginas nuevas de staging por verse 'demasiado basicas y sin suficientes imagenes/fotografias'; aunque esa decision fue sobre otras paginas (universidades, metalicas, vestuarios, taquillas inteligentes), es una senal de que el liston de calidad visual/de contenido puede aplicar tambien a esta actualizacion antes de publicar."
+      ],
+      "reasoningNotes": [
+        "Cambie el contentType de 'Mejora de title/meta' (hint) a 'landing_block' porque proposedStructureHint describe una estructura de contenido completa (que es, tipos de material, comparativa, como elegir medida, FAQ) que va mas alla de un simple ajuste de title/meta -- corresponde mejor a una revision de bloques de contenido de la landing existente.",
+        "Renombre la seccion 'Precios y presupuesto' a 'Solicita tu presupuesto personalizado' para evitar que el heading implique que se van a mostrar cifras de precio, ya que currentAssumptions no aporta ningun dato de precio.",
+        "Acote la audiencia a colegios/oficinas (entornos secos) en lugar de un publico generico de 'compradores de taquillas', apoyandome en que el catalogo confirmado asigna la melamina especificamente a oficinas, colegios y vestuarios secos, y en que las secondaryKeywords estan dominadas por terminos escolares.",
+        "Mantengo priority en 'medium' tal como llega del contexto: no hay señales en el contexto (volumen, urgencia comercial especifica) que justifiquen subirla o bajarla."
+      ]
+    },
+    "auditWarnings": [
+      "Afirmacion sensible no respaldada (fabricante directo / sin intermediarios): \"fabricante directo\" en \"Resolver objeciones tipicas (durabilidad en entornos humedos vs secos, diferenci...\" -- el brief de entrada no lo confirma (o lo marca como pendiente de confirmar)."
+    ]
+  },
+  "note": "Artefacto de solo lectura/propuesta. Ningun brief de este empleado se ha publicado en WordPress, Google Ads, GA4, GTM, n8n ni qdrant. La redaccion del contenido final (nunca generada por defecto por este empleado) y la decision de publicar las hace un humano por fuera de este sistema."
+}

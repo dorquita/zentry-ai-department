@@ -1,0 +1,78 @@
+# QA Reviewer -- revision de generic_json_artifact (dept-2026-08-17T103833Z-qa-input)
+
+- **Generado:** 2026-08-17T10:54:40.363Z
+- **sourceEmployee:** unknown
+- **artifactPath:** `reports/department/dept-2026-08-17T103833Z/dept-2026-08-17T103833Z-qa-input.json`
+
+**qa-reviewer no vuelve a hacer el trabajo original ni aplica correcciones -- solo evalua.**
+
+## Resultado
+
+- **reviewStatus:** `fail`
+- **overallPass:** no | **hasWarnings:** si
+- **findings:** 8 (critical: 4, warning: 3, info: 1)
+- **approvalRecommendation:** `pending` (riesgo: `high`)
+
+**Resumen:** Los tres outputs de especialistas de esta pasada (seo-specialist, content-strategist, analytics-specialist) son de buena calidad, con hallazgos bien evidenciados internamente y trazables a sus propios arrays de evidencia. El problema critico esta en la capa de sintesis de growth-director-v2: su growthSummary y varias entradas de currentSignals/bottlenecks/recommendedPriorities citan cifras operativas de backlog (105 acciones, 114 work orders, 77 change packs, 1 aprobacion pendiente critica) y una cita atribuida a 'visual-asset-planner' que no aparecen en ningun specialistOutput de este artifact ni en el propio growth.output.evidence (que solo contiene una entrada). Ademas, growth afirma datos concretos de SEM ('70 candidatas, 2 work orders') pese a la instruccion explicita de no asumir ningun dato de SEM en ausencia de sem-specialist. Estas afirmaciones sin respaldo sostienen directamente dos recomendaciones concretas -- una que declara innecesaria una aprobacion adicional antes de ejecutar trabajo de SEO/CRO, y otra que exige atencion urgente sobre una aprobacion 'critica' cuya existencia no se puede verificar dentro de este artifact -- lo que representa un riesgo real si un humano actua sobre ellas sin verificacion independiente. Se recomienda revision humana antes de promocionar las recomendaciones citadas.
+
+### Findings
+
+| Categoria | Severidad | Descripcion |
+|---|---|---|
+| unsupported_claims | critical | La prioridad de growth titulada exactamente 'Ejecutar el quick win ya aprobado en cerraduras-inteligentes-taquillas (SEO + CRO + enlazado interno)' declara en su campo dependsOn: 'Ninguna aprobacion adicional: las acciones relevantes ya estan en estado approved'. Esa afirmacion se apoya unicamente en growth.output.currentSignals[0], que habla de '105 acciones vivas... todas ya en estado approved o auto_approved_for_planning', dato que no aparece en ningun output de seo-specialist, content-strategist ni analytics-specialist incluidos en este artifact, ni en growth.output.evidence. |
+| unsupported_claims | critical | La prioridad titulada exactamente 'Revisar sin demora la solicitud de aprobacion pendiente de riesgo critico' basa todo su impact/confidence en el signal de currentSignals: 'Hay 1 solicitud de aprobacion pendiente y esta clasificada como riesgo critico (plan de despliegue a produccion de la pagina de taquillas melamina)', con evidenceRefs ['approvals-pending']. Ese ref no corresponde a ninguna entrada de growth.output.evidence (que solo contiene 'human-decision-staging-quality-2026-08-16') ni a ningun dato presente en los tres specialistOutputs de esta pasada. |
+| unsupported_claims | critical | growth.output.currentSignals incluye un signal de canal 'sem' que afirma: 'sem-watcher V1 (deterministico) esta conectado y genero 70 candidatas SEM y 2 work orders de categoria SEM en esta pasada'. Esto contradice directamente semStatus.note y las reviewInstructionsForQa, que indican explicitamente 'no hay ninguna senal de SEM/Google Ads en esta pasada: no asumas gasto, CPC, impresiones, campanas activas ni ningun otro dato de Ads'. Estas cifras concretas de SEM no aparecen en ningun specialistOutput de este artifact. |
+| fabrication_risk | critical | La prioridad titulada exactamente 'No republicar aun los 4 content gaps de staging: planificar segunda iteracion visual/de contenido antes de reintentar la aprobacion' atribuye a 'visual-asset-planner' la cita textual 'n8n NO se ha ejecutado'. El listado de stages de este artifact solo incluye seo-specialist, content-strategist, analytics-specialist y sem-specialist; no hay ningun output ni mencion de visual-asset-planner en specialistOutputs, por lo que esa cita no tiene respaldo dentro de este mismo artifact. |
+| unsupported_claims | warning | La prioridad titulada exactamente 'Investigar el cuello de botella del cluster gate en change packs' se apoya en cifras (114 work orders, 113 listas, 77 change packs, 5 listos) que no aparecen en ningun specialistOutput de este artifact ni en growth.output.evidence. |
+| missing_assumptions | warning | growth.output.dependencies aplica rigor explicito para marcar a web-engineer y qa-reviewer como ausentes de specialistInputs ('no aparece en specialistInputs de esta pasada'), pero no aplica ese mismo rigor a las cifras de backlog operativo (acciones, work orders, change packs, aprobaciones) ni a la cita de visual-asset-planner, que tampoco tienen respaldo verificable en este artifact -- un trato inconsistente de fuentes ausentes. |
+| evidence_coverage | warning | growth.output.evidence contiene una unica entrada ('human-decision-staging-quality-2026-08-16'), pero currentSignals, bottlenecks, opportunities, experiments y recommendedPriorities usan decenas de evidenceRefs adicionales (p.ej. 'actions-live', 'actions-top', 'workorders-ready', 'changepacks-ready', 'agent-activity', 'approvals-pending', 'dept-sem-unavailable') que no tienen entrada correspondiente en ningun array de evidencia de este artifact ni coinciden con los esquemas de IDs usados por los especialistas (ev1-ev24 en seo-specialist, E1-E26 en analytics-specialist). |
+| actionability | info | La deteccion de la contradiccion entre la propuesta de seo-specialist (publicar los 4 content gaps de staging, opportunity o7) y la decision humana previa del 2026-08-16 (rechazo por falta de imagenes) esta bien fundamentada -- coincide con content-strategist.risksAndUnknowns y con growth.output.evidence -- y es una recomendacion accionable y prudente independientemente del anadido no soportado sobre visual-asset-planner. |
+
+### Unsupported claims
+
+- growthSummary: '...backlog (105 acciones vivas, 114 work orders, 77 change packs, 1 aprobacion critica pendiente)' -- ninguna de estas cifras aparece en los outputs de seo-specialist, content-strategist o analytics-specialist de este artifact.
+- currentSignals (ops): '105 acciones vivas en el backlog SEO/CRO/contenido (8 de prioridad alta, 97 de prioridad media); el top de acciones abiertas esta dominado por la pagina .../cerraduras-inteligentes-taquillas/... todas ya en estado approved o auto_approved_for_planning.'
+- currentSignals (ops): 'De 77 change packs totales solo 5 estan listos para revisar; el resto esta mayormente bloqueado por cluster gate...'
+- currentSignals (sem): 'sem-watcher V1 (deterministico) esta conectado y genero 70 candidatas SEM y 2 work orders de categoria SEM en esta pasada.'
+- currentSignals (ops): 'Hay 1 solicitud de aprobacion pendiente y esta clasificada como riesgo critico (plan de despliegue a produccion de la pagina de taquillas melamina).'
+- recommendedPriorities[4].rationale: '...el agente visual-asset-planner de esta pasada confirma ademas que n8n NO se ha ejecutado para generar assets visuales.'
+- opportunities (cro): 'Ya existen 11 work orders de categoria CRO y varias acciones CRO aprobadas concentradas en la misma pagina de mayor prioridad SEO.'
+
+### Contradictions
+
+- growth.output.currentSignals afirma que 'sem-watcher V1... genero 70 candidatas SEM y 2 work orders de categoria SEM en esta pasada', contradiciendo semStatus.note y las reviewInstructionsForQa, que indican explicitamente no asumir ningun dato de SEM/Ads en ausencia de sem-specialist.
+- growth.output.dependencies marca explicitamente a web-engineer y qa-reviewer como ausentes de specialistInputs de esta pasada, pero el propio growthSummary/currentSignals/recommendedPriorities tratan como hechos verificados cifras de backlog y una cita de 'visual-asset-planner', ninguno de los cuales aparece en stages ni en specialistOutputs de este artifact.
+
+### Safety concerns
+
+- La prioridad 'Ejecutar el quick win ya aprobado en cerraduras-inteligentes-taquillas (SEO + CRO + enlazado interno)' declara dependsOn 'Ninguna aprobacion adicional: las acciones relevantes ya estan en estado approved', apoyandose en datos de estado del backlog no verificables dentro de este artifact; si un humano actua sobre esa base sin confirmar el estado real de esas acciones, podria promoverse trabajo de SEO/CRO/enlazado interno hacia produccion saltandose una revision de aprobacion efectiva.
+
+### Required corrections
+
+- Retirar o sustituir con evidenceRefs verificables dentro de este artifact (o marcar explicitamente como 'pendiente de confirmar, fuera del alcance de esta pasada') las cifras de backlog operativo citadas en growthSummary y currentSignals (acciones vivas, work orders, change packs, aprobaciones pendientes).
+- Retirar la afirmacion sobre 'sem-watcher V1... 70 candidatas SEM y 2 work orders SEM', ya que contradice explicitamente la instruccion de no asumir datos de SEM/Ads en ausencia de sem-specialist.
+- Retirar o justificar con evidencia verificable la cita atribuida a 'visual-asset-planner' sobre 'n8n NO se ha ejecutado', dado que ese agente no tiene output en este artifact.
+- Confirmar de forma independiente el estado real de aprobacion de las acciones de 'cerraduras-inteligentes-taquillas' antes de tratar el dependsOn 'Ninguna aprobacion adicional' como valido para promocion.
+- Anadir entradas a growth.output.evidence que respalden cada evidenceRef usado en currentSignals/bottlenecks/opportunities/recommendedPriorities que actualmente carece de correspondencia (actions-live, actions-top, workorders-ready, changepacks-ready, agent-activity, approvals-pending, dept-sem-unavailable).
+
+### Approval recommendation
+
+- **recommendedStatus:** `pending`
+- **riskLevel:** `high`
+- **rationale:** Los tres outputs de especialistas (seo-specialist, content-strategist, analytics-specialist) estan bien evidenciados internamente y son de buena calidad. Sin embargo, la sintesis de growth-director-v2 introduce cifras operativas concretas (backlog de acciones, work orders, change packs, aprobaciones pendientes), una cita atribuida a un agente ausente (visual-asset-planner) y un dato de SEM explicitamente prohibido en esta pasada, ninguno de los cuales tiene respaldo dentro de este artifact. Dos de esas afirmaciones sostienen directamente recomendaciones concretas (ejecutar sin aprobacion adicional; tratar una aprobacion como riesgo critico urgente), lo que exige revision humana antes de promocionar esas recomendaciones a ingenieria.
+
+### Evidence
+
+- growth.output.growthSummary: '...datos reales y ejecutados de seo-specialist, content-strategist y analytics-specialist... mas los resumenes deterministas del backlog (105 acciones vivas, 114 work orders, 77 change packs, 1 aprobacion critica pendiente).'
+- growth.output.currentSignals[0].description: '105 acciones vivas en el backlog SEO/CRO/contenido (8 de prioridad alta, 97 de prioridad media)... todas ya en estado approved o auto_approved_for_planning.'
+- growth.output.currentSignals[6].description: 'sem-watcher V1 (deterministico) esta conectado y genero 70 candidatas SEM y 2 work orders de categoria SEM en esta pasada.'
+- semStatus.note: 'No hay ninguna senal de SEM/Google Ads en esta pasada: no asumas gasto, CPC, impresiones, campanas activas ni ningun otro dato de Ads.'
+- growth.output.evidence: array con una unica entrada, ref='human-decision-staging-quality-2026-08-16'.
+- growth.output.recommendedPriorities[1].title='Ejecutar el quick win ya aprobado en cerraduras-inteligentes-taquillas (SEO + CRO + enlazado interno)', dependsOn=['Ninguna aprobacion adicional: las acciones relevantes ya estan en estado approved'].
+- growth.output.recommendedPriorities[5].title='Revisar sin demora la solicitud de aprobacion pendiente de riesgo critico', evidenceRefs=['approvals-pending'].
+- growth.output.recommendedPriorities[4].rationale: '...el agente visual-asset-planner de esta pasada confirma ademas que n8n NO se ha ejecutado para generar assets visuales.'
+- stages: solo lista seo-specialist, content-strategist, analytics-specialist (executed) y sem-specialist (not_available); no hay entrada para visual-asset-planner.
+- growth.output.dependencies incluye web-engineer con note='No aparece en specialistInputs de esta pasada coordinada... El fichero de definicion existe pero no hay salida suya', mostrando que growth SI aplica ese estandar a otros agentes pero no a los datos de backlog ni a visual-asset-planner.
+- content-strategist.output.risksAndUnknowns[3]: 'Una decision humana anterior rechazo publicar paginas nuevas de staging por verse demasiado basicas y sin suficientes imagenes/fotografias...' -- confirma que la parte central de recommendedPriorities[4] SI esta bien respaldada, aparte del anadido sobre visual-asset-planner/n8n.
+
+_Artefacto de solo lectura/revision. qa-reviewer no vuelve a hacer el trabajo original ni aplica ninguna correccion -- solo evalua el artifact ya producido. La decision de aplicar/rechazar cualquier correccion la toma un humano._

@@ -1,12 +1,12 @@
 # Approved Action Planner — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T074357Z`
-- **Generado:** 2026-08-17T07:45:27.157Z
+- **departmentRunId:** `dept-2026-08-17T103833Z`
+- **Generado:** 2026-08-17T10:40:09.895Z
 - **Acciones planificables encontradas:** 105
 
 ## Resumen ejecutivo
 
-Se encontraron **105** accion(es) planificable(s) en el Action Backlog: **6** aprobada(s) por un humano (`approved`) y **99** auto-aprobada(s) para planificacion por la politica de autonomia (`auto_approved_for_planning`, Fase O7). Se crearon **3** work order(s) nueva(s) y **102** ya tenian una work order (no se duplican). Ninguna work order ejecuta nada: son planes de ejecucion para revision humana, ni siquiera en su estado mas avanzado.
+Se encontraron **105** accion(es) planificable(s) en el Action Backlog: **6** aprobada(s) por un humano (`approved`) y **99** auto-aprobada(s) para planificacion por la politica de autonomia (`auto_approved_for_planning`, Fase O7). Se crearon **0** work order(s) nueva(s) y **105** ya tenian una work order (no se duplican). Ninguna work order ejecuta nada: son planes de ejecucion para revision humana, ni siquiera en su estado mas avanzado.
 
 ## Por categoria
 
@@ -19,13 +19,11 @@ Se encontraron **105** accion(es) planificable(s) en el Action Backlog: **6** ap
 | CRO improvement | 9 |
 | Analytics validation | 1 |
 
-## Work orders nuevas (3)
+## Work orders nuevas (0)
 
-- [medium] `7d718ce4-7efa-406d-acb6-e2fff56db479` SEO: "comprar taquillas para hospitales" (https://zentrylockers.com/taquillas-para-hospitales/) (seo, origen: auto_approved_for_planning, status: draft)
-- [medium] `e2a79e87-ecd6-493e-8f3e-ddef281063b4` Reforzar enlazado interno hacia https://zentrylockers.com/taquillas-para-hospitales/ (content, origen: auto_approved_for_planning, status: draft)
-- [medium] `46723a6d-2853-4e1f-91dc-f366f4e82722` CRO: https://zentrylockers.com/taquillas-para-hospitales/ (cro, origen: auto_approved_for_planning, status: draft)
+Ninguna.
 
-## Ya planificadas anteriormente (102)
+## Ya planificadas anteriormente (105)
 
 - [auto_prepared] `caf3c35d-8206-43db-bee9-20d418da675f` SEO: "cerraduras inteligentes para taquillas" (https://zentrylockers.com/cerraduras-inteligentes-taquillas/)
 - [auto_prepared] `34aa2d90-10ca-4b30-a64d-e171ba14fab8` SEO: "taquillas melamina" (https://zentrylockers.com/taquillas-melamina/)
@@ -129,6 +127,9 @@ Se encontraron **105** accion(es) planificable(s) en el Action Backlog: **6** ap
 - [auto_prepared] `bb862af7-773e-4ddb-ac29-101a7a4077c3` Mejorar title/meta de https://zentrylockers.com/taquillas-para-hospitales/
 - [auto_prepared] `9154978d-d226-4ee7-9fff-8d42a9093f2e` Reforzar enlazado interno hacia https://zentrylockers.com/taquillas-para-hospitales/
 - [auto_prepared] `abde7682-ec9e-437f-8d5c-3f4cfe739645` CRO: https://zentrylockers.com/taquillas-para-hospitales/
+- [auto_prepared] `7d718ce4-7efa-406d-acb6-e2fff56db479` SEO: "comprar taquillas para hospitales" (https://zentrylockers.com/taquillas-para-hospitales/)
+- [auto_prepared] `e2a79e87-ecd6-493e-8f3e-ddef281063b4` Reforzar enlazado interno hacia https://zentrylockers.com/taquillas-para-hospitales/
+- [auto_prepared] `46723a6d-2853-4e1f-91dc-f366f4e82722` CRO: https://zentrylockers.com/taquillas-para-hospitales/
 
 ## Confirmacion de seguridad
 

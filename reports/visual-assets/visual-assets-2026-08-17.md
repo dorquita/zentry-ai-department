@@ -1,7 +1,7 @@
 # Visual Asset Planner — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T074357Z`
-- **Generado:** 2026-08-17T07:45:29.482Z
+- **departmentRunId:** `dept-2026-08-17T103833Z`
+- **Generado:** 2026-08-17T10:40:11.258Z
 - **N8N_ASSET_GENERATION_WEBHOOK_URL configurada:** no
 
 ## Resumen ejecutivo

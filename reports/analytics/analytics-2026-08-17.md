@@ -1,7 +1,7 @@
 # Analytics Watcher — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T074357Z`
-- **Generado:** 2026-08-17T07:44:17.872Z
+- **departmentRunId:** `dept-2026-08-17T103833Z`
+- **Generado:** 2026-08-17T10:38:53.235Z
 - **GA4 conectado:** si
 - **GTM conectado:** si
 
@@ -13,17 +13,16 @@ GA4: lectura real completada. GTM: lectura real completada. Solo lectura en ambo
 
 | Canal | Sesiones | Usuarios activos | Conversiones |
 |---|---|---|---|
-| Direct | 170 | 69 | 81 |
+| Direct | 172 | 69 | 81 |
 | Organic Search | 6 | 6 | 3 |
 | Referral | 3 | 1 | 2 |
-| Unassigned | 3 | 2 | 0 |
 | AI Assistant | 2 | 2 | 0 |
 
 ## GA4 — Landing pages principales
 
 | Landing page | Sesiones | Conversiones | Bounce rate |
 |---|---|---|---|
-| / | 112 | 58 | 32.1% |
+| / | 114 | 58 | 31.6% |
 | /configurador-bancos | 10 | 6 | 10.0% |
 | /configurador-taquillas | 6 | 1 | 0.0% |
 | (not set) | 4 | 2 | 50.0% |
@@ -31,13 +30,13 @@ GA4: lectura real completada. GTM: lectura real completada. Solo lectura en ambo
 | /cerraduras-inteligentes-taquillas | 4 | 1 | 25.0% |
 | /cerraduras-para-taquillas | 4 | 0 | 50.0% |
 | /product/taquilla-2-puertas-modulo-1-melamina | 4 | 11 | 25.0% |
-| /taquillas-metalicas | 4 | 0 | 25.0% |
-|  | 3 | 0 | 100.0% |
 | /digitalizacion-taquillas | 3 | 0 | 66.7% |
+| /taquillas-metalicas | 3 | 0 | 0.0% |
 | /taquillas-para-colegios | 3 | 0 | 33.3% |
 | /taquillas-para-empresas | 3 | 0 | 66.7% |
 | /cookies | 2 | 0 | 50.0% |
 | /product/taquilla-1-puertas-modulo-1-melamina | 2 | 0 | 0.0% |
+| /product/taquilla-2-puertas-modulo-1-metalica | 2 | 0 | 50.0% |
 
 ## GA4 — Eventos clave (comparado contra lo esperado)
 
@@ -55,9 +54,8 @@ GA4: lectura real completada. GTM: lectura real completada. Solo lectura en ambo
 
 | Fuente | Medio | Sesiones | Conversiones |
 |---|---|---|---|
-| (direct) | (none) | 170 | 81 |
+| (direct) | (none) | 172 | 81 |
 | google | organic | 5 | 3 |
-| (not set) | (not set) | 3 | 0 |
 | tagassistant.google.com | referral | 3 | 2 |
 | chatgpt.com | ai-assistant | 2 | 0 |
 | duckduckgo | organic | 1 | 0 |
