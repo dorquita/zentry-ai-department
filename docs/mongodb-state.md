@@ -479,21 +479,46 @@ quedan donde están; no se borra nada.
 
 ### Bloqueo actual
 
-Primeros intentos reales contra Atlas, workflow `MongoDB state migration`:
+Intentos reales contra Atlas, workflow `MongoDB state migration`. Todos
+fallan en la sonda con `[mongo:auth_failure] bad auth : authentication
+failed`, y ninguno llega a escribir un solo documento:
 
-| run | resultado |
+| run | qué añadió al diagnóstico |
 | --- | --- |
-| `32013161621` | `[mongo:auth_failure] connect: bad auth : authentication failed` |
-| `32013758714` | igual, ya con la lista de causas |
-| `32013992701` | igual, y confirma la sospecha estructural |
+| `32013161621` | primer contacto: clasifica `auth_failure`, sin filtrar la URI |
+| `32013758714` | lista de causas por tipo de fallo |
+| `32013992701` | detecta que la URI **no fijaba `authSource`** |
+| `32015882947` | `authSource` ya presente (el aviso desaparece): **causa descartada** |
+| `32016224280` | radiografía de credenciales: **todo limpio**, y sigue fallando |
 
-La sonda reporta `esquema=mongodb+srv hosts=1 db=zentry_ai_department
-credenciales=si (no se muestran)`: la URI **trae la base en la ruta y no
-fija `authSource`**, que es exactamente la trampa descrita arriba.
+Lo que está **descartado** con evidencia:
 
-El SRV resuelve y se llega a la fase de autenticación, así que **la red y
-Network Access están bien**. Lo que falta es corregir la URI del secret
-`MONGODB_URI` (o el usuario de Database Access). Hasta entonces no se
-puede migrar nada, y el sistema sigue en shadow/legacy sin degradarse.
+- **Red y Network Access.** El SRV resuelve y se llega a la fase de
+  autenticación. Si la IP estuviera bloqueada, el fallo sería
+  `network_failure`, no `auth_failure`.
+- **`authSource`.** Presente desde el run `32015882947`.
+- **Forma de la cadena.** `placeholder=false caracteres_crudos=false
+  secuencias_percent=false alguna_parte_vacia=false`: no hay
+  `<db_password>` sin sustituir, ni caracteres que exijan
+  percent-encoding, ni un `%` que el driver esté decodificando de más, ni
+  usuario o contraseña vacíos.
+
+Es decir: **la URI es estructuralmente correcta y Atlas rechaza el par
+usuario/contraseña**. Lo que queda es de la consola de Atlas, no del
+código:
+
+1. El usuario de Database Access no existe **en este proyecto y cluster**
+   (es fácil crearlo en otro proyecto de la misma cuenta).
+2. La contraseña no es la que se pegó en la URI.
+3. El usuario existe pero no tiene rol sobre esta base.
+
+Lo más rápido es no adivinar: Atlas → Database Access → Edit → Edit
+Password → Autogenerate Secure Password, y reconstruir la URI con esa.
+Generar una contraseña **solo alfanumérica** elimina de raíz toda la
+familia de problemas de encoding.
+
+Hasta entonces no se puede migrar nada. El sistema sigue en shadow/legacy
+**sin degradarse**: fail-closed hizo su trabajo y no se ha escrito estado
+a medias en ningún sitio.
 
 **SOURCE OF TRUTH: LEGACY — MONGODB SHADOW MODE**
