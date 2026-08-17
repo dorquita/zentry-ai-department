@@ -112,6 +112,11 @@
     "probe:google": "ts-node scripts/probe-google-live.ts",
     "state:snapshot": "ts-node scripts/department-state.ts --mode snapshot",
     "state:verify": "ts-node scripts/department-state.ts --mode verify",
+    "state:probe-mongodb": "ts-node scripts/probe-mongodb.ts",
+    "state:migrate-mongodb": "ts-node scripts/migrate-state-to-mongodb.ts",
+    "state:snapshot-mongodb": "ts-node scripts/verify-state-mongodb.ts --mode snapshot",
+    "state:verify-mongodb": "ts-node scripts/verify-state-mongodb.ts",
+    "state:sync-mongodb": "ts-node scripts/sync-state-to-mongodb.ts",
     "staging:inventory": "ts-node scripts/read-staging-inventory.ts",
     "approvals:record-decisions": "ts-node scripts/o46-record-daily-brief-decisions.ts"
   },
@@ -119,6 +124,7 @@
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.5",
     "googleapis": "^144.0.0",
+    "mongodb": "^6.21.0",
     "nodemailer": "^9.0.3",
     "sharp": "^0.35.3"
   },

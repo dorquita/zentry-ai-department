@@ -80,6 +80,9 @@ import { runExternalDependenciesAuditTests } from "../test/external-dependencies
 import { runGoogleAdsLiveMigrationTests } from "../test/google-ads-live-migration.test";
 import { runVpsIndependenceTests } from "../test/vps-independence.test";
 import { runStatePersistenceTests } from "../test/state-persistence.test";
+import { runStateArtifactClassificationTests } from "../test/state-artifact-classification.test";
+import { runMongoPersistenceTests } from "../test/mongo-persistence.test";
+import { runMongoStateMigrationTests } from "../test/mongo-state-migration.test";
 import { runDepartmentEmployeeRunsTests } from "../test/department-employee-runs.test";
 
 interface TestCase {
@@ -168,6 +171,9 @@ async function main(): Promise<void> {
     { suiteName: "google-ads-live-migration", cases: runGoogleAdsLiveMigrationTests() },
     { suiteName: "vps-independence", cases: runVpsIndependenceTests() },
     { suiteName: "state-persistence", cases: runStatePersistenceTests() },
+    { suiteName: "state-artifact-classification", cases: runStateArtifactClassificationTests() },
+    { suiteName: "mongo-persistence", cases: runMongoPersistenceTests() },
+    { suiteName: "mongo-state-migration", cases: runMongoStateMigrationTests() },
   ];
 
   let passed = 0;

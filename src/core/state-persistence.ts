@@ -164,6 +164,67 @@ export function detectStateRegressions(before: StateManifest, after: StateManife
   return regressions;
 }
 
+// -------------------------------------------------------------------
+// Fase O56 — STATE vs ARTIFACT
+// -------------------------------------------------------------------
+//
+// `STATE_PATHS` mete `data` y `reports` en el mismo saco, y eso ha
+// resultado ser un error con consecuencias reales: un informe diario que
+// se regenera MAS CORTO (menos incidencias que ayer, por ejemplo) cuenta
+// como `bytes_lost`, el verify falla, y la pasada entera se descarta
+// ARRASTRANDO todas las lineas de estado nuevas y legitimas de `data/`.
+// Es decir: perdiamos estado de verdad por culpa de un artefacto que se
+// regenera solo.
+//
+// La separacion es conceptual, no fisica: no se borra ni se mueve nada.
+//
+//   STATE     `data/` — el estado del departamento. Perder aqui es
+//             perder trabajo irreproducible. Sigue siendo fail-closed.
+//   ARTIFACT  `reports/` — entregables regenerables: Daily Briefs,
+//             informes de salud, markdown de especialistas. Que encojan
+//             o cambien es normal y NO significa perdida de estado.
+//
+// Las funciones de arriba (`detectStateRegressions`, etc.) NO cambian de
+// comportamiento: siguen devolviendo TODAS las regresiones. Lo que se
+// añade aqui es la clasificacion, para que quien decide (el CLI) pueda
+// bloquear por lo primero y solo avisar por lo segundo.
+
+/** Prefijos cuyo contenido es estado autoritativo en fichero. */
+export const STATE_ONLY_PATHS = ["data"] as const;
+/** Prefijos cuyo contenido es entregable regenerable. */
+export const ARTIFACT_ONLY_PATHS = ["reports"] as const;
+
+export type StatePathClass = "state" | "artifact";
+
+/**
+ * Clasifica una ruta relativa. Todo lo que no sea explicitamente un
+ * artefacto se trata como estado: ante la duda, se protege.
+ */
+export function classifyStatePath(relativePath: string): StatePathClass {
+  const normalized = relativePath.split(path.sep).join("/");
+  for (const prefix of ARTIFACT_ONLY_PATHS) {
+    if (normalized === prefix || normalized.startsWith(`${prefix}/`)) return "artifact";
+  }
+  return "state";
+}
+
+export interface ClassifiedRegressions {
+  /** Perdidas de estado real. Bloquean la persistencia. */
+  state: StateRegression[];
+  /** Perdidas en entregables regenerables. Se informan, no bloquean. */
+  artifact: StateRegression[];
+}
+
+export function classifyStateRegressions(regressions: StateRegression[]): ClassifiedRegressions {
+  const state: StateRegression[] = [];
+  const artifact: StateRegression[] = [];
+  for (const regression of regressions) {
+    if (classifyStatePath(regression.path) === "artifact") artifact.push(regression);
+    else state.push(regression);
+  }
+  return { state, artifact };
+}
+
 export interface StateGrowth {
   newFiles: number;
   filesWithNewLines: number;

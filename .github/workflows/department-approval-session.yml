@@ -146,6 +146,29 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
 
+      # Fase O56 — LA DECISION HUMANA SE PERSISTE AQUI, EN ESTE JOB.
+      #
+      # Este workflow corre con `contents: read`, no restaura la rama
+      # `department-state` y no commitea nada. Hasta ahora eso significaba
+      # que `appendHumanDecision()` escribia en el disco de un runner
+      # efimero y la decision se perdia SIEMPRE: la pasada siguiente nunca
+      # llegaba a verla. Escribirla en MongoDB en el mismo job en que se
+      # toma es lo que cierra ese agujero.
+      #
+      # `always()`: si la sesion fallo a medias, las decisiones que si se
+      # llegaron a registrar tienen que persistir igual. La operacion es
+      # idempotente, asi que repetirla no duplica nada.
+      - name: Persistir las decisiones humanas en MongoDB
+        if: always()
+        run: npm run state:sync-mongodb -- --decisions-only
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+          # Sin la variable, el modo por defecto es "shadow" si hay
+          # credenciales y "legacy" si no. Poner "mongo" hace que este step
+          # falle cerrado cuando no puede persistir.
+          DEPARTMENT_PERSISTENCE_MODE: ${{ vars.DEPARTMENT_PERSISTENCE_MODE }}
+
       - name: Subir el resultado de la sesion
         if: always()
         uses: actions/upload-artifact@v4
@@ -153,7 +176,7 @@ jobs:
           name: approval-session-${{ inputs.departmentRunId }}
           path: |
             reports/department/${{ inputs.departmentRunId }}/approval-session.json
-            data/human-decisions.jsonl
+            data/department-human-decisions.jsonl
             data/execute-php-audit.jsonl
           if-no-files-found: warn
           retention-days: 90

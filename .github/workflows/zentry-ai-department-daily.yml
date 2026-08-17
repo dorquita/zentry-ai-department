@@ -90,6 +90,12 @@ jobs:
     # corria en el VPS (hasta 30 min propios). 120 min es el backstop del
     # JOB completo.
     timeout-minutes: 120
+    # Fase O56: el contexto `secrets` no esta disponible en el `if` de un
+    # step, asi que la presencia de la credencial se materializa aqui como
+    # un flag de entorno. El VALOR del secreto no entra en este env: solo
+    # el booleano "esta puesto o no".
+    env:
+      MONGODB_CONFIGURED: ${{ secrets.MONGODB_URI != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -137,6 +143,30 @@ jobs:
 
       - name: "[STATE] Manifiesto ANTES de la pasada"
         run: npm run state:snapshot -- --out "$RUNNER_TEMP/state-before.json"
+
+      # =====================================================================
+      # Fase O56 -- MongoDB. Sonda y foto del estado autoritativo ANTES.
+      #
+      # La sonda es fail-closed cuando hay credenciales: si estan puestas
+      # pero el cluster no responde, mejor saberlo aqui que descubrirlo al
+      # final, con la pasada ya hecha y sin sitio donde persistirla.
+      # Mientras no haya `MONGODB_URI` el modo es "legacy" y los dos steps
+      # se saltan solos, sin romper nada.
+      # =====================================================================
+      - name: "[MONGO] Sonda de MongoDB"
+        id: mongo_probe
+        if: ${{ env.MONGODB_CONFIGURED == 'true' }}
+        run: npm run state:probe-mongodb -- --write-check
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      - name: "[MONGO] Foto del estado autoritativo ANTES de la pasada"
+        if: ${{ env.MONGODB_CONFIGURED == 'true' }}
+        run: npm run state:snapshot-mongodb -- --out "$RUNNER_TEMP/mongo-state-before.json"
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
 
       # =====================================================================
       # FASE 0 -- Abrir la pasada: un unico departmentRunId para todo el run
@@ -987,6 +1017,52 @@ jobs:
       # que perder lineas no es un caso raro a tolerar: es imposible en
       # una pasada sana, y por tanto un fallo real.
       # =====================================================================
+      # =====================================================================
+      # Fase O56 -- MongoDB. Escritura de la pasada y guard de invariantes.
+      #
+      # ORDEN DELIBERADO: primero se ESCRIBE en MongoDB y despues se
+      # verifica, y las dos cosas van ANTES del guard legacy. Motivo: el
+      # guard legacy tira la pasada entera si un `.md` de `reports/` ha
+      # encogido, y no queremos que un artefacto regenerable impida que el
+      # estado autoritativo llegue a la fuente de verdad.
+      #
+      # En modo shadow un fallo de MongoDB no tumba la pasada (la fuente de
+      # verdad sigue siendo el fichero). En modo mongo, si.
+      # =====================================================================
+      - name: "[MONGO] Escribir el estado de la pasada en MongoDB"
+        id: mongo_sync
+        if: ${{ always() && env.MONGODB_CONFIGURED == 'true' }}
+        run: |
+          set -o pipefail
+          npm run state:sync-mongodb -- \
+            --departmentRunId "$DEPARTMENT_RUN_ID" \
+            --status "$RUN_STATUS" 2>&1 | tee mongo-sync.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUN_STATUS: ${{ job.status == 'success' && 'succeeded' || 'failed' }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+          DEPARTMENT_PERSISTENCE_MODE: ${{ vars.DEPARTMENT_PERSISTENCE_MODE }}
+
+      - name: "[MONGO] Verificar invariantes del estado autoritativo"
+        id: verify_mongo_state
+        if: ${{ always() && env.MONGODB_CONFIGURED == 'true' }}
+        run: |
+          set -o pipefail
+          npm run state:verify-mongodb -- \
+            --before "$RUNNER_TEMP/mongo-state-before.json" \
+            --departmentRunId "$DEPARTMENT_RUN_ID" \
+            --require-finished 2>&1 | tee mongo-state-verify.log
+          {
+            echo ""
+            sed -n '/^## Verificacion del estado autoritativo/,/^MONGO_STATE_VERIFY_JSON=/p' mongo-state-verify.log \
+              | grep -v '^MONGO_STATE_VERIFY_JSON='
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
       - name: "[STATE] Verificar que la pasada no ha perdido estado"
         id: verify_state
         if: always()

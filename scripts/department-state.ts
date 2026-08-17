@@ -21,6 +21,7 @@ import * as path from "path";
 import {
   StateManifest,
   captureStateManifest,
+  classifyStateRegressions,
   detectStateRegressions,
   renderStateVerification,
 } from "../src/core/state-persistence";
@@ -72,14 +73,38 @@ function main(): void {
     const before = JSON.parse(fs.readFileSync(path.resolve(beforePath), "utf-8")) as StateManifest;
     const after = captureStateManifest(PROJECT_ROOT, new Date().toISOString());
     const regressions = detectStateRegressions(before, after);
+    const classified = classifyStateRegressions(regressions);
 
     console.log(renderStateVerification(before, after, regressions));
     console.log("");
-    console.log(`STATE_VERIFY_JSON=${JSON.stringify({ regressions: regressions.length, ok: regressions.length === 0 })}`);
 
-    if (regressions.length > 0) {
+    // Fase O56 — solo `data/` bloquea. Un informe de `reports/` que se
+    // regenera mas corto es normal (menos incidencias que ayer) y hasta
+    // ahora tiraba TODO el estado nuevo de la pasada con el. Se sigue
+    // informando, pero no decide.
+    if (classified.artifact.length > 0) {
+      console.log(
+        `Aviso: ${classified.artifact.length} fichero(s) de \`reports/\` han encogido. Son entregables ` +
+          `regenerables, no estado: NO bloquean la persistencia.`
+      );
+      for (const regression of classified.artifact) {
+        console.log(`  - ${regression.path} (${regression.kind}): ${regression.detail}`);
+      }
+      console.log("");
+    }
+
+    console.log(
+      `STATE_VERIFY_JSON=${JSON.stringify({
+        regressions: regressions.length,
+        stateRegressions: classified.state.length,
+        artifactRegressions: classified.artifact.length,
+        ok: classified.state.length === 0,
+      })}`
+    );
+
+    if (classified.state.length > 0) {
       console.error(
-        `Se han detectado ${regressions.length} regresion(es) en el estado. NO se persiste nada: la rama de estado conserva el ultimo estado bueno.`
+        `Se han detectado ${classified.state.length} regresion(es) en el ESTADO (\`data/\`). NO se persiste nada: la rama de estado conserva el ultimo estado bueno.`
       );
       process.exit(1);
     }
