@@ -75,6 +75,24 @@ export interface QaApprovalRecommendation {
   rationale: string;
 }
 
+/**
+ * Correccion estructurada tal y como la declara qa-reviewer. Es la forma
+ * accionable de `requiredCorrections`: lo que permite reinvocar al
+ * empleado responsable con un encargo concreto en vez de con una frase.
+ *
+ * OPCIONAL en el contrato (ver el schema): una revision que solo traiga
+ * el texto plano sigue siendo valida, y el bucle de correccion la
+ * degrada con su motivo en vez de rechazarla.
+ */
+export interface QaCorrectionRequestOutput {
+  field: string;
+  problem: string;
+  expectedCriterion: string;
+  evidence: string[];
+  targetRecommendationId: string;
+  blocking: boolean;
+}
+
 export interface QaReviewerOutput {
   reviewStatus: QaReviewStatus;
   reviewedArtifact: QaReviewedArtifactRef;
@@ -83,6 +101,7 @@ export interface QaReviewerOutput {
   contradictions: string[];
   safetyConcerns: string[];
   requiredCorrections: string[];
+  correctionRequests?: QaCorrectionRequestOutput[];
   approvalRecommendation: QaApprovalRecommendation;
   evidence: string[];
   summary: string;
@@ -124,6 +143,19 @@ function isFinding(v: unknown): v is QaFinding {
     isString(o.severity) &&
     (FINDING_SEVERITIES as string[]).includes(o.severity) &&
     isString(o.description)
+  );
+}
+
+function isCorrectionRequest(v: unknown): v is QaCorrectionRequestOutput {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Record<string, unknown>;
+  return (
+    isString(o.field) &&
+    isString(o.problem) &&
+    isString(o.expectedCriterion) &&
+    isStringArray(o.evidence) &&
+    isString(o.targetRecommendationId) &&
+    typeof o.blocking === "boolean"
   );
 }
 
@@ -174,6 +206,17 @@ export function validateQaReviewerOutput(raw: unknown): QaReviewerOutput {
   }
   if (!isStringArray(o.requiredCorrections)) {
     throw new Error("Salida qa-reviewer invalida: requiredCorrections debe ser string[].");
+  }
+  // `correctionRequests` es OPCIONAL a proposito. Es lo que permite la
+  // correccion automatica dirigida, pero exigirlo convertiria en fallo de
+  // schema una revision por lo demas perfecta -- y un fallo de schema
+  // aqui bloquea la pasada entera. Si viene, tiene que estar bien; si no
+  // viene, el bucle se apoya en `requiredCorrections` (ver
+  // normalizeQaCorrections en src/department/qa-correction.ts).
+  if (o.correctionRequests !== undefined && (!Array.isArray(o.correctionRequests) || !o.correctionRequests.every(isCorrectionRequest))) {
+    throw new Error(
+      "Salida qa-reviewer invalida: correctionRequests, si viene, debe ser QaCorrectionRequestOutput[] con field/problem/expectedCriterion/targetRecommendationId (string), evidence (string[]) y blocking (boolean)."
+    );
   }
   if (!isApprovalRecommendation(o.approvalRecommendation)) {
     throw new Error("Salida qa-reviewer invalida: falta approvalRecommendation { recommendedStatus, riskLevel, rationale } valido.");

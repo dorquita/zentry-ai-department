@@ -34,8 +34,13 @@
     },
     "requiredCorrections": {
       "type": "array",
-      "description": "Correcciones concretas que un humano (o el empleado original) deberia aplicar antes de dar por bueno el artifact.",
+      "description": "Correcciones concretas que un humano (o el empleado original) deberia aplicar antes de dar por bueno el artifact. Texto legible, una frase por correccion. Sigue siendo obligatorio: es el resumen humano de correctionRequests.",
       "items": { "type": "string" }
+    },
+    "correctionRequests": {
+      "type": "array",
+      "description": "MISMAS correcciones que requiredCorrections, pero estructuradas para que el empleado responsable pueda corregir de forma dirigida sin intervencion humana. Opcional por compatibilidad, pero declararlo es lo que permite que el departamento reintente automaticamente: una correccion que solo existe como frase suelta obliga a parar y esperar a una persona.",
+      "items": { "$ref": "#/definitions/correctionRequest" }
     },
     "approvalRecommendation": { "$ref": "#/definitions/approvalRecommendation" },
     "evidence": {
@@ -97,6 +102,20 @@
         "description": { "type": "string" }
       },
       "required": ["category", "severity", "description"]
+    },
+    "correctionRequest": {
+      "type": "object",
+      "description": "Una correccion accionable. field dice QUE campo del artifact esta mal, problem QUE le pasa, expectedCriterion con QUE criterio se dara por resuelta, y evidence en QUE te basas. targetRecommendationId ata la correccion a una recomendacion concreta sin que nadie tenga que adivinarlo por coincidencia de titulo. blocking distingue lo que impide aprobar de lo que solo es una mejora: si se omite, se asume que bloquea.",
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string" },
+        "problem": { "type": "string" },
+        "expectedCriterion": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "targetRecommendationId": { "type": "string" },
+        "blocking": { "type": "boolean" }
+      },
+      "required": ["field", "problem", "expectedCriterion", "evidence", "targetRecommendationId", "blocking"]
     },
     "approvalRecommendation": {
       "type": "object",

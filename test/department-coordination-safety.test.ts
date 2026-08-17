@@ -65,6 +65,13 @@ const VALID_RESULT = {
   departmentQaStatus: "PASS",
   auditWarningCount: 0,
   priorityCount: 1,
+  // Bucle QA -> correccion -> re-QA. Van en el contrato COMUN, no solo
+  // en las fases del bucle: el workflow lee siempre los mismos campos
+  // sin ramificar por fase, que es justamente lo que hace que este
+  // contrato sea util.
+  qaLoopStatus: "",
+  correctionRequired: false,
+  nextRound: 0,
 };
 
 export function runDepartmentCoordinationSafetyTests(): TestCase[] {
@@ -443,10 +450,24 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
         // contrato de apply y manda el email. Aplicar lo decide despues
         // una persona sobre el Daily Brief numerado.
         assert.ok(configLines.includes("--phase plan"), "la pasada diaria debe planificar el contrato de apply");
-        for (const phase of ["--phase stage", "--phase notify"]) {
-          assert.ok(!configLines.includes(phase), `la pasada diaria NO debe ejecutar "${phase}": el apply es manual y posterior`);
-        }
-        // Y no puede depender del carril serverless, que esta apagado.
+
+        // INVERSION DELIBERADA. Antes se exigia que la pasada diaria NO
+        // ejecutara "--phase stage": el apply era manual y posterior. Esa
+        // condicion era exactamente la causa de que el departamento
+        // produjera ChangePlans ejecutables y terminara diciendo que
+        // hacia falta implementarlos a mano, teniendo el executor
+        // certificado al lado. Ahora se exige lo contrario: que SI se
+        // ejecute, porque staging es el entorno de trabajo y el cambio es
+        // reversible, esta validado por read-back y tiene rollback
+        // automatico.
+        assert.ok(configLines.includes("--phase stage"), "la pasada diaria debe aplicar en staging los ChangePlans ejecutables");
+
+        // Lo que NO cambia: "--phase notify" pertenece al carril de
+        // Telegram, que sigue apagado. Y la pasada no puede depender de
+        // la infraestructura serverless, que no esta desplegada -- el
+        // registro del cambio va a MongoDB, que si es el estado
+        // autoritativo.
+        assert.ok(!configLines.includes("--phase notify"), "la pasada diaria NO debe ejecutar la fase notify: el carril de Telegram sigue apagado");
         for (const forbidden of ["APPROVALS_API_URL", "APPROVALS_API_TOKEN", "TELEGRAM_BOT_TOKEN", "TELEGRAM_APPROVALS_ENABLED"]) {
           assert.ok(!configLines.includes(forbidden), `la pasada diaria no debe necesitar "${forbidden}"`);
         }
@@ -493,12 +514,19 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       name: "Cada invocacion de Claude guarda su coste en SU PROPIA ruta (el execution file ya no se pisa entre empleados)",
       fn: () => {
         const workflow = fs.readFileSync(WORKFLOW_PATH, "utf-8");
+        // El invariante REAL no es un numero: es que NINGUNA invocacion
+        // comparta ruta de registro con otra. El `execution_file` de
+        // claude-code-action no es unico por invocacion, asi que dos
+        // invocaciones con la misma ruta hacen que solo sobreviva el coste
+        // de la ultima -- y con el bucle de correccion de QA hay varias
+        // invocaciones DEL MISMO agente en la misma pasada, que es
+        // justamente donde eso es mas facil de romper.
         const recordPaths = [...workflow.matchAll(/execution-record-path:\s*(.+)/g)].map((m) => m[1].trim());
-        assert.equal(recordPaths.length, 6, "los seis empleados deben registrar su propio coste");
-        assert.equal(new Set(recordPaths).size, 6, "las seis rutas de registro deben ser DISTINTAS entre si");
+        assert.ok(recordPaths.length >= 6, `se esperaban al menos 6 invocaciones con registro propio; encontradas ${recordPaths.length}`);
+        assert.equal(new Set(recordPaths).size, recordPaths.length, "dos invocaciones comparten ruta de registro: el coste de una pisaria al de la otra");
         for (const agent of ["seo-specialist", "content-strategist", "analytics-specialist", "growth-director-v2", "qa-reviewer", "web-engineer"]) {
           assert.ok(
-            recordPaths.some((p) => p.includes(`/stages/${agent}/claude-execution.json`)),
+            recordPaths.some((p) => p.includes(`/stages/${agent}/`)),
             `falta el registro de coste propio de ${agent}`
           );
         }
@@ -509,8 +537,19 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       fn: () => {
         const workflow = fs.readFileSync(WORKFLOW_PATH, "utf-8");
         const runtimeUses = workflow.match(/uses:\s*\.\/\.github\/actions\/claude-employee-runtime/g) ?? [];
-        // 6 empleados Claude en la pasada: SEO, Content, Analytics, Growth, QA, Web Engineer.
-        assert.equal(runtimeUses.length, 6, "cada etapa Claude debe invocar el runtime comun");
+        // Antes se exigia un numero exacto (6). Ese numero dejo de ser un
+        // invariante al anadir el bucle QA -> correccion -> re-QA: la
+        // misma pasada puede invocar a qa-reviewer y a web-engineer
+        // varias veces, en rondas distintas. Lo que SI sigue siendo
+        // invariante -- y es lo que de verdad protege este test -- es que
+        // ninguna etapa Claude se invoque por fuera del runtime comun.
+        assert.ok(runtimeUses.length >= 6, `cada etapa Claude debe invocar el runtime comun; encontradas ${runtimeUses.length}`);
+        const agentNames = [...workflow.matchAll(/agent-name:\s*(\S+)/g)].map((m) => m[1].trim());
+        assert.equal(
+          agentNames.length,
+          runtimeUses.length,
+          "hay un `agent-name` que no corresponde a una invocacion del runtime comun (o al reves): ninguna etapa Claude puede invocarse por fuera"
+        );
 
         // El invariante REAL que protege este test no es el numero 10: es
         // que ninguna invocacion de Claude pueda correr sin backstop de
@@ -524,7 +563,10 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
         // el test y el fix.
         const timeouts = (workflow.match(/timeout-minutes:\s*(\d+)/g) ?? []).map((line) => Number(line.split(":")[1].trim()));
         const stepTimeouts = timeouts.filter((minutes) => minutes <= 30);
-        assert.ok(stepTimeouts.length >= 6, `cada step del runtime comun debe llevar su propio timeout-minutes acotado (<=30); encontrados: ${JSON.stringify(timeouts)}`);
+        assert.ok(
+          stepTimeouts.length >= runtimeUses.length,
+          `cada step del runtime comun debe llevar su propio timeout-minutes acotado (<=30); ${runtimeUses.length} invocaciones y ${stepTimeouts.length} timeouts acotados: ${JSON.stringify(timeouts)}`
+        );
         for (const minutes of stepTimeouts) {
           assert.ok(minutes >= 5, `un timeout-minutes de ${minutes} es demasiado corto para una invocacion real de Claude`);
         }

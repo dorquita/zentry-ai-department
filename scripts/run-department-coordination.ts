@@ -45,12 +45,22 @@ import {
 } from "../src/persistence/run-continuity";
 import { resolvePersistenceMode } from "../src/persistence/runtime";
 import { emptyStagingInventory, StagingInventory, summarizeInventoryForPrompt } from "../src/department/staging-inventory";
-import { buildChangePlanFromDraft, parseChangePlanDrafts } from "../src/department/web-engineer-changeplan";
+import { buildChangePlanFromDraft, parseChangePlanDrafts, ResolvedChangePlan } from "../src/department/web-engineer-changeplan";
 import { readApplySummary } from "../src/department/apply/store";
 import { buildDepartmentDailyBrief, DepartmentDailyBrief, PreviousRunSnapshot, renderDepartmentDailyBriefMarkdown, renderDepartmentStepSummary } from "../src/department/daily-brief";
 import { summarizeDepartmentRunCost } from "../src/department/employee-runs";
 import { buildDepartmentGrowthContext, buildDepartmentGrowthPrompt, DepartmentGrowthContext } from "../src/department/growth-input";
 import { buildDepartmentQaInputBundle } from "../src/department/qa-input";
+import { buildPlanQaInputBundle } from "../src/department/plan-qa-input";
+import {
+  appendQaLoopRound,
+  decideQaLoop,
+  emptyQaLoopRecord,
+  QaLoopRecord,
+  renderQaLoopSummary,
+  reviewIsBlocking,
+} from "../src/department/qa-correction";
+import { buildWebEngineerCorrectionContext, buildWebEngineerCorrectionPrompt } from "../src/department/web-engineer-correction-input";
 import { DepartmentPromotionResult, resolvePromotion } from "../src/department/promotion";
 import {
   DEPARTMENT_RUNNER_PHASES,
@@ -68,6 +78,9 @@ import {
   readStageOutput,
   recordStage,
   resolveDepartmentRunPaths,
+  resolvePlanQaInputPath,
+  resolveQaLoopPath,
+  resolveStageDir,
   resolveStageFilePaths,
   toRepoRelative,
   writeDepartmentJson,
@@ -524,7 +537,15 @@ async function phasePrepareWebEngineer(args: Record<string, string>): Promise<De
 
 function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunnerResultSummary {
   const departmentRunId = requireDepartmentRunId(args);
-  const { outputPath, contextPath, artifactPath } = resolveStageFilePaths(departmentRunId, "web-engineer");
+  // `--round` es la ronda del bucle de correccion de QA. 0 (por defecto)
+  // es la propuesta original y conserva EXACTAMENTE las rutas de siempre.
+  const round = parseRound(args);
+  const { outputPath, contextPath, artifactPath } = resolveStageFilePaths(departmentRunId, "web-engineer", round);
+  // El contexto de la ronda 0 es el que tiene el inventario, las
+  // recomendaciones y el BEFORE. Las rondas de correccion lo reciben
+  // dentro de su propio contexto, en `original`, asi que la auditoria de
+  // capacidades se hace siempre contra el mismo sitio.
+  const baseContextPath = resolveStageFilePaths(departmentRunId, "web-engineer", 0).contextPath;
   const outputArg = args.output && args.output !== "true" ? args.output : outputPath;
 
   if (!fs.existsSync(outputArg)) {
@@ -549,7 +570,7 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
     return baseResult("complete-web-engineer", departmentRunId, "invalid_output", reason);
   }
 
-  const context = JSON.parse(fs.readFileSync(contextPath, "utf-8")) as DepartmentWebEngineerContext;
+  const context = JSON.parse(fs.readFileSync(baseContextPath, "utf-8")) as DepartmentWebEngineerContext;
   const auditWarnings = auditWebEngineerOutputForUnconfirmedCapabilities(toWebEngineerAuditContext(context), output);
 
   // De INTENCION declarada a PLAN EJECUTABLE: el pageId, el BEFORE y el
@@ -562,13 +583,24 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
   const approvedRecommendationIds = context.approvedRecommendations.map((rec) => rec.recommendationId);
   const resolvedPlans = drafts.map((draft) => buildChangePlanFromDraft({ draft, inventory: stagingInventory, approvedRecommendationIds }));
   const actionable = resolvedPlans.filter((r) => r.status === "ACTIONABLE");
-  writeDepartmentJson(path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "change-plans.json"), {
+  // `change-plans.json` es la ruta CANONICA que lee la capa de apply, y
+  // siempre contiene la ULTIMA version producida. La foto de cada ronda
+  // se conserva aparte para poder demostrar que la re-QA reviso el output
+  // nuevo. Que la canonica lleve una version todavia no aceptada no es un
+  // riesgo: quien decide si algo se ejecuta es el veredicto del bucle
+  // (`qa-loop.json`), y un NEEDS_HUMAN_REVIEW bloquea todos los elementos.
+  const changePlansPayload = {
     departmentRunId,
+    round,
     generatedAt: new Date().toISOString(),
     draftsDeclared: drafts.length,
     draftsRejected: rejected,
     resolved: resolvedPlans,
-  });
+  };
+  writeDepartmentJson(path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "change-plans.json"), changePlansPayload);
+  if (round > 0) {
+    writeDepartmentJson(path.join(resolveStageDir(departmentRunId, "web-engineer", round), "change-plans.json"), changePlansPayload);
+  }
   console.log(
     `ChangePlans: ${drafts.length} declarado(s) por web-engineer, ${actionable.length} resuelto(s) como EJECUTABLE contra el inventario real, ${resolvedPlans.length - actionable.length} sin resolver (quedan manuales).`
   );
@@ -601,20 +633,276 @@ function phaseCompleteWebEngineer(args: Record<string, string>): DepartmentRunne
     note: "Especificacion tecnica de solo propuesta (approvalRequired=true). No se ha implementado nada en ningun sistema.",
   });
 
+  // `recordStage` SUSTITUYE el registro por nombre de etapa, asi que una
+  // ronda de correccion pisaria el registro de la original y el
+  // manifiesto perderia el historial. La ronda queda registrada en
+  // `qa-loop.json`, que si acumula; el manifiesto guarda el estado
+  // ACTUAL de la etapa, que es lo que representa.
   recordStage({
     departmentRunId,
     stage: "web-engineer",
     status: "executed",
-    reason: `Especificacion tecnica valida: ${output.proposedChanges.length} cambio(s) propuesto(s), ${auditWarnings.length} aviso(s) de auditoria de capacidades no confirmadas.`,
+    reason:
+      round === 0
+        ? `Especificacion tecnica valida: ${output.proposedChanges.length} cambio(s) propuesto(s), ${auditWarnings.length} aviso(s) de auditoria de capacidades no confirmadas.`
+        : `Correccion (ronda ${round}) valida: ${output.proposedChanges.length} cambio(s) propuesto(s), ${auditWarnings.length} aviso(s). La version original y las rondas anteriores se conservan en stages/web-engineer/rounds/.`,
     auditWarningCount: auditWarnings.length,
   });
 
-  console.log(`web-engineer: salida valida. Cambios propuestos: ${output.proposedChanges.length}. Avisos: ${auditWarnings.length}.`);
+  console.log(`web-engineer (ronda ${round}): salida valida. Cambios propuestos: ${output.proposedChanges.length}. Avisos: ${auditWarnings.length}.`);
   for (const warning of auditWarnings) console.log(`  [audit] ${warning}`);
   return {
     ...baseResult("complete-web-engineer", departmentRunId, "executed", "Especificacion tecnica validada y registrada."),
     expectedOutputPath: toRepoRelative(outputPath),
     auditWarningCount: auditWarnings.length,
+  };
+}
+
+// --- BUCLE QA -> CORRECCION -> RE-QA ---------------------------------------
+//
+// Lo que este bloque anade al circuito:
+//
+//     recomendacion -> ChangePlan -> QA DEL PLAN -> PASS -> apply staging
+//                                        |
+//                                       FAIL
+//                                        |
+//                            requiredCorrections[] dirigidas
+//                                        |
+//                              web-engineer corrige
+//                                        |
+//                                    re-QA (output NUEVO)
+//
+// Antes no existia NINGUNA revision del output de web-engineer: lo unico
+// que de verdad se escribia en staging era justo lo unico que nadie
+// revisaba. Y un FAIL de la QA que si existia (la de Growth) terminaba la
+// pasada sin que nadie corrigiera nada.
+
+/** Lee `--round`. Fail-closed: un valor que no sea un entero >= 0 es un error, nunca un 0 silencioso. */
+function parseRound(args: Record<string, string>): number {
+  const raw = args.round;
+  if (raw === undefined || raw === "true") return 0;
+  const round = Number(raw);
+  if (!Number.isInteger(round) || round < 0) {
+    throw new Error(`--round debe ser un entero >= 0; recibido "${raw}".`);
+  }
+  return round;
+}
+
+function readQaLoopRecord(departmentRunId: string): QaLoopRecord {
+  const filePath = resolveQaLoopPath(departmentRunId);
+  if (!fs.existsSync(filePath)) return emptyQaLoopRecord(departmentRunId, "web-engineer");
+  return JSON.parse(fs.readFileSync(filePath, "utf-8")) as QaLoopRecord;
+}
+
+function readChangePlansForRound(departmentRunId: string, round: number): ResolvedChangePlan[] {
+  const runDir = resolveDepartmentRunPaths(departmentRunId).runDir;
+  const roundPath = path.join(resolveStageDir(departmentRunId, "web-engineer", round), "change-plans.json");
+  const filePath = round > 0 && fs.existsSync(roundPath) ? roundPath : path.join(runDir, "change-plans.json");
+  if (!fs.existsSync(filePath)) return [];
+  const raw = JSON.parse(fs.readFileSync(filePath, "utf-8")) as { resolved?: ResolvedChangePlan[] };
+  return raw.resolved ?? [];
+}
+
+/**
+ * Prepara el bundle que qa-reviewer revisara: la especificacion tecnica y
+ * los ChangePlans de la ronda indicada. NO invoca a Claude -- igual que
+ * el resto de fases, deja el prompt listo y el runtime comun lo ejecuta.
+ */
+function phasePreparePlanQa(args: Record<string, string>): DepartmentRunnerResultSummary {
+  const departmentRunId = requireDepartmentRunId(args);
+  const round = parseRound(args);
+  const manifest = readManifest(departmentRunId);
+  const webOutput = readStageOutputTypedFromRound(departmentRunId, round);
+
+  if (!webOutput) {
+    const reason = `No hay salida valida de web-engineer para la ronda ${round}: no hay nada que revisar. La QA del plan se salta y el bucle no arranca.`;
+    console.log(reason);
+    return { ...baseResult("prepare-plan-qa", departmentRunId, "not_available", reason), claudeRequired: false };
+  }
+
+  const promotion = loadPromotion(departmentRunId);
+  const approvedRecommendations = (promotion?.promoted ?? []).map((rec) => ({
+    recommendationId: buildRecommendationId(departmentRunId, rec.rank),
+    rank: rec.rank,
+    title: rec.title,
+    rationale: rec.rationale,
+  }));
+
+  const loop = readQaLoopRecord(departmentRunId);
+  const previousCorrections = round === 0 ? [] : (loop.rounds[loop.rounds.length - 1]?.corrections ?? []);
+
+  const bundle = buildPlanQaInputBundle({
+    departmentRunId,
+    round,
+    approvedRecommendations,
+    webEngineerOutput: webOutput,
+    changePlans: readChangePlansForRound(departmentRunId, round),
+    previousCorrections,
+  });
+
+  const bundlePath = resolvePlanQaInputPath(departmentRunId, round);
+  writeDepartmentJson(bundlePath, bundle);
+
+  console.log(
+    `QA del plan (ronda ${round}): bundle preparado con ${bundle.changePlans.length} ChangePlan(s) y ${approvedRecommendations.length} recomendacion(es) aprobada(s). ${previousCorrections.length} correccion(es) de la ronda anterior a comprobar.`
+  );
+  return {
+    ...baseResult("prepare-plan-qa", departmentRunId, "prepared", `Bundle de QA del plan listo para la ronda ${round}.`),
+    qaInputPath: toRepoRelative(bundlePath),
+    claudeRequired: true,
+  };
+}
+
+/** Lee la salida de web-engineer de una ronda concreta. `undefined` si no existe o no valida. */
+function readStageOutputTypedFromRound(departmentRunId: string, round: number): WebEngineerOutput | undefined {
+  const { outputPath } = resolveStageFilePaths(departmentRunId, "web-engineer", round);
+  if (!fs.existsSync(outputPath)) return undefined;
+  try {
+    return validateWebEngineerOutput(JSON.parse(fs.readFileSync(outputPath, "utf-8")));
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Registra la revision del plan y DECIDE que pasa despues: aceptar, pedir
+ * correccion, o parar en NEEDS_HUMAN_REVIEW. Es la unica fase que puede
+ * cerrar el bucle.
+ */
+function phaseCompletePlanQa(args: Record<string, string>): DepartmentRunnerResultSummary {
+  const departmentRunId = requireDepartmentRunId(args);
+  const round = parseRound(args);
+  const outputArg = args.output && args.output !== "true" ? args.output : "";
+
+  let loop = readQaLoopRecord(departmentRunId);
+
+  if (!outputArg || !fs.existsSync(outputArg)) {
+    // Sin revision no se puede afirmar que el plan sea bueno. Fail-closed:
+    // el bucle termina pidiendo revision humana, NUNCA aceptando por
+    // defecto -- que seria exactamente maquillar la ausencia de QA.
+    const reason = withRuntimeNote(
+      `qa-reviewer no dejo ninguna revision del plan para la ronda ${round}. Sin revision no se puede afirmar que el plan sea seguro: el bucle termina en NEEDS_HUMAN_REVIEW.`,
+      args
+    );
+    loop = { ...loop, finalStatus: "NEEDS_HUMAN_REVIEW", finalReason: reason };
+    writeDepartmentJson(resolveQaLoopPath(departmentRunId), loop);
+    console.error(reason);
+    return { ...baseResult("complete-plan-qa", departmentRunId, "NEEDS_HUMAN_REVIEW", reason), qaLoopStatus: "NEEDS_HUMAN_REVIEW" };
+  }
+
+  let review: QaReviewerOutput;
+  try {
+    review = validateQaReviewerOutput(readModelOutput(outputArg));
+  } catch (err) {
+    const reason = withRuntimeNote(
+      `Revision del plan invalida en la ronda ${round}: ${err instanceof Error ? err.message : String(err)}. Fail-closed: NEEDS_HUMAN_REVIEW.`,
+      args
+    );
+    loop = { ...loop, finalStatus: "NEEDS_HUMAN_REVIEW", finalReason: reason };
+    writeDepartmentJson(resolveQaLoopPath(departmentRunId), loop);
+    console.error(reason);
+    return { ...baseResult("complete-plan-qa", departmentRunId, "NEEDS_HUMAN_REVIEW", reason), qaLoopStatus: "NEEDS_HUMAN_REVIEW" };
+  }
+
+  const decision = decideQaLoop({ review, round });
+  const { outputPath: reviewedPath } = resolveStageFilePaths(departmentRunId, "web-engineer", round);
+
+  loop = appendQaLoopRound(loop, {
+    revision: round,
+    qaAttempt: round + 1,
+    employee: "web-engineer",
+    reviewStatus: review.reviewStatus,
+    blocking: reviewIsBlocking(review),
+    action: decision.action,
+    corrections: decision.corrections,
+    reason: decision.reason,
+    reviewedOutputPath: toRepoRelative(reviewedPath),
+    reviewOutputPath: toRepoRelative(path.resolve(outputArg)),
+    at: new Date().toISOString(),
+  });
+  writeDepartmentJson(resolveQaLoopPath(departmentRunId), loop);
+  for (const line of renderQaLoopSummary(loop)) console.log(line);
+
+  if (decision.action === "request_correction") {
+    for (const correction of decision.corrections) {
+      console.log(`  [correccion] ${correction.field || "(campo no concretado)"}: ${correction.problem}`);
+    }
+  }
+
+  return {
+    ...baseResult("complete-plan-qa", departmentRunId, loop.finalStatus, decision.reason),
+    qaLoopStatus: loop.finalStatus,
+    correctionRequired: decision.action === "request_correction",
+    nextRound: decision.nextRound ?? 0,
+  };
+}
+
+/**
+ * Construye el encargo de correccion: la propuesta anterior integra, el
+ * veredicto de QA y las correcciones accionables. No se vuelve a ejecutar
+ * el departamento entero para corregir una recomendacion.
+ */
+async function phasePrepareWebEngineerCorrection(args: Record<string, string>): Promise<DepartmentRunnerResultSummary> {
+  const departmentRunId = requireDepartmentRunId(args);
+  const round = parseRound(args);
+  if (round < 1) throw new Error("Una correccion es siempre la ronda 1 o posterior: --round 0 es la propuesta original.");
+
+  const loop = readQaLoopRecord(departmentRunId);
+  const lastRound = loop.rounds[loop.rounds.length - 1];
+  if (!lastRound || lastRound.action !== "request_correction") {
+    const reason = `El bucle de QA no ha pedido ninguna correccion (estado: ${loop.finalStatus}). No se prepara nada.`;
+    console.log(reason);
+    return { ...baseResult("prepare-web-engineer-correction", departmentRunId, "not_available", reason), claudeRequired: false };
+  }
+
+  const previousRound = round - 1;
+  const previousOutput = readStageOutputTypedFromRound(departmentRunId, previousRound);
+  if (!previousOutput) {
+    const reason = `No se encuentra la propuesta de la ronda ${previousRound}. Sin la propuesta anterior, "corregir" seria "proponer de cero": no se pide.`;
+    console.error(reason);
+    return { ...baseResult("prepare-web-engineer-correction", departmentRunId, "not_available", reason), claudeRequired: false };
+  }
+
+  const original = JSON.parse(
+    fs.readFileSync(resolveStageFilePaths(departmentRunId, "web-engineer", 0).contextPath, "utf-8")
+  ) as DepartmentWebEngineerContext;
+
+  const context = buildWebEngineerCorrectionContext({
+    departmentRunId,
+    round,
+    maxRounds: loop.maxRounds,
+    original,
+    previousOutput,
+    previousChangePlans: buildPlanQaInputBundle({
+      departmentRunId,
+      round: previousRound,
+      approvedRecommendations: [],
+      webEngineerOutput: previousOutput,
+      changePlans: readChangePlansForRound(departmentRunId, previousRound),
+    }).changePlans,
+    qaVerdict: {
+      reviewStatus: lastRound.reviewStatus,
+      summary: lastRound.reason,
+      safetyConcerns: [],
+      unsupportedClaims: [],
+    },
+    corrections: lastRound.corrections,
+  });
+
+  const prompt = buildWebEngineerCorrectionPrompt(context, await loadPreviousHumanFeedbackFromState());
+  const paths = resolveStageFilePaths(departmentRunId, "web-engineer", round);
+  fs.mkdirSync(paths.stageDir, { recursive: true });
+  writeDepartmentJson(paths.contextPath, context);
+  fs.writeFileSync(paths.promptPath, prompt, "utf-8");
+
+  console.log(
+    `Correccion dirigida (ronda ${round} de ${loop.maxRounds}): ${lastRound.corrections.length} correccion(es) para web-engineer, con su propuesta anterior integra y el BEFORE real de cada plan.`
+  );
+  return {
+    ...baseResult("prepare-web-engineer-correction", departmentRunId, "prepared", `Encargo de correccion listo (ronda ${round}).`),
+    promptFilePath: toRepoRelative(paths.promptPath),
+    expectedOutputPath: toRepoRelative(paths.outputPath),
+    claudeRequired: true,
   };
 }
 
@@ -828,6 +1116,9 @@ const PHASES: Record<DepartmentRunnerPhase, (args: Record<string, string>) => De
   "complete-qa": phaseCompleteQa,
   "prepare-web-engineer": phasePrepareWebEngineer,
   "complete-web-engineer": phaseCompleteWebEngineer,
+  "prepare-plan-qa": phasePreparePlanQa,
+  "complete-plan-qa": phaseCompletePlanQa,
+  "prepare-web-engineer-correction": phasePrepareWebEngineerCorrection,
   brief: phaseBrief,
   gate: phaseGate,
 };

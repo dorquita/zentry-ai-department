@@ -48,6 +48,22 @@ export interface BuildApplyPlanInput {
    * camino nuevo: sustituye a interpretar prosa buscando `page_id=N`.
    */
   resolvedChangePlans?: ResolvedChangePlan[];
+  /**
+   * Veredicto del bucle QA -> correccion -> re-QA sobre el PLAN.
+   *
+   * `NEEDS_HUMAN_REVIEW` significa que QA siguio bloqueando despues de
+   * agotar las rondas de correccion automatica. Ese estado NO es un PASS
+   * con matices: aqui bloquea TODOS los elementos de la pasada. Sin esta
+   * puerta, la ruta canonica de `change-plans.json` (que siempre lleva la
+   * ULTIMA version producida) contendria una version rechazada por QA y
+   * el executor la aplicaria igualmente -- que es exactamente maquillar
+   * un FAIL de PASS.
+   *
+   * `in_progress` o ausente = el bucle no llego a cerrarse en esta
+   * pasada; no bloquea por si mismo, porque el caso normal (bucle no
+   * ejecutado) no debe cambiar de comportamiento.
+   */
+  planQaStatus?: string;
   now?: Date;
 }
 
@@ -83,8 +99,17 @@ export function selectChangesForRecommendation(
   return promotedCount === 1 ? [...output.proposedChanges] : [];
 }
 
-export function resolvePlannedStatus(params: { isBlockedByQa: boolean; capabilitySupported: boolean; hasExecutablePlan?: boolean }): DepartmentApplyStatus {
+export function resolvePlannedStatus(params: {
+  isBlockedByQa: boolean;
+  capabilitySupported: boolean;
+  hasExecutablePlan?: boolean;
+  planQaNeedsHumanReview?: boolean;
+}): DepartmentApplyStatus {
   if (params.isBlockedByQa) return "blocked";
+  // La QA del PLAN es la ultima puerta antes de escribir. Si agoto las
+  // rondas de correccion sin converger, no se ejecuta nada: ni siquiera
+  // un plan tecnicamente ejecutable.
+  if (params.planQaNeedsHumanReview) return "blocked";
   // Un ChangePlan ejecutable YA resuelto contra el inventario real hace
   // accionable la recomendacion aunque la capacidad legacy (la que
   // interpretaba prosa buscando `page_id=N`) no la reconozca. Es
@@ -99,6 +124,7 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
   const now = input.now ?? new Date();
   const nowIso = now.toISOString();
   const webOutput = input.webEngineer.status === "executed" ? input.webEngineer.output : undefined;
+  const planQaNeedsHumanReview = input.planQaStatus === "NEEDS_HUMAN_REVIEW";
   const promotedCount = input.promotion.promoted.length;
 
   const all: { recommendation: DepartmentRecommendation; blockedByQa: boolean }[] = [
@@ -152,6 +178,7 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
       isBlockedByQa: blockedByQa,
       capabilitySupported: capability.supported,
       hasExecutablePlan: executableChangePlan !== null,
+      planQaNeedsHumanReview,
     });
 
     return {
@@ -193,7 +220,11 @@ export function buildApplyPlan(input: BuildApplyPlanInput): DepartmentApplySumma
         {
           at: nowIso,
           event: "planned",
-          detail: `Elemento de apply construido a partir de la recomendacion #${recommendation.rank} de esta pasada. QA=${blockedByQa ? "BLOCKED" : input.promotion.departmentQaStatus}. Capacidad de apply: ${capability.supported ? String(capability.id) : "ninguna"} (${capability.reason})`,
+          detail:
+            `Elemento de apply construido a partir de la recomendacion #${recommendation.rank} de esta pasada. QA=${blockedByQa ? "BLOCKED" : input.promotion.departmentQaStatus}. Capacidad de apply: ${capability.supported ? String(capability.id) : "ninguna"} (${capability.reason})` +
+            (planQaNeedsHumanReview
+              ? " BLOQUEADO ADEMAS por la QA del plan: agoto las rondas de correccion automatica sin converger y quedo en NEEDS_HUMAN_REVIEW, asi que en esta pasada no se aplica nada."
+              : ""),
         },
       ],
       createdAt: nowIso,

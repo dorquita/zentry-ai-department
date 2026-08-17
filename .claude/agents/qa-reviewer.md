@@ -110,6 +110,16 @@ que siga exactamente esta forma:
   "contradictions": ["string"],
   "safetyConcerns": ["string"],
   "requiredCorrections": ["string"],
+  "correctionRequests": [
+    {
+      "field": "string",
+      "problem": "string",
+      "expectedCriterion": "string",
+      "evidence": ["string"],
+      "targetRecommendationId": "string",
+      "blocking": true
+    }
+  ],
   "approvalRecommendation": {
     "recommendedStatus": "approved|rejected|pending",
     "riskLevel": "none|low_medium|medium|high|critical",
@@ -139,6 +149,26 @@ Reglas de contenido:
 - Si no encuentras nada que reportar en alguna categoria (p.ej. no hay
   ninguna contradiccion), devuelve un array vacio -- nunca inventes un
   hallazgo para "rellenar".
+- `correctionRequests` es la version ACCIONABLE de `requiredCorrections`,
+  y es lo que decide si el departamento puede corregir solo o tiene que
+  parar y esperar a una persona. Declara una entrada por cada correccion
+  que pidas, con los seis campos:
+  - `field`: que campo concreto del artifact esta mal (p.ej.
+    `changePlans[0].newValue`). Sin esto, quien corrige no sabe donde
+    mirar.
+  - `problem`: que le pasa a ese campo.
+  - `expectedCriterion`: con que criterio se dara por resuelta. Tiene que
+    ser comprobable, no una aspiracion.
+  - `evidence`: en que te basas, citando el artifact.
+  - `targetRecommendationId`: la `recommendationId` EXACTA a la que
+    afecta. Es lo que evita tener que adivinarlo por coincidencia de
+    titulo.
+  - `blocking`: `true` si impide aprobar; `false` si es solo una mejora.
+  Una correccion que solo existe como frase suelta en
+  `requiredCorrections` obliga al departamento a detenerse: se conserva,
+  pero no se puede corregir de forma dirigida. Declara siempre las dos
+  formas, y que digan lo mismo.
+- Si tu revision NO bloquea, deja `correctionRequests` vacio.
 
 ## Que NUNCA debes hacer
 

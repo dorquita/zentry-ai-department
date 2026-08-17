@@ -26,6 +26,11 @@ export type DepartmentRunnerPhase =
   | "complete-qa"
   | "prepare-web-engineer"
   | "complete-web-engineer"
+  // Bucle QA -> correccion -> re-QA sobre el PLAN (lo unico que se
+  // escribe de verdad en staging, y lo unico que antes no revisaba nadie).
+  | "prepare-plan-qa"
+  | "complete-plan-qa"
+  | "prepare-web-engineer-correction"
   | "brief"
   | "gate";
 
@@ -38,6 +43,9 @@ export const DEPARTMENT_RUNNER_PHASES: DepartmentRunnerPhase[] = [
   "complete-qa",
   "prepare-web-engineer",
   "complete-web-engineer",
+  "prepare-plan-qa",
+  "complete-plan-qa",
+  "prepare-web-engineer-correction",
   "brief",
   "gate",
 ];
@@ -64,6 +72,12 @@ export interface DepartmentRunnerResultSummary {
   departmentQaStatus: string;
   auditWarningCount: number;
   priorityCount: number;
+  /** Veredicto del bucle de QA del plan: `in_progress` / `PASS` / `NEEDS_HUMAN_REVIEW`. Vacio si el bucle no corrio. */
+  qaLoopStatus: string;
+  /** `true` si el workflow debe ejecutar una ronda de correccion. */
+  correctionRequired: boolean;
+  /** Ronda que hay que ejecutar a continuacion. 0 = ninguna. */
+  nextRound: number;
 }
 
 export const EMPTY_DEPARTMENT_RUNNER_RESULT: Omit<DepartmentRunnerResultSummary, "phase" | "departmentRunId" | "status" | "reason"> = {
@@ -82,6 +96,9 @@ export const EMPTY_DEPARTMENT_RUNNER_RESULT: Omit<DepartmentRunnerResultSummary,
   departmentQaStatus: "",
   auditWarningCount: 0,
   priorityCount: 0,
+  qaLoopStatus: "",
+  correctionRequired: false,
+  nextRound: 0,
 };
 
 export function extractLastDepartmentRunnerResultJsonLine(log: string): string | undefined {
@@ -105,9 +122,10 @@ const STRING_FIELDS = [
   "briefMdPath",
   "stepSummaryPath",
   "departmentQaStatus",
+  "qaLoopStatus",
 ] as const;
 
-const NUMBER_FIELDS = ["promotedCount", "blockedCount", "auditWarningCount", "priorityCount"] as const;
+const NUMBER_FIELDS = ["promotedCount", "blockedCount", "auditWarningCount", "priorityCount", "nextRound"] as const;
 
 /** Valida (fail-closed, sin librerias externas) que el JSON parseado tiene la forma minima esperada antes de confiar en sus campos. */
 export function parseDepartmentRunnerResultJson(jsonText: string): DepartmentRunnerResultSummary {
@@ -131,8 +149,10 @@ export function parseDepartmentRunnerResultJson(jsonText: string): DepartmentRun
       throw new Error(`RUNNER_RESULT_JSON invalido: falta el campo numerico "${field}".`);
     }
   }
-  if (typeof o.claudeRequired !== "boolean") {
-    throw new Error('RUNNER_RESULT_JSON invalido: falta el campo booleano "claudeRequired".');
+  for (const field of ["claudeRequired", "correctionRequired"] as const) {
+    if (typeof o[field] !== "boolean") {
+      throw new Error(`RUNNER_RESULT_JSON invalido: falta el campo booleano "${field}".`);
+    }
   }
   if (!(DEPARTMENT_RUNNER_PHASES as string[]).includes(o.phase as string)) {
     throw new Error(`RUNNER_RESULT_JSON invalido: phase "${String(o.phase)}" no es una fase conocida.`);

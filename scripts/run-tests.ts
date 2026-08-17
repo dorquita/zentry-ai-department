@@ -66,6 +66,7 @@ import { runDepartmentSpecialistInputsTests } from "../test/department-specialis
 import { runDepartmentDailyBriefTests } from "../test/department-daily-brief.test";
 import { runDepartmentCoordinationSafetyTests } from "../test/department-coordination-safety.test";
 import { runChangePlanStagingRunnerTests } from "../test/changeplan-staging-runner.test";
+import { runQaCorrectionLoopTests } from "../test/qa-correction-loop.test";
 import { runDepartmentApplyApprovalTests } from "../test/department-apply-approval.test";
 import { runDepartmentApplyStateMachineTests } from "../test/department-apply-state-machine.test";
 import { runDepartmentApplyStagingTests } from "../test/department-apply-staging.test";
@@ -73,6 +74,7 @@ import { runDepartmentApplyProductionTests } from "../test/department-apply-prod
 import { runDepartmentApplyTelegramTests } from "../test/department-apply-telegram.test";
 import { runDepartmentApplyTraceabilityTests } from "../test/department-apply-traceability.test";
 import { runDepartmentBriefEmailTests } from "../test/department-brief-email.test";
+import { runHumanBriefEmailTests } from "../test/human-brief-email.test";
 import { runDepartmentExecutionReportTests } from "../test/department-execution-report.test";
 import { runApprovalsHumanFeedbackTests } from "../test/approvals-human-feedback.test";
 import { runApprovalsManualDecisionTests } from "../test/approvals-manual-decision.test";
@@ -162,6 +164,7 @@ async function main(): Promise<void> {
     { suiteName: "department-daily-brief", cases: runDepartmentDailyBriefTests() },
     { suiteName: "department-coordination-safety", cases: runDepartmentCoordinationSafetyTests() },
     { suiteName: "changeplan-staging-runner", cases: runChangePlanStagingRunnerTests() },
+    { suiteName: "qa-correction-loop", cases: runQaCorrectionLoopTests() },
     { suiteName: "department-employee-runs", cases: runDepartmentEmployeeRunsTests() },
     { suiteName: "department-apply-approval", cases: runDepartmentApplyApprovalTests() },
     { suiteName: "department-apply-state-machine", cases: runDepartmentApplyStateMachineTests() },
@@ -170,6 +173,7 @@ async function main(): Promise<void> {
     { suiteName: "department-apply-telegram", cases: runDepartmentApplyTelegramTests() },
     { suiteName: "department-apply-traceability", cases: runDepartmentApplyTraceabilityTests() },
     { suiteName: "department-brief-email", cases: runDepartmentBriefEmailTests() },
+    { suiteName: "human-brief-email", cases: runHumanBriefEmailTests() },
     { suiteName: "department-execution-report", cases: runDepartmentExecutionReportTests() },
     { suiteName: "approvals-human-feedback", cases: runApprovalsHumanFeedbackTests() },
     { suiteName: "approvals-manual-decision", cases: runApprovalsManualDecisionTests() },

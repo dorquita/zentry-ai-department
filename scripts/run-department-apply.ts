@@ -61,6 +61,8 @@ import {
 } from "../src/department/apply/change-types";
 import { createHttpApprovalStoreFromEnv } from "../src/approvals/http-store";
 import { isServerlessApprovalsEnabled, serverlessDisabledReason } from "../src/approvals/feature-flag";
+import { MongoStagingChangeStore } from "../src/approvals/mongo-staging-store";
+import { openPersistenceSession, PERSISTENCE_MODE_VAR, resolvePersistenceMode } from "../src/persistence/runtime";
 import { Approval, ApprovalStore } from "../src/approvals/store";
 import { flushRecordedTransitions, RecordedTransition, recordingTransitionPort } from "../src/approvals/executor-bridge";
 import { checkStagingApplyGuards, StagingApplyGuards } from "../src/department/apply/guards";
@@ -176,6 +178,26 @@ function loadResolvedChangePlans(departmentRunId: string): ResolvedChangePlan[] 
     return Array.isArray(raw.resolved) ? raw.resolved : [];
   } catch {
     return [];
+  }
+}
+
+/**
+ * Veredicto del bucle QA -> correccion -> re-QA sobre el PLAN.
+ *
+ * Fail-closed en una direccion sola, y a proposito: si el fichero existe
+ * pero no se puede leer, se devuelve NEEDS_HUMAN_REVIEW (no se aplica
+ * nada). Si NO existe, el bucle simplemente no corrio en esta pasada y se
+ * devuelve cadena vacia -- tratar su ausencia como bloqueo pararia todas
+ * las pasadas que no lo usan.
+ */
+function loadPlanQaStatus(departmentRunId: string): string {
+  const filePath = path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "qa-loop.json");
+  if (!fs.existsSync(filePath)) return "";
+  try {
+    const raw = JSON.parse(fs.readFileSync(filePath, "utf-8")) as { finalStatus?: string };
+    return typeof raw.finalStatus === "string" ? raw.finalStatus : "NEEDS_HUMAN_REVIEW";
+  } catch {
+    return "NEEDS_HUMAN_REVIEW";
   }
 }
 
@@ -295,7 +317,9 @@ async function phasePlan(args: Record<string, string>): Promise<void> {
   const ownedStagingPages = loadOwnedStagingPages();
 
   const resolvedChangePlans = loadResolvedChangePlans(departmentRunId);
-  let summary = buildApplyPlan({ departmentRunId, promotion, webEngineer, ownedStagingPages, resolvedChangePlans });
+  const planQaStatus = loadPlanQaStatus(departmentRunId);
+  if (planQaStatus) console.log(`Bucle de QA del plan: ${planQaStatus}.`);
+  let summary = buildApplyPlan({ departmentRunId, promotion, webEngineer, ownedStagingPages, resolvedChangePlans, planQaStatus });
   summary = await captureVersionAnchors(summary);
   summary = updateApplySummaryItems(summary, summary.items, {
     externalWritesPerformed: false,
@@ -354,10 +378,51 @@ function buildChangeFromItem(item: DepartmentApplyItem, version: number, previou
   };
 }
 
-async function phaseStage(args: Record<string, string>): Promise<void> {
-  if (!isServerlessApprovalsEnabled()) {
-    throw new Error(serverlessDisabledReason('La fase "stage" de esta pasada (que persiste en el datastore serverless)'));
+/**
+ * Resuelve DONDE se persiste el registro del cambio de staging.
+ *
+ * Antes esto no se elegia: la fase `stage` exigia el carril serverless
+ * (Worker de Cloudflare + D1 + `APPROVALS_API_URL`/`APPROVALS_API_TOKEN`)
+ * y, como ese carril esta implementado pero NO desplegado, el apply
+ * automatico en staging era inalcanzable. No por seguridad, sino por una
+ * dependencia de infraestructura que no tiene nada que ver con escribir
+ * en staging.
+ *
+ * Orden de preferencia, y el motivo de cada escalon:
+ *
+ *   1. Carril serverless, SI esta activo. Es el unico con transicion
+ *      condicional atomica, asi que es el que hay que usar cuando existe.
+ *   2. MongoDB, que desde O56/O57 ya es el estado autoritativo del
+ *      departamento. Suficiente para staging: un solo escritor
+ *      serializado por el `concurrency` del workflow, sin webhooks.
+ *   3. Nada. Y entonces se dice, no se aplica a ciegas sin registrar.
+ */
+async function resolveStagingChangeStore(): Promise<{ store: ApprovalStore; kind: string } | { store: null; reason: string }> {
+  if (isServerlessApprovalsEnabled()) {
+    return { store: createHttpApprovalStoreFromEnv(), kind: "serverless (Worker + D1)" };
   }
+  if (resolvePersistenceMode() !== "mongo") {
+    return {
+      store: null,
+      reason:
+        `El carril serverless esta apagado y ${PERSISTENCE_MODE_VAR} no es "mongo", asi que no hay ningun sitio autoritativo donde registrar el cambio. ` +
+        "No se aplica nada: escribir en staging sin poder registrar que se escribio dejaria el sitio en un estado que este sistema no sabe explicar.",
+    };
+  }
+  // En modo `mongo` esto falla cerrado si no puede conectar: nunca
+  // devuelve una sesion sin repositorio, asi que el `!` de abajo no
+  // esconde ningun caso.
+  const session = await openPersistenceSession();
+  if (!session.repository) {
+    return { store: null, reason: `MongoDB es la fuente de verdad pero no hay repositorio disponible: ${session.unavailableReason || "motivo no reportado"}.` };
+  }
+  return {
+    store: new MongoStagingChangeStore(session.repository) as unknown as ApprovalStore,
+    kind: `MongoDB (${session.target})`,
+  };
+}
+
+async function phaseStage(args: Record<string, string>): Promise<void> {
   const departmentRunId = requireDepartmentRunId(args);
   const summary = requireSummary(departmentRunId);
   const guards = resolveStagingGuards();
@@ -374,10 +439,18 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
     return;
   }
 
-  // El estado de las aprobaciones vive en el datastore SERVERLESS, no en
-  // el filesystem de este runner: por eso esta fase puede ejecutarse aqui
-  // sin que la aprobacion muera cuando el runner termine.
-  const store = createHttpApprovalStoreFromEnv();
+  // El registro del cambio vive en un estado AUTORITATIVO externo al
+  // runner (serverless o MongoDB), nunca en su filesystem: por eso esta
+  // fase puede ejecutarse aqui sin que el registro muera cuando el runner
+  // termine.
+  const resolved = await resolveStagingChangeStore();
+  if (!resolved.store) {
+    syncSummaryWith(departmentRunId, [], { externalWritesPerformed: false, applyNotAttemptedReason: resolved.reason });
+    console.log(resolved.reason);
+    return;
+  }
+  const store = resolved.store;
+  console.log(`Registro del cambio: ${resolved.kind}.`);
   const existing = await store.listByRun(departmentRunId);
   let externalWrites = false;
   let applied = 0;

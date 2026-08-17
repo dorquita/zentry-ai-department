@@ -1013,6 +1013,432 @@ jobs:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           RUNTIME_NOTE: "step=${{ steps.web_runtime.outcome }}, claude=${{ steps.web_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.web_runtime.outputs.output-source }}"
 
+
+      # =====================================================================
+      # FASE 4.2 -- QA DEL PLAN + BUCLE DE CORRECCION
+      #
+      #   recomendacion -> ChangePlan -> QA DEL PLAN -> PASS -> apply staging
+      #                                       |
+      #                                      FAIL
+      #                                       |
+      #                           requiredCorrections[] dirigidas
+      #                                       |
+      #                             web-engineer corrige
+      #                                       |
+      #                                   re-QA (output NUEVO)
+      #
+      # POR QUE EXISTE. Hasta ahora la unica QA revisaba a los
+      # especialistas y a Growth, y despues web-engineer producia la
+      # especificacion y los ChangePlans SIN que nadie los revisara. Es
+      # decir: lo unico que de verdad se escribe en staging era justo lo
+      # unico que no pasaba por QA. Y un FAIL de la QA que si existia
+      # terminaba la pasada -- nadie corregia nada.
+      #
+      # POR QUE ESTA DESPLEGADO Y NO EN UN BUCLE. GitHub Actions no tiene
+      # bucles de steps. El limite de 2 rondas automaticas vive en el
+      # dominio (MAX_AUTOMATIC_CORRECTION_ROUNDS,
+      # src/department/qa-correction.ts) y aqui se despliega estaticamente
+      # -- lo que ademas hace imposible por construccion que una tercera
+      # ronda ocurra por accidente.
+      #
+      # CADA invocacion de Claude lleva su propia `execution-record-path` y
+      # su propia `expected-output-path`: sin eso, la ronda 2 pisaria a la
+      # ronda 1 y "PASS en la ronda 2" seria indistinguible de "PASS sobre
+      # el artifact viejo".
+      # =====================================================================
+
+      - name: "[QA-PLAN] Preparar bundle de revision del plan (ronda 0)"
+        id: planqa0_prep_run
+        continue-on-error: true
+        if: always() && steps.web_done.outcome == 'success'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-plan-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 0 2>&1 | tee coord-plan-qa-prepare-0.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (prepare-plan-qa ronda 0)"
+        id: planqa0_prep
+        continue-on-error: true
+        if: steps.planqa0_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-plan-qa-prepare-0.log
+
+      - name: "[QA-PLAN] Runner de qa-reviewer paso 1 (ronda 0)"
+        id: planqa0_r1_run
+        continue-on-error: true
+        if: steps.planqa0_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" 2>&1 | tee plan-qa-step1-0.log
+        env:
+          QA_INPUT_PATH: ${{ steps.planqa0_prep.outputs.qaInputPath }}
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (paso 1 ronda 0)"
+        id: planqa0_r1
+        continue-on-error: true
+        if: steps.planqa0_r1_run.outcome == 'success'
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- plan-qa-step1-0.log
+
+      - name: "[QA-PLAN] Leer prompt (ronda 0)"
+        id: planqa0_prompt
+        continue-on-error: true
+        if: steps.planqa0_r1.outputs.qaStatus == 'pending_execution'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.planqa0_r1.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Ejecutar qa-reviewer sobre el PLAN (ronda 0)"
+        id: planqa0_runtime
+        continue-on-error: true
+        if: steps.planqa0_prompt.outcome == 'success' && steps.planqa0_r1.outputs.qaStatus == 'pending_execution'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: qa-reviewer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/qa-reviewer/plan-round-0/claude-execution.json
+          prompt: ${{ steps.planqa0_prompt.outputs.content }}
+          output-schema-path: config/qa-reviewer-output.schema.json
+          expected-output-path: ${{ steps.planqa0_r1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[QA-PLAN] Runner de qa-reviewer paso 2 (ronda 0)"
+        id: planqa0_r2_run
+        continue-on-error: true
+        if: steps.planqa0_runtime.outcome == 'success'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" --qa-reviewer-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee plan-qa-step2-0.log
+        env:
+          QA_INPUT_PATH: ${{ steps.planqa0_prep.outputs.qaInputPath }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.planqa0_r1.outputs.expectedOutputPath }}
+
+      - name: "[QA-PLAN] Decidir: aceptar, corregir, o parar en NEEDS_HUMAN_REVIEW (ronda 0)"
+        id: planqa0_done_run
+        continue-on-error: true
+        if: always() && steps.planqa0_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase complete-plan-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 0 --output "$EXPECTED_OUTPUT_PATH" --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-plan-qa-complete-0.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.planqa0_r1.outputs.expectedOutputPath }}
+          RUNTIME_NOTE: "step=${{ steps.planqa0_runtime.outcome }}, claude=${{ steps.planqa0_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa0_runtime.outputs.output-source }}"
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (complete-plan-qa ronda 0)"
+        id: planqa0
+        continue-on-error: true
+        if: always() && steps.planqa0_done_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-plan-qa-complete-0.log
+
+      - name: "[CORR] Preparar encargo de correccion dirigida (ronda 1)"
+        id: corr1_prep_run
+        continue-on-error: true
+        if: steps.planqa0.outputs.correctionRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-web-engineer-correction --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 2>&1 | tee coord-correction-prepare-1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      - name: "[CORR] Parsear RUNNER_RESULT_JSON (prepare-correction ronda 1)"
+        id: corr1_prep
+        continue-on-error: true
+        if: steps.corr1_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-correction-prepare-1.log
+
+      - name: "[CORR] Leer prompt de correccion (ronda 1)"
+        id: corr1_prompt
+        continue-on-error: true
+        if: steps.corr1_prep.outputs.claudeRequired == 'true'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.corr1_prep.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Ejecutar web-engineer en modo CORRECCION (ronda 1)"
+        id: corr1_runtime
+        continue-on-error: true
+        if: steps.corr1_prompt.outcome == 'success' && steps.corr1_prep.outputs.claudeRequired == 'true'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: web-engineer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/web-engineer/rounds/1/claude-execution.json
+          prompt: ${{ steps.corr1_prompt.outputs.content }}
+          output-schema-path: config/web-engineer-output.schema.json
+          expected-output-path: ${{ steps.corr1_prep.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[CORR] Validar la correccion y reconstruir sus ChangePlans (ronda 1)"
+        id: corr1_done
+        continue-on-error: true
+        if: always() && steps.corr1_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase complete-web-engineer --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-correction-complete-1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.corr1_runtime.outcome }}, claude=${{ steps.corr1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.corr1_runtime.outputs.output-source }}"
+
+      - name: "[QA-PLAN] Preparar bundle de revision del plan (ronda 1)"
+        id: planqa1_prep_run
+        continue-on-error: true
+        if: steps.corr1_done.outcome == 'success' && steps.corr1_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-plan-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 2>&1 | tee coord-plan-qa-prepare-1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (prepare-plan-qa ronda 1)"
+        id: planqa1_prep
+        continue-on-error: true
+        if: steps.planqa1_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-plan-qa-prepare-1.log
+
+      - name: "[QA-PLAN] Runner de qa-reviewer paso 1 (ronda 1)"
+        id: planqa1_r1_run
+        continue-on-error: true
+        if: steps.planqa1_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" 2>&1 | tee plan-qa-step1-1.log
+        env:
+          QA_INPUT_PATH: ${{ steps.planqa1_prep.outputs.qaInputPath }}
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (paso 1 ronda 1)"
+        id: planqa1_r1
+        continue-on-error: true
+        if: steps.planqa1_r1_run.outcome == 'success'
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- plan-qa-step1-1.log
+
+      - name: "[QA-PLAN] Leer prompt (ronda 1)"
+        id: planqa1_prompt
+        continue-on-error: true
+        if: steps.planqa1_r1.outputs.qaStatus == 'pending_execution'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.planqa1_r1.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Ejecutar qa-reviewer sobre el PLAN (ronda 1)"
+        id: planqa1_runtime
+        continue-on-error: true
+        if: steps.planqa1_prompt.outcome == 'success' && steps.planqa1_r1.outputs.qaStatus == 'pending_execution'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: qa-reviewer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/qa-reviewer/plan-round-1/claude-execution.json
+          prompt: ${{ steps.planqa1_prompt.outputs.content }}
+          output-schema-path: config/qa-reviewer-output.schema.json
+          expected-output-path: ${{ steps.planqa1_r1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[QA-PLAN] Runner de qa-reviewer paso 2 (ronda 1)"
+        id: planqa1_r2_run
+        continue-on-error: true
+        if: steps.planqa1_runtime.outcome == 'success'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" --qa-reviewer-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee plan-qa-step2-1.log
+        env:
+          QA_INPUT_PATH: ${{ steps.planqa1_prep.outputs.qaInputPath }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.planqa1_r1.outputs.expectedOutputPath }}
+
+      - name: "[QA-PLAN] Decidir: aceptar, corregir, o parar en NEEDS_HUMAN_REVIEW (ronda 1)"
+        id: planqa1_done_run
+        continue-on-error: true
+        if: always() && steps.planqa1_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase complete-plan-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 --output "$EXPECTED_OUTPUT_PATH" --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-plan-qa-complete-1.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.planqa1_r1.outputs.expectedOutputPath }}
+          RUNTIME_NOTE: "step=${{ steps.planqa1_runtime.outcome }}, claude=${{ steps.planqa1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa1_runtime.outputs.output-source }}"
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (complete-plan-qa ronda 1)"
+        id: planqa1
+        continue-on-error: true
+        if: always() && steps.planqa1_done_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-plan-qa-complete-1.log
+
+      - name: "[CORR] Preparar encargo de correccion dirigida (ronda 2)"
+        id: corr2_prep_run
+        continue-on-error: true
+        if: steps.planqa1.outputs.correctionRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-web-engineer-correction --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 2>&1 | tee coord-correction-prepare-2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      - name: "[CORR] Parsear RUNNER_RESULT_JSON (prepare-correction ronda 2)"
+        id: corr2_prep
+        continue-on-error: true
+        if: steps.corr2_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-correction-prepare-2.log
+
+      - name: "[CORR] Leer prompt de correccion (ronda 2)"
+        id: corr2_prompt
+        continue-on-error: true
+        if: steps.corr2_prep.outputs.claudeRequired == 'true'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.corr2_prep.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Ejecutar web-engineer en modo CORRECCION (ronda 2)"
+        id: corr2_runtime
+        continue-on-error: true
+        if: steps.corr2_prompt.outcome == 'success' && steps.corr2_prep.outputs.claudeRequired == 'true'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: web-engineer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/web-engineer/rounds/2/claude-execution.json
+          prompt: ${{ steps.corr2_prompt.outputs.content }}
+          output-schema-path: config/web-engineer-output.schema.json
+          expected-output-path: ${{ steps.corr2_prep.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[CORR] Validar la correccion y reconstruir sus ChangePlans (ronda 2)"
+        id: corr2_done
+        continue-on-error: true
+        if: always() && steps.corr2_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase complete-web-engineer --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-correction-complete-2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          RUNTIME_NOTE: "step=${{ steps.corr2_runtime.outcome }}, claude=${{ steps.corr2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.corr2_runtime.outputs.output-source }}"
+
+      - name: "[QA-PLAN] Preparar bundle de revision del plan (ronda 2)"
+        id: planqa2_prep_run
+        continue-on-error: true
+        if: steps.corr2_done.outcome == 'success' && steps.corr2_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase prepare-plan-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 2>&1 | tee coord-plan-qa-prepare-2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (prepare-plan-qa ronda 2)"
+        id: planqa2_prep
+        continue-on-error: true
+        if: steps.planqa2_prep_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-plan-qa-prepare-2.log
+
+      - name: "[QA-PLAN] Runner de qa-reviewer paso 1 (ronda 2)"
+        id: planqa2_r1_run
+        continue-on-error: true
+        if: steps.planqa2_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" 2>&1 | tee plan-qa-step1-2.log
+        env:
+          QA_INPUT_PATH: ${{ steps.planqa2_prep.outputs.qaInputPath }}
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (paso 1 ronda 2)"
+        id: planqa2_r1
+        continue-on-error: true
+        if: steps.planqa2_r1_run.outcome == 'success'
+        run: npm run qa-reviewer:parse-runner-result-for-ci -- plan-qa-step1-2.log
+
+      - name: "[QA-PLAN] Leer prompt (ronda 2)"
+        id: planqa2_prompt
+        continue-on-error: true
+        if: steps.planqa2_r1.outputs.qaStatus == 'pending_execution'
+        run: |
+          delim="PROMPT_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "content<<$delim"
+            cat "$PROMPT_FILE_PATH"
+            echo "$delim"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          PROMPT_FILE_PATH: ${{ steps.planqa2_r1.outputs.promptFilePath }}
+
+      - name: "[RUNTIME] Ejecutar qa-reviewer sobre el PLAN (ronda 2)"
+        id: planqa2_runtime
+        continue-on-error: true
+        if: steps.planqa2_prompt.outcome == 'success' && steps.planqa2_r1.outputs.qaStatus == 'pending_execution'
+        timeout-minutes: 20
+        uses: ./.github/actions/claude-employee-runtime
+        with:
+          agent-name: qa-reviewer
+          execution-record-path: ${{ steps.run.outputs.runDir }}/stages/qa-reviewer/plan-round-2/claude-execution.json
+          prompt: ${{ steps.planqa2_prompt.outputs.content }}
+          output-schema-path: config/qa-reviewer-output.schema.json
+          expected-output-path: ${{ steps.planqa2_r1.outputs.expectedOutputPath }}
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github-token: ${{ github.token }}
+
+      - name: "[QA-PLAN] Runner de qa-reviewer paso 2 (ronda 2)"
+        id: planqa2_r2_run
+        continue-on-error: true
+        if: steps.planqa2_runtime.outcome == 'success'
+        run: |
+          set -o pipefail
+          npm run qa-reviewer:run -- --artifact-path "$QA_INPUT_PATH" --qa-reviewer-output "$EXPECTED_OUTPUT_PATH" 2>&1 | tee plan-qa-step2-2.log
+        env:
+          QA_INPUT_PATH: ${{ steps.planqa2_prep.outputs.qaInputPath }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.planqa2_r1.outputs.expectedOutputPath }}
+
+      - name: "[QA-PLAN] Decidir: aceptar, corregir, o parar en NEEDS_HUMAN_REVIEW (ronda 2)"
+        id: planqa2_done_run
+        continue-on-error: true
+        if: always() && steps.planqa2_prep.outputs.claudeRequired == 'true'
+        run: |
+          set -o pipefail
+          npm run department:run -- --phase complete-plan-qa --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 --output "$EXPECTED_OUTPUT_PATH" --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-plan-qa-complete-2.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          EXPECTED_OUTPUT_PATH: ${{ steps.planqa2_r1.outputs.expectedOutputPath }}
+          RUNTIME_NOTE: "step=${{ steps.planqa2_runtime.outcome }}, claude=${{ steps.planqa2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa2_runtime.outputs.output-source }}"
+
+      - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (complete-plan-qa ronda 2)"
+        id: planqa2
+        continue-on-error: true
+        if: always() && steps.planqa2_done_run.outcome == 'success'
+        run: npm run department:parse-runner-result-for-ci -- coord-plan-qa-complete-2.log
+
       # =====================================================================
       # FASE 4.5 -- PLANIFICACION DEL APPLY (determinista, sin Claude)
       #
@@ -1040,6 +1466,73 @@ jobs:
           WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
           WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
           WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+
+      # =====================================================================
+      # FASE 4.6 -- APPLY REAL EN STAGING
+      #
+      # ESTA ES LA UNICA FASE DE LA PASADA QUE ESCRIBE FUERA. Escribe en
+      # STAGING y solo en staging.
+      #
+      # POR QUE EXISTE AHORA. Hasta aqui la pasada terminaba planificando:
+      # producia ChangePlans ejecutables y despues decia que hacia falta
+      # implementarlos a mano. La capacidad de ejecutarlos existia y
+      # estaba certificada (snapshot -> apply -> read-back -> validacion
+      # -> rollback verificado), pero solo la alcanzaban el E2E controlado
+      # y la sesion de aprobacion manual: la pasada automatica, no.
+      #
+      # LAS CONDICIONES, todas obligatorias y todas comprobadas en codigo:
+      #   - la QA del plan NO acabo en NEEDS_HUMAN_REVIEW (si acabo ahi, el
+      #     contrato de apply bloquea TODOS los elementos de la pasada);
+      #   - existe un ChangePlan ACTIONABLE resuelto contra el inventario
+      #     real, con BEFORE leido y ancla de version;
+      #   - el entorno resuelto de WordPress es `staging`;
+      #   - los interruptores de escritura estan encendidos.
+      #
+      # PRODUCCION SIGUE SIENDO INALCANZABLE DESDE AQUI. No se pasa
+      # ninguna credencial de produccion a este step, el adaptador la
+      # bloquea de forma incondicional, y la politica de ejecucion la
+      # rechaza por entorno antes de intentar nada. Publicar en produccion
+      # ocurre en UN solo workflow distinto y siempre tras aprobacion
+      # humana explicita.
+      # =====================================================================
+      - name: "[APPLY] Aplicar en STAGING los ChangePlans ejecutables (read-back + rollback automatico)"
+        id: apply_stage
+        continue-on-error: true
+        if: always()
+        run: |
+          set -o pipefail
+          npm run department:apply -- --phase stage --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-stage.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+          DEPARTMENT_PERSISTENCE_MODE: ${{ vars.DEPARTMENT_PERSISTENCE_MODE }}
+          WORDPRESS_STAGING_BASE_URL: ${{ secrets.WORDPRESS_STAGING_BASE_URL }}
+          WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+          WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
+          WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+          WORDPRESS_ENV: staging
+          WORDPRESS_DRAFTS_ENABLED: ${{ vars.WORDPRESS_DRAFTS_ENABLED }}
+          DEPARTMENT_STAGING_APPLY_ENABLED: ${{ vars.DEPARTMENT_STAGING_APPLY_ENABLED }}
+          NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED: ${{ vars.NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED }}
+          NOVAMIRA_STAGING_WRITES_ENABLED: ${{ vars.NOVAMIRA_STAGING_WRITES_ENABLED }}
+          NOVAMIRA_MCP_URL: ${{ secrets.NOVAMIRA_MCP_URL }}
+          NOVAMIRA_MCP_TOKEN: ${{ secrets.NOVAMIRA_MCP_TOKEN }}
+
+      - name: "[APPLY] Proyectar el resultado real sobre el contrato de la pasada"
+        id: apply_sync
+        continue-on-error: true
+        if: always()
+        run: |
+          set -o pipefail
+          npm run department:apply -- --phase sync --departmentRunId "$DEPARTMENT_RUN_ID" 2>&1 | tee coord-apply-sync.log
+        env:
+          DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+          DEPARTMENT_PERSISTENCE_MODE: ${{ vars.DEPARTMENT_PERSISTENCE_MODE }}
 
       # =====================================================================
       # FASE 5 -- DAILY BRIEF (ensamblado determinista, sin Claude)

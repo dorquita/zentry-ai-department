@@ -87,8 +87,37 @@ export function resolveDepartmentRunPaths(departmentRunId: string): DepartmentRu
   };
 }
 
-export function resolveStageDir(departmentRunId: string, stage: DepartmentStageName): string {
-  return path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "stages", stage);
+/**
+ * Directorio de una etapa. `round` es la ronda del bucle de correccion
+ * de QA: 0 (por defecto) es la ejecucion original y conserva EXACTAMENTE
+ * la ruta de siempre, para no mover nada de lo que ya funciona. Las
+ * rondas de correccion viven debajo, en `rounds/<n>/`.
+ *
+ * Que cada ronda tenga su propio directorio no es cosmetico: es lo unico
+ * que permite demostrar que la re-QA se hizo sobre el output NUEVO. Con
+ * una sola ruta por etapa, la ronda 2 sobrescribiria a la 1 y "PASS en la
+ * ronda 2" seria indistinguible de "PASS sobre el artifact viejo".
+ */
+export function resolveStageDir(departmentRunId: string, stage: DepartmentStageName, round = 0): string {
+  const base = path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "stages", stage);
+  return round > 0 ? path.join(base, "rounds", String(round)) : base;
+}
+
+/** Registro del bucle de QA de la pasada (rondas, correcciones, veredicto final). */
+export function resolveQaLoopPath(departmentRunId: string): string {
+  return path.join(resolveDepartmentRunPaths(departmentRunId).runDir, "qa-loop.json");
+}
+
+/**
+ * Bundle que revisa qa-reviewer en una ronda concreta del bucle. El
+ * nombre lleva la ronda a proposito, por la misma razon que
+ * `qaInputPath` lleva el departmentRunId: qa-reviewer deriva su
+ * `artifactId` del basename, asi que una ronda con nombre propio produce
+ * su propia identidad de revision y no puede confundirse con la anterior.
+ */
+export function resolvePlanQaInputPath(departmentRunId: string, round: number): string {
+  const runDir = resolveDepartmentRunPaths(departmentRunId).runDir;
+  return path.join(runDir, `${departmentRunId}-plan-qa-input-round-${round}.json`);
 }
 
 export interface StageFilePaths {
@@ -108,8 +137,8 @@ export interface StageFilePaths {
   executionRecordPath: string;
 }
 
-export function resolveStageFilePaths(departmentRunId: string, stage: DepartmentStageName): StageFilePaths {
-  const stageDir = resolveStageDir(departmentRunId, stage);
+export function resolveStageFilePaths(departmentRunId: string, stage: DepartmentStageName, round = 0): StageFilePaths {
+  const stageDir = resolveStageDir(departmentRunId, stage, round);
   return {
     stageDir,
     contextPath: path.join(stageDir, "context.json"),
