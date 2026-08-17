@@ -101,8 +101,12 @@ export function describeCredentialShape(uri: string): CredentialShape {
   return {
     hasCredentials: true,
     hasPlaceholder: /<[^>]*>/.test(userinfo),
-    // `:` y `@` extra dentro de la userinfo, o cualquier otro reservado crudo.
-    hasRawSpecialChars: /[/?#[\]\s]/.test(userinfo) || password.includes(":"),
+    // Reservados crudos dentro de la userinfo. El `@` va aparte porque la
+    // userinfo se corta por el ULTIMO `@`: si queda alguno DENTRO, es que
+    // la contrasena lleva un `@` sin escapar como %40, y ahi el driver y
+    // este parser pueden discrepar sobre donde acaba la contrasena.
+    hasRawSpecialChars:
+      /[/?#[\]\s]/.test(userinfo) || password.includes(":") || userinfo.includes("@"),
     hasPercentEscapes: /%[0-9a-fA-F]{2}/.test(userinfo),
     hasEmptyPart: username.length === 0 || password.length === 0,
   };

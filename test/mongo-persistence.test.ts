@@ -990,6 +990,12 @@ export function runMongoPersistenceTests(): TestCase[] {
           "una barra cruda en la contrasena rompe el parseo de la autoridad"
         );
         assert.equal(
+          describeCredentialShape("mongodb+srv://zentry:cla@ve@cluster0.abc.mongodb.net/z")
+            .hasRawSpecialChars,
+          true,
+          "un @ sin escapar como %40 hace que driver y parser discrepen sobre donde acaba la contrasena"
+        );
+        assert.equal(
           describeCredentialShape("mongodb://cluster0.abc.mongodb.net/z").hasCredentials,
           false,
           "una URI sin credenciales no es un caso de forma incorrecta"
