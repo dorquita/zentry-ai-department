@@ -313,11 +313,25 @@ export const ENTITY_REGISTRY: readonly EntityDescriptor[] = [
   {
     file: "staging-review-pages.jsonl",
     kind: "staging_review_page",
-    stateClass: "C",
-    idFields: ["wordpressPageId", "publishedAt"],
+    // Fase O57 — RECLASIFICADO de C a A. La clasificacion anterior decia
+    // "derivable de las ejecuciones de staging" y es FALSA: `publicUrl`
+    // es la URL real publicada, y `staging-executions.jsonl` solo guarda
+    // `wordpressDraftUrl` (la forma `?page_id=N`). El propio lector
+    // (`loadOwnedStagingPages` en scripts/run-department-apply.ts) pone
+    // las paginas de revision DESPUES a proposito, para que su URL real
+    // gane. Ese dato no existe en ningun otro sitio: si se pierde, el
+    // sistema deja de saber que paginas de staging controla y ninguna
+    // capacidad de apply se puede confirmar.
+    stateClass: "A",
+    // La identidad es la pagina, no la publicacion: el lector colapsa por
+    // `wordpressPageId` y se queda con la ultima. Meter `publishedAt` en
+    // la identidad crearia una entidad nueva por cada republicacion.
+    idFields: ["wordpressPageId"],
     freshnessField: "publishedAt",
     occurredAtField: "publishedAt",
-    rationale: "Derivable de las ejecuciones de staging.",
+    rationale:
+      "Catalogo de paginas de staging que el sistema controla. `publicUrl` es la URL real " +
+      "publicada y no se puede reconstruir desde ningun otro registro.",
   },
   {
     file: "image-optimizations.jsonl",
