@@ -69,14 +69,32 @@ function parseArgs(argv: string[]): Record<string, string> {
   return args;
 }
 
+/**
+ * Ejecuta una fase real en un proceso hijo.
+ *
+ * El `catch` no es decoracion. `execFileSync` solo devuelve stdout cuando
+ * el hijo termina BIEN; si lanza, la salida se queda dentro del error. La
+ * primera version de esto no la imprimia, asi que un apply fallido
+ * producia un log con el contrato de apply, un silencio de diez segundos
+ * y un "CRITICO" final -- sin una sola linea de lo que el executor habia
+ * dicho. El diagnostico se perdia exactamente en el caso en el que hace
+ * falta.
+ */
 function run(script: string, args: string[]): string {
-  const output = execFileSync("npx", ["ts-node", script, ...args], {
-    encoding: "utf-8",
-    env: { ...process.env, WORDPRESS_ENV: "staging" },
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  process.stdout.write(output);
-  return output;
+  try {
+    const output = execFileSync("npx", ["ts-node", script, ...args], {
+      encoding: "utf-8",
+      env: { ...process.env, WORDPRESS_ENV: "staging" },
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    process.stdout.write(output);
+    return output;
+  } catch (err) {
+    const failure = err as { stdout?: string; stderr?: string; message?: string };
+    if (failure.stdout) process.stdout.write(failure.stdout);
+    if (failure.stderr) process.stderr.write(failure.stderr);
+    throw new Error(`La fase "${args.join(" ")}" fallo: ${failure.message ?? String(err)}`);
+  }
 }
 
 /**
