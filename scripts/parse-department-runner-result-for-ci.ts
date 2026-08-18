@@ -15,7 +15,7 @@
  * Uso: ts-node scripts/parse-department-runner-result-for-ci.ts <ruta-al-log>
  */
 import * as fs from "fs";
-import { extractAndParseDepartmentRunnerResult } from "../src/department/runner-result";
+import { DEPARTMENT_RUNNER_RESULT_FIELDS, extractAndParseDepartmentRunnerResult } from "../src/department/runner-result";
 
 function writeGithubOutput(entries: Record<string, string>): void {
   const outputPath = process.env.GITHUB_OUTPUT;
@@ -40,27 +40,18 @@ function main(): void {
   }
   const result = extractAndParseDepartmentRunnerResult(fs.readFileSync(logPath, "utf-8"));
 
-  writeGithubOutput({
-    phase: result.phase,
-    departmentRunId: result.departmentRunId,
-    status: result.status,
-    reason: result.reason,
-    runDir: result.runDir,
-    manifestPath: result.manifestPath,
-    promptFilePath: result.promptFilePath,
-    expectedOutputPath: result.expectedOutputPath,
-    qaInputPath: result.qaInputPath,
-    promotionPath: result.promotionPath,
-    briefJsonPath: result.briefJsonPath,
-    briefMdPath: result.briefMdPath,
-    stepSummaryPath: result.stepSummaryPath,
-    claudeRequired: String(result.claudeRequired),
-    promotedCount: String(result.promotedCount),
-    blockedCount: String(result.blockedCount),
-    departmentQaStatus: result.departmentQaStatus,
-    auditWarningCount: String(result.auditWarningCount),
-    priorityCount: String(result.priorityCount),
-  });
+  // Se recorre el contrato ENTERO, no una lista escrita a mano.
+  //
+  // La lista a mano fue exactamente el fallo: cuando el contrato crecio
+  // con `correctionRequired`, la lista no crecio, y el bucle de
+  // correccion del workflow -- que depende de ese output -- quedo muerto
+  // en silencio. El departamento decidia pedir la correccion y nadie se
+  // enteraba.
+  const entries: Record<string, string> = {};
+  for (const field of DEPARTMENT_RUNNER_RESULT_FIELDS) {
+    entries[field] = String(result[field]);
+  }
+  writeGithubOutput(entries);
 
   console.log(`parse-department-runner-result-for-ci: phase=${result.phase} status=${result.status} departmentRunId=${result.departmentRunId} claudeRequired=${String(result.claudeRequired)}`);
 }

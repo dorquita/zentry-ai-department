@@ -103,6 +103,31 @@ export const EMPTY_DEPARTMENT_RUNNER_RESULT: Omit<DepartmentRunnerResultSummary,
   nextRound: 0,
 };
 
+/**
+ * TODOS los campos del contrato, en un unico sitio del que se derivan
+ * los outputs de GitHub Actions.
+ *
+ * POR QUE ES UNA LISTA DERIVADA Y NO ESCRITA A MANO. El parser de CI
+ * enumeraba los campos uno a uno, y cuando el contrato crecio con
+ * `qaLoopStatus` / `correctionRequired` / `nextRound` esa lista no
+ * crecio con el. Consecuencia: el departamento decidia "pide una
+ * correccion", lo escribia en disco, y el workflow -- que condiciona
+ * todo el bucle a `steps.qa_gate.outputs.correctionRequired == 'true'`
+ * -- leia un output que NUNCA existio. El bucle entero estaba muerto sin
+ * que ningun test ni ningun log lo dijera.
+ *
+ * Derivando la lista de `EMPTY_DEPARTMENT_RUNNER_RESULT`, que el
+ * compilador ya obliga a estar completo, un campo nuevo del contrato
+ * aparece como output solo.
+ */
+export const DEPARTMENT_RUNNER_RESULT_FIELDS: readonly (keyof DepartmentRunnerResultSummary)[] = [
+  "phase",
+  "departmentRunId",
+  "status",
+  "reason",
+  ...(Object.keys(EMPTY_DEPARTMENT_RUNNER_RESULT) as (keyof DepartmentRunnerResultSummary)[]),
+];
+
 export function extractLastDepartmentRunnerResultJsonLine(log: string): string | undefined {
   const matches = [...log.matchAll(/^RUNNER_RESULT_JSON=(.*)$/gm)];
   if (matches.length === 0) return undefined;

@@ -2,7 +2,11 @@ import * as assert from "node:assert/strict";
 import * as fs from "fs";
 import * as path from "path";
 import { assertSubagentIsToolless } from "../src/core/subagent-tool-guard";
-import { extractAndParseDepartmentRunnerResult, parseDepartmentRunnerResultJson } from "../src/department/runner-result";
+import {
+  DEPARTMENT_RUNNER_RESULT_FIELDS,
+  extractAndParseDepartmentRunnerResult,
+  parseDepartmentRunnerResultJson,
+} from "../src/department/runner-result";
 import { parseStageOutputText, resolveDepartmentRunPaths, resolveStageFilePaths, toRepoRelative } from "../src/department/run-store";
 import { assertSupportedContractVersion, buildDepartmentCoordinationRunId, DEPARTMENT_RUN_CONTRACT_VERSION, DEPARTMENT_STAGE_NAMES } from "../src/department/types";
 
@@ -307,6 +311,74 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
           runner.includes("decideChangePlanExecution"),
           "ejecutar o no un ChangePlan debe decidirlo la funcion pura de politica, que es la que se puede testear sin red"
         );
+      },
+    },
+    {
+      // REGRESION REAL (pasada dept-2026-08-18T012804Z, run 32088261661).
+      //
+      // QA bloqueo con 9 correcciones estructuradas, el bucle decidio
+      // `request_correction` y lo dejo escrito en `qa-loop-growth.json`
+      // con `finalStatus: in_progress`. Y no paso NADA: ninguna ronda de
+      // correccion se ejecuto.
+      //
+      // El motivo: el parser de CI enumeraba a mano los campos que
+      // publica como outputs, y esa lista se quedo sin
+      // `correctionRequired` cuando el contrato crecio. El workflow
+      // condiciona TODO el bucle -- el de Growth y el del plan -- a
+      // `steps.qa_gate.outputs.correctionRequired == 'true'`, asi que
+      // leia un output que nunca existio y la condicion era
+      // permanentemente falsa.
+      //
+      // La misma forma que los demas cortes de esta puesta en marcha: el
+      // sistema DECIDE bien y la decision no llega a quien tiene que
+      // actuar. Un output que falta no rompe nada de forma visible --
+      // simplemente apaga una rama entera en silencio.
+      name: "El parser de CI publica TODOS los campos del contrato, incluidos los que gobiernan el bucle de correccion",
+      fn: () => {
+        const parser = fs.readFileSync(path.join(PROJECT_ROOT, "scripts", "parse-department-runner-result-for-ci.ts"), "utf-8");
+        const workflow = fs.readFileSync(path.join(PROJECT_ROOT, ".github", "workflows", "zentry-ai-department-daily.yml"), "utf-8");
+
+        // 1. La lista de campos se DERIVA del contrato, no se escribe a
+        //    mano: es lo unico que impide que vuelva a desincronizarse.
+        assert.ok(
+          parser.includes("DEPARTMENT_RUNNER_RESULT_FIELDS"),
+          "el parser debe recorrer la lista derivada del contrato, no una enumeracion a mano"
+        );
+
+        // 2. Todo output que el workflow lea DE UN STEP DE ESTE PARSER
+        //    tiene que ser un campo real del contrato. Si lee
+        //    `steps.X.outputs.foo` y `foo` no existe, la condicion es
+        //    falsa para siempre y nadie se entera.
+        //
+        //    Se acota a los steps de ESTE parser a proposito: el
+        //    workflow lee ademas outputs de la composite action del
+        //    runtime y de los parsers por empleado, que tienen sus
+        //    propios contratos. Una lista blanca de nombres ajenos se
+        //    quedaria obsoleta igual que se quedo la del parser.
+        const contract = new Set<string>(DEPARTMENT_RUNNER_RESULT_FIELDS as readonly string[]);
+        const parserStepIds = new Set<string>();
+        for (const chunk of workflow.split(/^      - name:/m)) {
+          if (!chunk.includes("department:parse-runner-result-for-ci")) continue;
+          const id = /^\s*id:\s*([A-Za-z0-9_-]+)\s*$/m.exec(chunk);
+          if (id) parserStepIds.add(id[1]);
+        }
+        assert.ok(parserStepIds.size > 0, "no se ha encontrado ningun step que use el parser: el test no estaria comprobando nada");
+
+        // El guion cuenta: los outputs de la composite action se llaman
+        // `claude-outcome`, `output-source`... y un patron sin guion los
+        // trunca a `claude`.
+        for (const [, stepId, output] of workflow.matchAll(/steps\.([A-Za-z0-9_-]+)\.outputs\.([A-Za-z0-9_-]+)/g)) {
+          if (!parserStepIds.has(stepId)) continue;
+          assert.ok(
+            contract.has(output),
+            `el workflow lee "steps.${stepId}.outputs.${output}", pero "${output}" no es un campo del contrato que ese step publica: la condicion seria falsa para siempre`
+          );
+        }
+
+        // 3. Y en concreto los tres del bucle, que son los que faltaban.
+        for (const field of ["qaLoopStatus", "correctionRequired", "nextRound"]) {
+          assert.ok(contract.has(field), `"${field}" debe formar parte del contrato publicado como output`);
+        }
       },
     },
     {
