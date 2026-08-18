@@ -152,6 +152,32 @@ ejercitado, porque su reversion la pedia el propio script. Hay ahora un
 test que prohibe fijar la fase a mano en cualquiera de los dos
 envoltorios.
 
+## Fail-closed bajo un fallo real
+
+La pasada `dept-2026-08-18T010547Z` (run 32086920114) fallo por un motivo
+que no estaba previsto: la invocacion de `qa-reviewer` termino en 24
+segundos, contra los ~230 habituales, sin entregar salida valida. Los
+cuatro empleados anteriores de la misma pasada habian ido bien, asi que
+no es autenticacion ni configuracion.
+
+Lo relevante es como reacciono el departamento:
+
+```
+Etapas con fallo real: qa-reviewer=failed. El Daily Brief se ha generado
+igualmente con el estado real de cada etapa, pero la pasada se marca en
+rojo.
+```
+
+- 0 recomendaciones promovidas a ingenieria.
+- `web-engineer` no se invoco.
+- 0 escrituras en staging, 0 en produccion.
+- La pasada se marco en ROJO y el job de persistencia quedo sin ejecutar.
+
+Es decir: ante una puerta de calidad que no pudo pronunciarse, el sistema
+**no siguio adelante ni invento un veredicto**. Un QA que falla no se lee
+como un QA que aprueba. Eso es exactamente lo que debe pasar, y no estaba
+demostrado hasta ahora.
+
 ## Problemas encontrados durante la puesta en marcha
 
 Todos los bloqueos reales resultaron ser **la misma clase de fallo**: un
