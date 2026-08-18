@@ -66,6 +66,53 @@ EMAIL              resumen humano de 150-250 palabras
 PRODUCCION         inalcanzable por este camino, en cualquier caso
 ```
 
+## Que puede hacer ya sin intervencion humana
+
+En staging, de principio a fin y sin que nadie apruebe nada por el
+camino:
+
+1. Recoger datos live de Search Console, GA4, GTM y Google Ads, y leer
+   el inventario real de paginas de staging.
+2. Ejecutar los cuatro empleados de analisis (SEO, contenido, analitica)
+   y la sintesis de Growth.
+3. Priorizar y decidir que merece hacerse AHORA -- incluida la decision
+   de que no merece hacerse nada.
+4. Someter esas recomendaciones a QA independiente.
+5. Corregirse solo cuando QA bloquea, y volver a pasar por QA sobre la
+   version corregida, hasta dos rondas.
+6. Convertir una recomendacion aprobada en una especificacion tecnica
+   con ChangePlans.
+7. Resolver el destino exacto -- pageId, valor BEFORE, ancla de version
+   -- contra el inventario real, nunca contra lo que dijo el modelo.
+8. Someter el PLAN a una segunda puerta de QA, con su propio bucle de
+   correccion.
+9. Escribir el cambio en staging por `novamira/execute-php`.
+10. Releerlo por una via distinta de la de escritura y validar que nada
+    fuera del scope declarado cambio.
+11. Revertirlo solo si la validacion falla, y verificar la reversion
+    releyendo.
+12. Registrar todo el ciclo en MongoDB.
+13. Enviar un correo de 150-250 palabras que una persona no tecnica
+    entiende en un minuto.
+
+## Que sigue requiriendo intervencion humana
+
+1. **Publicar en produccion.** Sin excepcion, y por construccion, no solo
+   por politica.
+2. **Desbloquear un `NEEDS_HUMAN_REVIEW`**: cuando dos rondas de
+   correccion no resuelven lo que QA señala, el sistema para y lo dice.
+   No maquilla el FAIL.
+3. **Decisiones de negocio irreversibles** y las que dependen de
+   informacion que el departamento no tiene (destino final del trafico
+   de un segmento, por ejemplo).
+4. **Credenciales externas** y cualquier cambio de configuracion de las
+   fuentes live.
+5. **SEM / Google Ads**: `sem-specialist` queda deliberadamente fuera de
+   esta fase. Su ausencia no bloquea nada, pero ninguna conclusion del
+   departamento cubre Google Ads.
+6. **Restaurar staging si una escritura queda a medias.** El sistema
+   deja de tocar la pagina y pide intervencion; no reintenta a ciegas.
+
 ## Rollback
 
 La reversion automatica no se afirma por diseño: se ejerce.
