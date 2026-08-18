@@ -231,6 +231,29 @@ export function runHumanBriefEmailTests(): TestCase[] {
       name: "El modo se decide de forma determinista: fallo critico -> alerta, nada que contar -> sin trabajo, resto -> normal",
       fn: () => {
         assert.equal(resolveBriefMode(normalInput()), "normal");
+
+        // REGRESION REAL (pasada dept-2026-08-18T025944Z). El analisis
+        // entero fue bien -- cinco empleados, dos puertas de QA -- pero
+        // la lectura de la web de pruebas fallo por red. Sin inventario
+        // ninguna propuesta puede resolver su pagina destino, asi que
+        // nada podia aplicarse. El correo decia "Estado: Todo correcto".
+        //
+        // "Hoy no habia nada que aplicar" y "hoy no se podia aplicar
+        // nada" se leen igual y NO son lo mismo: lo segundo es una
+        // averia que puede durar dias sin que nadie la note.
+        const sinStaging = { ...normalInput(), stagingInventoryUnavailableReason: "Fallo de red leyendo el inventario de staging (fetch failed) tras 3 intentos con espera." };
+        assert.equal(resolveBriefMode(sinStaging), "alerta");
+        const emailSinStaging = buildHumanDailyBriefEmail(sinStaging);
+        assert.ok(!emailSinStaging.text.includes("Todo correcto"), "un dia sin poder tocar la web no puede decir que todo esta correcto");
+        assert.ok(
+          emailSinStaging.text.includes("web de pruebas"),
+          `la alerta tiene que decir que no se pudo conectar con la web de pruebas: ${emailSinStaging.text}`
+        );
+        // Y sin filtrar jerga: ni dominios, ni "fetch", ni el numero de reintentos.
+        for (const leak of ["fetch", "staging.zentrylockers", "inventario", "3 intentos"]) {
+          assert.ok(!emailSinStaging.text.toLowerCase().includes(leak.toLowerCase()), `el correo humano no puede filtrar "${leak}"`);
+        }
+
         assert.equal(resolveBriefMode({ brief: brief({ topPriorities: [], approvalsNeeded: [] }), apply: null, cost: null, runUrl: "" }), "sin_trabajo");
         assert.equal(
           resolveBriefMode({ brief: brief({ stageStatuses: [stage("seo-specialist", "executed"), stage("growth-director-v2", "failed"), stage("qa-reviewer", "executed")] }), apply: null, cost: null, runUrl: "" }),

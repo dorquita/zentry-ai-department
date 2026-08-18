@@ -42,6 +42,22 @@ export interface HumanDailyBriefEmailInput extends DailyBriefEmailInput {
    * este email (viven en el informe tecnico).
    */
   runFailureReason?: string;
+  /**
+   * Motivo por el que no se pudo leer la web de pruebas, si no se pudo.
+   *
+   * TAMBIEN ES ALERTA, y esto costo verlo. En la pasada
+   * dept-2026-08-18T025944Z el analisis entero fue bien -- los cinco
+   * empleados, las dos puertas de QA -- pero la lectura de staging fallo
+   * por red, y sin inventario NINGUNA propuesta puede resolver su pagina
+   * destino. El correo decia "Estado: Todo correcto" y "lo de hoy sigue
+   * en preparacion", que es exactamente igual a como se lee un dia en el
+   * que todo funciono y simplemente no tocaba aplicar nada.
+   *
+   * No es lo mismo "hoy no habia nada que aplicar" que "hoy no se podia
+   * aplicar nada". Confundirlos oculta una averia que puede durar dias
+   * sin que nadie la note.
+   */
+  stagingInventoryUnavailableReason?: string;
 }
 
 /** Maximo de cambios que se enumeran en "Hemos hecho". */
@@ -279,6 +295,9 @@ function brokenCriticalStages(brief: DepartmentDailyBrief): DepartmentStageName[
 export function resolveBriefMode(input: HumanDailyBriefEmailInput): HumanBriefMode {
   const brief = input.brief;
   if (String(input.runFailureReason ?? "").trim().length > 0) return "alerta";
+  // Sin lectura de la web de pruebas no se puede aplicar nada, aunque el
+  // analisis haya ido perfecto. Eso es una averia, no un dia tranquilo.
+  if (String(input.stagingInventoryUnavailableReason ?? "").trim().length > 0) return "alerta";
   if (brief.stageStatuses.filter((s) => s.status === "executed").length === 0) return "alerta";
   if (brokenCriticalStages(brief).length > 0) return "alerta";
 
@@ -468,6 +487,12 @@ function noWorkBody(): HumanBriefBody {
 export function humanFailureReason(input: HumanDailyBriefEmailInput): string {
   const declared = String(input.runFailureReason ?? "").trim();
   if (declared.length > 0) return humanPhrase(declared, 24, "Una parte del proceso no llego a terminar.");
+  // El motivo tecnico de la lectura de staging NO se copia: nombra
+  // dominios y errores de red. Se traduce a lo unico que le importa a
+  // quien lee -- que hoy no se podia tocar nada.
+  if (String(input.stagingInventoryUnavailableReason ?? "").trim().length > 0) {
+    return "No hemos podido conectar con la web de pruebas, asi que hoy ningun cambio podia prepararse ni aplicarse. El analisis si se ha hecho.";
+  }
   const broken = brokenCriticalStages(input.brief);
   if (broken.length > 0) return `${STAGE_HUMAN_WORK[broken[0]].charAt(0).toUpperCase()}${STAGE_HUMAN_WORK[broken[0]].slice(1)} no llego a terminar, asi que hoy no hay conclusiones fiables.`;
   return "El proceso de revision no llego a terminar, asi que hoy no hay conclusiones fiables.";
