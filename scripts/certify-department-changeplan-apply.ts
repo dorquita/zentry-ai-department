@@ -52,6 +52,8 @@ import { StagingInventory, StagingPageSnapshot } from "../src/department/staging
 import { DepartmentPromotionResult } from "../src/department/promotion";
 import { WebEngineerOutput } from "../src/employees/web-engineer/types";
 import { resolveDepartmentRunPaths, resolveStageFilePaths, toRepoRelative } from "../src/department/run-store";
+import { buildDepartmentWebEngineerContext } from "../src/department/web-engineer-input";
+import { summarizeInventoryForPrompt } from "../src/department/staging-inventory";
 
 const CERTIFICATION_MARKER = "[certificacion apply departamento]";
 
@@ -185,11 +187,8 @@ async function applyControlledPlan(input: {
   run("scripts/run-department-coordination.ts", ["--phase", "init", "--departmentRunId", input.departmentRunId]);
 
   const title = `Certificacion del camino de apply ${CERTIFICATION_MARKER}`;
-  fs.writeFileSync(
-    paths.promotionPath,
-    JSON.stringify(buildPromotion(input.departmentRunId, title, "Certificacion tecnica del camino de apply."), null, 2),
-    "utf-8"
-  );
+  const promotion = buildPromotion(input.departmentRunId, title, "Certificacion tecnica del camino de apply.");
+  fs.writeFileSync(paths.promotionPath, JSON.stringify(promotion, null, 2), "utf-8");
 
   // El inventario REAL: es de donde la fase `complete-web-engineer` saca
   // el pageId, el BEFORE y el ancla de version. No se falsea.
@@ -197,22 +196,22 @@ async function applyControlledPlan(input: {
 
   const stage = resolveStageFilePaths(input.departmentRunId, "web-engineer");
   fs.mkdirSync(stage.stageDir, { recursive: true });
-  // El contexto que la fase de validacion espera encontrar.
-  fs.writeFileSync(
-    stage.contextPath,
-    JSON.stringify(
-      {
-        departmentRunId: input.departmentRunId,
-        approvedRecommendations: [{ recommendationId: `${input.departmentRunId}#rec-1`, rank: 1, title }],
-        blockedRecommendations: [],
-        targetPageSnapshots: [],
-        confirmedCapabilities: [],
-      },
-      null,
-      2
-    ),
-    "utf-8"
-  );
+  // El contexto lo construye el MISMO builder que usa la pasada real.
+  // Escribirlo a mano fue el primer intento y fallo por un campo que
+  // faltaba -- y con razon: un contexto inventado a mano certifica que el
+  // script sabe escribir JSON, no que la fase sepa consumir lo que la
+  // pasada le entrega.
+  const context = buildDepartmentWebEngineerContext({
+    departmentRunId: input.departmentRunId,
+    promotion,
+    growthSummary: "Certificacion tecnica del camino de apply. No hay sintesis de Growth real en esta ejecucion.",
+    evidenceCatalog: [],
+    specialistInputs: [],
+    stagingInventory: summarizeInventoryForPrompt(input.inventory),
+    stagingInventoryUnavailableReason: input.inventory.unavailableReason,
+    fullStagingInventory: input.inventory,
+  });
+  fs.writeFileSync(stage.contextPath, JSON.stringify(context, null, 2), "utf-8");
   fs.writeFileSync(
     stage.outputPath,
     JSON.stringify(buildWebEngineerOutput(input.page, `${input.departmentRunId}#rec-1`, input.newExcerpt, input.purpose), null, 2),
