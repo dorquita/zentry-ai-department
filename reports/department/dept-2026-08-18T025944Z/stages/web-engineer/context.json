@@ -1,0 +1,375 @@
+{
+  "contextKind": "department_coordination_v1",
+  "departmentRunId": "dept-2026-08-18T025944Z",
+  "qaStatus": "PASS_WITH_WARNINGS",
+  "growthSummary": "El foco ahora mismo debe ser doble: (1) verificar que las 5 correcciones ya aprobadas por una persona el 2026-08-16 (enrutado roto de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de meta title/description con CTR 0%, y validacion de click_phone) se hayan aplicado realmente, porque los datos LIVE de hoy (seo-watcher-2026-08-18T025953Z y el snapshot GA4/GTM de esta pasada) muestran que los mismos problemas siguen presentes; y (2) resolver una contradiccion critica en analytics: la version live de GTM se llama literalmente sin publicar, pendiente aprobacion Pau, lo que pone en duda toda conclusion de conversion de esta pasada. La recomendacion de seo-specialist de publicar en produccion las paginas de staging (metalicas, universidades, vestuarios, taquillas inteligentes general) NO debe ejecutarse: una persona ya la rechazo explicitamente por falta de calidad visual/fotografica. sem-specialist sigue fuera de esta fase, por lo que no hay ninguna senal sobre SEM/Google Ads que se pueda usar para decidir nada.",
+  "sourceOfRecommendations": "growth-director-v2 sintetizo las salidas reales de los especialistas de esta misma pasada; qa-reviewer las reviso; solo lo que aparece en approvedRecommendations[] paso ambas puertas.",
+  "approvedRecommendations": [
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-1",
+      "rank": 1,
+      "title": "Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/",
+      "rationale": "Esta correccion ya fue aprobada por una persona el 2026-08-16 pero el run SEO Watcher de hoy sigue generando actionItems que apuntan a /cerraduras/, URL en papelera con 301. Impacto alto porque evita malgastar esfuerzo sobre keywords mal enrutadas; confianza alta porque la evidencia es consistente entre pasadas; esfuerzo bajo porque es una correccion de enrutado, no contenido nuevo.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Confirmar si el pipeline de SEO Watcher respeta el catalogo de clusters al generar actionItems"
+      ],
+      "evidenceRefs": [
+        "dept-seo-technical-issue-1",
+        "dept-seo-action-1",
+        "human-decision-approved-routing-fix"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-technical-issue-1",
+          "description": "seo-specialist, problema tecnico (severity=high, basis=evidence) en la pagina https://zentrylockers.com/cerraduras/: El backlog SEO sigue generando actionItems que apuntan a /cerraduras/, una URL documentada en el catalogo de clusters como en PAPELERA desde O22 con redireccion 301 real a /cerrad..."
+        },
+        {
+          "ref": "dept-seo-action-1",
+          "description": "seo-specialist, accion priorizada #1: \"Corregir el enrutado roto hacia /cerraduras/ (URL en papelera con 301) antes de invertir esfuerzo en esas keywords\" (priority=high, impact=high, effort=low, relatedIds=f2/f3/o2/o11/t1). Paginas citadas por esos relatedIds: https://zentrylockers.com/cerraduras/."
+        },
+        {
+          "ref": "human-decision-approved-routing-fix",
+          "description": "Decision humana registrada en el prompt de esta pasada: aprobada el 2026-08-16 (pasada dept-2026-08-15T175321Z) la propuesta Resolver el enrutado roto de /cerraduras/ antes de invertir esfuerzo SEO sobre esa URL, sin motivo adicional escrito."
+        }
+      ],
+      "qaWarnings": [
+        "[finding warning/approval_requirements] Varios items de growth.output.recommendedPriorities (por ejemplo Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/, Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1), Ejecutar el on-page del quick win cerraduras inteligentes para taquillas, Reescribir en bloque titles/meta descriptions de las paginas con CTR 0%, Validar en GA4 DebugView el disparo real de click_phone) dependen de Aprobacion humana ya concedida el 2026-08-16, respaldada solo por entradas de growth.output.evidence (human-decision-approved-*, human-decision-staging-reject) que son autorreferenciales -- ninguna otra parte de este artifact (stages, specialistOutputs) contiene un registro independiente de esas decisiones. growth.output.unknowns ya reconoce que no puede confirmar si esas correcciones aprobadas se ejecutaron realmente, lo cual es correcto, pero conviene que un humano reverifique el estado de esas aprobaciones antes de tratarlas como listas para ejecutar sin nueva revision."
+      ],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-2",
+      "rank": 2,
+      "title": "Verificar si la version live de GTM esta realmente publicada antes de confiar en los datos de conversion",
+      "rationale": "La version live del contenedor se llama literalmente O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau), una contradiccion directa entre nombre y estado reportado como live. Impacto alto porque toda decision de CRO/analytics de esta pasada depende de que esos eventos esten realmente en produccion; confianza alta porque es un hecho reportado por analytics-specialist; esfuerzo bajo porque es solo una verificacion administrativa en GTM.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Acceso de la persona responsable (Pau) para confirmar publicacion en GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-3",
+        "dept-analytics-action-2"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-analytics-tracking-issue-3",
+          "description": "analytics-specialist, problema de medicion (claimType=FACT): La version live de GTM se llama \"O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5)\", nombre que incluye el texto \"sin publicar, pendiente aprobacion Pau\" pese a ser reportada c..."
+        },
+        {
+          "ref": "dept-analytics-action-2",
+          "description": "analytics-specialist, accion priorizada (high, claimType=RECOMMENDATION): Confirmar el estado real de publicacion de la version live de GTM, cuyo nombre sugiere que hay cambios sin publicar pendientes de aprobacion."
+        }
+      ],
+      "qaWarnings": [],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-3",
+      "rank": 3,
+      "title": "Validar en GA4 DebugView el disparo real de click_phone (accion ya aprobada, aun sin resolver)",
+      "rationale": "Ya aprobada el 2026-08-16 sin motivo adicional escrito; analytics-specialist confirma en esta pasada que sigue en 0 ocurrencias pese a tag y trigger activos. Impacto alto por ser un evento clave de contacto; confianza media porque hay varias hipotesis posibles sin datos para descartar ninguna; esfuerzo bajo por tratarse de una prueba en DebugView.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Resultado de la verificacion de la version live de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-action-1",
+        "human-decision-approved-click-phone"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-analytics-tracking-issue-1",
+          "description": "analytics-specialist, problema de medicion (claimType=FACT): El evento clave click_phone no se disparo en el periodo (0 ocurrencias) pese a existir un tag GA4 Event - click_phone no pausado y un trigger click_phone de tipo linkClick en la version live del cont..."
+        },
+        {
+          "ref": "dept-analytics-action-1",
+          "description": "analytics-specialist, accion priorizada (high, claimType=RECOMMENDATION): Validar en GA4 DebugView el funcionamiento del trigger/tag click_phone, dado que es un evento clave de contacto sin ninguna ocurrencia registrada en el periodo."
+        },
+        {
+          "ref": "human-decision-approved-click-phone",
+          "description": "Decision humana registrada en el prompt de esta pasada: aprobada el 2026-08-16 la propuesta Validar el disparo de click_phone en GTM/GA4 antes de asumir que esa via de conversion esta perdida, sin motivo adicional escrito."
+        }
+      ],
+      "qaWarnings": [],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-4",
+      "rank": 4,
+      "title": "Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1)",
+      "rationale": "Aprobada el 2026-08-16; el run de hoy sigue generando 2 actionItems que apuntan a /taquillas-melamina-fenolico/ en lugar de /taquillas-melamina/. Impacto medio porque afecta trafico generico, no el quick win principal; confianza alta porque el catalogo de clusters documenta la regla exacta; esfuerzo bajo porque el script ya existe y esta aprobado.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Ejecucion del script scripts/o291-resolve-melamina-cannibalization.ts"
+      ],
+      "evidenceRefs": [
+        "dept-seo-opportunity-3",
+        "dept-seo-action-2",
+        "human-decision-approved-melamina"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-opportunity-3",
+          "description": "seo-specialist, oportunidad (cannibalization, priority=medium, basis=evidence) sobre keyword \"taquillas melamina / taquillas de melamina\" / pagina \"https://zentrylockers.com/taquillas-melamina-fenolico/\": Cerrar estos actionItems como mal enrutados (via el script ya aprobado en O29.1) y verificar que el trafico de estas keywords genericas se consolide sobre /taquillas-melamina/."
+        },
+        {
+          "ref": "dept-seo-action-2",
+          "description": "seo-specialist, accion priorizada #2: \"Cerrar la canibalizacion documentada taquillas melamina/de melamina -> /taquillas-melamina-fenolico/ via el script ya aprobado en O29.1\" (priority=medium, impact=medium, effort=low, relatedIds=f1/o3). Paginas citadas por esos relatedIds: https://zentrylockers.com/taquillas-melamina-fenolico/."
+        },
+        {
+          "ref": "human-decision-approved-melamina",
+          "description": "Decision humana registrada en el prompt de esta pasada: aprobada el 2026-08-16 la propuesta Cerrar los actionItems de canibalizacion de taquillas melamina y revisar la aprobacion critica pendiente relacionada, sin motivo adicional escrito."
+        }
+      ],
+      "qaWarnings": [
+        "[finding warning/approval_requirements] Varios items de growth.output.recommendedPriorities (por ejemplo Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/, Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1), Ejecutar el on-page del quick win cerraduras inteligentes para taquillas, Reescribir en bloque titles/meta descriptions de las paginas con CTR 0%, Validar en GA4 DebugView el disparo real de click_phone) dependen de Aprobacion humana ya concedida el 2026-08-16, respaldada solo por entradas de growth.output.evidence (human-decision-approved-*, human-decision-staging-reject) que son autorreferenciales -- ninguna otra parte de este artifact (stages, specialistOutputs) contiene un registro independiente de esas decisiones. growth.output.unknowns ya reconoce que no puede confirmar si esas correcciones aprobadas se ejecutaron realmente, lo cual es correcto, pero conviene que un humano reverifique el estado de esas aprobaciones antes de tratarlas como listas para ejecutar sin nueva revision."
+      ],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-5",
+      "rank": 5,
+      "title": "Ejecutar el on-page del quick win cerraduras inteligentes para taquillas (posicion 20.4)",
+      "rationale": "Aprobada el 2026-08-16; sigue en posicion ~20.4 con 46 impresiones segun datos live de hoy, por lo que el trabajo aprobado aun no se ha aplicado. Impacto alto por ser un quick win cerca de top20; confianza media porque mover de posicion 20 a top10 no depende solo de on-page; esfuerzo medio porque implica reforzar H1/H2, contenido y enlazado interno.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-4",
+        "dept-seo-opportunity-1",
+        "human-decision-approved-quickwin"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-action-4",
+          "description": "seo-specialist, accion priorizada #4: \"Optimizar on-page el quick win de cerraduras inteligentes para taquillas (posicion 20.4)\" (priority=high, impact=medium, effort=medium, relatedIds=o1). Paginas citadas por esos relatedIds: https://zentrylockers.com/cerraduras-inteligentes-taquillas/."
+        },
+        {
+          "ref": "dept-seo-opportunity-1",
+          "description": "seo-specialist, oportunidad (quick_win, priority=high, basis=evidence) sobre keyword \"cerraduras inteligentes para taquillas\" / pagina \"https://zentrylockers.com/cerraduras-inteligentes-taquillas/\": Reforzar H1/H2, ampliar profundidad del contenido, mejorar enlazado interno y actualizar meta title/description para pasar de posicion 20.4 a top 10."
+        },
+        {
+          "ref": "human-decision-approved-quickwin",
+          "description": "Decision humana registrada en el prompt de esta pasada: aprobada el 2026-08-16 la propuesta Ejecutar el quick win de mayor impacto: on-page de cerraduras inteligentes para taquillas, sin motivo adicional escrito."
+        }
+      ],
+      "qaWarnings": [],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-6",
+      "rank": 6,
+      "title": "Reescribir en bloque titles/meta descriptions de las paginas con CTR 0% (accion ya aprobada)",
+      "rationale": "Aprobada el 2026-08-16; el run de hoy sigue mostrando CTR 0.00% en multiples paginas con impresiones reales de 20 a 83. Impacto medio porque es una mejora barata y transversal a varias URLs; confianza media porque no hay cifra numerica exacta de clics, solo el indicador textual; esfuerzo medio por el numero de paginas implicadas.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "dept-seo-technical-issue-2",
+        "human-decision-approved-ctr-rewrite"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-action-5",
+          "description": "seo-specialist, accion priorizada #5: \"Auditar y reescribir en bloque titles/meta descriptions de las paginas con CTR 0.00% pese a impresiones reales\" (priority=medium, impact=medium, effort=medium, relatedIds=f4/o10/t2). Paginas citadas por esos relatedIds: multiples paginas."
+        },
+        {
+          "ref": "dept-seo-technical-issue-2",
+          "description": "seo-specialist, problema tecnico (severity=medium, basis=evidence) en la pagina multiples paginas: CTR reportado en 0.00% en multiples paginas del sitio pese a tener impresiones reales (20-83 en el periodo), segun los actionItems de tipo low_ctr -- indica snippets (title/meta d..."
+        },
+        {
+          "ref": "human-decision-approved-ctr-rewrite",
+          "description": "Decision humana registrada en el prompt de esta pasada: aprobada el 2026-08-16 la propuesta Reescribir meta title/description en las 7 paginas con CTR 0% e impresiones reales, sin motivo adicional escrito."
+        }
+      ],
+      "qaWarnings": [],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-7",
+      "rank": 7,
+      "title": "Ejecutar los quick wins on-page en /taquillas-para-hospitales/ (propuesta nueva, sin decision humana registrada)",
+      "rationale": "A diferencia de las anteriores, esta propuesta de seo-specialist no aparece entre las decisiones humanas previas de este contexto. Impacto medio porque una de las dos keywords esta al borde del top10 (10.6); confianza media porque se basa en datos live de hoy; esfuerzo medio porque implica intervenir la misma pagina en una sola pasada para dos keywords.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Aprobacion humana pendiente (no registrada en este contexto)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-4",
+        "dept-seo-opportunity-5"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-seo-action-3",
+          "description": "seo-specialist, accion priorizada #3: \"Ejecutar los quick wins on-page en /taquillas-para-hospitales/ (comprar taquillas para hospitales y taquillas para hospital) en una sola intervencion\" (priority=high, impact=medium, effort=medium, relatedIds=o4/o5). Paginas citadas por esos relatedIds: https://zentrylockers.com/taquillas-para-hospitales/."
+        },
+        {
+          "ref": "dept-seo-opportunity-4",
+          "description": "seo-specialist, oportunidad (quick_win, priority=high, basis=evidence) sobre keyword \"comprar taquillas para hospitales\" / pagina \"https://zentrylockers.com/taquillas-para-hospitales/\": Reforzar contenido y meta title/description para consolidar la posicion 10.6 dentro del top 10 real."
+        },
+        {
+          "ref": "dept-seo-opportunity-5",
+          "description": "seo-specialist, oportunidad (quick_win, priority=medium, basis=evidence) sobre keyword \"taquillas para hospital\" / pagina \"https://zentrylockers.com/taquillas-para-hospitales/\": Optimizar on-page (H1/H2, profundidad de contenido, enlazado interno) y reescribir meta title/description para mejorar CTR y pasar de posicion 17.1 a top 10."
+        }
+      ],
+      "qaWarnings": [],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-8",
+      "rank": 8,
+      "title": "Confirmar que click_catalog_download, view_quote_page y view_contact_page esten marcados como conversion en GA4",
+      "rationale": "Estos tres eventos se disparan (4, 12 y 39 veces respectivamente) pero registran 0 conversiones, a diferencia de otros eventos de CTA donde conversion=ocurrencias. Impacto medio porque podria estar subestimando el funnel real; confianza alta porque es una observacion directa de datos GA4 de esta pasada; esfuerzo bajo porque es solo revisar configuracion de eventos clave.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Resultado de la verificacion de la version live de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-3",
+        "dept-analytics-tracking-issue-2"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-analytics-action-3",
+          "description": "analytics-specialist, accion priorizada (medium, claimType=RECOMMENDATION): Confirmar que eventos clave (click_catalog_download, view_quote_page, view_contact_page) estan marcados como conversiones en GA4, ya que se disparan pero no generan conversiones registradas."
+        },
+        {
+          "ref": "dept-analytics-tracking-issue-2",
+          "description": "analytics-specialist, problema de medicion (claimType=OBSERVATION): click_catalog_download se disparo 4 veces pero registro 0 conversiones, a diferencia de click_whatsapp, click_request_quote y generate_lead_form_submit, cuyas conversiones igualan sus ocurrencias."
+        }
+      ],
+      "qaWarnings": [],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-9",
+      "rank": 9,
+      "title": "Resolver el riesgo de canibalizacion hotel/hoteles antes de redactar o publicar la landing sectorial de hotel",
+      "rationale": "content-strategist declara explicitamente este riesgo (cluster relacionado hoteles) y lo vincula con la practica ya aprobada de cerrar canibalizaciones de keywords similares. Impacto medio porque afecta a una pieza de contenido nueva antes de invertir en su redaccion; confianza media porque la intencion de hotel esta marcada como mixta/de revision manual, no confirmada al 100%; esfuerzo bajo porque es verificacion de cluster, no produccion de contenido.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Revision manual de la intencion real de la keyword hotel",
+        "Precedente de la decision aprobada sobre canibalizacion de taquillas melamina"
+      ],
+      "evidenceRefs": [
+        "dept-content-risks",
+        "dept-content-summary"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-content-risks",
+          "description": "content-strategist, riesgos/incognitas declarados (5): Riesgo de canibalizacion SEO entre \"hotel\" (esta pagina) y \"hoteles\" (senalado en clusterNote como cluster relacionado) -- recomendable resolverlo antes de publicar, en linea con la decision previa ya aprobada de cerrar los actionItems de canibalizacion de keywords similares | Publicar contenido nu..."
+        },
+        {
+          "ref": "dept-content-summary",
+          "description": "content-strategist (salida real de esta pasada): oportunidad \"Landing sectorial \"hotel\": taquillas y cerraduras para el sector hotelero\" -- La keyword \"hotel\" no tiene aun pagina dedicada y combina interes potencial en mobiliario (Zentry) y control de acceso (Tukandado), lo que justifica una landing nueva que cualifique al visitante antes de derivarlo a una u otra solucion. (priority=medium, contentType=new_landing, targetBrand=mixed, searchIntent=commercial)."
+        }
+      ],
+      "qaWarnings": [],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-10",
+      "rank": 10,
+      "title": "Segmentar o excluir el trafico referral de tagassistant.google.com en los informes de GA4",
+      "rationale": "Aporta 3 sesiones y 2 conversiones en el periodo y probablemente corresponde a actividad interna de QA/pruebas segun la propia hipotesis de analytics-specialist, contaminando ligeramente los informes. Impacto bajo por el volumen reducido; confianza media porque es una hipotesis, no un hecho confirmado; esfuerzo bajo por ser un filtro/segmento estandar en GA4.",
+      "impact": "low",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-4",
+        "dept-analytics-action-4"
+      ],
+      "evidence": [
+        {
+          "ref": "dept-analytics-tracking-issue-4",
+          "description": "analytics-specialist, problema de medicion (claimType=OBSERVATION): La fuente de trafico tagassistant.google.com esta clasificada como canal Referral y aporto 3 sesiones y 2 conversiones en el periodo."
+        },
+        {
+          "ref": "dept-analytics-action-4",
+          "description": "analytics-specialist, accion priorizada (medium, claimType=RECOMMENDATION): Segmentar o excluir el trafico referral de tagassistant.google.com en los informes de GA4."
+        }
+      ],
+      "qaWarnings": [],
+      "resolvedTargets": [],
+      "targetResolutionStatus": "unresolved_target",
+      "targetResolutionReason": "No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    }
+  ],
+  "blockedRecommendations": [],
+  "specialistStatuses": [
+    {
+      "employee": "seo-specialist",
+      "status": "executed",
+      "note": "seo-specialist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas."
+    },
+    {
+      "employee": "content-strategist",
+      "status": "executed",
+      "note": "content-strategist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas."
+    },
+    {
+      "employee": "analytics-specialist",
+      "status": "executed",
+      "note": "analytics-specialist: salida REAL de esta misma pasada coordinada, ya validada contra su propio contrato. Usala tal cual -- no la recalcules ni la contradigas."
+    },
+    {
+      "employee": "sem-specialist",
+      "status": "not_available",
+      "note": "sem-specialist queda EXPLICITAMENTE FUERA de esta fase (pendiente / temporalmente no disponible). No hay ninguna senal de SEM/Google Ads en esta pasada: no asumas gasto, CPC, impresiones, campanas activas ni ningun otro dato de Ads, y no trates su ausencia como si SEM estuviera sano o vacio. Su ausencia NUNCA bloquea esta pasada."
+    }
+  ],
+  "confirmedExistingPageUrls": [],
+  "stagingInventory": [],
+  "stagingInventoryUnavailableReason": "Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera.",
+  "targetPageSnapshots": [],
+  "yoastMetaUnavailableNotice": "",
+  "noPluginThemeApiInventoryNotice": "Este proyecto NO mantiene ningun inventario real y actualizado de plugins, temas ni rutas de API de WordPress instalados en zentrylockers.com. No existe ningun dato fiable al respecto en este contexto ni en ningun otro sitio al que tengas acceso. Cualquier necesidad tecnica de este tipo (formularios, tablas comparativas interactivas, integraciones) debe ir en unknowns o dependencies, marcada explicitamente como pendiente de confirmar por un humano con acceso real al sitio -- nunca redactada como si ya existiera o estuviera instalada.",
+  "noConfirmedPageInventoryNotice": "Esta pasada coordinada NO vincula las recomendaciones a ninguna pagina concreta ya auditada de zentrylockers.com (no hay ChangePack ni ExistingPageAudit detras de ellas: vienen de la sintesis del Growth Director sobre senales de SEO/Content/Analytics). Por tanto NO SABES si las paginas o componentes que menciones existen ya, ni con que estructura. Nombra el objetivo por lo que la recomendacion dice (p.ej. la URL o seccion que cita la evidencia), y declara explicitamente en unknowns[] que la existencia y el estado real de esa pagina/componente estan sin confirmar y requieren verificacion humana con acceso al sitio."
+}

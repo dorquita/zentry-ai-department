@@ -1,0 +1,23 @@
+{
+  "contractVersion": "qa-correction-loop/v1",
+  "departmentRunId": "dept-2026-08-18T025944Z",
+  "employee": "web-engineer",
+  "maxRounds": 2,
+  "rounds": [
+    {
+      "revision": 0,
+      "qaAttempt": 1,
+      "employee": "web-engineer",
+      "reviewStatus": "pass_with_warnings",
+      "blocking": false,
+      "action": "accept",
+      "corrections": [],
+      "reason": "QA acepto la propuesta original (reviewStatus=pass_with_warnings, sin findings criticos ni riesgos de seguridad).",
+      "reviewedOutputPath": "reports/department/dept-2026-08-18T025944Z/stages/web-engineer/output.json",
+      "reviewOutputPath": "reports/qa-reviewer/dept-2026-08-18T025944Z-plan-qa-input-round-0/output.json",
+      "at": "2026-08-18T03:26:36.122Z"
+    }
+  ],
+  "finalStatus": "PASS",
+  "finalReason": "QA acepto la propuesta original (reviewStatus=pass_with_warnings, sin findings criticos ni riesgos de seguridad)."
+}

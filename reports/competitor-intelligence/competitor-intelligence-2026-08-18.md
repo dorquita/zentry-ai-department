@@ -1,7 +1,7 @@
 # Competitor Intelligence — 2026-08-18
 
-- **departmentRunId:** `dept-2026-08-18T012804Z`
-- **Generado:** 2026-08-18T01:29:25.592Z
+- **departmentRunId:** `dept-2026-08-18T025944Z`
+- **Generado:** 2026-08-18T03:00:58.397Z
 - **Competidores analizados:** Marmataquillas (competitor), Taquiblok (Taquillas Blok) (competitor), Setroc (competitor), Ojmar (reference)
 - **Paginas leidas:** 11 de 11 intentadas
 

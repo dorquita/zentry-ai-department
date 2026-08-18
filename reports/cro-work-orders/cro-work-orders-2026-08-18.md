@@ -1,7 +1,7 @@
 # CRO Work Orders — 2026-08-18
 
-- **departmentRunId:** `dept-2026-08-18T012804Z`
-- **Generado:** 2026-08-18T01:29:26.532Z
+- **departmentRunId:** `dept-2026-08-18T025944Z`
+- **Generado:** 2026-08-18T03:00:58.945Z
 - **Propuestas generadas:** 0
 
 ## Resumen ejecutivo

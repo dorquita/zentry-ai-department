@@ -1,0 +1,1040 @@
+{
+  "contractVersion": "department-apply/v2",
+  "departmentRunId": "dept-2026-08-18T025944Z",
+  "generatedAt": "2026-08-18T03:26:39.924Z",
+  "items": [
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-1",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-1",
+      "recommendationRank": 1,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "Esta correccion ya fue aprobada por una persona el 2026-08-16 pero el run SEO Watcher de hoy sigue generando actionItems que apuntan a /cerraduras/, URL en papelera con 301. Impacto alto porque evita malgastar esfuerzo sobre keywords mal enrutadas; confianza alta porque la evidencia es consistente entre pasadas; esfuerzo bajo porque es una correccion de enrutado, no contenido nuevo.",
+      "evidenceRefs": [
+        "dept-seo-technical-issue-1",
+        "dept-seo-action-1",
+        "human-decision-approved-routing-fix"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Verificar el estado real de la redireccion 301 desde /cerraduras/ y corregir el enrutado si sigue roto, confirmando ademas si el pipeline de SEO Watcher respeta el catalogo de clusters al generar actionItems sobre esa URL.",
+            "rationale": "Responde a la recomendacion aprobada 'Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/': una persona ya aprobo esta correccion el 2026-08-16, pero el run de SEO Watcher de hoy sigue generando actionItems sobre la misma URL, lo que sugiere que no se aplico o no se verifico.",
+            "targetPageOrComponent": "https://zentrylockers.com/cerraduras/ (enrutado/redirecciones)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #1 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-2",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-2",
+      "recommendationRank": 2,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "analytics-specialist"
+      ],
+      "title": "Verificar si la version live de GTM esta realmente publicada antes de confiar en los datos de conversion",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "La version live del contenedor se llama literalmente O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau), una contradiccion directa entre nombre y estado reportado como live. Impacto alto porque toda decision de CRO/analytics de esta pasada depende de que esos eventos esten realmente en produccion; confianza alta porque es un hecho reportado por analytics-specialist; esfuerzo bajo porque es solo una verificacion administrativa en GTM.",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-3",
+        "dept-analytics-action-2"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Confirmar con el responsable humano (Pau) si la version live del contenedor GTM, nombrada 'O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau)', esta realmente publicada en produccion; publicarla o revertirla segun corresponda tras esa confirmacion.",
+            "rationale": "Responde a la recomendacion aprobada 'Verificar si la version live de GTM esta realmente publicada antes de confiar en los datos de conversion': el propio nombre de la version contradice su estado reportado como live, lo que pone en duda toda conclusion de conversion de esta pasada.",
+            "targetPageOrComponent": "Contenedor GTM (sistema externo a WordPress)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #2 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-3",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-3",
+      "recommendationRank": 3,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "analytics-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "Validar en GA4 DebugView el disparo real de click_phone (accion ya aprobada, aun sin resolver)",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "Ya aprobada el 2026-08-16 sin motivo adicional escrito; analytics-specialist confirma en esta pasada que sigue en 0 ocurrencias pese a tag y trigger activos. Impacto alto por ser un evento clave de contacto; confianza media porque hay varias hipotesis posibles sin datos para descartar ninguna; esfuerzo bajo por tratarse de una prueba en DebugView.",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-action-1",
+        "human-decision-approved-click-phone"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Tras resolver el estado de publicacion de GTM (cambio anterior), ejecutar una prueba en GA4 DebugView para confirmar si el trigger/tag click_phone dispara correctamente el evento clave de contacto.",
+            "rationale": "Responde a la recomendacion aprobada 'Validar en GA4 DebugView el disparo real de click_phone (accion ya aprobada, aun sin resolver)': ya fue aprobada el 2026-08-16 pero sigue en 0 ocurrencias pese a tag y trigger activos.",
+            "targetPageOrComponent": "Evento GA4 click_phone / tag GTM asociado"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #3 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-4",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-4",
+      "recommendationRank": 4,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1)",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "Aprobada el 2026-08-16; el run de hoy sigue generando 2 actionItems que apuntan a /taquillas-melamina-fenolico/ en lugar de /taquillas-melamina/. Impacto medio porque afecta trafico generico, no el quick win principal; confianza alta porque el catalogo de clusters documenta la regla exacta; esfuerzo bajo porque el script ya existe y esta aprobado.",
+      "evidenceRefs": [
+        "dept-seo-opportunity-3",
+        "dept-seo-action-2",
+        "human-decision-approved-melamina"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Ejecutar el script ya aprobado que resuelve la canibalizacion entre 'taquillas melamina' y 'taquillas de melamina', consolidando el trafico de esas keywords genericas sobre /taquillas-melamina/ y cerrando los actionItems que siguen apuntando a /taquillas-melamina-fenolico/.",
+            "rationale": "Responde a la recomendacion aprobada 'Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1)': aprobada el 2026-08-16, pero el run de hoy sigue generando 2 actionItems sobre la URL incorrecta.",
+            "targetPageOrComponent": "https://zentrylockers.com/taquillas-melamina-fenolico/ y https://zentrylockers.com/taquillas-melamina/"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #4 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-5",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-5",
+      "recommendationRank": 5,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "Ejecutar el on-page del quick win cerraduras inteligentes para taquillas (posicion 20.4)",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "Aprobada el 2026-08-16; sigue en posicion ~20.4 con 46 impresiones segun datos live de hoy, por lo que el trabajo aprobado aun no se ha aplicado. Impacto alto por ser un quick win cerca de top20; confianza media porque mover de posicion 20 a top10 no depende solo de on-page; esfuerzo medio porque implica reforzar H1/H2, contenido y enlazado interno.",
+      "evidenceRefs": [
+        "dept-seo-action-4",
+        "dept-seo-opportunity-1",
+        "human-decision-approved-quickwin"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "medium",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Reforzar la estructura H1/H2, ampliar la profundidad del contenido, mejorar el enlazado interno y actualizar meta title/description de la pagina de cerraduras inteligentes para taquillas, con el objetivo de mover la keyword de posicion ~20.4 a top10.",
+            "rationale": "Responde a la recomendacion aprobada 'Ejecutar el on-page del quick win cerraduras inteligentes para taquillas (posicion 20.4)': aprobada el 2026-08-16, pero los datos live de hoy muestran que sigue en la misma posicion, indicando que el trabajo aun no se aplico.",
+            "targetPageOrComponent": "https://zentrylockers.com/cerraduras-inteligentes-taquillas/"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #5 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-6",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-6",
+      "recommendationRank": 6,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "Reescribir en bloque titles/meta descriptions de las paginas con CTR 0% (accion ya aprobada)",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "Aprobada el 2026-08-16; el run de hoy sigue mostrando CTR 0.00% en multiples paginas con impresiones reales de 20 a 83. Impacto medio porque es una mejora barata y transversal a varias URLs; confianza media porque no hay cifra numerica exacta de clics, solo el indicador textual; esfuerzo medio por el numero de paginas implicadas.",
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "dept-seo-technical-issue-2",
+        "human-decision-approved-ctr-rewrite"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Auditar el conjunto de paginas con CTR reportado en 0.00% pese a impresiones reales (20-83 en el periodo) y reescribir en bloque sus meta title/description para mejorar el snippet en resultados de busqueda.",
+            "rationale": "Responde a la recomendacion aprobada 'Reescribir en bloque titles/meta descriptions de las paginas con CTR 0% (accion ya aprobada)': aprobada el 2026-08-16, el run de hoy sigue mostrando el mismo patron en multiples paginas.",
+            "targetPageOrComponent": "Conjunto de paginas con CTR 0% (identidad exacta de cada URL no listada en este contexto)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #6 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-7",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-7",
+      "recommendationRank": 7,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Ejecutar los quick wins on-page en /taquillas-para-hospitales/ (propuesta nueva, sin decision humana registrada)",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "A diferencia de las anteriores, esta propuesta de seo-specialist no aparece entre las decisiones humanas previas de este contexto. Impacto medio porque una de las dos keywords esta al borde del top10 (10.6); confianza media porque se basa en datos live de hoy; esfuerzo medio porque implica intervenir la misma pagina en una sola pasada para dos keywords.",
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-4",
+        "dept-seo-opportunity-5"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Intervenir en una sola pasada el contenido on-page de /taquillas-para-hospitales/ para reforzar simultaneamente las keywords 'comprar taquillas para hospitales' (posicion 10.6, cerca del top10) y 'taquillas para hospital' (posicion 17.1): mejorar H1/H2, profundidad de contenido, enlazado interno y meta title/description.",
+            "rationale": "Responde a la recomendacion aprobada 'Ejecutar los quick wins on-page en /taquillas-para-hospitales/ (propuesta nueva, sin decision humana registrada)'. A diferencia de las anteriores, esta propuesta NO tiene aprobacion humana previa registrada en este contexto y requiere esa aprobacion antes de cualquier trabajo.",
+            "targetPageOrComponent": "https://zentrylockers.com/taquillas-para-hospitales/"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #7 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-8",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-8",
+      "recommendationRank": 8,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "analytics-specialist"
+      ],
+      "title": "Confirmar que click_catalog_download, view_quote_page y view_contact_page esten marcados como conversion en GA4",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "Estos tres eventos se disparan (4, 12 y 39 veces respectivamente) pero registran 0 conversiones, a diferencia de otros eventos de CTA donde conversion=ocurrencias. Impacto medio porque podria estar subestimando el funnel real; confianza alta porque es una observacion directa de datos GA4 de esta pasada; esfuerzo bajo porque es solo revisar configuracion de eventos clave.",
+      "evidenceRefs": [
+        "dept-analytics-action-3",
+        "dept-analytics-tracking-issue-2"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Revisar en la configuracion de GA4 si los eventos click_catalog_download, view_quote_page y view_contact_page estan marcados como conversion, dado que se disparan (4, 12 y 39 veces respectivamente) pero registran 0 conversiones, a diferencia de otros eventos de CTA equivalentes.",
+            "rationale": "Responde a la recomendacion aprobada 'Confirmar que click_catalog_download, view_quote_page y view_contact_page esten marcados como conversion en GA4', que depende a su vez del resultado de la verificacion de publicacion de GTM.",
+            "targetPageOrComponent": "Configuracion de eventos/conversiones en GA4"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #8 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-9",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-9",
+      "recommendationRank": 9,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "content-strategist"
+      ],
+      "title": "Resolver el riesgo de canibalizacion hotel/hoteles antes de redactar o publicar la landing sectorial de hotel",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "content-strategist declara explicitamente este riesgo (cluster relacionado hoteles) y lo vincula con la practica ya aprobada de cerrar canibalizaciones de keywords similares. Impacto medio porque afecta a una pieza de contenido nueva antes de invertir en su redaccion; confianza media porque la intencion de hotel esta marcada como mixta/de revision manual, no confirmada al 100%; esfuerzo bajo porque es verificacion de cluster, no produccion de contenido.",
+      "evidenceRefs": [
+        "dept-content-risks",
+        "dept-content-summary"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Revisar el cluster SEO y la intencion real de busqueda de 'hotel' frente a 'hoteles' antes de redactar o publicar la landing sectorial nueva propuesta por content-strategist, para evitar canibalizacion entre ambas keywords.",
+            "rationale": "Responde a la recomendacion aprobada 'Resolver el riesgo de canibalizacion hotel/hoteles antes de redactar o publicar la landing sectorial de hotel', en linea con la practica ya aprobada de cerrar canibalizaciones similares (taquillas melamina).",
+            "targetPageOrComponent": "Landing sectorial nueva 'hotel' (contenido pendiente de redaccion, pagina no confirmada existente)"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #9 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-18T025944Z#apply-10",
+      "recommendationId": "dept-2026-08-18T025944Z#rec-10",
+      "recommendationRank": 10,
+      "departmentRunId": "dept-2026-08-18T025944Z",
+      "sourceAgents": [
+        "analytics-specialist"
+      ],
+      "title": "Segmentar o excluir el trafico referral de tagassistant.google.com en los informes de GA4",
+      "target": "https://zentrylockers.com/cerraduras/ (URL citada por la evidencia; existencia y estado real NO confirmados en este contexto, ver unknowns) | https://zentrylockers.com/taquillas-melamina-fenolico/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-melamina/ (URL destino de consolidacion citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/cerraduras-inteligentes-taquillas/ (URL citada por la evidencia; existencia NO confirmada) | https://zentrylockers.com/taquillas-para-hospitales/ (URL citada por la evidencia; existencia NO confirmada) | Conjunto de paginas con CTR 0% e impresiones 20-83 en el periodo, identidad exacta de cada URL NO listada en este contexto | Landing sectorial nueva 'hotel' propuesta por content-strategist -- pagina que probablemente NO existe todavia, sin slug confirmado | Configuracion de enrutado/redirecciones del sitio (301 hacia /cerraduras/) | Script de resolucion de canibalizacion ya aprobado (referenciado en la evidencia como O29.1, ruta/nombre exacto no verificable por mi) | Contenedor GTM y su version live (fuera de WordPress) | Configuracion de eventos y conversiones en GA4 (click_phone, click_catalog_download, view_quote_page, view_contact_page) | Segmentos/filtros de informes de GA4 (trafico referral) | Bloque de contenido on-page (H1/H2, cuerpo, enlazado interno) de paginas de producto/servicio existentes | Campos meta title/description (Yoast SEO) de multiples paginas | Contenido nuevo de landing sectorial 'hotel' (pendiente de redaccion por content-strategist)",
+      "proposedChange": "Aporta 3 sesiones y 2 conversiones en el periodo y probablemente corresponde a actividad interna de QA/pruebas segun la propia hipotesis de analytics-specialist, contaminando ligeramente los informes. Impacto bajo por el volumen reducido; confianza media porque es una hipotesis, no un hecho confirmado; esfuerzo bajo por ser un filtro/segmento estandar en GA4.",
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-4",
+        "dept-analytics-action-4"
+      ],
+      "qaStatus": "PASS_WITH_WARNINGS",
+      "impact": "low",
+      "confidence": "medium",
+      "effort": "low",
+      "webEngineerSpecification": {
+        "implementationSummary": "Esta pasada coordinada no aporta ChangePacks ni inventario de staging (la lectura de staging.zentrylockers.com fallo por red), por lo que ninguna de las 10 recomendaciones aprobadas por Growth+QA puede resolverse contra una pagina verificada ni convertirse en un changePlan ejecutable. La especificacion cubre, en su lugar, el trabajo de ingenieria necesario para: (1) verificar y desbloquear 5 correcciones ya aprobadas por una persona el 2026-08-16 que, segun los datos live de hoy, parecen no haberse aplicado todavia (enrutado de /cerraduras/, canibalizacion de taquillas melamina, quick win de cerraduras inteligentes para taquillas, reescritura de metas con CTR 0%, validacion de click_phone); (2) resolver la contradiccion critica de la version live de GTM (nombre indica sin publicar, pendiente aprobacion Pau); y (3) especificar dos recomendaciones nuevas sin decision humana previa (quick wins en /taquillas-para-hospitales/ y revision de canibalizacion hotel/hoteles antes de publicar contenido nuevo), ademas de dos ajustes de configuracion de analytics de menor impacto. Nada de esto se ejecuta en esta fase; todo queda como especificacion pendiente de aprobacion y de una relectura exitosa del inventario de staging.",
+        "proposedChanges": [
+          {
+            "description": "Crear un filtro o segmento en la configuracion de informes de GA4 que excluya o segmente el trafico clasificado como Referral desde tagassistant.google.com.",
+            "rationale": "Responde a la recomendacion aprobada 'Segmentar o excluir el trafico referral de tagassistant.google.com en los informes de GA4': aporta 3 sesiones y 2 conversiones en el periodo y probablemente es trafico interno de QA/pruebas contaminando los informes.",
+            "targetPageOrComponent": "Configuracion de informes/segmentos en GA4"
+          }
+        ],
+        "acceptanceCriteria": [
+          "La URL /cerraduras/ redirige (301) correctamente a la URL de destino correcta y el siguiente run de SEO Watcher deja de generar actionItems sobre ella",
+          "Un humano con acceso a GTM confirma explicitamente si la version 'O44' esta publicada o no, y el nombre de la version deja de contener el texto 'sin publicar, pendiente aprobacion Pau' una vez resuelto",
+          "GA4 DebugView registra al menos un evento click_phone tras una interaccion de prueba, o se documenta la causa raiz concreta por la que no se dispara",
+          "Los actionItems de canibalizacion sobre /taquillas-melamina-fenolico/ para las keywords 'taquillas melamina'/'taquillas de melamina' desaparecen en el siguiente run de SEO Watcher tras ejecutar el script aprobado",
+          "La pagina de cerraduras inteligentes para taquillas incorpora H1/H2 reforzados, contenido ampliado, enlazado interno adicional y meta title/description actualizados, verificables antes de publicar",
+          "Cada pagina identificada con CTR 0% tiene un meta title/description nuevo y distinto del actual, redactado para mejorar el snippet en SERP",
+          "La pagina /taquillas-para-hospitales/ refleja mejoras on-page para ambas keywords en una sola intervencion, sin duplicar contenido",
+          "Los tres eventos citados (click_catalog_download, view_quote_page, view_contact_page) quedan explicitamente marcados como conversion en GA4, o se documenta por que no deben marcarse asi",
+          "Existe una decision documentada sobre el cluster hotel/hoteles antes de que content-strategist redacte o publique la landing 'hotel'",
+          "El trafico de tagassistant.google.com queda excluido o segmentado en al menos un informe de referencia de GA4"
+        ],
+        "validationPlan": [
+          "Esta pasada no incluye stagingQaResult ni inventario de staging legible (fetch failed en staging.zentrylockers.com tras 3 intentos): antes de cualquier otra validacion, repetir la lectura del inventario de staging hasta obtener una respuesta valida",
+          "Una vez disponible el inventario de staging, contrastar cada URL citada en este documento contra ese inventario para confirmar su existencia real y su version actual (versionHash) antes de tocar nada",
+          "Para los cambios de enrutado y canibalizacion, verificar en el siguiente run de SEO Watcher que los actionItems correspondientes ya no se generan",
+          "Para el cambio de GTM, obtener confirmacion explicita y trazable (mensaje, ticket o similar) de la persona responsable (Pau) sobre el estado de publicacion antes de dar el tema por cerrado",
+          "Para click_phone, revisar GA4 DebugView en tiempo real con una interaccion de prueba manual sobre el enlace de telefono en staging",
+          "Para los cambios de contenido on-page y meta, revisar visualmente en staging tras aplicar los cambios y confirmar que el H1/H2, el contenido y las metas reflejan lo especificado antes de considerar el cambio listo para produccion",
+          "Para los cambios de configuracion GA4 (conversiones, segmentos), verificar en la interfaz de administracion de GA4 que la configuracion nueva aparece activa"
+        ],
+        "rollbackPlan": [
+          "Antes de cualquier cambio de contenido o meta, guardar una copia integra del post_content, title, excerpt y meta actuales de cada pagina afectada como referencia de reversion",
+          "Si la correccion de enrutado introduce un bucle de redireccion o rompe otras URLs, revertir a la regla de redireccion anterior documentada en el catalogo de clusters",
+          "Si la ejecucion del script de canibalizacion produce resultados inesperados, revertir manualmente los cambios de enrutado/consolidacion usando la copia de estado previo",
+          "Si la publicacion de la version GTM introduce errores de tracking, despublicar esa version y restaurar la version live anterior conocida",
+          "Si el marcado de eventos como conversion en GA4 distorsiona metricas historicas, revertir la configuracion de conversion a su estado anterior",
+          "Si el contenido on-page nuevo o modificado no pasa la revision visual/de copy, restaurar el contenido guardado antes del cambio y no promoverlo a produccion"
+        ],
+        "approvalRequired": true
+      },
+      "changePlanResolution": "no_change_plan_declared",
+      "changePlanResolutionReason": "web-engineer no declaro ningun changePlan para esta recomendacion en esta pasada (ver web-engineer-diagnostics.json para el detalle por recomendacion).",
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "requires_manual_staging_implementation",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-18T03:26:39.924Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #10 de esta pasada. QA=PASS_WITH_WARNINGS. Capacidad de apply: ninguna (La especificacion no cita de forma inequivoca ninguna pagina de staging publicada de este sistema (ni `page_id=<N>` ni su URL exacta). Requiere implementacion manual -- no se adivina el destino de una escritura.)"
+        }
+      ],
+      "createdAt": "2026-08-18T03:26:39.924Z",
+      "updatedAt": "2026-08-18T03:26:39.924Z"
+    }
+  ],
+  "counts": {
+    "proposed": 0,
+    "staging_applying": 0,
+    "staging_applied": 0,
+    "staging_validation_failed": 0,
+    "staging_rolled_back": 0,
+    "awaiting_approval": 0,
+    "awaiting_rejection_reason": 0,
+    "rejected": 0,
+    "approved": 0,
+    "approval_stale": 0,
+    "production_queued": 0,
+    "production_applying": 0,
+    "production_applied": 0,
+    "production_validation_failed": 0,
+    "production_rolled_back": 0,
+    "blocked": 0,
+    "requires_manual_staging_implementation": 10
+  },
+  "externalWritesPerformed": false,
+  "productionWritesPerformed": false,
+  "applyNotAttemptedReason": "WORDPRESS_BACKEND=\"local_preview\": solo el backend \"rest\" realiza escrituras reales. Y ningun elemento de esta pasada tiene un ChangePlan ejecutable por execute-php. No hay ningun camino de escritura disponible."
+}

@@ -1,0 +1,219 @@
+{
+  "departmentRunId": "dept-2026-08-18T025944Z",
+  "departmentQaStatus": "PASS_WITH_WARNINGS",
+  "qaReviewStatus": "pass_with_warnings",
+  "globalBlockReason": null,
+  "promoted": [
+    {
+      "rank": 1,
+      "title": "Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/",
+      "rationale": "Esta correccion ya fue aprobada por una persona el 2026-08-16 pero el run SEO Watcher de hoy sigue generando actionItems que apuntan a /cerraduras/, URL en papelera con 301. Impacto alto porque evita malgastar esfuerzo sobre keywords mal enrutadas; confianza alta porque la evidencia es consistente entre pasadas; esfuerzo bajo porque es una correccion de enrutado, no contenido nuevo.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Confirmar si el pipeline de SEO Watcher respeta el catalogo de clusters al generar actionItems"
+      ],
+      "evidenceRefs": [
+        "dept-seo-technical-issue-1",
+        "dept-seo-action-1",
+        "human-decision-approved-routing-fix"
+      ],
+      "decision": "promoted_with_warnings",
+      "blockedBy": [],
+      "qaWarnings": [
+        "[finding warning/approval_requirements] Varios items de growth.output.recommendedPriorities (por ejemplo Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/, Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1), Ejecutar el on-page del quick win cerraduras inteligentes para taquillas, Reescribir en bloque titles/meta descriptions de las paginas con CTR 0%, Validar en GA4 DebugView el disparo real de click_phone) dependen de Aprobacion humana ya concedida el 2026-08-16, respaldada solo por entradas de growth.output.evidence (human-decision-approved-*, human-decision-staging-reject) que son autorreferenciales -- ninguna otra parte de este artifact (stages, specialistOutputs) contiene un registro independiente de esas decisiones. growth.output.unknowns ya reconoce que no puede confirmar si esas correcciones aprobadas se ejecutaron realmente, lo cual es correcto, pero conviene que un humano reverifique el estado de esas aprobaciones antes de tratarlas como listas para ejecutar sin nueva revision."
+      ]
+    },
+    {
+      "rank": 2,
+      "title": "Verificar si la version live de GTM esta realmente publicada antes de confiar en los datos de conversion",
+      "rationale": "La version live del contenedor se llama literalmente O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau), una contradiccion directa entre nombre y estado reportado como live. Impacto alto porque toda decision de CRO/analytics de esta pasada depende de que esos eventos esten realmente en produccion; confianza alta porque es un hecho reportado por analytics-specialist; esfuerzo bajo porque es solo una verificacion administrativa en GTM.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Acceso de la persona responsable (Pau) para confirmar publicacion en GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-3",
+        "dept-analytics-action-2"
+      ],
+      "decision": "promoted",
+      "blockedBy": [],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Validar en GA4 DebugView el disparo real de click_phone (accion ya aprobada, aun sin resolver)",
+      "rationale": "Ya aprobada el 2026-08-16 sin motivo adicional escrito; analytics-specialist confirma en esta pasada que sigue en 0 ocurrencias pese a tag y trigger activos. Impacto alto por ser un evento clave de contacto; confianza media porque hay varias hipotesis posibles sin datos para descartar ninguna; esfuerzo bajo por tratarse de una prueba en DebugView.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Resultado de la verificacion de la version live de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-action-1",
+        "human-decision-approved-click-phone"
+      ],
+      "decision": "promoted",
+      "blockedBy": [],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1)",
+      "rationale": "Aprobada el 2026-08-16; el run de hoy sigue generando 2 actionItems que apuntan a /taquillas-melamina-fenolico/ en lugar de /taquillas-melamina/. Impacto medio porque afecta trafico generico, no el quick win principal; confianza alta porque el catalogo de clusters documenta la regla exacta; esfuerzo bajo porque el script ya existe y esta aprobado.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Ejecucion del script scripts/o291-resolve-melamina-cannibalization.ts"
+      ],
+      "evidenceRefs": [
+        "dept-seo-opportunity-3",
+        "dept-seo-action-2",
+        "human-decision-approved-melamina"
+      ],
+      "decision": "promoted_with_warnings",
+      "blockedBy": [],
+      "qaWarnings": [
+        "[finding warning/approval_requirements] Varios items de growth.output.recommendedPriorities (por ejemplo Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/, Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1), Ejecutar el on-page del quick win cerraduras inteligentes para taquillas, Reescribir en bloque titles/meta descriptions de las paginas con CTR 0%, Validar en GA4 DebugView el disparo real de click_phone) dependen de Aprobacion humana ya concedida el 2026-08-16, respaldada solo por entradas de growth.output.evidence (human-decision-approved-*, human-decision-staging-reject) que son autorreferenciales -- ninguna otra parte de este artifact (stages, specialistOutputs) contiene un registro independiente de esas decisiones. growth.output.unknowns ya reconoce que no puede confirmar si esas correcciones aprobadas se ejecutaron realmente, lo cual es correcto, pero conviene que un humano reverifique el estado de esas aprobaciones antes de tratarlas como listas para ejecutar sin nueva revision."
+      ]
+    },
+    {
+      "rank": 5,
+      "title": "Ejecutar el on-page del quick win cerraduras inteligentes para taquillas (posicion 20.4)",
+      "rationale": "Aprobada el 2026-08-16; sigue en posicion ~20.4 con 46 impresiones segun datos live de hoy, por lo que el trabajo aprobado aun no se ha aplicado. Impacto alto por ser un quick win cerca de top20; confianza media porque mover de posicion 20 a top10 no depende solo de on-page; esfuerzo medio porque implica reforzar H1/H2, contenido y enlazado interno.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-4",
+        "dept-seo-opportunity-1",
+        "human-decision-approved-quickwin"
+      ],
+      "decision": "promoted",
+      "blockedBy": [],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "Reescribir en bloque titles/meta descriptions de las paginas con CTR 0% (accion ya aprobada)",
+      "rationale": "Aprobada el 2026-08-16; el run de hoy sigue mostrando CTR 0.00% en multiples paginas con impresiones reales de 20 a 83. Impacto medio porque es una mejora barata y transversal a varias URLs; confianza media porque no hay cifra numerica exacta de clics, solo el indicador textual; esfuerzo medio por el numero de paginas implicadas.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "dept-seo-technical-issue-2",
+        "human-decision-approved-ctr-rewrite"
+      ],
+      "decision": "promoted",
+      "blockedBy": [],
+      "qaWarnings": []
+    },
+    {
+      "rank": 7,
+      "title": "Ejecutar los quick wins on-page en /taquillas-para-hospitales/ (propuesta nueva, sin decision humana registrada)",
+      "rationale": "A diferencia de las anteriores, esta propuesta de seo-specialist no aparece entre las decisiones humanas previas de este contexto. Impacto medio porque una de las dos keywords esta al borde del top10 (10.6); confianza media porque se basa en datos live de hoy; esfuerzo medio porque implica intervenir la misma pagina en una sola pasada para dos keywords.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Aprobacion humana pendiente (no registrada en este contexto)"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-4",
+        "dept-seo-opportunity-5"
+      ],
+      "decision": "promoted",
+      "blockedBy": [],
+      "qaWarnings": []
+    },
+    {
+      "rank": 8,
+      "title": "Confirmar que click_catalog_download, view_quote_page y view_contact_page esten marcados como conversion en GA4",
+      "rationale": "Estos tres eventos se disparan (4, 12 y 39 veces respectivamente) pero registran 0 conversiones, a diferencia de otros eventos de CTA donde conversion=ocurrencias. Impacto medio porque podria estar subestimando el funnel real; confianza alta porque es una observacion directa de datos GA4 de esta pasada; esfuerzo bajo porque es solo revisar configuracion de eventos clave.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Resultado de la verificacion de la version live de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-3",
+        "dept-analytics-tracking-issue-2"
+      ],
+      "decision": "promoted",
+      "blockedBy": [],
+      "qaWarnings": []
+    },
+    {
+      "rank": 9,
+      "title": "Resolver el riesgo de canibalizacion hotel/hoteles antes de redactar o publicar la landing sectorial de hotel",
+      "rationale": "content-strategist declara explicitamente este riesgo (cluster relacionado hoteles) y lo vincula con la practica ya aprobada de cerrar canibalizaciones de keywords similares. Impacto medio porque afecta a una pieza de contenido nueva antes de invertir en su redaccion; confianza media porque la intencion de hotel esta marcada como mixta/de revision manual, no confirmada al 100%; esfuerzo bajo porque es verificacion de cluster, no produccion de contenido.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Revision manual de la intencion real de la keyword hotel",
+        "Precedente de la decision aprobada sobre canibalizacion de taquillas melamina"
+      ],
+      "evidenceRefs": [
+        "dept-content-risks",
+        "dept-content-summary"
+      ],
+      "decision": "promoted",
+      "blockedBy": [],
+      "qaWarnings": []
+    },
+    {
+      "rank": 10,
+      "title": "Segmentar o excluir el trafico referral de tagassistant.google.com en los informes de GA4",
+      "rationale": "Aporta 3 sesiones y 2 conversiones en el periodo y probablemente corresponde a actividad interna de QA/pruebas segun la propia hipotesis de analytics-specialist, contaminando ligeramente los informes. Impacto bajo por el volumen reducido; confianza media porque es una hipotesis, no un hecho confirmado; esfuerzo bajo por ser un filtro/segmento estandar en GA4.",
+      "impact": "low",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-analytics-tracking-issue-4",
+        "dept-analytics-action-4"
+      ],
+      "decision": "promoted",
+      "blockedBy": [],
+      "qaWarnings": []
+    }
+  ],
+  "blocked": [],
+  "unattributedBlockingSignals": [
+    "[requiredCorrection] Corregir en analytics-specialist.output.conversionObservations la afirmacion mas del doble que cualquier otro evento clave listado sobre click_request_quote, ya que contradice ev17 (view_contact_page = 39 ocurrencias); sustituirla por una comparacion numericamente exacta o eliminar el calificativo.",
+    "[requiredCorrection] Alinear o documentar el mapeo entre el esquema de evidenceRefs de growth.output (por ejemplo dept-seo-technical-issue-1, dept-content-summary, dept-seo-action-1) y los ids reales de los outputs de los especialistas (t1/t2, o1-o11, f1-f6 en seo-specialist; sin ids en analytics-specialist y content-strategist), para que las citas de growth sean verificables dentro del propio artifact.",
+    "[requiredCorrection] Anadir a content-strategist.output un array evidence estructurado (source/description), equivalente al de seo-specialist y analytics-specialist, en vez de referenciar por nombre campos del brief (currentAssumptions, clusterNote, brandRationale) sin reproducir su contenido.",
+    "[requiredCorrection] Antes de promover a ingenieria cualquier item de growth.output.recommendedPriorities marcado como Aprobacion humana ya concedida el 2026-08-16, verificar de forma independiente que esa aprobacion sigue vigente y que su alcance cubre exactamente la accion propuesta, dado que growth.output.unknowns ya reconoce no poder confirmar si esas correcciones se ejecutaron.",
+    "[contradiction] seo-specialist.output.prioritizedActions[5].title = Publicar a produccion las paginas de staging ya aprobadas para los huecos de contenido confirmados (taquillas metalicas, universidades, vestuarios) contradice growth.output.risks[0], que documenta que una persona ya rechazo publicar esas mismas paginas por verse demasiado basicas y sin suficientes imagenes/fotografias.",
+    "[contradiction] analytics-specialist.output.conversionObservations (mas del doble que cualquier otro evento clave listado sobre click_request_quote) contradice su propia evidencia ev17 (view_contact_page = 39 ocurrencias).",
+    "[unsupportedClaim] analytics-specialist.output.conversionObservations: click_request_quote es el evento clave con mas volumen del periodo, con 66 ocurrencias y 66 conversiones, mas del doble que cualquier otro evento clave listado -- contradicho por ev17 (view_contact_page = 39 ocurrencias, que no es menos de la mitad de 66).",
+    "[unsupportedClaim] growth.output.recommendedPriorities cita repetidamente Aprobacion humana ya concedida el 2026-08-16 como dependencia resuelta, respaldada unicamente por entradas de evidence autorreferenciales dentro del propio output de growth (human-decision-approved-*), sin ningun registro independiente visible en otra parte de este artifact."
+  ],
+  "qaSummary": {
+    "criticalFindings": 0,
+    "warningFindings": 5,
+    "safetyConcerns": 0,
+    "contradictions": 2,
+    "unsupportedClaims": 2,
+    "requiredCorrections": 4
+  }
+}

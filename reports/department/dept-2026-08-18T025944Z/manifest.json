@@ -1,0 +1,86 @@
+{
+  "contractVersion": "department-run/v1",
+  "departmentRunId": "dept-2026-08-18T025944Z",
+  "startedAt": "2026-08-18T02:59:44.397Z",
+  "updatedAt": "2026-08-18T03:24:25.383Z",
+  "note": "Pasada coordinada de solo lectura/propuesta (READ / ANALYZE / PROPOSE). Ningun empleado de esta pasada aplica nada: no se ha escrito en WordPress, staging, produccion, Google Ads, GA4/GTM, Search Console, n8n ni email, y nada se ha commiteado en el repositorio. Toda accion propuesta requiere aprobacion humana explicita.",
+  "stages": [
+    {
+      "stage": "sem-specialist",
+      "phase": "specialists",
+      "status": "not_available",
+      "reason": "sem-specialist queda explicitamente FUERA de esta fase (pendiente). No se ejecuta, no se intenta arreglar, y su ausencia nunca bloquea la pasada del departamento.",
+      "outputPath": null,
+      "artifactPath": null,
+      "sourceRunId": null,
+      "auditWarningCount": null,
+      "recordedAt": "2026-08-18T02:59:44.397Z"
+    },
+    {
+      "stage": "seo-specialist",
+      "phase": "specialists",
+      "status": "executed",
+      "reason": "seo-specialist ejecutado en esta pasada. Avisos de auditoria de dominio: 4.",
+      "outputPath": "reports/department/dept-2026-08-18T025944Z/stages/seo-specialist/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T025944Z/stages/seo-specialist/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": 4,
+      "recordedAt": "2026-08-18T03:06:10.721Z"
+    },
+    {
+      "stage": "content-strategist",
+      "phase": "specialists",
+      "status": "executed",
+      "reason": "content-strategist ejecutado sobre el change pack af35fa31-823e-4d8e-9312-6a6308721160. Avisos de auditoria: 2.",
+      "outputPath": "reports/department/dept-2026-08-18T025944Z/stages/content-strategist/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T025944Z/stages/content-strategist/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": 2,
+      "recordedAt": "2026-08-18T03:08:02.258Z"
+    },
+    {
+      "stage": "analytics-specialist",
+      "phase": "specialists",
+      "status": "executed",
+      "reason": "analytics-specialist ejecutado sobre el snapshot real dept-2026-08-18T025944Z. Avisos de auditoria: 12.",
+      "outputPath": "reports/department/dept-2026-08-18T025944Z/stages/analytics-specialist/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T025944Z/stages/analytics-specialist/artifact.json",
+      "sourceRunId": "dept-2026-08-18T025944Z",
+      "auditWarningCount": 12,
+      "recordedAt": "2026-08-18T03:10:24.307Z"
+    },
+    {
+      "stage": "growth-director-v2",
+      "phase": "growth",
+      "status": "executed",
+      "reason": "Sintesis valida sobre 3 especialista(s) ejecutado(s). 10 prioridad(es) propuesta(s), 0 aviso(s) de auditoria de dominio.",
+      "outputPath": "reports/department/dept-2026-08-18T025944Z/stages/growth-director-v2/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T025944Z/stages/growth-director-v2/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": 0,
+      "recordedAt": "2026-08-18T03:18:08.745Z"
+    },
+    {
+      "stage": "qa-reviewer",
+      "phase": "qa",
+      "status": "executed",
+      "reason": "Revision valida: reviewStatus=pass_with_warnings, 5 hallazgo(s), 0 problema(s) de seguridad.",
+      "outputPath": "reports/department/dept-2026-08-18T025944Z/stages/qa-reviewer/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T025944Z/stages/qa-reviewer/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": null,
+      "recordedAt": "2026-08-18T03:22:14.894Z"
+    },
+    {
+      "stage": "web-engineer",
+      "phase": "web-engineering",
+      "status": "executed",
+      "reason": "Especificacion tecnica valida: 10 cambio(s) propuesto(s), 1 aviso(s) de auditoria de capacidades no confirmadas.",
+      "outputPath": "reports/department/dept-2026-08-18T025944Z/stages/web-engineer/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T025944Z/stages/web-engineer/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": 1,
+      "recordedAt": "2026-08-18T03:24:25.383Z"
+    }
+  ]
+}

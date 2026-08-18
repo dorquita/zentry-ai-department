@@ -1,0 +1,189 @@
+{
+  "contractVersion": "web-engineer-diagnostics/v1",
+  "departmentRunId": "dept-2026-08-18T025944Z",
+  "stagingInventorySize": 0,
+  "stagingInventoryUnavailableReason": "Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera.",
+  "changePlansDeclared": 0,
+  "changePlansRejected": [],
+  "changePlansActionable": 0,
+  "recommendations": [
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-1",
+      "rank": 1,
+      "sourceEmployees": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-2",
+      "rank": 2,
+      "sourceEmployees": [
+        "analytics-specialist"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-3",
+      "rank": 3,
+      "sourceEmployees": [
+        "analytics-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-4",
+      "rank": 4,
+      "sourceEmployees": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-5",
+      "rank": 5,
+      "sourceEmployees": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-6",
+      "rank": 6,
+      "sourceEmployees": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-7",
+      "rank": 7,
+      "sourceEmployees": [
+        "seo-specialist"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-8",
+      "rank": 8,
+      "sourceEmployees": [
+        "analytics-specialist"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-9",
+      "rank": 9,
+      "sourceEmployees": [
+        "content-strategist"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    },
+    {
+      "recommendationId": "dept-2026-08-18T025944Z#rec-10",
+      "rank": 10,
+      "sourceEmployees": [
+        "analytics-specialist"
+      ],
+      "targetReferences": [],
+      "targetResolution": "unresolved_target",
+      "pageIdResolved": null,
+      "beforeAvailable": false,
+      "afterDeclared": false,
+      "afterLength": 0,
+      "operationResolved": null,
+      "capabilityResolved": null,
+      "changePlanStatus": "no_change_plan_declared",
+      "reason": "web-engineer no declaro ningun changePlan para esta recomendacion. No se ha resuelto ninguna pagina porque el inventario de staging de esta pasada esta VACIO: Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera. Eso NO significa que las paginas citadas no existan -- significa que no se han podido leer, y sin lectura no se resuelve ningun destino."
+    }
+  ],
+  "countsByStatus": {
+    "no_change_plan_declared": 10
+  }
+}

@@ -1,14 +1,14 @@
 # Staging QA Agent — 2026-08-18
 
-- **departmentRunId:** `dept-2026-08-18T012804Z`
-- **Generado:** 2026-08-18T01:29:34.905Z
+- **departmentRunId:** `dept-2026-08-18T025944Z`
+- **Generado:** 2026-08-18T03:01:00.326Z
 
 ## Salud general de staging
 
-- **Alcanzable:** si
-- **HTTP 200:** si (codigo 200)
-- **Sin errores PHP visibles:** si
-- **noindex preservado:** si
+- **Alcanzable:** no (fetch failed)
+- **HTTP 200:** no 
+- **Sin errores PHP visibles:** no
+- **noindex preservado:** no — REVISAR, staging nunca deberia indexarse
 
 ## Borradores verificados (21)
 

@@ -1,0 +1,6 @@
+{
+  "contractVersion": "staging-inventory/v1",
+  "capturedAt": "2026-08-18T03:22:17.459Z",
+  "pages": [],
+  "unavailableReason": "Fallo de red leyendo el inventario de staging en staging.zentrylockers.com (fetch failed) tras 3 intentos con espera."
+}

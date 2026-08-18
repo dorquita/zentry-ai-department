@@ -1,0 +1,64 @@
+# QA Reviewer -- revision de generic_json_artifact (dept-2026-08-18T025944Z-qa-input)
+
+- **Generado:** 2026-08-18T03:22:10.898Z
+- **sourceEmployee:** unknown
+- **artifactPath:** `reports/department/dept-2026-08-18T025944Z/dept-2026-08-18T025944Z-qa-input.json`
+
+**qa-reviewer no vuelve a hacer el trabajo original ni aplica correcciones -- solo evalua.**
+
+## Resultado
+
+- **reviewStatus:** `pass_with_warnings`
+- **overallPass:** si | **hasWarnings:** si
+- **findings:** 5 (critical: 0, warning: 5, info: 0)
+- **approvalRecommendation:** `pending` (riesgo: `low_medium`)
+
+**Resumen:** El artifact integra correctamente tres especialistas ejecutados y una sintesis de growth-director-v2, con hallazgos en general bien anclados a evidencia y buena disciplina en el manejo de la ausencia de sem-specialist. Se detectan sin embargo un claim numerico erroneo en analytics-specialist (mas del doble que contradice su propia evidencia ev17), una contradiccion entre la recomendacion de seo-specialist de publicar paginas de staging y el rechazo humano ya documentado por growth (que growth ya neutraliza), una brecha de trazabilidad entre los evidenceRefs de growth y los ids reales de los especialistas, y una dependencia en aprobaciones humanas previas respaldada solo por evidencia autorreferencial dentro del propio output de growth. Ninguno de estos problemas es critico ni implica una accion insegura propuesta, por lo que se recomienda pass_with_warnings con revision humana pendiente.
+
+### Findings
+
+| Categoria | Severidad | Descripcion |
+|---|---|---|
+| evidence_coverage | warning | growth.output.recommendedPriorities y growth.output.bottlenecks/risks usan evidenceRefs con un esquema propio (por ejemplo dept-seo-technical-issue-1, dept-content-summary, dept-analytics-tracking-issue-1, dept-seo-action-1) que no coincide con los ids reales presentes en los outputs de los especialistas (seo-specialist.output.technicalIssues usa t1/t2, opportunities usa o1-o11, findings usa f1-f6; analytics-specialist.output no incluye campo id en measurementFindings/funnelObservations/trackingIssues/etc; content-strategist.output no tiene ningun array de ids en absoluto). Esto impide verificar por coincidencia literal de id las citas de growth dentro del propio artifact. |
+| contradictions | warning | seo-specialist.output.prioritizedActions[5] (rank 6, title: Publicar a produccion las paginas de staging ya aprobadas para los huecos de contenido confirmados (taquillas metalicas, universidades, vestuarios)) contradice el rechazo humano que growth.output.risks[0] y growth.output.bottlenecks[1] documentan explicitamente (una persona rechazo publicar esas mismas paginas por verse demasiado basicas y sin suficientes imagenes/fotografias). Growth ya neutraliza la contradiccion excluyendo esa recomendacion de recommendedPriorities, pero la contradiccion entre capas existe y queda sin corregir en la capa de seo-specialist. |
+| unsupported_claims | warning | analytics-specialist.output.conversionObservations afirma (claimType FACT) que click_request_quote tiene 66 ocurrencias, mas del doble que cualquier otro evento clave listado. Esto es numericamente falso frente a la propia evidencia del mismo output: ev17 (view_contact_page) registra 39 ocurrencias, y 66 no es mas del doble de 39 (se necesitarian mas de 78). |
+| evidence_coverage | warning | content-strategist.output no incluye un array evidence estructurado (source/description) equivalente al de seo-specialist.output.evidence o analytics-specialist.output.evidence; su campo supportingEvidence solo menciona por nombre campos del brief recibido (currentAssumptions, clusterNote, brandRationale, secondaryKeywords) sin citar su contenido real, lo que reduce la verificabilidad de sus afirmaciones dentro de este mismo artifact. |
+| approval_requirements | warning | Varios items de growth.output.recommendedPriorities (por ejemplo Confirmar y desbloquear la correccion ya aprobada del enrutado roto hacia /cerraduras/, Cerrar la canibalizacion taquillas melamina/de melamina via el script ya aprobado (O29.1), Ejecutar el on-page del quick win cerraduras inteligentes para taquillas, Reescribir en bloque titles/meta descriptions de las paginas con CTR 0%, Validar en GA4 DebugView el disparo real de click_phone) dependen de Aprobacion humana ya concedida el 2026-08-16, respaldada solo por entradas de growth.output.evidence (human-decision-approved-*, human-decision-staging-reject) que son autorreferenciales -- ninguna otra parte de este artifact (stages, specialistOutputs) contiene un registro independiente de esas decisiones. growth.output.unknowns ya reconoce que no puede confirmar si esas correcciones aprobadas se ejecutaron realmente, lo cual es correcto, pero conviene que un humano reverifique el estado de esas aprobaciones antes de tratarlas como listas para ejecutar sin nueva revision. |
+
+### Unsupported claims
+
+- analytics-specialist.output.conversionObservations: click_request_quote es el evento clave con mas volumen del periodo, con 66 ocurrencias y 66 conversiones, mas del doble que cualquier otro evento clave listado -- contradicho por ev17 (view_contact_page = 39 ocurrencias, que no es menos de la mitad de 66).
+- growth.output.recommendedPriorities cita repetidamente Aprobacion humana ya concedida el 2026-08-16 como dependencia resuelta, respaldada unicamente por entradas de evidence autorreferenciales dentro del propio output de growth (human-decision-approved-*), sin ningun registro independiente visible en otra parte de este artifact.
+
+### Contradictions
+
+- seo-specialist.output.prioritizedActions[5].title = Publicar a produccion las paginas de staging ya aprobadas para los huecos de contenido confirmados (taquillas metalicas, universidades, vestuarios) contradice growth.output.risks[0], que documenta que una persona ya rechazo publicar esas mismas paginas por verse demasiado basicas y sin suficientes imagenes/fotografias.
+- analytics-specialist.output.conversionObservations (mas del doble que cualquier otro evento clave listado sobre click_request_quote) contradice su propia evidencia ev17 (view_contact_page = 39 ocurrencias).
+
+### Safety concerns
+
+_Sin problemas de seguridad detectados._
+
+### Required corrections
+
+- Corregir en analytics-specialist.output.conversionObservations la afirmacion mas del doble que cualquier otro evento clave listado sobre click_request_quote, ya que contradice ev17 (view_contact_page = 39 ocurrencias); sustituirla por una comparacion numericamente exacta o eliminar el calificativo.
+- Alinear o documentar el mapeo entre el esquema de evidenceRefs de growth.output (por ejemplo dept-seo-technical-issue-1, dept-content-summary, dept-seo-action-1) y los ids reales de los outputs de los especialistas (t1/t2, o1-o11, f1-f6 en seo-specialist; sin ids en analytics-specialist y content-strategist), para que las citas de growth sean verificables dentro del propio artifact.
+- Anadir a content-strategist.output un array evidence estructurado (source/description), equivalente al de seo-specialist y analytics-specialist, en vez de referenciar por nombre campos del brief (currentAssumptions, clusterNote, brandRationale) sin reproducir su contenido.
+- Antes de promover a ingenieria cualquier item de growth.output.recommendedPriorities marcado como Aprobacion humana ya concedida el 2026-08-16, verificar de forma independiente que esa aprobacion sigue vigente y que su alcance cubre exactamente la accion propuesta, dado que growth.output.unknowns ya reconoce no poder confirmar si esas correcciones se ejecutaron.
+
+### Approval recommendation
+
+- **recommendedStatus:** `pending`
+- **riskLevel:** `low_medium`
+- **rationale:** El artifact es de solo lectura (ninguna accion se ha aplicado a ningun sistema) y la mayoria de las recommendedPriorities de growth requieren verificacion humana explicita antes de ejecutar nada, lo cual es correcto. Sin embargo, hay una dependencia relevante en aprobaciones humanas previas (2026-08-16) respaldadas solo por evidencia autorreferencial dentro del propio output de growth, un claim numerico erroneo en analytics-specialist, y una brecha de trazabilidad entre los evidenceRefs de growth y los ids reales de los especialistas. Ninguno de estos problemas es una accion insegura en si misma, pero justifican revision humana antes de promover las recomendaciones a la fase de ingenieria.
+
+### Evidence
+
+- seo-specialist.output.prioritizedActions[5].title = Publicar a produccion las paginas de staging ya aprobadas para los huecos de contenido confirmados (taquillas metalicas, universidades, vestuarios)
+- growth.output.risks[0].description cita el rechazo humano por verse demasiado basicas y sin suficientes imagenes/fotografias
+- analytics-specialist.output.evidence ev14 (click_request_quote = 66 ocurrencias) y ev17 (view_contact_page = 39 ocurrencias) contradicen conversionObservations que afirma mas del doble que cualquier otro evento clave listado
+- growth.output.recommendedPriorities[0].evidenceRefs = [dept-seo-technical-issue-1, dept-seo-action-1, human-decision-approved-routing-fix], ids que no aparecen literalmente en seo-specialist.output.technicalIssues (id t1) ni en ninguna otra parte del artifact
+- content-strategist.output.supportingEvidence cita currentAssumptions, clusterNote y brandRationale por nombre sin incluir un array evidence con source/description
+- growth.output.unknowns[0]: No se puede confirmar desde este contexto si las 5 correcciones aprobadas el 2026-08-16 ... ya se convirtieron en trabajo operativo, porque actionsSummary/workOrdersSummary/changePacksSummary vienen a cero por diseno en esta pasada
+
+_Artefacto de solo lectura/revision. qa-reviewer no vuelve a hacer el trabajo original ni aplica ninguna correccion -- solo evalua el artifact ya producido. La decision de aplicar/rechazar cualquier correccion la toma un humano._

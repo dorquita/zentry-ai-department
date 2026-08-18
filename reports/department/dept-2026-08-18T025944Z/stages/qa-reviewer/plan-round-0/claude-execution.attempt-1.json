@@ -1,0 +1,12 @@
+{
+  "contractVersion": "claude-execution-record/v1",
+  "employee": "qa-reviewer",
+  "model": "claude-sonnet-5",
+  "durationMs": 106874,
+  "costUsd": 0.2664184,
+  "numTurns": 2,
+  "outputSource": "structured_output",
+  "outcome": "success",
+  "note": "",
+  "recordedAt": "2026-08-18T03:26:30.816Z"
+}
