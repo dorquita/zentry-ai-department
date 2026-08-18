@@ -66,6 +66,43 @@ EMAIL              resumen humano de 150-250 palabras
 PRODUCCION         inalcanzable por este camino, en cualquier caso
 ```
 
+## Capacidades
+
+| Capacidad | Estado | Evidencia |
+| --------- | ------ | --------- |
+| Persistencia (MongoDB como fuente de verdad) | OPERATIVA | Cada pasada hidrata `data/` desde MongoDB al arrancar y escribe el estado al cerrar. El apply se NIEGA a escribir en staging si no tiene donde registrar el cambio. |
+| Datos LIVE | OPERATIVA | Search Console, GA4, GTM y Google Ads (0 mutaciones) se recogen al inicio de cada pasada, con gate fail-closed: solo `live` cuenta como live. |
+| Agentes Claude | OPERATIVA | 5 empleados con salida estructurada validada contra su JSON Schema versionado en cada pasada. |
+| Deteccion de trabajo nuevo | OPERATIVA | 7-9 prioridades por pasada, derivadas solo de los datos de esa pasada. |
+| ChangePlan ejecutable | OPERATIVA | run 32086475304: plan resuelto contra el inventario real, con pageId y ancla de version. |
+| QA | OPERATIVA | Dos puertas independientes: recomendaciones y plan. |
+| Correccion automatica | OPERATIVA (recien conectada) | Ver seccion QA loop. |
+| Staging / Novamira | OPERATIVA | run 32086475304: escritura real por `novamira/execute-php` sobre el post 1960. |
+| Read-back | OPERATIVA | Se relee por REST, via DISTINTA de la de escritura, para que la validacion no pueda confirmarse a si misma. |
+| Rollback | OPERATIVA | run 32087573582: validacion fallida -> reversion automatica -> pagina identica al inicio. |
+| Email | OPERATIVA | Resumen humano de 150-250 palabras, tres modos (normal, sin trabajo, alerta). |
+| Produccion protegida | OPERATIVA | 0 escrituras en produccion en toda la puesta en marcha. |
+
+## Pasada fresca
+
+<!-- PENDIENTE -->
+
+## Ejecuciones reales
+
+<!-- PENDIENTE -->
+
+## QA loop
+
+<!-- PENDIENTE -->
+
+## Email
+
+<!-- PENDIENTE -->
+
+## Autonomia actual
+
+<!-- PENDIENTE -->
+
 ## Que puede hacer ya sin intervencion humana
 
 En staging, de principio a fin y sin que nadie apruebe nada por el
