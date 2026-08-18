@@ -316,10 +316,41 @@ runs:
         # growth-director-v2 dentro de la pasada coordinada (runs
         # 32060162770 y 32072490978, 24 s de step y dos intentos sin
         # execution_file). Solo la LONGITUD -- el contenido no se imprime.
-        echo "[runtime] ${AGENT_NAME}: prompt=${#PROMPT} bytes, schema=$(wc -c < "$OUTPUT_SCHEMA_PATH") bytes, max-turns=${MAX_TURNS}."
+        #
+        # EL PROMPT NO PUEDE VIAJAR POR `env:`, y esto se aprendio de la
+        # peor manera. Linux limita CADA cadena de entorno a 128 KiB
+        # (MAX_ARG_STRLEN): pasar un prompt mas grande hace que el propio
+        # `execve` del step falle con E2BIG antes de ejecutar una sola
+        # linea. El step muere en segundos, los steps siguientes de la
+        # composite quedan `skipped` -- incluida la invocacion de Claude
+        # y el paso que CLASIFICA los fallos -- y el resultado que llega
+        # arriba es "la etapa no dejo salida", con clase de fallo y
+        # motivo VACIOS. Un limite del sistema operativo disfrazado de
+        # empleado que no responde.
+        #
+        # Observado en web-engineer (pasada dept-2026-08-18T022827Z), la
+        # primera vez que una pasada fresca llego a invocarlo: su
+        # contexto adjunta el contenido completo de las paginas objetivo.
+        #
+        # Aqui el prompt se escribe a un FICHERO -- el cuerpo del script,
+        # que Actions ya vuelca a disco, no tiene ese limite -- y de ahi
+        # se mide.
+        cat > "${RUNNER_TEMP}/prompt-size-probe.txt" <<'ZENTRY_PROMPT_EOF'
+        ${{ inputs.prompt }}
+        ZENTRY_PROMPT_EOF
+        PROMPT_BYTES=$(wc -c < "${RUNNER_TEMP}/prompt-size-probe.txt")
+        rm -f "${RUNNER_TEMP}/prompt-size-probe.txt"
+        echo "prompt-bytes=${PROMPT_BYTES}" >> "$GITHUB_OUTPUT"
+        echo "[runtime] ${AGENT_NAME}: prompt=${PROMPT_BYTES} bytes, schema=$(wc -c < "$OUTPUT_SCHEMA_PATH") bytes, max-turns=${MAX_TURNS}."
+        # Aviso, no barrera: el limite exacto que aplica a la Action de
+        # Claude depende de como pase ella el prompt, y no se fija aqui
+        # un numero inventado. Pero un prompt por encima de 128 KiB es la
+        # primera sospecha ante un step que muere en segundos.
+        if [ "$PROMPT_BYTES" -gt 131072 ]; then
+          echo "::warning::El prompt de ${AGENT_NAME} ocupa ${PROMPT_BYTES} bytes, por encima del limite de 128 KiB (131072) que Linux impone a una variable de entorno. Si la invocacion muere en segundos sin dejar execution_file, esta es la causa a mirar primero."
+        fi
       env:
         AGENT_NAME: ${{ inputs.agent-name }}
-        PROMPT: ${{ inputs.prompt }}
         OUTPUT_SCHEMA_PATH: ${{ inputs.output-schema-path }}
         MAX_TURNS: ${{ inputs.max-turns }}
 
