@@ -1,0 +1,144 @@
+{
+  "contractVersion": "qa-correction-loop/v1",
+  "departmentRunId": "dept-2026-08-17T234302Z",
+  "employee": "growth-director-v2",
+  "maxRounds": 2,
+  "rounds": [
+    {
+      "revision": 0,
+      "qaAttempt": 1,
+      "employee": "growth-director-v2",
+      "reviewStatus": "fail",
+      "blocking": true,
+      "action": "request_correction",
+      "corrections": [
+        {
+          "field": "growth.output.recommendedPriorities[0].dependsOn / evidenceRefs",
+          "problem": "La justificacion 'ya aprobado por un humano el 2026-08-16' para 'ejecutar' un cambio de enrutado en produccion se apoya unicamente en growth.output.evidence[0], una descripcion narrativa sin approvalRequestId ni dato verificable.",
+          "expectedCriterion": "La recomendacion debe citar un identificador de aprobacion verificable o marcarse explicitamente como pendiente de nueva aprobacion en este run antes de calificarse como apta para ejecucion directa.",
+          "evidence": [
+            "growth.output.recommendedPriorities[0].title = 'Confirmar y ejecutar la correccion definitiva del enrutado de /cerraduras/'",
+            "growth.output.evidence[0].description sobre aprobaciones del 2026-08-16"
+          ],
+          "targetRecommendationId": "Confirmar y ejecutar la correccion definitiva del enrutado de /cerraduras/",
+          "blocking": true,
+          "fromPlainText": false
+        },
+        {
+          "field": "growth.output.recommendedPriorities[1].dependsOn / evidenceRefs",
+          "problem": "Misma justificacion narrativa sin approvalRequestId para autorizar el cierre/ejecucion del script de canibalizacion melamina.",
+          "expectedCriterion": "Debe citarse un identificador de aprobacion verificable para el cierre del backlog melamina, o marcarse como pendiente de confirmacion antes de ejecutar el script.",
+          "evidence": [
+            "growth.output.recommendedPriorities[1].title = 'Cerrar la canibalizacion melamina vs melamina-fenolico en el backlog'",
+            "growth.output.evidence[0].description"
+          ],
+          "targetRecommendationId": "Cerrar la canibalizacion melamina vs melamina-fenolico en el backlog",
+          "blocking": true,
+          "fromPlainText": false
+        },
+        {
+          "field": "growth.output.recommendedPriorities[2].dependsOn / evidenceRefs",
+          "problem": "El titulo usa 'Ejecutar' para un cambio on-page en produccion, justificado solo con la narrativa de aprobacion humana no verificable.",
+          "expectedCriterion": "Debe existir un identificador de aprobacion trazable antes de ejecutar cambios on-page en la pagina cerraduras-inteligentes-taquillas.",
+          "evidence": [
+            "growth.output.recommendedPriorities[2].title = 'Ejecutar el quick win on-page de cerraduras inteligentes para taquillas'",
+            "growth.output.evidence[0].description"
+          ],
+          "targetRecommendationId": "Ejecutar el quick win on-page de cerraduras inteligentes para taquillas",
+          "blocking": true,
+          "fromPlainText": false
+        },
+        {
+          "field": "growth.output.recommendedPriorities[3].dependsOn / evidenceRefs",
+          "problem": "Reescritura de metas en produccion justificada solo con la misma narrativa de aprobacion no verificable, ademas confidence es 'medium' por incertidumbre de CTR pero se sigue tratando como accion aprobada.",
+          "expectedCriterion": "Aportar identificador de aprobacion verificable antes de tratar esta reescritura de metas como autorizada para ejecucion.",
+          "evidence": [
+            "growth.output.recommendedPriorities[3].title = 'Reescribir meta title/description en paginas con CTR 0% e impresiones reales'",
+            "growth.output.evidence[0].description"
+          ],
+          "targetRecommendationId": "Reescribir meta title/description en paginas con CTR 0% e impresiones reales",
+          "blocking": true,
+          "fromPlainText": false
+        },
+        {
+          "field": "growth.output.recommendedPriorities[4].dependsOn / evidenceRefs",
+          "problem": "Cita la misma aprobacion narrativa no verificable aunque la accion en si (validar en DebugView) es de solo diagnostico, no de escritura en produccion.",
+          "expectedCriterion": "Aclarar que esta accion es de solo lectura/diagnostico y no requiere el mismo nivel de aprobacion que las acciones de escritura; o aportar el identificador de aprobacion si se considera necesario igualmente.",
+          "evidence": [
+            "growth.output.recommendedPriorities[4].title = 'Validar en GA4 DebugView el disparo real de click_phone'",
+            "growth.output.evidence[0].description"
+          ],
+          "targetRecommendationId": "Validar en GA4 DebugView el disparo real de click_phone",
+          "blocking": false,
+          "fromPlainText": false
+        },
+        {
+          "field": "growth.output.recommendedPriorities[7].dependsOn / evidenceRefs",
+          "problem": "Cita la misma aprobacion narrativa no verificable para la coordinacion del articulo pilar, aunque la accion en si es de revision cruzada, no de publicacion directa.",
+          "expectedCriterion": "Aclarar que esta accion es de coordinacion/revision (no de publicacion) y no depende estrictamente del mismo nivel de aprobacion citado; o aportar el identificador de aprobacion si aplica.",
+          "evidence": [
+            "growth.output.recommendedPriorities[7].title = 'Coordinar el articulo pilar Soluciones de taquillas con el cluster SEO antes de publicarlo'",
+            "growth.output.evidence[0].description"
+          ],
+          "targetRecommendationId": "Coordinar el articulo pilar Soluciones de taquillas con el cluster SEO antes de publicarlo",
+          "blocking": false,
+          "fromPlainText": false
+        },
+        {
+          "field": "growth.output.risks[0] / recommendedPriorities[6].rationale",
+          "problem": "Contradiccion no resuelta entre seo-specialist (o11-o13, ev-gap-uni/met/vest: staging 'ya aprobada visualmente') y growth (afirma que un humano rechazo esa publicacion por falta de iteracion visual el 2026-08-16).",
+          "expectedCriterion": "El artifact debe aclarar explicitamente si la aprobacion visual reportada por seo-specialist es anterior o posterior al rechazo humano citado por growth, o corregir la afirmacion desactualizada de seo-specialist, antes de decidir sobre esta recomendacion.",
+          "evidence": [
+            "seo-specialist o11.rationale: 'staging (2110) ya aprobada visualmente'",
+            "growth.output.risks[0].description: 'accion ya rechazada por un humano el 2026-08-16 por falta de calidad visual'"
+          ],
+          "targetRecommendationId": "Completar segunda iteracion visual de las 4 paginas de staging antes de replantear su publicacion",
+          "blocking": true,
+          "fromPlainText": false
+        },
+        {
+          "field": "",
+          "problem": "Aportar en growth.output un identificador de aprobacion verificable (approvalRequestId, timestamp de sistema de aprobaciones, o referencia cruzada) para cada recomendacion que cite 'ya aprobado por un humano el 2026-08-16', en vez de reutilizar una unica descripcion narrativa en seis recomendaciones distintas.",
+          "expectedCriterion": "",
+          "evidence": [],
+          "targetRecommendationId": "",
+          "blocking": true,
+          "fromPlainText": true
+        },
+        {
+          "field": "",
+          "problem": "Eliminar o justificar con fuente real la cifra '70 candidatas SEM' en growth.output.dependencies, dado que sem-specialist tiene status not_available y las instrucciones de revision prohiben asumir datos de SEM.",
+          "expectedCriterion": "",
+          "evidence": [],
+          "targetRecommendationId": "",
+          "blocking": true,
+          "fromPlainText": true
+        },
+        {
+          "field": "",
+          "problem": "Resolver explicitamente la contradiccion entre seo-specialist (staging de universidades/metalicas/vestuarios ya aprobada visualmente, recomienda publicar) y growth (afirma que un humano ya rechazo esa publicacion por falta de iteracion visual) antes de promover cualquier recomendacion relacionada con estas 4 paginas.",
+          "expectedCriterion": "",
+          "evidence": [],
+          "targetRecommendationId": "",
+          "blocking": true,
+          "fromPlainText": true
+        },
+        {
+          "field": "",
+          "problem": "Corregir los evidenceRefs de growth.output (currentSignals, bottlenecks, opportunities, experiments, recommendedPriorities, risks) para que apunten a ids reales existentes en los outputs de los especialistas (ti1, f1-f7, o1-o15, e1-e21) o en growth.output.evidence, en vez de identificadores inventados como 'dept-seo-action-1' que no aparecen en ningun otro lugar del artifact.",
+          "expectedCriterion": "",
+          "evidence": [],
+          "targetRecommendationId": "",
+          "blocking": true,
+          "fromPlainText": true
+        }
+      ],
+      "reason": "QA bloquea con 9 correccion(es) bloqueante(s) de 11. Se pide correccion al responsable (ronda 1 de 2) y despues se vuelve a revisar el output NUEVO.",
+      "reviewedOutputPath": "reports/department/dept-2026-08-17T234302Z/stages/growth-director-v2/output.json",
+      "reviewOutputPath": "reports/qa-reviewer/dept-2026-08-17T234302Z-qa-input/review.json",
+      "at": "2026-08-18T00:03:01.675Z"
+    }
+  ],
+  "finalStatus": "in_progress",
+  "finalReason": "QA bloquea con 9 correccion(es) bloqueante(s) de 11. Se pide correccion al responsable (ronda 1 de 2) y despues se vuelve a revisar el output NUEVO."
+}

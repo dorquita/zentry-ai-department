@@ -1,7 +1,7 @@
 # SEO Change Packs — 2026-08-17
 
-- **departmentRunId:** `dept-2026-08-17T230452Z`
-- **Generado:** 2026-08-17T23:06:06.372Z
+- **departmentRunId:** `dept-2026-08-17T234302Z`
+- **Generado:** 2026-08-17T23:44:19.680Z
 
 ## Resumen ejecutivo
 

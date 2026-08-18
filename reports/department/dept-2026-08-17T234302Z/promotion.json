@@ -1,0 +1,207 @@
+{
+  "departmentRunId": "dept-2026-08-17T234302Z",
+  "departmentQaStatus": "BLOCKED",
+  "qaReviewStatus": "fail",
+  "globalBlockReason": "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer.",
+  "promoted": [],
+  "blocked": [
+    {
+      "rank": 1,
+      "title": "Confirmar y ejecutar la correccion definitiva del enrutado de /cerraduras/",
+      "rationale": "Impacto alto, esfuerzo bajo: ya aprobado por un humano el 2026-08-16, pero los datos live de esta pasada muestran que el problema persiste, indicando que no se ha completado o ha reaparecido.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Decision humana ya aprobada sobre el enrutado de /cerraduras/",
+        "Decision sobre destino final del trafico de centros deportivos/gimnasios"
+      ],
+      "evidenceRefs": [
+        "dept-seo-technical-issue-1",
+        "dept-seo-action-1",
+        "human-decisions-approved-2026-08-16"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 2,
+      "title": "Cerrar la canibalizacion melamina vs melamina-fenolico en el backlog",
+      "rationale": "Impacto medio, esfuerzo bajo: decision de cluster O29.1 ya lo resolvio y un humano ya aprobo cerrarlo, pero el backlog sigue generando entradas mal enrutadas.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Decision humana ya aprobada sobre cierre de canibalizacion melamina",
+        "Ejecucion confirmada del script de resolucion"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-2",
+        "dept-seo-opportunity-3",
+        "human-decisions-approved-2026-08-16"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Ejecutar el quick win on-page de cerraduras inteligentes para taquillas",
+      "rationale": "Impacto medio, confianza alta, esfuerzo bajo: keyword ya aprobada como quick win prioritario, con evidencia clara en pagina correctamente enrutada.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Decision humana ya aprobada sobre este quick win"
+      ],
+      "evidenceRefs": [
+        "dept-seo-opportunity-4",
+        "human-decisions-approved-2026-08-16"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "Reescribir meta title/description en paginas con CTR 0% e impresiones reales",
+      "rationale": "Impacto medio, esfuerzo medio: patron sistemico confirmado en varias paginas, ya aprobado por un humano; confianza media porque no se puede diferenciar CTR verdaderamente cero de un redondeo del pipeline.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Decision humana ya aprobada sobre reescritura de metas"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-4",
+        "dept-seo-opportunity-6",
+        "dept-seo-opportunity-7",
+        "human-decisions-approved-2026-08-16"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 5,
+      "title": "Validar en GA4 DebugView el disparo real de click_phone",
+      "rationale": "Impacto alto potencial, esfuerzo bajo: tag y trigger existen sin pausar pero 0 occurrences en el periodo; ya aprobado por un humano.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Decision humana ya aprobada sobre validacion de click_phone"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-tracking-issue-1",
+        "human-decisions-approved-2026-08-16"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "Confirmar el estado real de publicacion de la version GTM pendiente de Pau",
+      "rationale": "Impacto alto, esfuerzo bajo: el nombre de la version live indica cambios de eventos CTA sin publicar; hasta confirmarse, cualquier lectura de conversion sobre esos eventos es provisional.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Confirmacion del responsable del workspace de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-4"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 7,
+      "title": "Completar segunda iteracion visual de las 4 paginas de staging antes de replantear su publicacion",
+      "rationale": "Impacto medio, esfuerzo alto: un humano ya rechazo publicar estas paginas por falta de calidad visual; la recomendacion no es publicarlas como sugiere seo-specialist, sino completar la iteracion pendiente.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "high",
+      "dependsOn": [
+        "Decision humana de rechazo de publicacion directa de staging"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "human-decision-rejected-staging-2026-08-16"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 8,
+      "title": "Coordinar el articulo pilar Soluciones de taquillas con el cluster SEO antes de publicarlo",
+      "rationale": "Impacto medio, esfuerzo bajo: content-strategist declara riesgo de canibalizacion, y existe solape potencial no resuelto con el hueco de taquillas inteligentes general ya en staging; confianza media por esta contradiccion no verificada.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Decision humana ya aprobada sobre coordinacion de contenido con cluster SEO",
+        "Revision cruzada seo-specialist / content-strategist"
+      ],
+      "evidenceRefs": [
+        "dept-content-risks",
+        "dept-content-summary",
+        "dept-seo-summary",
+        "human-decisions-approved-2026-08-16"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 9,
+      "title": "Revisar configuracion de conversion GA4 de tres eventos sin conversion",
+      "rationale": "Impacto medio, esfuerzo bajo: click_catalog_download, view_quote_page y view_contact_page disparan pero no suman conversions, pudiendo infravalorar el volumen real.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-analytics-action-3",
+        "dept-analytics-tracking-issue-2",
+        "dept-analytics-tracking-issue-3"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=2, safetyConcerns=2). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    }
+  ],
+  "unattributedBlockingSignals": [],
+  "qaSummary": {
+    "criticalFindings": 2,
+    "warningFindings": 2,
+    "safetyConcerns": 2,
+    "contradictions": 1,
+    "unsupportedClaims": 2,
+    "requiredCorrections": 4
+  }
+}
