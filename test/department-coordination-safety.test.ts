@@ -310,6 +310,47 @@ export function runDepartmentCoordinationSafetyTests(): TestCase[] {
       },
     },
     {
+      // REGRESION REAL (run 32087245294). Todo envoltorio que entregue
+      // PHP a `callNovamiraExecutePhp` tiene que DEDUCIR la fase del PHP
+      // que recibe, nunca fijarla.
+      //
+      // El E2E la fijaba en "apply". Cuando el executor lanzo su rollback
+      // automatico, el guard comparo el PHP de reversion contra la
+      // plantilla determinista del apply, no coincidio, y bloqueo la
+      // propia reversion (`php_not_deterministic`). El apply ya habia
+      // escrito: la pagina quedo a medias.
+      //
+      // El guard hizo su trabajo. Lo que mentia era la fase declarada, y
+      // una fase mal declarada convierte el rollback -- la unica red de
+      // seguridad que tiene una escritura -- en una llamada que el propio
+      // sistema rechaza.
+      name: "La fase de una escritura de execute-php se DEDUCE del PHP, nunca se fija a mano",
+      fn: () => {
+        const wrappers = [
+          path.join(PROJECT_ROOT, "scripts", "run-department-apply.ts"),
+          path.join(PROJECT_ROOT, "scripts", "o47-execute-php-e2e.ts"),
+        ];
+        for (const file of wrappers) {
+          const source = fs.readFileSync(file, "utf-8");
+          const name = path.relative(PROJECT_ROOT, file);
+
+          // Ninguna fase literal: ni "apply" ni "rollback" cableadas.
+          const literalPhases = [...source.matchAll(/^\s*phase:\s*"([^"]+)"/gm)].map((m) => m[1]);
+          assert.deepEqual(
+            literalPhases,
+            [],
+            `${name} fija la fase a ${JSON.stringify(literalPhases)}. Una fase fija bloquea el rollback automatico en el guard y deja la pagina a medias.`
+          );
+
+          // Y la deduccion existe, comparando con el PHP del apply.
+          assert.ok(
+            /phase:\s*php === buildPhpForPlan\(/.test(source),
+            `${name} debe deducir la fase comparando el PHP recibido con buildPhpForPlan(plan): lo que no es el PHP del apply es un rollback.`
+          );
+        }
+      },
+    },
+    {
       name: "PRODUCCION solo es alcanzable desde el carril encolado, y la pasada diaria no puede llegar ahi",
       fn: () => {
         const executor = fs.readFileSync(path.join(PROJECT_ROOT, "src", "department", "apply", "production-executor.ts"), "utf-8");
