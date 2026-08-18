@@ -231,6 +231,20 @@ distinto. Ninguno era funcionalidad que faltara.
 | 6 | El bucle de correccion no se disparaba | Estaba construido sobre el PLAN, pero QA bloquea en la puerta ANTERIOR (Growth), donde web-engineer ni siquiera se invoca |
 | 7 | Aun en la puerta correcta, no se disparaba | QA devolvia `fail` con 2 hallazgos criticos y `requiredCorrections` vacio; la regla propia descartaba informacion accionable que si estaba ahi |
 | 8 | El rollback del arnes no podia ejecutarse | Fase de escritura fijada a mano (ver seccion Rollback) |
+| 9 | QA bloqueaba con 9 correcciones estructuradas y NINGUNA ronda de correccion se ejecutaba | El parser de CI enumeraba a mano los campos que publica como outputs y esa lista se quedo sin `correctionRequired`. El workflow condiciona TODO el bucle a `steps.qa_gate.outputs.correctionRequired == 'true'`, y un output inexistente evalua a cadena vacia: la condicion era falsa para siempre. El bucle entero llevaba apagado desde que se escribio, sin error y sin log |
+| 10 | Dos pasadas fallaron por empleados distintos y no se pudo saber por que | El log decia QUE etapa fallo, no por que. La causa quedaba a mitad de un log de 42.899 lineas o dentro del artifact |
+
+De los diez, **seis** (1, 2, 3, 6, 7, 9) son literalmente la misma
+historia: **una decision correcta que no llega a quien tiene que
+actuar**. El sistema sabia hacerlo, decidia hacerlo, lo dejaba escrito
+-- y el paso siguiente leia otra cosa, o no leia nada. Ninguno de los
+diez era funcionalidad que faltara.
+
+El numero 9 es el mas instructivo: un output que no existe no da error
+en GitHub Actions, evalua a cadena vacia. Los steps salen `skipped`, que
+es exactamente lo que se veria si la condicion fuera legitimamente
+falsa. No hay ninguna señal que distinga "no hacia falta corregir" de
+"la rama de correccion esta muerta".
 
 ## Estado de produccion
 
