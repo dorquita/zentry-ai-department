@@ -15,6 +15,26 @@
  *                               staging (id, status, slug, titulo) para
  *                               que una persona elija. Cero escrituras.
  *   --mode run --postId <N>     El E2E completo sobre esa pagina.
+ *   --mode rollback-drill --postId <N>
+ *                               El E2E hasta el apply, pero forzando que
+ *                               la VALIDACION falle, para ver el rollback
+ *                               AUTOMATICO del executor de verdad.
+ *
+ * SOBRE EL SIMULACRO DE ROLLBACK, y por que se hace asi. La reversion del
+ * modo `run` la pide el script: sirve para demostrar que el camino es
+ * reversible, pero NO demuestra lo que interesa de verdad, que es que el
+ * sistema se revierte SOLO cuando algo sale mal. Para eso hace falta una
+ * validacion que falle.
+ *
+ * Provocar un fallo real de escritura no se puede sin romper algo de
+ * verdad en staging. Lo que si se puede -- y es honesto decir exactamente
+ * que es lo simulado -- es envenenar UNA sola lectura: la relectura
+ * posterior al apply, que es justo la senal con la que el executor decide
+ * si lo escrito coincide con lo planeado. Todo lo demas es real: la
+ * escritura ocurrio, el rollback lo lanza el executor por su cuenta,
+ * reescribe en staging por el mismo guard, y su verificacion posterior
+ * usa la lectura REAL sin tocar. El simulacro es el disparador, no la
+ * respuesta.
  *
  * ESCRITURAS: dos en STAGING (el cambio y su reversion), cero en
  * produccion. Este script no tiene ninguna via para tocar produccion: el
@@ -235,7 +255,10 @@ async function main(): Promise<void> {
     console.log("\nCero escrituras. Este modo solo lee metadatos.");
     return;
   }
-  if (mode !== "run") throw new Error(`--mode "${mode}" desconocido. Usa "list", "ability-info" o "run".`);
+  const drill = mode === "rollback-drill";
+  if (mode !== "run" && !drill) {
+    throw new Error(`--mode "${mode}" desconocido. Usa "list", "ability-info", "run" o "rollback-drill".`);
+  }
 
   const postId = Number(args.postId);
   if (!Number.isInteger(postId) || postId <= 0) throw new Error("Falta --postId <N> (entero positivo).");
@@ -310,8 +333,26 @@ async function main(): Promise<void> {
   };
 
   session = await openSession();
+
+  // EL UNICO PUNTO SIMULADO DE TODO EL SIMULACRO.
+  //
+  // El executor lee tres veces: (1) el snapshot previo, (2) la relectura
+  // con la que valida lo que acaba de escribir, y (3) la verificacion de
+  // su propio rollback. Solo se envenena la (2), que es la senal con la
+  // que decide "esto no ha quedado como pedi". La (1) y la (3) son
+  // lecturas reales de WordPress -- y la (3) es la que despues afirma que
+  // la reversion ocurrio de verdad, asi que no puede estar tocada.
+  let readCount = 0;
+  const drillGetState = async (id: number): Promise<PhpTargetState> => {
+    const state = await getState(id);
+    readCount += 1;
+    if (!drill || readCount !== 2) return state;
+    console.log("\n[drill] Envenenando SOLO la relectura de validacion: el executor vera un contenido que no coincide con el plan.");
+    return { ...state, contentHtml: `${state.contentHtml}<!-- rollback-drill: lectura alterada a proposito -->` };
+  };
+
   const deps = {
-    getState,
+    getState: drillGetState,
     runPhp: async (php: string): Promise<string> => {
       return callNovamiraExecutePhp(
         {
@@ -350,6 +391,61 @@ async function main(): Promise<void> {
     afterValue: applyOutcome.afterValue,
     detail: applyOutcome.detail,
   });
+
+  if (drill) {
+    // Lo que tiene que haber pasado, y se comprueba una por una: el
+    // executor escribio, su validacion fallo, y REVIRTIO SOLO. Nadie le
+    // pidio la reversion desde aqui.
+    const finalDrill = await getState(postId);
+    const finalDrillHash = computeVersionHash({
+      status: finalDrill.status,
+      title: finalDrill.title,
+      metaDescription: finalDrill.excerpt,
+      contentHtml: finalDrill.contentHtml,
+    });
+    const identicalDrill = finalDrillHash === beforeHash && finalDrill.contentHtml === before.contentHtml;
+    log("4-drill-final", {
+      status: applyOutcome.status,
+      validation: applyOutcome.validation,
+      rollback: applyOutcome.rollback,
+      stagingWritePerformed: applyOutcome.stagingWritePerformed,
+      productionWritePerformed: applyOutcome.productionWritePerformed,
+      versionHash: finalDrillHash,
+      identicalToStart: identicalDrill,
+      detail: applyOutcome.detail,
+    });
+
+    fs.mkdirSync(REPORT_DIR, { recursive: true });
+    const drillPath = path.join(REPORT_DIR, `rollback-drill-${postId}.json`);
+    fs.writeFileSync(
+      drillPath,
+      JSON.stringify(
+        { postId, url: before.link, mode: "rollback-drill", beforeHash, finalHash: finalDrillHash, outcome: applyOutcome.status, rollback: applyOutcome.rollback, identicalToStart: identicalDrill, steps },
+        null,
+        2
+      ),
+      "utf-8"
+    );
+    console.log(`\nInforme del simulacro en ${path.relative(PROJECT_ROOT, drillPath)}.`);
+    console.log(
+      `ROLLBACK_DRILL_RESULT_JSON=${JSON.stringify({
+        postId,
+        outcome: applyOutcome.status,
+        validation: applyOutcome.validation,
+        rollback: applyOutcome.rollback,
+        identicalToStart: identicalDrill,
+        productionWrites: 0,
+      })}`
+    );
+
+    if (applyOutcome.status !== "rolled_back") {
+      throw new Error(`El simulacro esperaba "rolled_back" y termino en "${applyOutcome.status}". ${applyOutcome.detail}`);
+    }
+    if (!identicalDrill) {
+      throw new Error("El rollback automatico NO dejo la pagina exactamente como estaba. Requiere revision humana inmediata.");
+    }
+    return;
+  }
 
   if (applyOutcome.status !== "applied") {
     // Ya se habra revertido solo si llego a escribir. Se reporta y se

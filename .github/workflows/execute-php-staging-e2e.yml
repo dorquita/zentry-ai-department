@@ -26,11 +26,11 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "list / ability-info (solo lectura) | run (E2E completo, ESCRIBE en staging)"
+        description: "list / ability-info (solo lectura) | run (E2E completo, ESCRIBE en staging) | rollback-drill (validacion forzada a fallar para ver el rollback automatico)"
         required: true
         default: "list"
         type: choice
-        options: ["list", "ability-info", "run"]
+        options: ["list", "ability-info", "run", "rollback-drill"]
       postId:
         description: "ID de la pagina de staging (solo para mode=run y para certifyDepartmentPath)"
         required: false
@@ -97,12 +97,15 @@ jobs:
             POST_ID=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").postId)')
             ABILITY=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").ability || "")')
           fi
-          if [ "$MODE" != "list" ] && [ "$MODE" != "run" ] && [ "$MODE" != "ability-info" ]; then
-            echo "mode=\"$MODE\" desconocido. Fail-closed: no se ejecuta nada."
-            exit 1
-          fi
-          if [ "$MODE" = "run" ] && { [ -z "$POST_ID" ] || [ "$POST_ID" = "0" ]; }; then
-            echo "mode=run sin postId. Fail-closed: no se escribe en una pagina que nadie ha elegido."
+          case "$MODE" in
+            list|run|ability-info|rollback-drill) ;;
+            *)
+              echo "mode=\"$MODE\" desconocido. Fail-closed: no se ejecuta nada."
+              exit 1
+              ;;
+          esac
+          if { [ "$MODE" = "run" ] || [ "$MODE" = "rollback-drill" ]; } && { [ -z "$POST_ID" ] || [ "$POST_ID" = "0" ]; }; then
+            echo "mode=$MODE sin postId. Fail-closed: no se escribe en una pagina que nadie ha elegido."
             exit 1
           fi
           {
@@ -133,10 +136,10 @@ jobs:
           set -o pipefail
           if [ "$MODE" = "ability-info" ] && [ -n "$ABILITY" ]; then
             npx ts-node scripts/o47-execute-php-e2e.ts --mode ability-info --ability "$ABILITY"
-          elif [ "$MODE" != "run" ]; then
-            npx ts-node scripts/o47-execute-php-e2e.ts --mode "$MODE"
+          elif [ "$MODE" = "run" ] || [ "$MODE" = "rollback-drill" ]; then
+            npx ts-node scripts/o47-execute-php-e2e.ts --mode "$MODE" --postId "$POST_ID"
           else
-            npx ts-node scripts/o47-execute-php-e2e.ts --mode run --postId "$POST_ID"
+            npx ts-node scripts/o47-execute-php-e2e.ts --mode "$MODE"
           fi
         env:
           MODE: ${{ steps.request.outputs.mode }}
