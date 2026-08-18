@@ -35,6 +35,20 @@ on:
         description: "ID de la pagina de staging (solo para mode=run y para certifyDepartmentPath)"
         required: false
         type: string
+      inspectPostId:
+        description: >-
+          SOLO LECTURA. Imprime el estado actual (status, title, excerpt)
+          de esa pagina de staging y si contiene el marcador de
+          certificacion. No escribe nada.
+        required: false
+        type: string
+      restoreExcerpt:
+        description: >-
+          Restaura el extracto de la pagina indicada en postId al texto
+          exacto que se ponga aqui. Solo para devolver staging a un estado
+          conocido despues de un apply que fallo a medias.
+        required: false
+        type: string
       certifyDepartmentPath:
         description: >-
           En vez del E2E del executor, certificar el CAMINO COMPLETO del
@@ -134,6 +148,34 @@ jobs:
           # Los DOS interruptores del fallback. Apagar cualquiera lo desactiva.
           NOVAMIRA_STAGING_WRITES_ENABLED: "true"
           NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED: "true"
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
+          WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+
+      - name: "Inspeccionar una pagina de staging (SOLO LECTURA)"
+        if: ${{ inputs.inspectPostId != '' }}
+        run: npx ts-node scripts/certify-department-changeplan-apply.ts --inspect --postId "$INSPECT_POST_ID"
+        env:
+          INSPECT_POST_ID: ${{ inputs.inspectPostId }}
+          WORDPRESS_ENV: staging
+          WP_API_URL: ${{ secrets.WP_API_URL }}
+          WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
+          WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}
+
+      - name: "Restaurar el extracto de una pagina a un valor conocido"
+        if: ${{ inputs.restoreExcerpt != '' }}
+        run: npx ts-node scripts/certify-department-changeplan-apply.ts --postId "$POST_ID" --restoreExcerpt "$RESTORE_EXCERPT"
+        env:
+          POST_ID: ${{ inputs.postId }}
+          RESTORE_EXCERPT: ${{ inputs.restoreExcerpt }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB_NAME: ${{ vars.MONGODB_DB_NAME }}
+          DEPARTMENT_PERSISTENCE_MODE: ${{ secrets.MONGODB_URI != '' && 'mongo' || 'legacy' }}
+          WORDPRESS_ENV: staging
+          NOVAMIRA_STAGING_WRITES_ENABLED: "true"
+          NOVAMIRA_EXECUTE_PHP_FALLBACK_ENABLED: "true"
+          WORDPRESS_DRAFTS_ENABLED: "true"
+          DEPARTMENT_STAGING_APPLY_ENABLED: "true"
           WP_API_URL: ${{ secrets.WP_API_URL }}
           WP_API_USERNAME: ${{ secrets.WP_API_USERNAME }}
           WP_API_PASSWORD: ${{ secrets.WP_API_PASSWORD }}

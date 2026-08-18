@@ -228,6 +228,45 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const requestedId = args.postId && args.postId !== "true" ? Number(args.postId) : null;
 
+  // MODO INSPECCION -- SOLO LECTURA. Existe para poder responder a la
+  // pregunta "como esta la pagina AHORA" sin escribir nada, que es lo
+  // primero que hace falta saber cuando un apply deja staging en un
+  // estado incierto.
+  if (args.inspect === "true") {
+    if (requestedId === null) throw new Error("--inspect necesita --postId <N>.");
+    const page = await readStagingPage(requestedId);
+    console.log(`[inspect] post ${page.wordpressPageId} (${page.stagingUrl})`);
+    console.log(`[inspect] status  = ${page.status}`);
+    console.log(`[inspect] title   = ${JSON.stringify(page.title)}`);
+    console.log(`[inspect] excerpt = ${JSON.stringify(page.excerpt)}`);
+    console.log(`[inspect] contiene el marcador de certificacion: ${page.excerpt.includes(CERTIFICATION_MARKER)}`);
+    console.log("INSPECT_RESULT_JSON=" + JSON.stringify({ postId: page.wordpressPageId, excerpt: page.excerpt, contaminated: page.excerpt.includes(CERTIFICATION_MARKER) }));
+    return;
+  }
+
+  // MODO RESTAURACION -- escribe, pero solo para devolver un valor
+  // conocido. Se usa cuando un apply fallido deja el extracto modificado.
+  if (args.restoreExcerpt && args.restoreExcerpt !== "true") {
+    if (requestedId === null) throw new Error("--restoreExcerpt necesita --postId <N>.");
+    const inventory = await readStagingInventory();
+    const page = inventory.pages.find((p) => p.wordpressPageId === requestedId);
+    if (!page) throw new Error(`La pagina ${requestedId} no esta en el inventario.`);
+    console.log(`[restore] excerpt ACTUAL   = ${JSON.stringify(page.excerpt)}`);
+    console.log(`[restore] excerpt OBJETIVO = ${JSON.stringify(args.restoreExcerpt)}`);
+    await applyControlledPlan({
+      departmentRunId: `cert-restore-${new Date().toISOString().replace(/[:.]/g, "").slice(0, 15)}Z`,
+      page,
+      inventory,
+      newExcerpt: args.restoreExcerpt,
+      purpose: "Restaurar",
+    });
+    const after = await readStagingPage(requestedId);
+    console.log(`[restore] excerpt FINAL    = ${JSON.stringify(after.excerpt)}`);
+    console.log("RESTORE_RESULT_JSON=" + JSON.stringify({ postId: requestedId, restored: after.excerpt.trim() === args.restoreExcerpt.trim() }));
+    if (after.excerpt.trim() !== args.restoreExcerpt.trim()) process.exitCode = 1;
+    return;
+  }
+
   console.log("Leyendo el inventario REAL de staging (solo lectura)...");
   const inventory = await readStagingInventory();
   if (inventory.unavailableReason) {
@@ -245,7 +284,18 @@ async function main(): Promise<void> {
   // --- APLICAR -------------------------------------------------------
   const applyRunId = `cert-apply-${stamp.replace(/[:.]/g, "").slice(0, 15)}Z`;
   console.log(`\n=== APPLY (departmentRunId ${applyRunId}) ===`);
-  await applyControlledPlan({ departmentRunId: applyRunId, page, inventory, newExcerpt: modifiedExcerpt, purpose: "Modificar" });
+  // Un apply que FALLA es justo cuando mas falta hace intentar la
+  // reversion: puede haber escrito antes de fallar. Abortar aqui seria
+  // dejar staging en un estado incierto -- exactamente lo que este
+  // circuito promete no hacer.
+  let applyError: string | null = null;
+  try {
+    await applyControlledPlan({ departmentRunId: applyRunId, page, inventory, newExcerpt: modifiedExcerpt, purpose: "Modificar" });
+  } catch (err) {
+    applyError = err instanceof Error ? err.message : String(err);
+    console.error(`El apply fallo: ${applyError}`);
+    console.error("Se continua igualmente con la REVERSION: un apply fallido puede haber escrito antes de fallar.");
+  }
 
   const afterApply = await readStagingPage(page.wordpressPageId);
   console.log(`[2-after] excerpt = ${JSON.stringify(afterApply.excerpt)}`);
@@ -277,6 +327,7 @@ async function main(): Promise<void> {
   console.log(`[3-final] identicalToStart = ${identicalToStart}`);
 
   const result = {
+    applyError,
     postId: page.wordpressPageId,
     stagingUrl: page.stagingUrl,
     applyRunId,
@@ -298,7 +349,10 @@ async function main(): Promise<void> {
 
   // Fail-closed: si el cambio no se aplico, o si staging no volvio a su
   // estado original, esto NO es una certificacion superada.
-  if (!applied) {
+  if (applyError) {
+    console.error(`FALLO: el apply no termino bien (${applyError}).`);
+    process.exitCode = 1;
+  } else if (!applied) {
     console.error("FALLO: el ChangePlan no llego a modificar la pagina por el camino del departamento.");
     process.exitCode = 1;
   }
