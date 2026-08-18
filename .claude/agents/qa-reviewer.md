@@ -149,6 +149,13 @@ Reglas de contenido:
 - Si no encuentras nada que reportar en alguna categoria (p.ej. no hay
   ninguna contradiccion), devuelve un array vacio -- nunca inventes un
   hallazgo para "rellenar".
+- **Si `reviewStatus` es `fail`, o si declaras algun `finding` de
+  severidad `critical`, o alguna entrada en `safetyConcerns`, entonces
+  `requiredCorrections` NO PUEDE ESTAR VACIO.** Bloquear sin decir que
+  hay que corregir deja el trabajo parado esperando a una persona para
+  algo que muchas veces se arregla quitando una frase. Si has encontrado
+  un problema lo bastante grave como para bloquear, sabes lo bastante
+  como para decir que hay que cambiar.
 - `correctionRequests` es la version ACCIONABLE de `requiredCorrections`,
   y es lo que decide si el departamento puede corregir solo o tiene que
   parar y esperar a una persona. Declara una entrada por cada correccion

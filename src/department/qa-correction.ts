@@ -63,6 +63,12 @@ export interface QaCorrectionRequest {
   blocking: boolean;
   /** `true` si vino como texto plano del contrato antiguo. */
   fromPlainText: boolean;
+  /**
+   * De donde salio esta correccion. Importa porque no todas valen lo
+   * mismo: una declarada por QA trae criterio de aceptacion, y una
+   * derivada de un finding trae solo la descripcion del problema.
+   */
+  derivedFrom: "correction_request" | "required_correction" | "finding" | "safety_concern";
 }
 
 /** Forma estructurada opcional que qa-reviewer puede devolver ademas del texto. */
@@ -118,6 +124,7 @@ export function normalizeQaCorrections(output: QaReviewerOutput): QaCorrectionRe
         // Fail-closed: una correccion que no declara si bloquea, bloquea.
         blocking: raw.blocking === false ? false : true,
         fromPlainText: false,
+        derivedFrom: "correction_request",
       });
     }
   }
@@ -136,7 +143,53 @@ export function normalizeQaCorrections(output: QaReviewerOutput): QaCorrectionRe
       targetRecommendationId: "",
       blocking: true,
       fromPlainText: true,
+      derivedFrom: "required_correction",
     });
+  }
+
+  // ULTIMO RECURSO, y es el que de verdad hace que el bucle exista.
+  //
+  // La primera pasada fresca real bloqueo con DOS findings `critical` y
+  // `requiredCorrections` VACIO. El schema lo permite: el array es
+  // obligatorio, su contenido no. Y con la regla anterior -- "sin
+  // correcciones declaradas no se corrige" -- eso mandaba la pasada a
+  // NEEDS_HUMAN_REVIEW teniendo la informacion accionable delante: la
+  // `description` de un finding critical dice exactamente que esta mal y
+  // donde.
+  //
+  // Derivarlas de ahi NO es inventar nada: el texto es literalmente lo
+  // que QA escribio sobre el problema. Lo que no se inventa es el
+  // criterio de aceptacion -- ese queda vacio y se dice que esta vacio,
+  // porque QA no lo dio.
+  //
+  // Se marca `derivedFrom` para que la diferencia sea visible: una
+  // correccion declarada trae criterio; una derivada, solo el problema.
+  if (corrections.length === 0) {
+    for (const finding of output.findings) {
+      if (finding.severity !== "critical") continue;
+      corrections.push({
+        field: `findings[${finding.category}]`,
+        problem: finding.description,
+        expectedCriterion: "",
+        evidence: [],
+        targetRecommendationId: "",
+        blocking: true,
+        fromPlainText: false,
+        derivedFrom: "finding",
+      });
+    }
+    for (const concern of asStringArray(output.safetyConcerns)) {
+      corrections.push({
+        field: "safetyConcerns",
+        problem: concern,
+        expectedCriterion: "",
+        evidence: [],
+        targetRecommendationId: "",
+        blocking: true,
+        fromPlainText: false,
+        derivedFrom: "safety_concern",
+      });
+    }
   }
 
   return corrections;
@@ -213,14 +266,22 @@ export function decideQaLoop(input: DecideQaLoopInput): QaLoopDecision {
   }
 
   if (corrections.length === 0) {
-    // QA bloquea pero no dice que corregir. Reinvocar al responsable sin
-    // decirle que arreglar es tirar una invocacion a la basura y, peor,
-    // invitarle a cambiar cosas al azar hasta que pase.
+    // QA bloquea y no hay NADA accionable: ni correcciones declaradas,
+    // ni findings criticos, ni riesgos de seguridad. Reinvocar al
+    // responsable sin decirle que arreglar es tirar una invocacion y,
+    // peor, invitarle a cambiar cosas al azar hasta que pase.
+    //
+    // Ojo con lo estrecho que es ya este caso: `normalizeQaCorrections`
+    // deriva correcciones de los findings criticos y de los
+    // safetyConcerns, que son exactamente lo que hace que una revision
+    // bloquee. Llegar aqui significa que el veredicto es `fail` sin
+    // ninguna senal bloqueante detras -- una revision incoherente
+    // consigo misma, y eso si es cosa de una persona.
     return {
       action: "needs_human_review",
       nextRound: null,
       corrections: [],
-      reason: `QA bloquea (reviewStatus=${input.review.reviewStatus}) pero no ha declarado ninguna correccion accionable. Sin saber QUE corregir, una correccion automatica seria un cambio a ciegas. Motivo de QA: ${input.review.summary || "sin resumen"}.`,
+      reason: `QA bloquea (reviewStatus=${input.review.reviewStatus}) pero no ha dejado NADA accionable: ni correcciones declaradas, ni findings criticos, ni riesgos de seguridad. Sin saber QUE corregir, una correccion automatica seria un cambio a ciegas. Motivo de QA: ${input.review.summary || "sin resumen"}.`,
     };
   }
 

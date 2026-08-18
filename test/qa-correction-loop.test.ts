@@ -131,10 +131,72 @@ export function runQaCorrectionLoopTests(): { name: string; fn: () => void }[] {
       },
     },
     {
-      name: "QA que bloquea SIN decir que corregir va a revision humana: corregir a ciegas seria cambiar cosas al azar",
+      name: "REGRESION REAL: fail con findings critical y requiredCorrections VACIO SI dispara correccion",
+      fn: () => {
+        // Esto paso de verdad en la pasada dept-2026-08-17T234302Z: QA
+        // bloqueo con dos findings `critical` y `requiredCorrections`
+        // vacio (el schema exige el array, no su contenido). Con la regla
+        // anterior -- "sin correcciones declaradas no se corrige" -- la
+        // pasada se iba a NEEDS_HUMAN_REVIEW teniendo la informacion
+        // accionable delante, en la descripcion del propio finding.
+        const review = reviewFor({
+          reviewStatus: "fail",
+          requiredCorrections: [],
+          findings: [
+            {
+              category: "fabrication_risk",
+              severity: "critical",
+              description: "growth.output.dependencies afirma 70 candidatas SEM pese a que semStatus es not_available.",
+            },
+            { category: "actionability", severity: "warning", description: "Podria concretarse mas." },
+          ],
+          summary: "Hay una cifra de SEM sin respaldo.",
+        });
+
+        const corrections = normalizeQaCorrections(review);
+        assert.equal(corrections.length, 1, "solo el finding CRITICAL genera correccion; un warning no bloquea");
+        assert.equal(corrections[0].derivedFrom, "finding");
+        assert.ok(corrections[0].problem.includes("70 candidatas SEM"), "el problema es el texto LITERAL de QA, no una parafrasis");
+        // El criterio de aceptacion NO se inventa: QA no lo dio.
+        assert.equal(corrections[0].expectedCriterion, "");
+
+        const decision = decideQaLoop({ review, round: 0 });
+        assert.equal(decision.action, "request_correction", "el bucle TIENE que dispararse: la informacion accionable estaba ahi");
+        assert.equal(decision.nextRound, 1);
+      },
+    },
+    {
+      name: "Un safetyConcern sin correcciones declaradas tambien dispara correccion",
+      fn: () => {
+        const review = reviewFor({
+          reviewStatus: "fail",
+          requiredCorrections: [],
+          safetyConcerns: ["La propuesta promete un plazo de entrega que nadie ha confirmado."],
+        });
+        const corrections = normalizeQaCorrections(review);
+        assert.equal(corrections.length, 1);
+        assert.equal(corrections[0].derivedFrom, "safety_concern");
+        assert.equal(decideQaLoop({ review, round: 0 }).action, "request_correction");
+      },
+    },
+    {
+      name: "Lo declarado GANA a lo derivado: si QA declara correcciones, no se duplican con los findings",
+      fn: () => {
+        const review = reviewFor({
+          reviewStatus: "fail",
+          requiredCorrections: ["Quita la cifra de SEM."],
+          findings: [{ category: "fabrication_risk", severity: "critical", description: "Cifra de SEM sin respaldo." }],
+        });
+        const corrections = normalizeQaCorrections(review);
+        assert.equal(corrections.length, 1, "la derivacion es un ULTIMO recurso, no un anadido");
+        assert.equal(corrections[0].derivedFrom, "required_correction");
+      },
+    },
+    {
+      name: "Un fail SIN ninguna senal bloqueante detras si va a revision humana: es una revision incoherente consigo misma",
       fn: () => {
         const decision = decideQaLoop({
-          review: reviewFor({ reviewStatus: "fail", requiredCorrections: [], summary: "No me convence." }),
+          review: reviewFor({ reviewStatus: "fail", requiredCorrections: [], findings: [], safetyConcerns: [], summary: "No me convence." }),
           round: 0,
         });
         assert.equal(decision.action, "needs_human_review");
