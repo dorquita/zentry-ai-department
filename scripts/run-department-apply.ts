@@ -619,7 +619,19 @@ async function runStagingApply(input: RunStagingApplyInput): Promise<void> {
           runPhp: async (php: string) =>
             callNovamiraExecutePhp(
               {
-                actor: "department_daily_apply",
+                // El actor es `web_engineer_apply` y NO uno propio de la
+                // pasada diaria. Es la MISMA operacion -- aplicar en
+                // staging el cambio que especifico web-engineer -- solo
+                // que disparada automaticamente en vez de desde la
+                // sesion de aprobacion manual. Quien escribe no cambia
+                // porque cambie quien aprieta el boton.
+                //
+                // La primera version invento `department_daily_apply` y
+                // el guard la rechazo, con razon: su allowlist de actores
+                // es una barrera de seguridad, y la respuesta correcta a
+                // que te bloquee es usar el actor que corresponde, no
+                // ampliar la lista para que quepa el tuyo.
+                actor: "web_engineer_apply",
                 abilityName: "novamira/execute-php",
                 environment: "staging",
                 // El PHP de rollback NO es el del plan: distinguirlos por

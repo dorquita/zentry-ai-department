@@ -394,6 +394,19 @@ export async function applyChangePlanWithPhp(
  * despues RELEE para poder afirmar que se revirtio de verdad. Un rollback
  * que no se verifica no es un rollback.
  */
+/**
+ * `true` si el mensaje describe una llamada que el servidor RECHAZO antes
+ * de ejecutar nada -- no un fallo a mitad de camino.
+ *
+ * Deliberadamente estrecho: solo el vocabulario literal del guard de
+ * execute-php. Un timeout, un 500 o un error de PHP NO entran aqui,
+ * porque esos si dejan el estado en duda.
+ */
+export function isRefusedBeforeExecuting(message: string): boolean {
+  const text = String(message ?? "").toLowerCase();
+  return text.includes("llamada bloqueada") || text.includes("bloqueado por el guard");
+}
+
 async function rollback(
   plan: ExecutePhpChangePlan,
   context: ExecutePhpContext,
@@ -438,7 +451,26 @@ async function rollback(
   try {
     await deps.runPhp(rollbackPhp);
   } catch (err) {
-    const detail = `CRITICO: el rollback fallo (${err instanceof Error ? err.message : String(err)}). El post ${plan.targetId} puede haber quedado en un estado intermedio. Requiere intervencion humana -- este sistema no volvera a tocarlo. Causa original: ${cause}`;
+    const message = err instanceof Error ? err.message : String(err);
+    // UNA LLAMADA RECHAZADA NO ESCRIBIO NADA.
+    //
+    // Si el apply Y el rollback fallan los dos porque el servidor RECHAZO
+    // la llamada antes de ejecutarla (guard de actor, entorno, ability no
+    // permitida), entonces no hubo ninguna escritura que deshacer. Decir
+    // "el post puede haber quedado en un estado intermedio, requiere
+    // intervencion humana inmediata" seria una falsa alarma en la senal
+    // MAS grave del sistema -- y una falsa alarma ahi entrena a ignorar
+    // justo lo que nunca hay que ignorar.
+    //
+    // Se comprueba sobre el mensaje del RECHAZO, no sobre un fallo de red
+    // ni un error de PHP: esos SI dejan el estado en duda y siguen siendo
+    // rollback_failed.
+    if (isRefusedBeforeExecuting(message) && isRefusedBeforeExecuting(cause)) {
+      const detail = `Bloqueado antes de escribir: la llamada fue RECHAZADA (${message}). No hubo ninguna escritura, asi que no hay nada que revertir y el post ${plan.targetId} sigue exactamente como estaba. Causa original: ${cause}`;
+      audit.push(auditRecord(context, plan, rollbackPhp, clock().toISOString(), "blocked_by_guard", { beforeHash, afterHash: null, validation: "not_run", rollback: "not_needed", detail }));
+      return { ...base, status: "blocked_by_guard", stagingWritePerformed: false, validation: "not_run", rollback: "not_needed", detail };
+    }
+    const detail = `CRITICO: el rollback fallo (${message}). El post ${plan.targetId} puede haber quedado en un estado intermedio. Requiere intervencion humana -- este sistema no volvera a tocarlo. Causa original: ${cause}`;
     audit.push(auditRecord(context, plan, rollbackPhp, clock().toISOString(), "rollback_failed", { beforeHash, afterHash: null, validation: "failed", rollback: "rollback_failed", detail }));
     return { ...base, status: "rollback_failed", detail };
   }

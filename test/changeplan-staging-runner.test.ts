@@ -3,6 +3,7 @@ import {
   decideChangePlanExecution,
   mapOutcomeToChangeStatus,
 } from "../src/department/apply/changeplan-staging-runner";
+import { isRefusedBeforeExecuting } from "../src/department/apply/execute-php-executor";
 import { ExecutablePlanRecord } from "../src/department/apply/types";
 
 /**
@@ -130,6 +131,30 @@ export function runChangePlanStagingRunnerTests(): { name: string; fn: () => voi
           decideChangePlanExecution({ executableChangePlan: planFor(), flags: { ...ON, wordpressEnv: "production" } }),
         ];
         for (const caso of casos) assert.ok(caso.reason.trim().length > 10, "un motivo vacio es indistinguible de no haber evaluado");
+      },
+    },
+    {
+      name: "REGRESION REAL: una llamada RECHAZADA no se reporta como dano en staging",
+      fn: () => {
+        // Paso de verdad (run 32086012465): el guard de execute-php
+        // rechazo la llamada por actor no autorizado, el apply no
+        // escribio nada, el rollback fue rechazado por lo MISMO, y el
+        // sistema lo reporto como "CRITICO: el post puede haber quedado
+        // en un estado intermedio. Requiere intervencion humana
+        // inmediata". La pagina estaba intacta.
+        //
+        // Una falsa alarma en la senal MAS grave del sistema entrena a
+        // ignorar justo lo que nunca hay que ignorar.
+        assert.equal(isRefusedBeforeExecuting("execute-php guard: llamada BLOQUEADA (actor). Actor no autorizado."), true);
+        assert.equal(isRefusedBeforeExecuting("Bloqueado por el guard (environment): produccion no permitida."), true);
+
+        // Lo que NO puede colar como "no paso nada": un fallo a mitad de
+        // camino deja el estado en duda y sigue siendo critico.
+        assert.equal(isRefusedBeforeExecuting("Fallo de red: socket hang up"), false);
+        assert.equal(isRefusedBeforeExecuting("HTTP 500 del servidor MCP"), false);
+        assert.equal(isRefusedBeforeExecuting("PHP Fatal error: allowed memory size exhausted"), false);
+        assert.equal(isRefusedBeforeExecuting("timeout tras 30000 ms"), false);
+        assert.equal(isRefusedBeforeExecuting(""), false);
       },
     },
     {
