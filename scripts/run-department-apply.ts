@@ -397,9 +397,12 @@ function buildChangeFromItem(item: DepartmentApplyItem, version: number, previou
  *      serializado por el `concurrency` del workflow, sin webhooks.
  *   3. Nada. Y entonces se dice, no se aplica a ciegas sin registrar.
  */
-async function resolveStagingChangeStore(): Promise<{ store: ApprovalStore; kind: string } | { store: null; reason: string }> {
+async function resolveStagingChangeStore(): Promise<
+  { store: ApprovalStore; kind: string; close: () => Promise<void> } | { store: null; reason: string }
+> {
   if (isServerlessApprovalsEnabled()) {
-    return { store: createHttpApprovalStoreFromEnv(), kind: "serverless (Worker + D1)" };
+    // HTTP: no hay conexion que cerrar.
+    return { store: createHttpApprovalStoreFromEnv(), kind: "serverless (Worker + D1)", close: async () => {} };
   }
   if (resolvePersistenceMode() !== "mongo") {
     return {
@@ -416,9 +419,16 @@ async function resolveStagingChangeStore(): Promise<{ store: ApprovalStore; kind
   if (!session.repository) {
     return { store: null, reason: `MongoDB es la fuente de verdad pero no hay repositorio disponible: ${session.unavailableReason || "motivo no reportado"}.` };
   }
+  const repository = session.repository;
   return {
-    store: new MongoStagingChangeStore(session.repository) as unknown as ApprovalStore,
+    store: new MongoStagingChangeStore(repository) as unknown as ApprovalStore,
     kind: `MongoDB (${session.target})`,
+    // OBLIGATORIO cerrarla. Una conexion de MongoDB abierta mantiene vivo
+    // el event loop de Node y el proceso NO TERMINA -- lo que desde fuera
+    // se ve como un cuelgue, no como un error. Todos los demas scripts
+    // que abren persistencia la cierran; este no lo hacia, y colgo la
+    // certificacion hasta agotar el timeout del job.
+    close: () => repository.close(),
   };
 }
 
@@ -477,7 +487,28 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
     return;
   }
   const store = resolved.store;
+  const closeStore = resolved.close;
   console.log(`Registro del cambio: ${resolved.kind}.`);
+  try {
+    await runStagingApply({ departmentRunId, summary, store, guards, guardCheck, changePlanCandidates });
+  } finally {
+    // En un `finally`: si el apply lanza, la conexion tiene que cerrarse
+    // igual. Si no, el error real quedaria enterrado bajo un cuelgue.
+    await closeStore();
+  }
+}
+
+interface RunStagingApplyInput {
+  departmentRunId: string;
+  summary: DepartmentApplySummary;
+  store: ApprovalStore;
+  guards: StagingApplyGuards;
+  guardCheck: { allowed: boolean; reason: string };
+  changePlanCandidates: DepartmentApplyItem[];
+}
+
+async function runStagingApply(input: RunStagingApplyInput): Promise<void> {
+  const { departmentRunId, summary, store, guards, guardCheck, changePlanCandidates } = input;
   const existing = await store.listByRun(departmentRunId);
   let externalWrites = false;
   let applied = 0;
