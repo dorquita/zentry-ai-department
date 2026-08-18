@@ -425,16 +425,43 @@ async function resolveStagingChangeStore(): Promise<{ store: ApprovalStore; kind
 async function phaseStage(args: Record<string, string>): Promise<void> {
   const departmentRunId = requireDepartmentRunId(args);
   const summary = requireSummary(departmentRunId);
+
+  // DOS EXECUTORS, DOS PUERTAS DISTINTAS. Es la distincion que faltaba, y
+  // no es un matiz: sin ella, la puerta de uno cerraba el paso al otro.
+  //
+  //   LEGACY        title/meta por REST -> `checkStagingApplyGuards`,
+  //                 que exige WORDPRESS_BACKEND="rest" y las credenciales
+  //                 WORDPRESS_*.
+  //   CHANGEPLAN    execute-php via Novamira -> `decideChangePlanExecution`,
+  //                 que exige entorno staging, sus dos interruptores y las
+  //                 credenciales WP_API_*.
+  //
+  // El fallo real que esto corrige: con `WORDPRESS_BACKEND` resuelto a
+  // `local_preview` (porque las credenciales REST no estan configuradas
+  // -- solo las de Novamira), la fase se cortaba ANTES del bucle y no se
+  // aplicaba nada. Y el elemento bloqueado tenia un ChangePlan
+  // perfectamente ejecutable por un camino que NO usa REST para nada.
+  //
+  // Un guard que protege un executor no puede decidir por otro. Ninguna
+  // de las dos puertas se relaja: lo que cambia es que cada una gobierna
+  // solo lo suyo.
   const guards = resolveStagingGuards();
   const guardCheck = checkStagingApplyGuards(guards);
-  console.log(`Interruptores de staging: ${guardCheck.reason}`);
+  const changePlanFlagsPrecheck = resolveChangePlanFlags();
+  console.log(`Interruptores del executor legacy (REST): ${guardCheck.reason}`);
 
-  // Se comprueba ANTES del bucle a proposito: con los interruptores
-  // apagados no se crea ningun registro de cambio. En un checkout
+  const changePlanCandidates = summary.items.filter(
+    (item) => item.applyStatus === "proposed" && decideChangePlanExecution({ executableChangePlan: item.executableChangePlan, flags: changePlanFlagsPrecheck }).executable
+  );
+  console.log(`ChangePlans ejecutables por execute-php en esta pasada: ${changePlanCandidates.length}.`);
+
+  // Se comprueba ANTES del bucle a proposito: sin ningun camino
+  // disponible no se crea ningun registro de cambio. En un checkout
   // efimero (un runner de CI) crear registros generaria cambios que
   // nadie podria continuar, porque desaparecen con el runner.
-  if (!guardCheck.allowed) {
-    syncSummaryWith(departmentRunId, [], { externalWritesPerformed: false, applyNotAttemptedReason: guardCheck.reason });
+  if (!guardCheck.allowed && changePlanCandidates.length === 0) {
+    const reason = `${guardCheck.reason} Y ningun elemento de esta pasada tiene un ChangePlan ejecutable por execute-php. No hay ningun camino de escritura disponible.`;
+    syncSummaryWith(departmentRunId, [], { externalWritesPerformed: false, applyNotAttemptedReason: reason });
     console.log("No se ha creado ninguna aprobacion ni se ha escrito nada.");
     return;
   }
@@ -478,7 +505,9 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
     // de version. Cuando existen los dos, ejecutar el legacy seria
     // preferir la adivinanza al dato.
     const planDecision = decideChangePlanExecution({ executableChangePlan: item.executableChangePlan, flags: changePlanFlags });
-    const hasLegacyCapability = item.applyCapability.supported && item.applyCapability.target !== null;
+    // El legacy necesita ADEMAS su propio guard: es el que comprueba que
+    // el backend REST puede escribir de verdad.
+    const hasLegacyCapability = guardCheck.allowed && item.applyCapability.supported && item.applyCapability.target !== null;
 
     if (!planDecision.executable && !hasLegacyCapability) {
       // Esto ya NO es silencio: antes un elemento con ChangePlan pero sin
@@ -685,7 +714,9 @@ async function phaseStage(args: Record<string, string>): Promise<void> {
 
   const updated = syncSummaryWith(departmentRunId, await store.listByRun(departmentRunId), {
     externalWritesPerformed: externalWrites,
-    applyNotAttemptedReason: guardCheck.allowed ? "" : guardCheck.reason,
+    // El motivo solo aplica al carril legacy: si el de ChangePlan si
+    // pudo actuar, decir "no se intento" seria falso.
+    applyNotAttemptedReason: guardCheck.allowed || changePlanCandidates.length > 0 ? "" : guardCheck.reason,
   });
   console.log(`Apply en staging terminado: ${summarize(updated)}. Cambios listos para revision: ${applied}.`);
 
