@@ -1255,6 +1255,19 @@ function phaseGate(args: Record<string, string>): DepartmentRunnerResultSummary 
   if (broken.length > 0) {
     const reason = `Etapas con fallo real: ${broken.map((s) => `${s.stage}=${s.status}`).join(", ")}. El Daily Brief se ha generado igualmente con el estado real de cada etapa, pero la pasada se marca en rojo.`;
     console.error(reason);
+    // EL MOTIVO, AQUI, AL FINAL DEL LOG.
+    //
+    // Sin esto, saber POR QUE fallo una etapa exigia rebuscar a mitad de
+    // un log de mas de 40.000 lineas, o descargarse el artifact de la
+    // pasada. Dos pasadas seguidas fallaron por empleados distintos
+    // (dept-2026-08-18T010547Z: qa-reviewer; dept-2026-08-18T020054Z:
+    // growth-director-v2) y en ninguna de las dos se pudo leer la causa
+    // desde el propio log. Una pasada que falla y no se puede
+    // diagnosticar desde el final de su log es, en la practica, una
+    // pasada que no se puede arreglar.
+    for (const stage of broken) {
+      console.error(`  [fallo] ${stage.stage} (${stage.status}): ${stage.reason || "(la etapa no dejo motivo)"}`);
+    }
     process.exitCode = 1;
     return baseResult("gate", departmentRunId, "degraded", reason);
   }

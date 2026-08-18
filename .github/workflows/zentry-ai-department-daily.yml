@@ -820,7 +820,7 @@ jobs:
           npm run department:run -- --phase complete-growth --departmentRunId "$DEPARTMENT_RUN_ID" --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-growth-complete.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.growth_runtime.outcome }}, claude=${{ steps.growth_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.growth_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.growth_runtime.outcome }}, claude=${{ steps.growth_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.growth_runtime.outputs.output-source }}, clase de fallo=${{ steps.growth_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.growth_runtime.outputs.first-attempt-failure-reason }}"
 
       # =====================================================================
       # FASE 3 -- QA REVIEWER: revisa especialistas + sintesis de Growth,
@@ -928,7 +928,7 @@ jobs:
           npm run department:run -- "${ARGS[@]}" 2>&1 | tee coord-qa-complete.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.qa_runtime.outcome }}, claude=${{ steps.qa_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.qa_runtime.outcome }}, claude=${{ steps.qa_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa_runtime.outputs.output-source }}, clase de fallo=${{ steps.qa_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.qa_runtime.outputs.first-attempt-failure-reason }}"
           REVIEW_JSON_PATH: ${{ steps.qa2.outputs.reviewJsonPath || steps.qa1.outputs.reviewJsonPath }}
           EXPECTED_OUTPUT_PATH: ${{ steps.qa1.outputs.expectedOutputPath }}
 
@@ -1014,7 +1014,7 @@ jobs:
           npm run department:run -- --phase complete-growth --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-growth-correction-complete-1.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.gcorr1_runtime.outcome }}, claude=${{ steps.gcorr1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.gcorr1_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.gcorr1_runtime.outcome }}, claude=${{ steps.gcorr1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.gcorr1_runtime.outputs.output-source }}, clase de fallo=${{ steps.gcorr1_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.gcorr1_runtime.outputs.first-attempt-failure-reason }}"
 
       - name: "[QA] Preparar bundle de re-revision (ronda 1)"
         id: qa1_prep_run
@@ -1107,7 +1107,7 @@ jobs:
           npm run department:run -- "${ARGS[@]}" 2>&1 | tee coord-qa-complete-1.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.qa1_runtime.outcome }}, claude=${{ steps.qa1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa1_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.qa1_runtime.outcome }}, claude=${{ steps.qa1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa1_runtime.outputs.output-source }}, clase de fallo=${{ steps.qa1_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.qa1_runtime.outputs.first-attempt-failure-reason }}"
           REVIEW_JSON_PATH: ${{ steps.qa1_r2.outputs.reviewJsonPath || steps.qa1_r1.outputs.reviewJsonPath }}
           EXPECTED_OUTPUT_PATH: ${{ steps.qa1_r1.outputs.expectedOutputPath }}
 
@@ -1173,7 +1173,7 @@ jobs:
           npm run department:run -- --phase complete-growth --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-growth-correction-complete-2.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.gcorr2_runtime.outcome }}, claude=${{ steps.gcorr2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.gcorr2_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.gcorr2_runtime.outcome }}, claude=${{ steps.gcorr2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.gcorr2_runtime.outputs.output-source }}, clase de fallo=${{ steps.gcorr2_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.gcorr2_runtime.outputs.first-attempt-failure-reason }}"
 
       - name: "[QA] Preparar bundle de re-revision (ronda 2)"
         id: qa2_prep_run
@@ -1266,7 +1266,7 @@ jobs:
           npm run department:run -- "${ARGS[@]}" 2>&1 | tee coord-qa-complete-2.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.qa2_runtime.outcome }}, claude=${{ steps.qa2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa2_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.qa2_runtime.outcome }}, claude=${{ steps.qa2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.qa2_runtime.outputs.output-source }}, clase de fallo=${{ steps.qa2_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.qa2_runtime.outputs.first-attempt-failure-reason }}"
           REVIEW_JSON_PATH: ${{ steps.qa2_r2.outputs.reviewJsonPath || steps.qa2_r1.outputs.reviewJsonPath }}
           EXPECTED_OUTPUT_PATH: ${{ steps.qa2_r1.outputs.expectedOutputPath }}
 
@@ -1364,7 +1364,7 @@ jobs:
           npm run department:run -- --phase complete-web-engineer --departmentRunId "$DEPARTMENT_RUN_ID" --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-web-complete.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.web_runtime.outcome }}, claude=${{ steps.web_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.web_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.web_runtime.outcome }}, claude=${{ steps.web_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.web_runtime.outputs.output-source }}, clase de fallo=${{ steps.web_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.web_runtime.outputs.first-attempt-failure-reason }}"
 
 
       # =====================================================================
@@ -1484,7 +1484,7 @@ jobs:
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           EXPECTED_OUTPUT_PATH: ${{ steps.planqa0_r1.outputs.expectedOutputPath }}
-          RUNTIME_NOTE: "step=${{ steps.planqa0_runtime.outcome }}, claude=${{ steps.planqa0_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa0_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.planqa0_runtime.outcome }}, claude=${{ steps.planqa0_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa0_runtime.outputs.output-source }}, clase de fallo=${{ steps.planqa0_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.planqa0_runtime.outputs.first-attempt-failure-reason }}"
 
       - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (complete-plan-qa ronda 0)"
         id: planqa0
@@ -1548,7 +1548,7 @@ jobs:
           npm run department:run -- --phase complete-web-engineer --departmentRunId "$DEPARTMENT_RUN_ID" --round 1 --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-correction-complete-1.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.corr1_runtime.outcome }}, claude=${{ steps.corr1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.corr1_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.corr1_runtime.outcome }}, claude=${{ steps.corr1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.corr1_runtime.outputs.output-source }}, clase de fallo=${{ steps.corr1_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.corr1_runtime.outputs.first-attempt-failure-reason }}"
 
       - name: "[QA-PLAN] Preparar bundle de revision del plan (ronda 1)"
         id: planqa1_prep_run
@@ -1634,7 +1634,7 @@ jobs:
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           EXPECTED_OUTPUT_PATH: ${{ steps.planqa1_r1.outputs.expectedOutputPath }}
-          RUNTIME_NOTE: "step=${{ steps.planqa1_runtime.outcome }}, claude=${{ steps.planqa1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa1_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.planqa1_runtime.outcome }}, claude=${{ steps.planqa1_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa1_runtime.outputs.output-source }}, clase de fallo=${{ steps.planqa1_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.planqa1_runtime.outputs.first-attempt-failure-reason }}"
 
       - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (complete-plan-qa ronda 1)"
         id: planqa1
@@ -1698,7 +1698,7 @@ jobs:
           npm run department:run -- --phase complete-web-engineer --departmentRunId "$DEPARTMENT_RUN_ID" --round 2 --runtime-note "$RUNTIME_NOTE" 2>&1 | tee coord-correction-complete-2.log
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
-          RUNTIME_NOTE: "step=${{ steps.corr2_runtime.outcome }}, claude=${{ steps.corr2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.corr2_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.corr2_runtime.outcome }}, claude=${{ steps.corr2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.corr2_runtime.outputs.output-source }}, clase de fallo=${{ steps.corr2_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.corr2_runtime.outputs.first-attempt-failure-reason }}"
 
       - name: "[QA-PLAN] Preparar bundle de revision del plan (ronda 2)"
         id: planqa2_prep_run
@@ -1784,7 +1784,7 @@ jobs:
         env:
           DEPARTMENT_RUN_ID: ${{ steps.run.outputs.departmentRunId }}
           EXPECTED_OUTPUT_PATH: ${{ steps.planqa2_r1.outputs.expectedOutputPath }}
-          RUNTIME_NOTE: "step=${{ steps.planqa2_runtime.outcome }}, claude=${{ steps.planqa2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa2_runtime.outputs.output-source }}"
+          RUNTIME_NOTE: "step=${{ steps.planqa2_runtime.outcome }}, claude=${{ steps.planqa2_runtime.outputs.claude-outcome }}, origen de salida=${{ steps.planqa2_runtime.outputs.output-source }}, clase de fallo=${{ steps.planqa2_runtime.outputs.first-attempt-failure-class }}, motivo=${{ steps.planqa2_runtime.outputs.first-attempt-failure-reason }}"
 
       - name: "[QA-PLAN] Parsear RUNNER_RESULT_JSON (complete-plan-qa ronda 2)"
         id: planqa2

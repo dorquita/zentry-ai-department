@@ -108,6 +108,14 @@ outputs:
   first-attempt-failure-class:
     description: 'Clase del fallo del PRIMER intento (vacio si el primer intento resolvio bien) -- ver src/core/claude-employee-retry.ts.'
     value: ${{ steps.resolve.outputs.failure-class }}
+  first-attempt-failure-reason:
+    description: >-
+      Motivo legible del fallo del PRIMER intento (vacio si resolvio
+      bien). Se expone porque sin el, saber por que fallo un empleado
+      exigia rebuscar a mitad de un log de mas de 40.000 lineas o
+      descargarse el artifact de la pasada. Nunca contiene contenido
+      generado por el modelo -- ver src/core/claude-employee-retry.ts.
+    value: ${{ steps.resolve.outputs.failure-reason }}
 
 runs:
   using: "composite"
