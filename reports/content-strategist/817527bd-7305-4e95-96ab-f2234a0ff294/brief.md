@@ -1,6 +1,6 @@
 # Brief de estrategia de contenido — 817527bd-7305-4e95-96ab-f2234a0ff294
 
-- **Generado:** 2026-08-17T07:51:30.600Z
+- **Generado:** 2026-08-18T01:35:37.720Z
 - **Keyword:** taquillas fenólicas en palencia
 - **Marca:** zentry | **brandIntent:** zentry_locker_core
 - **Tipo de contenido (hint del pipeline determinista):** Mejora de title/meta
@@ -9,56 +9,54 @@
 
 ## Estado: brief completado
 
-- **Oportunidad:** Reforzar la página existente de taquillas fenólicas para captar búsquedas locales/de material en Palencia — La página ya está indexada en https://zentrylockers.com/taquillas-fenolicas/ y puede enriquecerse con contenido y title/meta orientados a la keyword local 'taquillas fenólicas en palencia' sin necesidad de crear una página nueva.
-- **Audiencia objetivo:** Responsable de compras o mantenimiento de un colegio, polideportivo o gimnasio en la provincia de Palencia que necesita taquillas resistentes a la humedad para vestuarios o zonas de duchas.
-- **Intencion de busqueda:** commercial | **Intencion comercial:** Captar leads B2B locales (centros educativos, deportivos, gimnasios de la zona de Palencia) que ya han decidido el material (fenólica) y están comparando proveedores antes de pedir presupuesto.
-- **Angulo:** Usar la resistencia a la humedad e impacto de la fenólica (hecho de catálogo confirmado) como argumento diferenciador frente a melamina/metálica para entornos húmedos típicos de vestuarios/piscinas/polideportivos, sin fabricar ninguna promesa de logística o cobertura específica para Palencia que no esté confirmada en el contexto.
-- **Tipo de contenido:** landing_block | **Marca:** zentry | **Prioridad:** medium
+- **Oportunidad:** Actualizar title/meta y reforzar diferenciación de material en la página de taquillas fenólicas para la variante local "en Palencia" — La keyword "taquillas fenólicas en palencia" es una variante geolocalizada de una página ya existente que puede captar demanda local de compra si el title/meta se ajusta y el contenido deja claro por qué la fenólica es la opción frente a melamina/metálica, evitando canibalizar el cluster ya existente.
+- **Audiencia objetivo:** Responsable de compras o mantenimiento de un colegio, gimnasio, piscina municipal o polideportivo en Palencia y su provincia que necesita renovar taquillas en zonas húmedas (duchas, vestuarios) y busca proveedor cercano o que sirva en su zona.
+- **Intencion de busqueda:** transactional | **Intencion comercial:** Captar leads B2B locales listos para pedir presupuesto de taquillas fenólicas, aprovechando que la búsqueda combina material concreto + ubicación (señal de intención de compra cercana a la decisión), sin prometer cobertura logística que no está confirmada en el input.
+- **Angulo:** Diferenciar explícitamente la fenólica frente a melamina y metálica (resistencia a humedad e impacto, uso en piscinas/duchas/gimnasios) para que la página no compita por las mismas señales que el cluster de melamina/colegios ya detectado, y anclar el contenido en casos de uso B2B reales de la zona sin inventar presencia o plazos locales.
+- **Tipo de contenido:** title_meta_improvement | **Marca:** zentry | **Prioridad:** medium
 
 ### Estructura propuesta
 
-**H1:** Taquillas Fenólicas en Palencia
+**H1:** Taquillas Fenólicas en Palencia: Resistencia y Durabilidad para Espacios Húmedos
 
-- H2: Taquillas fenólicas: resistencia para entornos húmedos — Explicar por qué la fenólica es la opción técnica para vestuarios, duchas, piscinas o polideportivos, apoyándose en las propiedades de catálogo confirmadas (máxima resistencia a humedad e impacto).
-- H2: Materiales disponibles: fenólica, metálica y melamina — Presentar los tres materiales de catálogo con sus usos recomendados para que el lector identifique si la fenólica encaja con su instalación.
-- H3: Metálica vs fenólica vs melamina: ¿cuál elegir? — Tabla comparativa breve (humedad, impacto, acabado, coste relativo) que ayude a decidir sin dar cifras de precio no confirmadas.
-- H2: Cómo elegir la medida y configuración correcta — Guiar en la elección de tamaño/número de compartimentos según el tipo de instalación (colegio, gimnasio), sin inventar dimensiones estándar no confirmadas.
-- H2: Precios y presupuesto a medida — Explicar que el precio depende de cantidad/configuración y remitir a solicitar presupuesto, evitando cualquier cifra o plazo no confirmado.
-- H2: Preguntas frecuentes sobre taquillas fenólicas — Resolver dudas habituales (durabilidad, mantenimiento, métodos de apertura disponibles) usando solo el catálogo de materiales/métodos confirmado.
+- H2: Taquillas fenólicas: características y usos — Presentar el material fenólico (resistencia a humedad e impacto, acabado técnico) usando el catálogo confirmado de la marca, y sus entornos típicos (piscinas, duchas, gimnasios, polideportivos) para que el lector confirme que es el material adecuado a su caso.
+- H2: Fenólica vs. melamina vs. metálica: cómo elegir — Diferenciar claramente esta página del cluster de taquillas de melamina/colegios ya detectado, ayudando a decidir según humedad del entorno y nivel de uso, para reducir el riesgo de canibalización interna.
+- H2: Taquillas fenólicas para colegios, gimnasios y piscinas en Palencia — Conectar la keyword geolocalizada con casos de uso B2B concretos de la zona, sin afirmar cobertura de servicio, plazos de entrega o presencia local que no vienen confirmados en el input.
+- H2: Solicita tu presupuesto de taquillas fenólicas — Bloque de conversión que remite a presupuesto a medida sin fijar precios ni condiciones no confirmadas.
+- H2: Preguntas frecuentes sobre taquillas fenólicas — Resolver dudas habituales (medidas, mantenimiento, diferencias con otros materiales) para capturar featured snippets, sin introducir cifras de garantía o plazo no confirmadas.
 
 ### CTA
 
 - **Principal:** Solicitar presupuesto sin compromiso
-- **Secundario:** Consultar dudas técnicas sobre materiales antes de pedir presupuesto
-- **Razonamiento:** La keyword tiene intención comercial pero no hay datos de precio/plazo confirmados, así que el CTA principal remite a presupuesto (coherente con recommendedCtaHint) y el secundario da una vía de contacto de menor compromiso para quien aún está comparando materiales.
+- **Razonamiento:** Coincide con recommendedCtaHint y encaja con la intención transactional de la keyword (material + ubicación); al no tener datos de precio, plazo o cobertura local confirmados, el CTA remite a presupuesto a medida en vez de prometer cifras.
 
 ### Enlaces internos propuestos
 
-- taquillas de melamina -> página de categoría/landing de taquillas de melamina, keyword relacionada del cluster: 'taquillas melamina' / 'taquillas de melamina' (sin URL real todavia)
-- taquillas para colegios -> página de categoría/landing de taquillas escolares, keyword relacionada del cluster: 'taquillas colegios' / 'taquillas escolares' (sin URL real todavia)
-- comprar taquillas -> landing principal de catálogo/compra de taquillas, keyword relacionada del cluster: 'comprar taquillas' (sin URL real todavia)
+- taquillas de melamina -> página/categoría de taquillas de melamina, keyword relacionada: taquillas melamina, taquillas de melamina (sin URL real todavia)
+- taquillas para colegios -> página de categoría de taquillas escolares/colegios, keyword relacionada: taquillas colegios, taquillas escolares (sin URL real todavia)
+- ver todo el catálogo de taquillas -> landing o categoría principal de taquillas, según internalLinkHints ("landing/categoría principal relacionada") (sin URL real todavia)
 
 ### Evidencia de soporte
 
-- currentAssumptions confirma que la keyword 'taquillas fenólicas en palencia' se asume relevante y que la página https://zentrylockers.com/taquillas-fenolicas/ sigue existiendo en esa URL, lo que respalda actualizar en lugar de crear página nueva.
-- clusterNote advierte de posible canibalización con 'taquillas melamina', 'taquillas de melamina', 'taquillas colegios', 'taquillas escolares' y 'comprar taquillas', lo que justifica el enlazado interno propuesto hacia esas páginas del cluster en vez de intentar posicionar todas esas keywords en esta misma pieza.
-- brandRationale indica intención principal de mobiliario/taquillas sin mención de cerraduras, lo que confirma targetBrand zentry sin necesidad de cross-sell con Tukandado.
+- currentAssumptions confirma que la keyword y la página https://zentrylockers.com/taquillas-fenolicas/ siguen vigentes y existiendo en esa URL.
+- clusterNote advierte de posible cluster/canibalización con taquillas melamina, taquillas de melamina, taquillas colegios, taquillas escolares y comprar taquillas, lo que justifica el ángulo de diferenciación de material en vez de repetir contenido genérico de esas páginas.
+- brandRationale del contexto confirma intención principal de compra de mobiliario (Zentry) y material detectado fenólica/fenólicas, coherente con el catálogo confirmado de materiales de la skill de marca.
 
 ### Riesgos / incognitas
 
-- Riesgo de canibalización SEO con las páginas de melamina/colegios/escolares/comprar-taquillas del mismo cluster si no se coordina el enlazado interno (riesgo ya señalado en el contexto).
-- No hay ningún dato en currentAssumptions sobre cobertura o logística específica para Palencia; no se debe afirmar 'servicio en Palencia' ni plazos de entrega concretos.
-- No hay confirmación de precios, garantía ni condición de fabricante directo en el contexto: cualquier sección de precios debe remitir a presupuesto, no a cifras.
-- Dependencia de que la página siga existiendo tal cual en la URL indicada (asunción explícita, no verificada por este agente).
+- Riesgo de canibalización SEO con el cluster de taquillas melamina/colegios/escolares ya señalado en clusterNote y risks del contexto.
+- Se asume que la página sigue existiendo en esa URL y que el brief sigue vigente; si ha cambiado desde que se generó la work order, la propuesta debería revalidarse.
+- No hay datos de volumen de búsqueda real para la variante hiperlocal "en palencia", por lo que no se puede confirmar el impacto SEO esperado de esta mejora.
+- No se dispone de datos confirmados sobre cobertura de servicio, plazos de entrega o presencia local en Palencia; cualquier mención geográfica debe limitarse a la keyword/título, no a promesas de logística o presencia física.
+- El registro de decisiones humanas muestra que ya se cerraron actionItems de canibalización de "taquillas melamina", pero esta página es sobre fenólica: conviene confirmar con negocio si esa resolución también cubre el solapamiento con fenólica antes de publicar cambios de contenido más allá del title/meta.
 
 **reasoningNotes (justificacion del subagente, no auto-evaluacion):**
 
-- Cambié el contentType de 'Mejora de title/meta' (hint) a 'landing_block' porque el proposedStructureHint incluye una arquitectura de contenido completa (materiales, medidas, precios, FAQ) que va más allá de un simple ajuste de title/meta; se trata de enriquecer bloques de la página existente, no solo sus etiquetas.
-- Evité replicar literalmente el primer H2 del hint ('¿Que es taquillas fenólicas en palencia?', gramaticalmente forzado por el keyword stuffing) y lo reformulé de forma editorial manteniendo el foco en material + uso, ya que el objetivo es utilidad real para el lector, no solo repetir la keyword.
-- No incluí ninguna afirmación de logística o cobertura específica en Palencia porque currentAssumptions no confirma ningún dato de negocio sobre esa localidad; el ángulo se apoya solo en la propiedad técnica confirmada de la fenólica (resistencia a humedad/impacto).
-- Mantuve priority en medium (heredada) porque, aunque la keyword es de nicho local, se trata de una actualización sobre una página ya indexada y de bajo riesgo/esfuerzo frente a crear contenido nuevo, sin motivo claro para subir o bajar la prioridad.
+- Mantengo contentType como title_meta_improvement (coincide con contentTypeHint) en vez de expandir a un artículo completo, porque changeType es content_update de prioridad media sobre una keyword hiperlocal de la que no hay datos de volumen; la recommendedStructure se ofrece como mejoras ligeras de apoyo (para reforzar diferenciación y reducir canibalización), no como un artículo nuevo desde cero.
+- Sustituyo el heading genérico "¿Que es taquillas fenólicas en palencia?" del proposedStructureHint por encabezados orientados a beneficio/diferenciación, porque el original lee como plantilla de keyword-stuffing poco natural y no aporta valor real a la audiencia B2B.
+- El ángulo prioriza diferenciar fenólica frente a melamina/metálica precisamente porque el clusterNote y los risks del contexto señalan solapamiento con esas keywords; esto conecta directamente con la decisión humana ya aprobada de cerrar canibalización de 'taquillas melamina', aunque advierto en riesgos que esa resolución no cubre explícitamente el caso fenólica.
+- No incluyo ninguna sección de 'Precios y presupuesto' con cifras (a diferencia del proposedStructureHint que sugería un H2 'Precios y presupuesto'); en su lugar el bloque de CTA remite a solicitar presupuesto, siguiendo la regla de no fabricar precios ni plazos que no vienen en currentAssumptions.
 
-> ⚠️ Auditoria: 1 aviso(s) para revision humana:
-> - Afirmacion sensible no respaldada (fabricante directo / sin intermediarios): "fabricante directo" en "No hay confirmación de precios, garantía ni condición de fabricante directo en e..." -- el brief de entrada no lo confirma (o lo marca como pendiente de confirmar).
+Auditoria: sin avisos (ninguna afirmacion sensible ni enlace interno marcado como real sin respaldo en el contexto).
 
 _Artefacto de solo lectura/propuesta. Ningun brief de este empleado se ha publicado en WordPress, Google Ads, GA4, GTM, n8n ni qdrant. La redaccion del contenido final (nunca generada por defecto por este empleado) y la decision de publicar las hace un humano por fuera de este sistema._

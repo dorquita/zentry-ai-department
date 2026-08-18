@@ -1,0 +1,170 @@
+{
+  "departmentRunId": "dept-2026-08-18T012804Z",
+  "departmentQaStatus": "BLOCKED",
+  "qaReviewStatus": "fail",
+  "globalBlockReason": "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.",
+  "promoted": [],
+  "blocked": [
+    {
+      "rank": 1,
+      "title": "Verificar y completar el cierre de los enrutados SEO ya aprobados (/cerraduras/ y taquillas melamina)",
+      "rationale": "Impacto alto y esfuerzo bajo: ambas correcciones ya fueron aprobadas por un humano el 2026-08-16, pero el run live mas reciente (seo-watcher-2026-08-18T012813Z) demuestra que los mismos actionItems siguen mal enrutados -- ejecutar cualquier otra optimizacion sobre estas paginas antes de resolver esto desperdicia esfuerzo. Confianza alta porque la evidencia es directa y reciente.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Ejecucion tecnica del script scripts/o291-resolve-melamina-cannibalization.ts sobre el run actual"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-action-2",
+        "dept-seo-technical-issue-1",
+        "dept-seo-technical-issue-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 2,
+      "title": "Confirmar el estado real de publicacion de la version O44 de GTM",
+      "rationale": "Impacto alto porque el nombre de la version live sugiere que esta pendiente de aprobacion, lo cual pone en duda la fiabilidad de todos los tags y triggers reportados como activos, incluyendo el tag de click_phone que se propone validar. Esfuerzo bajo (confirmar con Pau/consola GTM). Confianza media porque es un hallazgo nuevo de esta pasada sin decision humana previa registrada.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Confirmacion de Pau sobre el estado de publicacion de la version O44 - Eventos CTA nuevos"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Validar el disparo real de click_phone en GTM Preview / GA4 DebugView",
+      "rationale": "Ya aprobado por un humano el 2026-08-16; el evento sigue con 0 ocurrencias en el periodo mas reciente pese a tener tag y trigger activos, lo que mantiene abierta la duda sobre si se pierde una via de conversion real. Esfuerzo bajo, impacto alto si confirma un fallo tecnico corregible.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Confirmar primero el estado de publicacion de la version O44 de GTM"
+      ],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-tracking-issue-1"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "Ejecutar el quick win on-page de cerraduras inteligentes para taquillas",
+      "rationale": "Ya aprobado por un humano el 2026-08-16; keyword bien enrutada a la pagina correcta, en posicion 20.4 con 46 impresiones, con margen realista a top 10 mediante refuerzo de contenido y enlazado interno. Esfuerzo medio, impacto medio.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-3",
+        "dept-seo-opportunity-3"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 5,
+      "title": "Auditar y reescribir metas de las paginas con CTR 0% incluyendo la variante Palencia de content-strategist",
+      "rationale": "Combina la accion ya aprobada de reescribir metas en 7 paginas con CTR 0% con la propuesta nueva de content-strategist para taquillas fenolicas en Palencia, dado que ambas apuntan al mismo patron sistemico y a la misma pagina (taquillas-fenolicas). Confianza media porque content-strategist declara un riesgo de canibalizacion con el cluster de melamina que no esta confirmado como cubierto por la resolucion ya aprobada.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16 (rewrite CTR 0%)",
+        "Confirmar con negocio si la resolucion de canibalizacion de melamina cubre tambien el solapamiento con fenolica"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-5",
+        "dept-seo-opportunity-5",
+        "dept-seo-technical-issue-3",
+        "dept-content-summary",
+        "dept-content-risks"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "No republicar aun las paginas de staging de universidades, metalicas y vestuarios",
+      "rationale": "seo-specialist vuelve a proponer publicarlas en esta pasada (impacto alto segun su propio ranking), pero una decision humana del 2026-08-16 rechazo explicitamente esa publicacion por falta de calidad visual y fotografica, indicando que necesitan una segunda iteracion antes de pasar a produccion. Se prioriza la decision humana ya registrada sobre la propuesta viva del especialista; confianza baja en cualquier plan de publicacion inmediata.",
+      "impact": "medium",
+      "confidence": "low",
+      "effort": "medium",
+      "dependsOn": [
+        "Decision humana ya registrada (rechazo 2026-08-16) por calidad visual insuficiente",
+        "Segunda iteracion visual/de contenido no evidenciada en este contexto"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-6",
+        "dept-seo-opportunity-6",
+        "dept-seo-opportunity-7",
+        "dept-seo-opportunity-8",
+        "human-decision-staging-reject"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 7,
+      "title": "Decidir con Pau el enrutado de taquillas inteligentes (solucion general) y retomar la coordinacion con content-strategist",
+      "rationale": "El riesgo de canibalizacion entre taquillas_inteligentes_general y cerraduras_inteligentes_taquillas sigue sin resolver, y la coordinacion previa aprobada entre content-strategist y el cluster SEO no se completo en esta pasada porque content-strategist trabajo sobre un tema distinto (fenolica Palencia). Esfuerzo bajo (es una decision, no una ejecucion), impacto medio porque desbloquea contenido nuevo pendiente.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Decision explicita de Pau sobre taquillas_inteligentes_general vs cerraduras_inteligentes_taquillas",
+        "Coordinacion pendiente con content-strategist no ejecutada en esta pasada"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-7"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    }
+  ],
+  "unattributedBlockingSignals": [],
+  "qaSummary": {
+    "criticalFindings": 3,
+    "warningFindings": 1,
+    "safetyConcerns": 1,
+    "contradictions": 1,
+    "unsupportedClaims": 6,
+    "requiredCorrections": 5
+  }
+}

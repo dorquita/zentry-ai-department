@@ -1,0 +1,729 @@
+{
+  "contractVersion": "department-run/v1",
+  "departmentRunId": "dept-2026-08-18T012804Z",
+  "generatedAt": "2026-08-18T01:47:16.432Z",
+  "executiveSummary": {
+    "discovered": [
+      "3 especialista(s) con salida real en esta pasada: seo-specialist, content-strategist, analytics-specialist.",
+      "El esfuerzo debe concentrarse primero en verificar que los enrutados SEO ya aprobados por humanos (fix de /cerraduras/ y cierre de canibalizacion de taquillas melamina) se hayan aplicado de verdad, porque el run live mas reciente (seo-watcher-2026-08-18T012813Z) sigue mostrando esos mismos problemas sin resolver. En paralelo, validar el disparo real de click_phone y confirmar si la version O44 de...",
+      "SEO: Datos live de Search Console (run seo-watcher-2026-08-18T012813Z, 36 jobs) cruzados con el catalogo de clusters y keywords objetivo. El hallazgo mas urgente es tecnico: dos actionItems (cerraduras inteligentes para centros deportivos, cerr...",
+      "Analytics: 3 problema(s) de medicion y 3 observacion(es) de conversion sobre el snapshot \"dept-2026-08-18T012804Z\".",
+      "Contenido: oportunidad \"Actualizar title/meta y reforzar diferenciación de material en la página de taquillas fenólicas para la variante local \"en Palencia\"\" (prioridad medium)."
+    ],
+    "needsAttention": [
+      "7 prioridad(es) bloqueada(s) por QA -- no pasan a ingenieria hasta que se corrijan o se descarten.",
+      "SEM sigue pendiente y fuera de esta fase: ninguna conclusion de este informe cubre Google Ads."
+    ],
+    "changed": [
+      "Pasada coordinada anterior encontrada en este checkout: `dept-2026-08-18T010547Z` (8 prioridad(es), QA NOT_AVAILABLE, 4 etapa(s) ejecutada(s)).",
+      "Hoy: 7 prioridad(es), QA BLOCKED, 5 etapa(s) ejecutada(s).",
+      "La comparativa es de VOLUMEN y ESTADO entre pasadas, no de resultados de negocio: este sistema todavia no mide impacto real de ninguna accion (nada se ha aplicado)."
+    ]
+  },
+  "topPriorities": [
+    {
+      "rank": 1,
+      "action": "Verificar y completar el cierre de los enrutados SEO ya aprobados (/cerraduras/ y taquillas melamina)",
+      "reason": "Impacto alto y esfuerzo bajo: ambas correcciones ya fueron aprobadas por un humano el 2026-08-16, pero el run live mas reciente (seo-watcher-2026-08-18T012813Z) demuestra que los mismos actionItems siguen mal enrutados -- ejecutar cualquier otra optimizacion sobre estas paginas antes de resolver esto desperdicia esfuerzo. Confianza alta porque la evidencia es directa y reciente.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "evidence": [
+        {
+          "ref": "dept-seo-action-1",
+          "description": "seo-specialist, accion priorizada #1: \"Corregir el enrutado de las oportunidades sobre /cerraduras/ (pagina en papelera con 301) antes de ejecutar cualquier optimizacion on-page\" (priority=high, impact=high, effort=low, relatedIds=T1/O1/O10/F1/F2). Paginas citadas por esos relatedIds: https://zentrylockers.com/cerraduras/.",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-action-2",
+          "description": "seo-specialist, accion priorizada #2: \"Cerrar los actionItems mal enrutados de taquillas melamina/de melamina hacia /taquillas-melamina-fenolico/ via el script de resolucion existente\" (priority=high, impact=medium, effort=low, relatedIds=T2/O2/F3). Paginas citadas por esos relatedIds: https://zentrylockers.com/taquillas-melamina-fenolico/.",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-technical-issue-1",
+          "description": "seo-specialist, problema tecnico (severity=high, basis=evidence) en la pagina https://zentrylockers.com/cerraduras/: Pagina en papelera con redireccion 301 real activa hacia /cerraduras-para-taquillas/, pero sigue siendo el target de dos actionItems vivos generados en este run (cerraduras inteli...",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-technical-issue-2",
+          "description": "seo-specialist, problema tecnico (severity=medium, basis=evidence) en la pagina https://zentrylockers.com/taquillas-melamina-fenolico/: Sigue recibiendo actionItems generados a partir de las keywords genericas \"taquillas melamina\"/\"taquillas de melamina\", pese a que la decision O29.1 excluye explicitamente esta pa...",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        }
+      ],
+      "originEmployees": [
+        "seo-specialist"
+      ],
+      "qaStatus": "BLOCKED",
+      "qaNotes": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "approvalRequired": true,
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Ejecucion tecnica del script scripts/o291-resolve-melamina-cannibalization.ts sobre el run actual"
+      ],
+      "hasEngineeringSpec": false
+    },
+    {
+      "rank": 2,
+      "action": "Confirmar el estado real de publicacion de la version O44 de GTM",
+      "reason": "Impacto alto porque el nombre de la version live sugiere que esta pendiente de aprobacion, lo cual pone en duda la fiabilidad de todos los tags y triggers reportados como activos, incluyendo el tag de click_phone que se propone validar. Esfuerzo bajo (confirmar con Pau/consola GTM). Confianza media porque es un hallazgo nuevo de esta pasada sin decision humana previa registrada.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "evidence": [
+        {
+          "ref": "dept-analytics-action-2",
+          "description": "analytics-specialist, accion priorizada (high, claimType=RECOMMENDATION): Confirmar si la version live O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) esta realmente publicada en produccion, ya que afecta a la confianza en todo el resto de tags/triggers r...",
+          "originEmployees": [
+            "analytics-specialist"
+          ]
+        },
+        {
+          "ref": "dept-analytics-tracking-issue-2",
+          "description": "analytics-specialist, problema de medicion (claimType=OBSERVATION): La version live reportada del contenedor GTM se llama O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5), lo que genera incertidumbre sobre si los tags/triggers listados como li...",
+          "originEmployees": [
+            "analytics-specialist"
+          ]
+        }
+      ],
+      "originEmployees": [
+        "analytics-specialist"
+      ],
+      "qaStatus": "BLOCKED",
+      "qaNotes": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "approvalRequired": true,
+      "dependsOn": [
+        "Confirmacion de Pau sobre el estado de publicacion de la version O44 - Eventos CTA nuevos"
+      ],
+      "hasEngineeringSpec": false
+    },
+    {
+      "rank": 3,
+      "action": "Validar el disparo real de click_phone en GTM Preview / GA4 DebugView",
+      "reason": "Ya aprobado por un humano el 2026-08-16; el evento sigue con 0 ocurrencias en el periodo mas reciente pese a tener tag y trigger activos, lo que mantiene abierta la duda sobre si se pierde una via de conversion real. Esfuerzo bajo, impacto alto si confirma un fallo tecnico corregible.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "evidence": [
+        {
+          "ref": "dept-analytics-action-1",
+          "description": "analytics-specialist, accion priorizada (high, claimType=RECOMMENDATION): Validar en GTM Preview / GA4 DebugView el tag GA4 Event - click_phone con un clic real, ya que es un evento del catalogo sin ninguna ocurrencia en todo el periodo pese a estar configurado y activo.",
+          "originEmployees": [
+            "analytics-specialist"
+          ]
+        },
+        {
+          "ref": "dept-analytics-tracking-issue-1",
+          "description": "analytics-specialist, problema de medicion (claimType=FACT): El evento click_phone figura en el catalogo de eventos clave con fired false y 0 ocurrencias en el periodo 2026-07-20 a 2026-08-17, pese a que GTM tiene configurados un tag GA4 Event - click_phone (n...",
+          "originEmployees": [
+            "analytics-specialist"
+          ]
+        }
+      ],
+      "originEmployees": [
+        "analytics-specialist"
+      ],
+      "qaStatus": "BLOCKED",
+      "qaNotes": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "approvalRequired": true,
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16",
+        "Confirmar primero el estado de publicacion de la version O44 de GTM"
+      ],
+      "hasEngineeringSpec": false
+    },
+    {
+      "rank": 4,
+      "action": "Ejecutar el quick win on-page de cerraduras inteligentes para taquillas",
+      "reason": "Ya aprobado por un humano el 2026-08-16; keyword bien enrutada a la pagina correcta, en posicion 20.4 con 46 impresiones, con margen realista a top 10 mediante refuerzo de contenido y enlazado interno. Esfuerzo medio, impacto medio.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "evidence": [
+        {
+          "ref": "dept-seo-action-3",
+          "description": "seo-specialist, accion priorizada #3: \"Ejecutar el quick win de cerraduras inteligentes para taquillas en /cerraduras-inteligentes-taquillas/\" (priority=high, impact=medium, effort=medium, relatedIds=O3). Paginas citadas por esos relatedIds: https://zentrylockers.com/cerraduras-inteligentes-taquillas/.",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-opportunity-3",
+          "description": "seo-specialist, oportunidad (quick_win, priority=high, basis=evidence) sobre keyword \"cerraduras inteligentes para taquillas\" / pagina \"https://zentrylockers.com/cerraduras-inteligentes-taquillas/\": Reforzar H1/H2, ampliar profundidad del texto, mejorar enlazado interno y actualizar meta title/description para pasar de posicion 20.4 a top 10.",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        }
+      ],
+      "originEmployees": [
+        "seo-specialist"
+      ],
+      "qaStatus": "BLOCKED",
+      "qaNotes": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "approvalRequired": true,
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16"
+      ],
+      "hasEngineeringSpec": false
+    },
+    {
+      "rank": 5,
+      "action": "Auditar y reescribir metas de las paginas con CTR 0% incluyendo la variante Palencia de content-strategist",
+      "reason": "Combina la accion ya aprobada de reescribir metas en 7 paginas con CTR 0% con la propuesta nueva de content-strategist para taquillas fenolicas en Palencia, dado que ambas apuntan al mismo patron sistemico y a la misma pagina (taquillas-fenolicas). Confianza media porque content-strategist declara un riesgo de canibalizacion con el cluster de melamina que no esta confirmado como cubierto por la resolucion ya aprobada.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "evidence": [
+        {
+          "ref": "dept-seo-action-5",
+          "description": "seo-specialist, accion priorizada #5: \"Auditar y reescribir metas de las paginas con CTR 0% y volumen relevante (colegios, melamina, fenolicas)\" (priority=medium, impact=medium, effort=medium, relatedIds=O5/T3). Paginas citadas por esos relatedIds: https://zentrylockers.com/taquillas-para-colegios/ , multiple (taquillas-melamina, taquillas-melamina-fenolico, taquillas-para-colegios, taquillas-fenolicas).",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-opportunity-5",
+          "description": "seo-specialist, oportunidad (low_ctr, priority=medium, basis=evidence) sobre keyword \"taquillas colegios / taquillas escolares\" / pagina \"https://zentrylockers.com/taquillas-para-colegios/\": Reescribir meta title y meta description con mensajes mas atractivos (precio, garantia, CTA) para la intencion consolidada colegios/escolares.",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-technical-issue-3",
+          "description": "seo-specialist, problema tecnico (severity=medium, basis=inference) en la pagina multiple (taquillas-melamina, taquillas-melamina-fenolico, taquillas-para-colegios, taquillas-fenolicas): Patron repetido de CTR 0.00% con impresiones relevantes (22 a 83) en distintas familias de pagina, lo que sugiere una debilidad sistemica en meta titles/descriptions mas alla de c...",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-content-summary",
+          "description": "content-strategist (salida real de esta pasada): oportunidad \"Actualizar title/meta y reforzar diferenciación de material en la página de taquillas fenólicas para la variante local \"en Palencia\"\" -- La keyword \"taquillas fenólicas en palencia\" es una variante geolocalizada de una página ya existente que puede captar demanda local de compra si el title/meta se ajusta y el contenido deja claro por qué la fenólica es la opción frente a m... (priority=medium, contentType=title_meta_improvement, targetBrand=zentry, searchIntent=transactional).",
+          "originEmployees": [
+            "content-strategist"
+          ]
+        },
+        {
+          "ref": "dept-content-risks",
+          "description": "content-strategist, riesgos/incognitas declarados (5): Riesgo de canibalización SEO con el cluster de taquillas melamina/colegios/escolares ya señalado en clusterNote y risks del contexto. | Se asume que la página sigue existiendo en esa URL y que el brief sigue vigente; si ha cambiado desde que se generó la work order, la propuesta debería revalidarse...",
+          "originEmployees": [
+            "content-strategist"
+          ]
+        }
+      ],
+      "originEmployees": [
+        "seo-specialist",
+        "content-strategist"
+      ],
+      "qaStatus": "BLOCKED",
+      "qaNotes": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "approvalRequired": true,
+      "dependsOn": [
+        "Aprobacion humana ya concedida el 2026-08-16 (rewrite CTR 0%)",
+        "Confirmar con negocio si la resolucion de canibalizacion de melamina cubre tambien el solapamiento con fenolica"
+      ],
+      "hasEngineeringSpec": false
+    },
+    {
+      "rank": 6,
+      "action": "No republicar aun las paginas de staging de universidades, metalicas y vestuarios",
+      "reason": "seo-specialist vuelve a proponer publicarlas en esta pasada (impacto alto segun su propio ranking), pero una decision humana del 2026-08-16 rechazo explicitamente esa publicacion por falta de calidad visual y fotografica, indicando que necesitan una segunda iteracion antes de pasar a produccion. Se prioriza la decision humana ya registrada sobre la propuesta viva del especialista; confianza baja en cualquier plan de publicacion inmediata.",
+      "impact": "medium",
+      "confidence": "low",
+      "effort": "medium",
+      "evidence": [
+        {
+          "ref": "dept-seo-action-6",
+          "description": "seo-specialist, accion priorizada #6: \"Publicar a produccion las paginas de staging ya aprobadas para huecos reales (universidades, metalicas, vestuarios)\" (priority=medium, impact=high, effort=medium, relatedIds=G1/G2/G3/O6/O7/O8). Paginas citadas por esos relatedIds: ninguna (los elementos referenciados no declaran pagina).",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-opportunity-6",
+          "description": "seo-specialist, oportunidad (content_gap, priority=medium, basis=evidence) sobre keyword \"taquillas universidad\": Publicar a produccion la pagina de staging ya aprobada visualmente (2110) para el cluster de universidades.",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-opportunity-7",
+          "description": "seo-specialist, oportunidad (content_gap, priority=medium, basis=evidence) sobre keyword \"taquillas metalicas\": Publicar a produccion la pagina de staging ya aprobada (2105) para el tercer material de catalogo (metalicas).",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "dept-seo-opportunity-8",
+          "description": "seo-specialist, oportunidad (content_gap, priority=medium, basis=evidence) sobre keyword \"taquillas vestuarios\": Publicar a produccion la pagina de staging ya aprobada (2104), manteniendola diferenciada de /bancos-de-vestuario/.",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        },
+        {
+          "ref": "human-decision-staging-reject",
+          "description": "Decision humana registrada el 2026-08-16 (pasada dept-2026-08-15T175321Z), version 1: rechazo la propuesta de publicar en produccion las paginas nuevas ya aprobadas en staging (universidades, metalicas, vestuarios, taquillas inteligentes general), con motivo textual: las paginas de staging todavia se ven demasiado basicas y sin suficientes imagenes/fotografias, necesitan una segunda iteracion visual y de contenido antes de publicarse en produccion.",
+          "originEmployees": [
+            "growth-director-v2 (contexto determinista del departamento)"
+          ]
+        }
+      ],
+      "originEmployees": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "qaStatus": "BLOCKED",
+      "qaNotes": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "approvalRequired": true,
+      "dependsOn": [
+        "Decision humana ya registrada (rechazo 2026-08-16) por calidad visual insuficiente",
+        "Segunda iteracion visual/de contenido no evidenciada en este contexto"
+      ],
+      "hasEngineeringSpec": false
+    },
+    {
+      "rank": 7,
+      "action": "Decidir con Pau el enrutado de taquillas inteligentes (solucion general) y retomar la coordinacion con content-strategist",
+      "reason": "El riesgo de canibalizacion entre taquillas_inteligentes_general y cerraduras_inteligentes_taquillas sigue sin resolver, y la coordinacion previa aprobada entre content-strategist y el cluster SEO no se completo en esta pasada porque content-strategist trabajo sobre un tema distinto (fenolica Palencia). Esfuerzo bajo (es una decision, no una ejecucion), impacto medio porque desbloquea contenido nuevo pendiente.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "low",
+      "evidence": [
+        {
+          "ref": "dept-seo-action-7",
+          "description": "seo-specialist, accion priorizada #7: \"Decidir con Pau el enrutado de taquillas inteligentes (solucion general) vs. cerraduras inteligentes antes de publicar la pagina candidata\" (priority=medium, impact=medium, effort=low, relatedIds=F6/G4). Paginas citadas por esos relatedIds: ninguna (los elementos referenciados no declaran pagina).",
+          "originEmployees": [
+            "seo-specialist"
+          ]
+        }
+      ],
+      "originEmployees": [
+        "seo-specialist"
+      ],
+      "qaStatus": "BLOCKED",
+      "qaNotes": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "approvalRequired": true,
+      "dependsOn": [
+        "Decision explicita de Pau sobre taquillas_inteligentes_general vs cerraduras_inteligentes_taquillas",
+        "Coordinacion pendiente con content-strategist no ejecutada en esta pasada"
+      ],
+      "hasEngineeringSpec": false
+    }
+  ],
+  "sections": {
+    "seo": {
+      "employee": "seo-specialist",
+      "status": "executed",
+      "headline": "Datos live de Search Console (run seo-watcher-2026-08-18T012813Z, 36 jobs) cruzados con el catalogo de clusters y keywords objetivo. El hallazgo mas urgente es tecnico: dos actionItems (cerraduras inteligentes para cent...",
+      "bullets": [
+        "7 hallazgo(s), 10 oportunidad(es), 3 problema(s) tecnico(s), 6 gap(s) de contenido, 3 recomendacion(es) de enlazado interno.",
+        "Accion #1 (high, impacto high, esfuerzo low): Corregir el enrutado de las oportunidades sobre /cerraduras/ (pagina en papelera con 301) antes de ejecutar cualquier optimizacion on-page",
+        "Accion #2 (high, impacto medium, esfuerzo low): Cerrar los actionItems mal enrutados de taquillas melamina/de melamina hacia /taquillas-melamina-fenolico/ via el script de resolucion existente",
+        "Accion #3 (high, impacto medium, esfuerzo medium): Ejecutar el quick win de cerraduras inteligentes para taquillas en /cerraduras-inteligentes-taquillas/",
+        "Incognitas declaradas por el propio especialista: 5."
+      ]
+    },
+    "content": {
+      "employee": "content-strategist",
+      "status": "executed",
+      "headline": "La keyword \"taquillas fenólicas en palencia\" es una variante geolocalizada de una página ya existente que puede captar demanda local de compra si el title/meta se ajusta y el contenido deja claro por qué la fenólica es ...",
+      "bullets": [
+        "Oportunidad \"Actualizar title/meta y reforzar diferenciación de material en la página de taquillas fenólicas para la variante local \"en Palencia\"\" (prioridad medium, tipo title_meta_improvement, marca zentry, intencion transactional).",
+        "Estructura propuesta: H1 \"Taquillas Fenólicas en Palencia: Resistencia y Durabilidad para Espacios Húmedos\" con 5 seccion(es); 3 enlace(s) interno(s) sugerido(s).",
+        "CTA principal: Solicitar presupuesto sin compromiso",
+        "Riesgos/incognitas declarados: 5."
+      ]
+    },
+    "analytics": {
+      "employee": "analytics-specialist",
+      "status": "executed",
+      "headline": "4 hallazgo(s) de medicion sobre datos reales ya leidos por analytics-watcher.",
+      "bullets": [
+        "Snapshot analizado: pasada de datos \"dept-2026-08-18T012804Z\" (GA4 conectado: true, GTM conectado: true).",
+        "5 observacion(es) de trafico, 3 de conversion, 3 problema(s) de medicion, 4 hipotesis.",
+        "Accion (high): Validar en GTM Preview / GA4 DebugView el tag GA4 Event - click_phone con un clic real, ya que es un evento del catalogo sin ninguna ocurrencia en todo el peri...",
+        "Accion (high): Confirmar si la version live O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) esta realmente publicada en produccion, ya que afecta a la confi...",
+        "Accion (medium): Excluir o segmentar por separado las sesiones con fuente tagassistant.google.com en los informes de canal Referral para no mezclar trafico de comprobacion inte...",
+        "Incognitas declaradas por el propio especialista: 5."
+      ]
+    },
+    "growth": {
+      "employee": "growth-director-v2",
+      "status": "executed",
+      "headline": "El esfuerzo debe concentrarse primero en verificar que los enrutados SEO ya aprobados por humanos (fix de /cerraduras/ y cierre de canibalizacion de taquillas melamina) se hayan aplicado de verdad, porque el run live mas reciente (seo-watcher-2026-08-18T012813Z) sigue mostrando esos mismos problemas sin resolver. En p...",
+      "bullets": [
+        "7 prioridad(es) propuesta(s), 4 oportunidad(es), 4 cuello(s) de botella, 5 riesgo(s), 3 experimento(s).",
+        "Dependencias declaradas ausentes/parciales: 3 de 8.",
+        "Incognitas declaradas por Growth: 6."
+      ]
+    },
+    "qa": {
+      "employee": "qa-reviewer",
+      "status": "executed",
+      "headline": "Los tres outputs de especialistas (seo-specialist, content-strategist, analytics-specialist) son de buena calidad, bien evidenciados y con unknowns declarados explicitamente. Sin embargo, la sintesis de growth-director-v2 afirma repetidamente 'aprobacion humana ya concedida el 2026-08-16' en 4 recommendedPriorities di...",
+      "bullets": [
+        "reviewStatus del empleado: `fail` -> estado de departamento: `BLOCKED`.",
+        "Hallazgos: 3 critical, 1 warning, 1 info.",
+        "6 afirmacion(es) sin respaldo, 1 contradiccion(es), 1 problema(s) de seguridad, 5 correccion(es) exigida(s).",
+        "Recomendacion de aprobacion: pending (riesgo high)."
+      ]
+    },
+    "webEngineering": {
+      "employee": "web-engineer",
+      "status": "blocked",
+      "headline": "Sin especificacion tecnica en esta pasada (status=blocked).",
+      "bullets": [
+        "Ninguna recomendacion sobrevivio la puerta de QA (7 bloqueada(s), estado QA BLOCKED). qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer."
+      ]
+    }
+  },
+  "blockedOrUnknown": [
+    "SEM: pendiente / temporalmente no disponible -- sem-specialist queda explicitamente fuera de esta fase y no ha aportado ninguna senal de Google Ads. Su ausencia no bloquea el departamento.",
+    "web-engineer: blocked -- Ninguna recomendacion sobrevivio la puerta de QA (7 bloqueada(s), estado QA BLOCKED). qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.",
+    "Promocion a ingenieria bloqueada globalmente: qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.",
+    "Incognita declarada por Growth: No hay ninguna senal de SEM/Google Ads en esta pasada (sem-specialist not_available); no se puede evaluar gasto, CPC, campanas activas ni su posible relacion con el trafico Direct anomalo.",
+    "Incognita declarada por Growth: No se puede confirmar si el script scripts/o291-resolve-melamina-cannibalization.ts se ha ejecutado ya sobre los actionItems del run seo-watcher-2026-08-18T012813Z o si estan pendientes de cierre (declarado explicitamente por seo-specialist).",
+    "Incognita declarada por Growth: No se especifica en este contexto cual es el target URL correcto para cerraduras inteligentes para centros deportivos mas alla de las dos opciones mencionadas por seo-specialist -- la decision final queda pendiente de Pau.",
+    "Incognita declarada por Growth: No se puede confirmar si la version O44 de GTM (nombre indica pendiente de aprobacion) esta realmente publicada en produccion o sigue en revision.",
+    "Incognita declarada por Growth: No hay evidencia en esta pasada de que qa-reviewer o web-engineer hayan producido artifacts propios; su estado real de ejecucion en este ciclo se desconoce.",
+    "Incognita declarada por Growth: content-strategist advierte que no hay datos de volumen de busqueda real para la variante hiperlocal taquillas fenolicas en Palencia, por lo que no se puede confirmar el impacto SEO esperado de esa mejora."
+  ],
+  "approvalsNeeded": [
+    {
+      "decision": "DESCARTAR o CORREGIR: \"Verificar y completar el cierre de los enrutados SEO ya aprobados (/cerraduras/ y taquillas melamina)\"",
+      "why": "QA la ha bloqueado. Motivo(s): qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.. Decide si se corrige y se vuelve a proponer, o se descarta.",
+      "qaStatus": "BLOCKED",
+      "origin": "seo-specialist"
+    },
+    {
+      "decision": "DESCARTAR o CORREGIR: \"Confirmar el estado real de publicacion de la version O44 de GTM\"",
+      "why": "QA la ha bloqueado. Motivo(s): qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.. Decide si se corrige y se vuelve a proponer, o se descarta.",
+      "qaStatus": "BLOCKED",
+      "origin": "analytics-specialist"
+    },
+    {
+      "decision": "DESCARTAR o CORREGIR: \"Validar el disparo real de click_phone en GTM Preview / GA4 DebugView\"",
+      "why": "QA la ha bloqueado. Motivo(s): qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.. Decide si se corrige y se vuelve a proponer, o se descarta.",
+      "qaStatus": "BLOCKED",
+      "origin": "analytics-specialist"
+    },
+    {
+      "decision": "DESCARTAR o CORREGIR: \"Ejecutar el quick win on-page de cerraduras inteligentes para taquillas\"",
+      "why": "QA la ha bloqueado. Motivo(s): qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.. Decide si se corrige y se vuelve a proponer, o se descarta.",
+      "qaStatus": "BLOCKED",
+      "origin": "seo-specialist"
+    },
+    {
+      "decision": "DESCARTAR o CORREGIR: \"Auditar y reescribir metas de las paginas con CTR 0% incluyendo la variante Palencia de content-strategist\"",
+      "why": "QA la ha bloqueado. Motivo(s): qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.. Decide si se corrige y se vuelve a proponer, o se descarta.",
+      "qaStatus": "BLOCKED",
+      "origin": "seo-specialist, content-strategist"
+    },
+    {
+      "decision": "DESCARTAR o CORREGIR: \"No republicar aun las paginas de staging de universidades, metalicas y vestuarios\"",
+      "why": "QA la ha bloqueado. Motivo(s): qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.. Decide si se corrige y se vuelve a proponer, o se descarta.",
+      "qaStatus": "BLOCKED",
+      "origin": "seo-specialist, growth-director-v2 (contexto determinista del departamento)"
+    },
+    {
+      "decision": "DESCARTAR o CORREGIR: \"Decidir con Pau el enrutado de taquillas inteligentes (solucion general) y retomar la coordinacion con content-strategist\"",
+      "why": "QA la ha bloqueado. Motivo(s): qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.. Decide si se corrige y se vuelve a proponer, o se descarta.",
+      "qaStatus": "BLOCKED",
+      "origin": "seo-specialist"
+    }
+  ],
+  "stageStatuses": [
+    {
+      "stage": "sem-specialist",
+      "phase": "specialists",
+      "status": "not_available",
+      "reason": "sem-specialist queda explicitamente FUERA de esta fase (pendiente). No se ejecuta, no se intenta arreglar, y su ausencia nunca bloquea la pasada del departamento.",
+      "outputPath": null,
+      "artifactPath": null,
+      "sourceRunId": null,
+      "auditWarningCount": null,
+      "recordedAt": "2026-08-18T01:28:04.887Z"
+    },
+    {
+      "stage": "seo-specialist",
+      "phase": "specialists",
+      "status": "executed",
+      "reason": "seo-specialist ejecutado en esta pasada. Avisos de auditoria de dominio: 0.",
+      "outputPath": "reports/department/dept-2026-08-18T012804Z/stages/seo-specialist/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T012804Z/stages/seo-specialist/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": 0,
+      "recordedAt": "2026-08-18T01:33:41.527Z"
+    },
+    {
+      "stage": "content-strategist",
+      "phase": "specialists",
+      "status": "executed",
+      "reason": "content-strategist ejecutado sobre el change pack 817527bd-7305-4e95-96ab-f2234a0ff294. Avisos de auditoria: 0.",
+      "outputPath": "reports/department/dept-2026-08-18T012804Z/stages/content-strategist/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T012804Z/stages/content-strategist/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": 0,
+      "recordedAt": "2026-08-18T01:35:41.650Z"
+    },
+    {
+      "stage": "analytics-specialist",
+      "phase": "specialists",
+      "status": "executed",
+      "reason": "analytics-specialist ejecutado sobre el snapshot real dept-2026-08-18T012804Z. Avisos de auditoria: 10.",
+      "outputPath": "reports/department/dept-2026-08-18T012804Z/stages/analytics-specialist/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T012804Z/stages/analytics-specialist/artifact.json",
+      "sourceRunId": "dept-2026-08-18T012804Z",
+      "auditWarningCount": 10,
+      "recordedAt": "2026-08-18T01:38:59.320Z"
+    },
+    {
+      "stage": "growth-director-v2",
+      "phase": "growth",
+      "status": "executed",
+      "reason": "Sintesis valida sobre 3 especialista(s) ejecutado(s). 7 prioridad(es) propuesta(s), 0 aviso(s) de auditoria de dominio.",
+      "outputPath": "reports/department/dept-2026-08-18T012804Z/stages/growth-director-v2/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T012804Z/stages/growth-director-v2/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": 0,
+      "recordedAt": "2026-08-18T01:42:58.802Z"
+    },
+    {
+      "stage": "qa-reviewer",
+      "phase": "qa",
+      "status": "executed",
+      "reason": "Revision valida: reviewStatus=fail, 5 hallazgo(s), 1 problema(s) de seguridad.",
+      "outputPath": "reports/department/dept-2026-08-18T012804Z/stages/qa-reviewer/output.json",
+      "artifactPath": "reports/department/dept-2026-08-18T012804Z/stages/qa-reviewer/artifact.json",
+      "sourceRunId": null,
+      "auditWarningCount": null,
+      "recordedAt": "2026-08-18T01:46:06.006Z"
+    },
+    {
+      "stage": "web-engineer",
+      "phase": "web-engineering",
+      "status": "blocked",
+      "reason": "Ninguna recomendacion sobrevivio la puerta de QA (7 bloqueada(s), estado QA BLOCKED). qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=3, safetyConcerns=1). Ninguna recomendacion se promueve a web-engineer.",
+      "outputPath": null,
+      "artifactPath": null,
+      "sourceRunId": null,
+      "auditWarningCount": null,
+      "recordedAt": "2026-08-18T01:47:00.444Z"
+    }
+  ],
+  "departmentQaStatus": "BLOCKED",
+  "externalWrites": "none",
+  "apply": {
+    "planned": true,
+    "counts": {
+      "proposed": 0,
+      "staging_applying": 0,
+      "staging_applied": 0,
+      "staging_validation_failed": 0,
+      "staging_rolled_back": 0,
+      "awaiting_approval": 0,
+      "awaiting_rejection_reason": 0,
+      "rejected": 0,
+      "approved": 0,
+      "approval_stale": 0,
+      "production_queued": 0,
+      "production_applying": 0,
+      "production_applied": 0,
+      "production_validation_failed": 0,
+      "production_rolled_back": 0,
+      "blocked": 7,
+      "requires_manual_staging_implementation": 0
+    },
+    "externalWritesPerformed": false,
+    "productionWritesPerformed": false,
+    "notAttemptedReason": "WORDPRESS_BACKEND=\"local_preview\": solo el backend \"rest\" realiza escrituras reales. Y ningun elemento de esta pasada tiene un ChangePlan ejecutable por execute-php. No hay ningun camino de escritura disponible.",
+    "items": [
+      {
+        "rank": 1,
+        "title": "Verificar y completar el cierre de los enrutados SEO ya aprobados (/cerraduras/ y taquillas melamina)",
+        "applyStatus": "blocked",
+        "applyStatusLabel": "BLOCKED",
+        "capability": "ninguna",
+        "capabilityReason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "humanApproval": "none",
+        "humanApprovalReason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
+        "validationStatus": "not_run",
+        "rollbackStatus": "not_needed",
+        "stagingUrl": "",
+        "productionUrl": "",
+        "rejectionReason": ""
+      },
+      {
+        "rank": 2,
+        "title": "Confirmar el estado real de publicacion de la version O44 de GTM",
+        "applyStatus": "blocked",
+        "applyStatusLabel": "BLOCKED",
+        "capability": "ninguna",
+        "capabilityReason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "humanApproval": "none",
+        "humanApprovalReason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
+        "validationStatus": "not_run",
+        "rollbackStatus": "not_needed",
+        "stagingUrl": "",
+        "productionUrl": "",
+        "rejectionReason": ""
+      },
+      {
+        "rank": 3,
+        "title": "Validar el disparo real de click_phone en GTM Preview / GA4 DebugView",
+        "applyStatus": "blocked",
+        "applyStatusLabel": "BLOCKED",
+        "capability": "ninguna",
+        "capabilityReason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "humanApproval": "none",
+        "humanApprovalReason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
+        "validationStatus": "not_run",
+        "rollbackStatus": "not_needed",
+        "stagingUrl": "",
+        "productionUrl": "",
+        "rejectionReason": ""
+      },
+      {
+        "rank": 4,
+        "title": "Ejecutar el quick win on-page de cerraduras inteligentes para taquillas",
+        "applyStatus": "blocked",
+        "applyStatusLabel": "BLOCKED",
+        "capability": "ninguna",
+        "capabilityReason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "humanApproval": "none",
+        "humanApprovalReason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
+        "validationStatus": "not_run",
+        "rollbackStatus": "not_needed",
+        "stagingUrl": "",
+        "productionUrl": "",
+        "rejectionReason": ""
+      },
+      {
+        "rank": 5,
+        "title": "Auditar y reescribir metas de las paginas con CTR 0% incluyendo la variante Palencia de content-strategist",
+        "applyStatus": "blocked",
+        "applyStatusLabel": "BLOCKED",
+        "capability": "ninguna",
+        "capabilityReason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "humanApproval": "none",
+        "humanApprovalReason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
+        "validationStatus": "not_run",
+        "rollbackStatus": "not_needed",
+        "stagingUrl": "",
+        "productionUrl": "",
+        "rejectionReason": ""
+      },
+      {
+        "rank": 6,
+        "title": "No republicar aun las paginas de staging de universidades, metalicas y vestuarios",
+        "applyStatus": "blocked",
+        "applyStatusLabel": "BLOCKED",
+        "capability": "ninguna",
+        "capabilityReason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "humanApproval": "none",
+        "humanApprovalReason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
+        "validationStatus": "not_run",
+        "rollbackStatus": "not_needed",
+        "stagingUrl": "",
+        "productionUrl": "",
+        "rejectionReason": ""
+      },
+      {
+        "rank": 7,
+        "title": "Decidir con Pau el enrutado de taquillas inteligentes (solucion general) y retomar la coordinacion con content-strategist",
+        "applyStatus": "blocked",
+        "applyStatusLabel": "BLOCKED",
+        "capability": "ninguna",
+        "capabilityReason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "humanApproval": "none",
+        "humanApprovalReason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta.",
+        "validationStatus": "not_run",
+        "rollbackStatus": "not_needed",
+        "stagingUrl": "",
+        "productionUrl": "",
+        "rejectionReason": ""
+      }
+    ]
+  },
+  "cost": {
+    "runs": [
+      {
+        "employee": "seo-specialist",
+        "model": "claude-sonnet-5",
+        "durationMs": 216889,
+        "costUsd": 0.5635039000000001,
+        "numTurns": 2,
+        "outputSource": "structured_output",
+        "outcome": "success",
+        "note": ""
+      },
+      {
+        "employee": "content-strategist",
+        "model": "claude-sonnet-5",
+        "durationMs": 94150,
+        "costUsd": 0.2744325,
+        "numTurns": 3,
+        "outputSource": "structured_output",
+        "outcome": "success",
+        "note": ""
+      },
+      {
+        "employee": "analytics-specialist",
+        "model": "claude-sonnet-5",
+        "durationMs": 176271,
+        "costUsd": 0.4976124,
+        "numTurns": 3,
+        "outputSource": "structured_output",
+        "outcome": "success",
+        "note": ""
+      },
+      {
+        "employee": "growth-director-v2",
+        "model": "claude-sonnet-5",
+        "durationMs": 214629,
+        "costUsd": 0.7723751000000001,
+        "numTurns": 3,
+        "outputSource": "structured_output",
+        "outcome": "success",
+        "note": ""
+      },
+      {
+        "employee": "qa-reviewer",
+        "model": "claude-sonnet-5",
+        "durationMs": 161178,
+        "costUsd": 0.5632710000000001,
+        "numTurns": 2,
+        "outputSource": "structured_output",
+        "outcome": "success",
+        "note": ""
+      }
+    ],
+    "totalCostUsd": 2.6711949000000006,
+    "totalDurationMs": 863117,
+    "totalTurns": 13,
+    "employeesWithCost": 5,
+    "employeesWithoutCost": 0,
+    "partial": false
+  },
+  "note": "Este informe contiene PROPUESTAS. Solo las acciones que hayan pasado la puerta de aprobacion humana correspondiente pueden ejecutarse mediante APPLY. El analisis del departamento (SEO, Content, Analytics, Growth, QA, Web Engineer) es READ / ANALYZE / PROPOSE: ningun empleado escribe en ningun sistema. Nada se ha commiteado, no se ha tocado produccion, Google Ads, GA4/GTM, Search Console ni n8n. Todas las cifras de este informe son conteos de elementos realmente producidos en esta pasada -- ninguna es una estimacion de negocio. En esta pasada NO se ha escrito en ningun sistema externo."
+}

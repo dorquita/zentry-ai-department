@@ -4,7 +4,7 @@
 - **changePackId:** `5ac544c5-54a6-46f6-bb54-2cc9894804a4` (status: approved_to_execute)
 - **Plantilla visual:** `sector_landing` — Landing de sector B2B
 - **Por que esta plantilla:** Cuando el change pack apunta a un sector concreto (colegio, gimnasio, hotel, oficina, hospital...) detectado via b2b_sector_terms en config/brand-positioning.json — p.ej. "taquillas escolares", "taquillas para gimnasios".
-- **Generado:** 2026-08-17T23:44:19.804Z
+- **Generado:** 2026-08-18T01:29:26.698Z
 
 > Este fichero es un preview VISUAL local (Fase O12.4), complementario al preview de texto ya generado por el WordPress Draft Agent (`6d4d8a7a-1e42-476e-9e99-9dfbf10b30bf.md`, sin tocar). No se ha llamado a WordPress ni generado ninguna imagen real.
 

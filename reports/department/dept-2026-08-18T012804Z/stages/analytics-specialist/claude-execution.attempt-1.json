@@ -1,0 +1,12 @@
+{
+  "contractVersion": "claude-execution-record/v1",
+  "employee": "analytics-specialist",
+  "model": "claude-sonnet-5",
+  "durationMs": 176271,
+  "costUsd": 0.4976124,
+  "numTurns": 3,
+  "outputSource": "structured_output",
+  "outcome": "success",
+  "note": "",
+  "recordedAt": "2026-08-18T01:38:52.671Z"
+}

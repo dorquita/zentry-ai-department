@@ -1,0 +1,797 @@
+{
+  "generatedAt": "2026-08-18T01:38:55.440Z",
+  "context": {
+    "status": "ready",
+    "departmentRunId": "dept-2026-08-18T012804Z",
+    "reportGeneratedAt": "2026-08-18T01:28:25.254Z",
+    "reportPath": "/home/runner/work/zentry-ai-department/zentry-ai-department/reports/analytics/analytics-2026-08-18.md",
+    "ga4Connected": true,
+    "gtmConnected": true,
+    "ga4": {
+      "dateRange": {
+        "startDate": "2026-07-20",
+        "endDate": "2026-08-17"
+      },
+      "channelTraffic": [
+        {
+          "channel": "Direct",
+          "sessions": 172,
+          "activeUsers": 68,
+          "conversions": 81
+        },
+        {
+          "channel": "Organic Search",
+          "sessions": 8,
+          "activeUsers": 6,
+          "conversions": 3
+        },
+        {
+          "channel": "Referral",
+          "sessions": 3,
+          "activeUsers": 1,
+          "conversions": 2
+        },
+        {
+          "channel": "AI Assistant",
+          "sessions": 2,
+          "activeUsers": 2,
+          "conversions": 0
+        },
+        {
+          "channel": "Unassigned",
+          "sessions": 1,
+          "activeUsers": 1,
+          "conversions": 1
+        }
+      ],
+      "topLandingPages": [
+        {
+          "landingPage": "/",
+          "sessions": 115,
+          "conversions": 59,
+          "bounceRatePercent": 31.3
+        },
+        {
+          "landingPage": "/configurador-bancos",
+          "sessions": 10,
+          "conversions": 6,
+          "bounceRatePercent": 10
+        },
+        {
+          "landingPage": "/configurador-taquillas",
+          "sessions": 6,
+          "conversions": 1,
+          "bounceRatePercent": 0
+        },
+        {
+          "landingPage": "(not set)",
+          "sessions": 4,
+          "conversions": 2,
+          "bounceRatePercent": 50
+        },
+        {
+          "landingPage": "/bancos-de-vestuario",
+          "sessions": 4,
+          "conversions": 2,
+          "bounceRatePercent": 0
+        },
+        {
+          "landingPage": "/cerraduras-inteligentes-taquillas",
+          "sessions": 4,
+          "conversions": 1,
+          "bounceRatePercent": 25
+        },
+        {
+          "landingPage": "/cerraduras-para-taquillas",
+          "sessions": 4,
+          "conversions": 0,
+          "bounceRatePercent": 50
+        },
+        {
+          "landingPage": "/product/taquilla-2-puertas-modulo-1-melamina",
+          "sessions": 4,
+          "conversions": 11,
+          "bounceRatePercent": 25
+        },
+        {
+          "landingPage": "/taquillas-metalicas",
+          "sessions": 4,
+          "conversions": 0,
+          "bounceRatePercent": 25
+        },
+        {
+          "landingPage": "/digitalizacion-taquillas",
+          "sessions": 3,
+          "conversions": 0,
+          "bounceRatePercent": 66.7
+        },
+        {
+          "landingPage": "/taquillas-para-colegios",
+          "sessions": 3,
+          "conversions": 0,
+          "bounceRatePercent": 33.3
+        },
+        {
+          "landingPage": "/taquillas-para-empresas",
+          "sessions": 3,
+          "conversions": 0,
+          "bounceRatePercent": 66.7
+        },
+        {
+          "landingPage": "/cookies",
+          "sessions": 2,
+          "conversions": 0,
+          "bounceRatePercent": 50
+        },
+        {
+          "landingPage": "/product/taquilla-1-puertas-modulo-1-melamina",
+          "sessions": 2,
+          "conversions": 0,
+          "bounceRatePercent": 0
+        },
+        {
+          "landingPage": "/product/taquilla-2-puertas-modulo-1-metalica",
+          "sessions": 2,
+          "conversions": 0,
+          "bounceRatePercent": 50
+        }
+      ],
+      "keyEvents": [
+        {
+          "name": "generate_lead_form_submit",
+          "fired": true,
+          "occurrences": 6,
+          "conversions": 6
+        },
+        {
+          "name": "click_whatsapp",
+          "fired": true,
+          "occurrences": 15,
+          "conversions": 15
+        },
+        {
+          "name": "click_phone",
+          "fired": false,
+          "occurrences": 0,
+          "conversions": 0
+        },
+        {
+          "name": "click_request_quote",
+          "fired": true,
+          "occurrences": 66,
+          "conversions": 66
+        },
+        {
+          "name": "click_catalog_download",
+          "fired": true,
+          "occurrences": 4,
+          "conversions": 0
+        },
+        {
+          "name": "view_quote_page",
+          "fired": true,
+          "occurrences": 12,
+          "conversions": 0
+        },
+        {
+          "name": "view_contact_page",
+          "fired": true,
+          "occurrences": 39,
+          "conversions": 0
+        }
+      ],
+      "sourceMedium": [
+        {
+          "source": "(direct)",
+          "medium": "(none)",
+          "sessions": 172,
+          "conversions": 81
+        },
+        {
+          "source": "google",
+          "medium": "organic",
+          "sessions": 7,
+          "conversions": 3
+        },
+        {
+          "source": "tagassistant.google.com",
+          "medium": "referral",
+          "sessions": 3,
+          "conversions": 2
+        },
+        {
+          "source": "chatgpt.com",
+          "medium": "ai-assistant",
+          "sessions": 2,
+          "conversions": 0
+        },
+        {
+          "source": "(not set)",
+          "medium": "(not set)",
+          "sessions": 1,
+          "conversions": 1
+        },
+        {
+          "source": "duckduckgo",
+          "medium": "organic",
+          "sessions": 1,
+          "conversions": 0
+        }
+      ]
+    },
+    "gtm": {
+      "containerName": "www.zentrylockers.com",
+      "containerPublicId": "GTM-MSPSGLK5",
+      "workspaceName": "Default Workspace",
+      "liveVersionName": "O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5)",
+      "tagCount": 8,
+      "triggerCount": 7,
+      "variableCount": 0,
+      "tags": [
+        {
+          "name": "GA4 Event - click_whatsapp",
+          "type": "gaawe",
+          "paused": false
+        },
+        {
+          "name": "Google Tag - GA4 - Zentry",
+          "type": "googtag",
+          "paused": false
+        },
+        {
+          "name": "GA4 Event - generate_lead_form_submit",
+          "type": "gaawe",
+          "paused": false
+        },
+        {
+          "name": "GA4 Event - click_phone",
+          "type": "gaawe",
+          "paused": false
+        },
+        {
+          "name": "GA4 Event - click_catalog_download",
+          "type": "gaawe",
+          "paused": false
+        },
+        {
+          "name": "GA4 Event - click_request_quote",
+          "type": "gaawe",
+          "paused": false
+        },
+        {
+          "name": "GA4 Event - view_quote_page",
+          "type": "gaawe",
+          "paused": false
+        },
+        {
+          "name": "GA4 Event - view_contact_page",
+          "type": "gaawe",
+          "paused": false
+        }
+      ],
+      "triggers": [
+        {
+          "name": "click_phone",
+          "type": "linkClick"
+        },
+        {
+          "name": "/solicitar-presupuesto/",
+          "type": "linkClick"
+        },
+        {
+          "name": "click_whatsapp",
+          "type": "linkClick"
+        },
+        {
+          "name": "Vista de una página - /gracias",
+          "type": "pageview"
+        },
+        {
+          "name": "click_catalog_download",
+          "type": "linkClick"
+        },
+        {
+          "name": "Page Path equals /solicitar-presupuesto/",
+          "type": "pageview"
+        },
+        {
+          "name": "visita contacto",
+          "type": "pageview"
+        }
+      ]
+    },
+    "watcherWarnings": [],
+    "sourceGeneratedAt": "2026-08-18T01:28:25.254Z",
+    "freshness": {
+      "status": "fresh",
+      "ageHours": 0.2,
+      "maxAgeHours": 26,
+      "sourceGeneratedAt": "2026-08-18T01:28:25.254Z",
+      "producedInThisRun": false,
+      "humanSummary": "DATOS RECIENTES PERO NO DE ESTA PASADA (0.2 h, umbral 26 h): la fuente externa se leyo el 2026-08-18T01:28:25.254Z. Son utilizables, pero cita siempre esa fecha en vez de dar a entender que son de hoy."
+    }
+  },
+  "result": {
+    "status": "executed",
+    "output": {
+      "runSummary": {
+        "departmentRunId": "dept-2026-08-18T012804Z",
+        "reportGeneratedAt": "2026-08-18T01:28:25.254Z",
+        "ga4Connected": true,
+        "gtmConnected": true
+      },
+      "measurementFindings": [
+        {
+          "claimType": "FACT",
+          "statement": "El contexto cubre el periodo GA4 del 2026-07-20 al 2026-08-17, con GA4 y GTM conectados en vivo en esta pasada.",
+          "evidenceIds": []
+        },
+        {
+          "claimType": "FACT",
+          "statement": "El contenedor GTM www.zentrylockers.com tiene 8 tags, 7 triggers y 0 variables; ninguno de los 8 tags aparece marcado como pausado.",
+          "evidenceIds": [
+            "e17",
+            "e18"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "El nombre de la version live del contenedor GTM es O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5), lo que introduce una contradiccion entre estar catalogada como version live y su propio nombre indicando que esta pendiente de aprobacion/sin publicar.",
+          "evidenceIds": [
+            "e17"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "En la landing /product/taquilla-2-puertas-modulo-1-melamina las conversiones registradas (11) superan al numero de sesiones (4), y en la home las conversiones (59) representan mas del 50% de las sesiones (115), lo que sugiere que la metrica conversions puede contar multiples eventos clave por sesion en lugar de sesiones unicas que convierten.",
+          "evidenceIds": [
+            "e6",
+            "e7"
+          ]
+        }
+      ],
+      "funnelObservations": [
+        {
+          "claimType": "FACT",
+          "statement": "El evento view_quote_page registro 12 ocurrencias mientras que click_request_quote registro 66 ocurrencias en el mismo periodo.",
+          "evidenceIds": [
+            "e9",
+            "e10"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "Dado que las ocurrencias de click_request_quote (66) superan ampliamente a las de view_quote_page (12), y GTM tiene un trigger de linkClick llamado /solicitar-presupuesto/ separado de un trigger de pageview llamado Page Path equals /solicitar-presupuesto/, el evento click_request_quote parece dispararse tambien desde ubicaciones distintas a la propia pagina de presupuesto.",
+          "evidenceIds": [
+            "e9",
+            "e10",
+            "e20",
+            "e21"
+          ]
+        },
+        {
+          "claimType": "FACT",
+          "statement": "El evento click_phone del catalogo de eventos clave aparece con fired false y 0 ocurrencias/0 conversiones en el periodo, por lo que no hay datos de este paso del funnel.",
+          "evidenceIds": [
+            "e8"
+          ]
+        },
+        {
+          "claimType": "FACT",
+          "statement": "view_contact_page registro 39 ocurrencias y 0 conversiones, y view_quote_page registro 12 ocurrencias y 0 conversiones, en linea con ser eventos de vista de pagina y no acciones de conversion.",
+          "evidenceIds": [
+            "e10",
+            "e14"
+          ]
+        }
+      ],
+      "trafficObservations": [
+        {
+          "claimType": "FACT",
+          "statement": "El canal Direct registro 172 sesiones y 81 conversiones en el periodo, frente a 8 sesiones/3 conversiones de Organic Search, 3 sesiones/2 conversiones de Referral, 2 sesiones/0 conversiones de AI Assistant y 1 sesion/1 conversion de Unassigned.",
+          "evidenceIds": [
+            "e1",
+            "e2",
+            "e3",
+            "e4",
+            "e5"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "El canal Direct concentra la gran mayoria de las sesiones (172 de 186 sesiones totales entre los 5 canales listados) y de las conversiones (81 de 87) del periodo.",
+          "evidenceIds": [
+            "e1",
+            "e2",
+            "e3",
+            "e4",
+            "e5"
+          ]
+        },
+        {
+          "claimType": "FACT",
+          "statement": "El canal Direct muestra 172 sesiones frente a solo 68 usuarios activos (ratio de aproximadamente 2.5 sesiones por usuario), mientras que Organic Search (8 sesiones/6 usuarios) y AI Assistant (2 sesiones/2 usuarios) estan cerca de una relacion 1:1.",
+          "evidenceIds": [
+            "e1",
+            "e2",
+            "e4"
+          ]
+        },
+        {
+          "claimType": "FACT",
+          "statement": "La fuente/medio tagassistant.google.com / referral registro 3 sesiones y 2 conversiones en el periodo.",
+          "evidenceIds": [
+            "e15"
+          ]
+        },
+        {
+          "claimType": "FACT",
+          "statement": "La landing page / (home) es la de mayor trafico con 115 sesiones, 59 conversiones y una tasa de rebote de 31.3%.",
+          "evidenceIds": [
+            "e6"
+          ]
+        }
+      ],
+      "conversionObservations": [
+        {
+          "claimType": "FACT",
+          "statement": "click_request_quote es el evento clave con mas ocurrencias del periodo (66), seguido de view_contact_page (39, sin conversiones asociadas) y click_whatsapp (15, todas contadas como conversion).",
+          "evidenceIds": [
+            "e9",
+            "e14",
+            "e12"
+          ]
+        },
+        {
+          "claimType": "FACT",
+          "statement": "generate_lead_form_submit registro 6 ocurrencias y 6 conversiones, y click_whatsapp registro 15 ocurrencias y 15 conversiones, es decir, el 100% de sus disparos se contabilizan como conversion.",
+          "evidenceIds": [
+            "e13",
+            "e12"
+          ]
+        },
+        {
+          "claimType": "FACT",
+          "statement": "click_catalog_download se disparo 4 veces en el periodo pero registro 0 conversiones, a diferencia de generate_lead_form_submit, click_whatsapp y click_request_quote que si se cuentan como conversion.",
+          "evidenceIds": [
+            "e11",
+            "e13",
+            "e12",
+            "e9"
+          ]
+        }
+      ],
+      "trackingIssues": [
+        {
+          "claimType": "FACT",
+          "statement": "El evento click_phone figura en el catalogo de eventos clave con fired false y 0 ocurrencias en el periodo 2026-07-20 a 2026-08-17, pese a que GTM tiene configurados un tag GA4 Event - click_phone (no pausado) y un trigger click_phone de tipo linkClick.",
+          "evidenceIds": [
+            "e8",
+            "e18",
+            "e19"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "La version live reportada del contenedor GTM se llama O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5), lo que genera incertidumbre sobre si los tags/triggers listados como live corresponden efectivamente a lo publicado en produccion.",
+          "evidenceIds": [
+            "e17"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "click_catalog_download se dispara (4 ocurrencias) pero no esta contabilizado como conversion en GA4, a diferencia de otros eventos de accion de lead como generate_lead_form_submit, click_whatsapp y click_request_quote.",
+          "evidenceIds": [
+            "e11",
+            "e13",
+            "e12",
+            "e9"
+          ]
+        }
+      ],
+      "anomalyCandidates": [
+        {
+          "claimType": "OBSERVATION",
+          "statement": "El ratio de sesiones por usuario en el canal Direct (aproximadamente 2.5) es notablemente mayor que en otros canales del periodo, lo que lo convierte en candidato a revision.",
+          "evidenceIds": [
+            "e1",
+            "e2",
+            "e4"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "La presencia de tagassistant.google.com como fuente/medio de tipo referral con 2 conversiones es un patron que llama la atencion y conviene revisar antes de tratarlo como trafico externo genuino.",
+          "evidenceIds": [
+            "e15"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "Que la landing /product/taquilla-2-puertas-modulo-1-melamina registre mas conversiones (11) que sesiones (4) es un patron candidato a revisar.",
+          "evidenceIds": [
+            "e7"
+          ]
+        },
+        {
+          "claimType": "OBSERVATION",
+          "statement": "Que click_phone no registre ninguna ocurrencia en todo el periodo, teniendo tag y trigger configurados y activos en GTM, es un patron candidato a revisar frente al resto de eventos del catalogo que si se disparan.",
+          "evidenceIds": [
+            "e8",
+            "e18",
+            "e19"
+          ]
+        }
+      ],
+      "hypotheses": [
+        {
+          "claimType": "HYPOTHESIS",
+          "statement": "El alto ratio de sesiones por usuario del canal Direct podria deberse a visitantes recurrentes que acceden directamente a la web, a pruebas internas del equipo, o a trafico de otros canales que pierde sus parametros UTM y se atribuye como Direct; no esta confirmado con los datos disponibles.",
+          "evidenceIds": [
+            "e1",
+            "e2",
+            "e4"
+          ]
+        },
+        {
+          "claimType": "HYPOTHESIS",
+          "statement": "Las sesiones con fuente tagassistant.google.com podrian corresponder a actividad interna de comprobacion de tags (QA) del propio equipo en lugar de trafico externo real, aunque no puede confirmarse con el contexto entregado.",
+          "evidenceIds": [
+            "e15"
+          ]
+        },
+        {
+          "claimType": "HYPOTHESIS",
+          "statement": "Que click_phone registre 0 ocurrencias podria deberse a un fallo en el disparo del tag/trigger (por ejemplo un selector roto) en lugar de una ausencia real de clics en el telefono, dado que el tag y el trigger existen y no estan pausados; esto no esta confirmado.",
+          "evidenceIds": [
+            "e8",
+            "e18",
+            "e19"
+          ]
+        },
+        {
+          "claimType": "HYPOTHESIS",
+          "statement": "Las conversiones que superan a las sesiones en algunas landing pages podrian explicarse porque una misma sesion dispara mas de un evento clave (por ejemplo click_whatsapp y click_request_quote en la misma visita), aunque no puede confirmarse con los datos entregados.",
+          "evidenceIds": [
+            "e6",
+            "e7"
+          ]
+        }
+      ],
+      "recommendedMeasurements": [
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Validar en GTM Preview / GA4 DebugView el tag GA4 Event - click_phone realizando un clic real sobre el enlace de telefono, dado que en el periodo analizado no se registro ninguna ocurrencia pese a que el tag y el trigger estan configurados y activos.",
+          "evidenceIds": [
+            "e8",
+            "e18",
+            "e19"
+          ]
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Confirmar si la version O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) es realmente la que sirve en produccion, dado que su propio nombre sugiere un estado pendiente de aprobacion.",
+          "evidenceIds": [
+            "e17"
+          ]
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Segmentar las sesiones del canal Direct por usuarios nuevos vs recurrentes en GA4 para revisar si el alto ratio de sesiones por usuario proviene de un numero reducido de usuarios muy recurrentes.",
+          "evidenceIds": [
+            "e1"
+          ]
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Excluir o segmentar por separado las sesiones con fuente tagassistant.google.com en los informes de trafico/conversion por canal para evitar que trafico de comprobacion interna distorsione el canal Referral.",
+          "evidenceIds": [
+            "e15"
+          ]
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Documentar de forma explicita como se calcula la metrica conversions en estos informes (recuento de eventos clave vs. sesiones unicas que convierten), dado que en algunas landing pages las conversiones superan a las sesiones.",
+          "evidenceIds": [
+            "e6",
+            "e7"
+          ]
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Evaluar si click_catalog_download deberia marcarse como evento de conversion en GA4, en linea con generate_lead_form_submit, click_whatsapp y click_request_quote.",
+          "evidenceIds": [
+            "e11",
+            "e13",
+            "e12",
+            "e9"
+          ]
+        }
+      ],
+      "prioritizedActions": [
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Validar en GTM Preview / GA4 DebugView el tag GA4 Event - click_phone con un clic real, ya que es un evento del catalogo sin ninguna ocurrencia en todo el periodo pese a estar configurado y activo.",
+          "evidenceIds": [
+            "e8",
+            "e18",
+            "e19"
+          ],
+          "priority": "high"
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Confirmar si la version live O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) esta realmente publicada en produccion, ya que afecta a la confianza en todo el resto de tags/triggers reportados.",
+          "evidenceIds": [
+            "e17"
+          ],
+          "priority": "high"
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Excluir o segmentar por separado las sesiones con fuente tagassistant.google.com en los informes de canal Referral para no mezclar trafico de comprobacion interna con trafico externo real.",
+          "evidenceIds": [
+            "e15"
+          ],
+          "priority": "medium"
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Segmentar las sesiones del canal Direct por usuarios nuevos vs recurrentes para entender el alto ratio de sesiones por usuario observado en el periodo.",
+          "evidenceIds": [
+            "e1"
+          ],
+          "priority": "medium"
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Documentar la definicion exacta de la metrica conversions usada en estos informes, dado que en algunas landing pages supera al numero de sesiones.",
+          "evidenceIds": [
+            "e6",
+            "e7"
+          ],
+          "priority": "low"
+        },
+        {
+          "claimType": "RECOMMENDATION",
+          "statement": "Evaluar marcar click_catalog_download como evento de conversion en GA4 para alinearlo con el resto de eventos de accion de lead.",
+          "evidenceIds": [
+            "e11",
+            "e13",
+            "e12",
+            "e9"
+          ],
+          "priority": "low"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "e1",
+          "source": "ga4_channel_traffic",
+          "description": "Canal Direct: 172 sesiones, 68 usuarios activos, 81 conversiones en el periodo 2026-07-20 a 2026-08-17."
+        },
+        {
+          "id": "e2",
+          "source": "ga4_channel_traffic",
+          "description": "Canal Organic Search: 8 sesiones, 6 usuarios activos, 3 conversiones."
+        },
+        {
+          "id": "e3",
+          "source": "ga4_channel_traffic",
+          "description": "Canal Referral: 3 sesiones, 1 usuario activo, 2 conversiones."
+        },
+        {
+          "id": "e4",
+          "source": "ga4_channel_traffic",
+          "description": "Canal AI Assistant: 2 sesiones, 2 usuarios activos, 0 conversiones."
+        },
+        {
+          "id": "e5",
+          "source": "ga4_channel_traffic",
+          "description": "Canal Unassigned: 1 sesion, 1 usuario activo, 1 conversion."
+        },
+        {
+          "id": "e6",
+          "source": "ga4_landing_pages",
+          "description": "Landing page / (home): 115 sesiones, 59 conversiones, tasa de rebote 31.3%."
+        },
+        {
+          "id": "e7",
+          "source": "ga4_landing_pages",
+          "description": "Landing page /product/taquilla-2-puertas-modulo-1-melamina: 4 sesiones, 11 conversiones, tasa de rebote 25%."
+        },
+        {
+          "id": "e8",
+          "source": "ga4_key_events",
+          "description": "Evento click_phone: fired false, 0 ocurrencias, 0 conversiones."
+        },
+        {
+          "id": "e9",
+          "source": "ga4_key_events",
+          "description": "Evento click_request_quote: fired true, 66 ocurrencias, 66 conversiones."
+        },
+        {
+          "id": "e10",
+          "source": "ga4_key_events",
+          "description": "Evento view_quote_page: fired true, 12 ocurrencias, 0 conversiones."
+        },
+        {
+          "id": "e11",
+          "source": "ga4_key_events",
+          "description": "Evento click_catalog_download: fired true, 4 ocurrencias, 0 conversiones."
+        },
+        {
+          "id": "e12",
+          "source": "ga4_key_events",
+          "description": "Evento click_whatsapp: fired true, 15 ocurrencias, 15 conversiones."
+        },
+        {
+          "id": "e13",
+          "source": "ga4_key_events",
+          "description": "Evento generate_lead_form_submit: fired true, 6 ocurrencias, 6 conversiones."
+        },
+        {
+          "id": "e14",
+          "source": "ga4_key_events",
+          "description": "Evento view_contact_page: fired true, 39 ocurrencias, 0 conversiones."
+        },
+        {
+          "id": "e15",
+          "source": "ga4_source_medium",
+          "description": "Fuente/medio tagassistant.google.com / referral: 3 sesiones, 2 conversiones."
+        },
+        {
+          "id": "e16",
+          "source": "ga4_source_medium",
+          "description": "Fuente/medio (direct)/(none): 172 sesiones, 81 conversiones."
+        },
+        {
+          "id": "e17",
+          "source": "gtm_container",
+          "description": "Contenedor www.zentrylockers.com, liveVersionName O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5), tagCount 8, triggerCount 7, variableCount 0."
+        },
+        {
+          "id": "e18",
+          "source": "gtm_tags",
+          "description": "Tag GA4 Event - click_phone, tipo gaawe, paused false."
+        },
+        {
+          "id": "e19",
+          "source": "gtm_triggers",
+          "description": "Trigger click_phone, tipo linkClick."
+        },
+        {
+          "id": "e20",
+          "source": "gtm_triggers",
+          "description": "Trigger /solicitar-presupuesto/, tipo linkClick."
+        },
+        {
+          "id": "e21",
+          "source": "gtm_triggers",
+          "description": "Trigger Page Path equals /solicitar-presupuesto/, tipo pageview."
+        }
+      ],
+      "unknowns": [
+        "No se puede determinar si la ausencia de ocurrencias de click_phone se debe a un fallo tecnico del tag/trigger o simplemente a que ningun usuario hizo clic en el telefono durante el periodo.",
+        "No hay datos de periodos anteriores en el contexto para comparar si las cifras de trafico y conversion de este periodo son tipicas o atipicas respecto a la tendencia historica del sitio.",
+        "No se especifica en el contexto si la version live del contenedor GTM (O44, cuyo nombre indica pendiente de aprobacion) ha sido efectivamente publicada en produccion o sigue en estado de revision.",
+        "No hay informacion de dispositivo, geografia o segmento de usuario en el contexto que permita explicar el alto ratio de sesiones por usuario del canal Direct.",
+        "No se especifica en el contexto la definicion exacta que usa GA4 para la metrica conversions (recuento de eventos clave vs. sesiones unicas que convierten), lo que impide confirmar por que algunas landing pages muestran mas conversiones que sesiones."
+      ]
+    },
+    "auditWarnings": [
+      "Evidencia no rastreable (e6, ga4_landing_pages): la cifra \"31.3%\" citada en \"Landing page / (home): 115 sesiones, 59 conversiones, tasa de rebote 31.3%.\" no aparece en el contexto real entregado (GA4/GTM/avisos de analytics-watcher).",
+      "Evidencia no rastreable (e7, ga4_landing_pages): la cifra \"25%\" citada en \"Landing page /product/taquilla-2-puertas-modulo-1-melamina: 4 sesiones, 11 conversiones, tasa de rebote 25%.\" no aparece en el contexto real entregado (GA4/GTM/avisos de analytics-watcher).",
+      "measurementFindings[0] (\"FACT\"): cita cifra(s) [4, 07, 20, 08, 17, 4] sin ningun evidenceIds -- toda cifra debe estar respaldada por una entrada de evidence[].",
+      "measurementFindings[3]: la cifra \"50%\" en \"En la landing /product/taquilla-2-puertas-modulo-1-melamina las conversiones registradas (11) supera...\" no es rastreable ni en el contexto real ni en las evidencias citadas -- posible metrica inventada.",
+      "trafficObservations[1]: la cifra \"186\" en \"El canal Direct concentra la gran mayoria de las sesiones (172 de 186 sesiones totales entre los 5 c...\" no es rastreable ni en el contexto real ni en las evidencias citadas -- posible metrica inventada.",
+      "trafficObservations[1]: la cifra \"87\" en \"El canal Direct concentra la gran mayoria de las sesiones (172 de 186 sesiones totales entre los 5 c...\" no es rastreable ni en el contexto real ni en las evidencias citadas -- posible metrica inventada.",
+      "trafficObservations[2]: la cifra \"2.5\" en \"El canal Direct muestra 172 sesiones frente a solo 68 usuarios activos (ratio de aproximadamente 2.5...\" no es rastreable ni en el contexto real ni en las evidencias citadas -- posible metrica inventada.",
+      "conversionObservations[1]: la cifra \"100%\" en \"generate_lead_form_submit registro 6 ocurrencias y 6 conversiones, y click_whatsapp registro 15 ocur...\" no es rastreable ni en el contexto real ni en las evidencias citadas -- posible metrica inventada.",
+      "anomalyCandidates[0]: la cifra \"2.5\" en \"El ratio de sesiones por usuario en el canal Direct (aproximadamente 2.5) es notablemente mayor que ...\" no es rastreable ni en el contexto real ni en las evidencias citadas -- posible metrica inventada.",
+      "hypotheses[3]: marcada como HYPOTHESIS pero usa lenguaje de causalidad cierta (\"porque\") -- correlacion no implica causalidad, redactar como posible explicacion (\"podria deberse a\", \"una hipotesis es que\")."
+    ],
+    "departmentRunId": "dept-2026-08-18T012804Z"
+  },
+  "note": "Artefacto de solo lectura. analytics-specialist nunca modifica GA4 ni GTM -- solo interpreta datos ya leidos por analytics-watcher. Ninguna hipotesis debe leerse como causalidad confirmada; toda cifra citada deberia poder rastrearse hasta el contexto real (ver auditWarnings)."
+}
