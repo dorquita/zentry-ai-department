@@ -67,6 +67,7 @@ import { applyChangePlanWithPhp, ExecutePhpContext, PhpTargetState } from "../sr
 import { assessNativeAbilityForPlan } from "../src/core/novamira-ability-capabilities";
 import { parseBlockInventory } from "../src/core/gutenberg-blocks";
 import { computeVersionHash } from "../src/department/apply/version";
+import { buildPhpForPlan } from "../src/core/execute-php-builder";
 
 const PROJECT_ROOT = path.join(__dirname, "..");
 const REPORT_DIR = path.join(PROJECT_ROOT, "reports", "execute-php-e2e");
@@ -256,8 +257,13 @@ async function main(): Promise<void> {
     return;
   }
   const drill = mode === "rollback-drill";
-  if (mode !== "run" && !drill) {
-    throw new Error(`--mode "${mode}" desconocido. Usa "list", "ability-info", "run" o "rollback-drill".`);
+  const restoreH2 = mode === "restore-h2";
+  if (mode !== "run" && !drill && !restoreH2) {
+    throw new Error(`--mode "${mode}" desconocido. Usa "list", "ability-info", "run", "rollback-drill" o "restore-h2".`);
+  }
+  const restoreH2Text = restoreH2 ? String(args.h2 ?? "").trim() : "";
+  if (restoreH2 && restoreH2Text.length === 0) {
+    throw new Error('--mode restore-h2 exige --h2 "<texto exacto del h2 original>". Fail-closed: no se adivina el texto que hay que restaurar.');
   }
 
   const postId = Number(args.postId);
@@ -296,8 +302,11 @@ async function main(): Promise<void> {
   // --- 2/3. ChangePlan + demostrar que no hay ability nativa ---
   const { nativeAbility } = chooseOperation();
 
+  // En `restore-h2` el texto lo pone la persona que restaura: es el h2
+  // original que hay que devolver, no un marcador de prueba.
   const marker = `[E2E execute-php ${new Date().toISOString()}]`;
-  const edited = replaceFirstH2Text(before.contentHtml, `Configurador de bancos ${marker}`);
+  const targetH2 = restoreH2 ? restoreH2Text : `Configurador de bancos ${marker}`;
+  const edited = replaceFirstH2Text(before.contentHtml, targetH2);
   if (!edited) {
     throw new Error(`La pagina ${postId} no tiene ningun bloque core/heading de nivel 2. El E2E se detiene: no se inventa un cambio.`);
   }
@@ -359,10 +368,22 @@ async function main(): Promise<void> {
           actor: "web_engineer_apply",
           abilityName: "novamira/execute-php",
           environment: "staging",
-          // El E2E solo emite escrituras de apply: la reversion es otro
-          // ChangePlan normal, tambien en fase "apply". El rollback
-          // automatico del executor construye su propia peticion.
-          phase: "apply",
+          // LA FASE SE DEDUCE DEL PHP, no se fija.
+          //
+          // Aqui habia un fallo que el simulacro de rollback destapo
+          // (run 32087245294). Este envoltorio declaraba `phase: "apply"`
+          // para TODA escritura, asi que cuando el executor lanzo su
+          // rollback automatico, el guard comparo el PHP de reversion
+          // contra la plantilla determinista del APPLY, no coincidio, y
+          // bloqueo la propia reversion:
+          //
+          //   llamada BLOQUEADA (php_not_deterministic)
+          //
+          // Resultado: la pagina quedo a medias. El guard hizo su
+          // trabajo; lo que mentia era la fase declarada. Se deduce por
+          // igualdad literal con el PHP del apply, igual que en el camino
+          // real del departamento (scripts/run-department-apply.ts).
+          phase: php === buildPhpForPlan(plan) ? "apply" : "rollback",
           qaStatus: context.qaStatus,
           departmentRunId: context.departmentRunId,
           recommendationId: context.recommendationId,
@@ -391,6 +412,26 @@ async function main(): Promise<void> {
     afterValue: applyOutcome.afterValue,
     detail: applyOutcome.detail,
   });
+
+  if (restoreH2) {
+    // RESTAURACION: se aplica y NO se revierte -- el objetivo es
+    // precisamente dejar la pagina en el valor indicado. Se comprueba
+    // releyendo, igual que cualquier otra escritura.
+    const restored = await getState(postId);
+    const h2Now = (restored.contentHtml.match(/<h2\b[^>]*>([\s\S]*?)<\/h2>/i) ?? [])[1] ?? "(sin h2)";
+    log("4-restored", {
+      status: applyOutcome.status,
+      validation: applyOutcome.validation,
+      h2Now,
+      versionHash: computeVersionHash({ status: restored.status, title: restored.title, metaDescription: restored.excerpt, contentHtml: restored.contentHtml }),
+      detail: applyOutcome.detail,
+    });
+    console.log(`RESTORE_RESULT_JSON=${JSON.stringify({ postId, outcome: applyOutcome.status, h2Now, matchesRequested: h2Now === restoreH2Text, productionWrites: 0 })}`);
+    if (applyOutcome.status !== "applied" || h2Now !== restoreH2Text) {
+      throw new Error(`La restauracion no dejo el h2 pedido. Estado: "${applyOutcome.status}", h2 actual: "${h2Now}". ${applyOutcome.detail}`);
+    }
+    return;
+  }
 
   if (drill) {
     // Lo que tiene que haber pasado, y se comprueba una por una: el
@@ -474,13 +515,17 @@ async function main(): Promise<void> {
           actor: "web_engineer_apply",
           abilityName: "novamira/execute-php",
           environment: "staging",
-          phase: "apply",
+          phase: php === buildPhpForPlan(revertPlan) ? "apply" : "rollback",
           qaStatus: revertContext.qaStatus,
           departmentRunId: revertContext.departmentRunId,
           recommendationId: revertContext.recommendationId,
           changeId: revertContext.changeId,
           plan: revertPlan,
           php,
+          // La reversion del modo `run` es un apply normal de otro plan,
+          // pero si ESE apply fallara su validacion, el executor lanzaria
+          // su propio rollback -- y entonces la fase tendria que ser
+          // "rollback". Se deduce igual que arriba en vez de fijarla.
           capabilitySelection: selection,
           flags: revertContext.flags,
           snapshotPreviousValue: middle.contentHtml,

@@ -30,7 +30,7 @@ on:
         required: true
         default: "list"
         type: choice
-        options: ["list", "ability-info", "run", "rollback-drill"]
+        options: ["list", "ability-info", "run", "rollback-drill", "restore-h2"]
       postId:
         description: "ID de la pagina de staging (solo para mode=run y para certifyDepartmentPath)"
         required: false
@@ -40,6 +40,13 @@ on:
           SOLO LECTURA. Imprime el estado actual (status, title, excerpt)
           de esa pagina de staging y si contiene el marcador de
           certificacion. No escribe nada.
+        required: false
+        type: string
+      restoreH2:
+        description: >-
+          Solo para mode=restore-h2. Texto EXACTO al que devolver el
+          primer h2 de la pagina indicada en postId. Sirve para dejar
+          staging en su estado original si una prueba quedo a medias.
         required: false
         type: string
       restoreExcerpt:
@@ -98,13 +105,13 @@ jobs:
             ABILITY=$(node -e 'console.log(require("./reports/execute-php-e2e/e2e-request.json").ability || "")')
           fi
           case "$MODE" in
-            list|run|ability-info|rollback-drill) ;;
+            list|run|ability-info|rollback-drill|restore-h2) ;;
             *)
               echo "mode=\"$MODE\" desconocido. Fail-closed: no se ejecuta nada."
               exit 1
               ;;
           esac
-          if { [ "$MODE" = "run" ] || [ "$MODE" = "rollback-drill" ]; } && { [ -z "$POST_ID" ] || [ "$POST_ID" = "0" ]; }; then
+          if { [ "$MODE" = "run" ] || [ "$MODE" = "rollback-drill" ] || [ "$MODE" = "restore-h2" ]; } && { [ -z "$POST_ID" ] || [ "$POST_ID" = "0" ]; }; then
             echo "mode=$MODE sin postId. Fail-closed: no se escribe en una pagina que nadie ha elegido."
             exit 1
           fi
@@ -136,6 +143,8 @@ jobs:
           set -o pipefail
           if [ "$MODE" = "ability-info" ] && [ -n "$ABILITY" ]; then
             npx ts-node scripts/o47-execute-php-e2e.ts --mode ability-info --ability "$ABILITY"
+          elif [ "$MODE" = "restore-h2" ]; then
+            npx ts-node scripts/o47-execute-php-e2e.ts --mode restore-h2 --postId "$POST_ID" --h2 "$RESTORE_H2"
           elif [ "$MODE" = "run" ] || [ "$MODE" = "rollback-drill" ]; then
             npx ts-node scripts/o47-execute-php-e2e.ts --mode "$MODE" --postId "$POST_ID"
           else
@@ -145,6 +154,7 @@ jobs:
           MODE: ${{ steps.request.outputs.mode }}
           POST_ID: ${{ steps.request.outputs.postId }}
           ABILITY: ${{ steps.request.outputs.ability }}
+          RESTORE_H2: ${{ inputs.restoreH2 }}
           # Entorno: STAGING y nada mas. Ninguna variable de produccion se
           # expone a este job, ni siquiera apagada.
           WORDPRESS_ENV: staging
