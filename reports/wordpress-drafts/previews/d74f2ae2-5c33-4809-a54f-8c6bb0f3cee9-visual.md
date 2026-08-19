@@ -4,7 +4,7 @@
 - **changePackId:** `17f7c707-cfb7-4039-84db-d5d138936301` (status: approved_to_execute)
 - **Plantilla visual:** `product_landing` — Landing de producto/material
 - **Por que esta plantilla:** Cuando el change pack gira en torno a un MATERIAL o modelo concreto (melamina, fenolica, metalica, madera) detectado via material_terms — p.ej. "taquillas de melamina", "taquilla madera".
-- **Generado:** 2026-08-18T03:00:59.101Z
+- **Generado:** 2026-08-19T07:32:19.322Z
 
 > Este fichero es un preview VISUAL local (Fase O12.4), complementario al preview de texto ya generado por el WordPress Draft Agent (`d74f2ae2-5c33-4809-a54f-8c6bb0f3cee9.md`, sin tocar). No se ha llamado a WordPress ni generado ninguna imagen real.
 

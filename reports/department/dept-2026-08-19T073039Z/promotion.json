@@ -1,0 +1,158 @@
+{
+  "departmentRunId": "dept-2026-08-19T073039Z",
+  "departmentQaStatus": "BLOCKED",
+  "qaReviewStatus": "fail",
+  "globalBlockReason": "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer.",
+  "promoted": [],
+  "blocked": [
+    {
+      "rank": 1,
+      "title": "Corregir el enrutado roto antes de invertir mas esfuerzo (URL en papelera + cannibalizacion de melamina)",
+      "rationale": "Impacto alto porque cualquier optimizacion sobre la URL en papelera o la pagina de combinacion mal enrutada se pierde; confianza alta porque ambos hallazgos vienen de evidencia directa del catalogo de clusters (301 documentado, decision O29.1 ya aprobada); esfuerzo bajo porque es solo correccion de enrutado, no contenido nuevo. Depende de confirmar si scripts/o291-resolve-melamina-cannibalization.ts ya se ejecuto, dato que el propio seo-specialist marca como desconocido.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [
+        "Confirmacion de si el script de resolucion de cannibalizacion O29.1 ya se ejecuto sobre estos action items"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-action-2",
+        "dept-seo-opportunity-2",
+        "dept-seo-opportunity-3"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 2,
+      "title": "Resolver la solicitud de aprobacion critica pendiente sobre la pagina de melamina-fenolico",
+      "rationale": "Es la unica solicitud de aprobacion pendiente en todo el backlog y esta marcada como riesgo critico; ademas coincide directamente con la pagina implicada en la cannibalizacion de melamina detectada por seo-specialist, por lo que resolverla junto con el enrutado evita revision duplicada. Impacto alto por el nivel de riesgo declarado, confianza media porque no hay detalle del contenido exacto del plan de despliegue en este contexto, esfuerzo bajo-medio porque es una revision humana puntual.",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "dependsOn": [
+        "Revision humana de la solicitud de aprobacion critica (production_deployment_plan)"
+      ],
+      "evidenceRefs": [
+        "approvals-pending",
+        "dept-seo-action-2"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 3,
+      "title": "Quick win on-page en 'cerraduras inteligentes para taquillas'",
+      "rationale": "Impacto medio-alto por estar a un empujon de top 10 con impresiones ya reales; confianza alta por venir de evidencia directa de Search Console; esfuerzo medio porque implica reescritura de contenido, H1/H2 y enlazado interno, no solo metadatos.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-seo-opportunity-1",
+        "dept-seo-action-3"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 4,
+      "title": "NO publicar aun las paginas de staging (metalicas, vestuarios, universidades); primero una segunda iteracion visual/de contenido",
+      "rationale": "seo-specialist las recomienda publicar dando por hecho que estan 'visualmente aprobadas' (dept-seo-action-6), pero una decision humana reciente rechazo exactamente esa publicacion por considerarlas demasiado basicas en imagenes/fotografias. Ante esta contradiccion, la prioridad correcta no es publicar sino iterar visualmente antes de volver a proponerlo; impacto medio porque desbloquea contenido ya casi listo, confianza alta porque se basa en una decision humana explicita y literal, esfuerzo medio porque requiere trabajo visual/de contenido adicional, no solo aprobacion.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [
+        "Decision humana previa de rechazo (2026-08-16) sobre publicacion de estas mismas paginas",
+        "Segunda iteracion visual/de contenido antes de re-proponer"
+      ],
+      "evidenceRefs": [
+        "dept-seo-action-6",
+        "human-decision-staging-publish-rejected"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 5,
+      "title": "Validar y corregir la medicion de click_phone y el estado real de publicacion de GTM",
+      "rationale": "Impacto alto porque afecta a la fiabilidad de todo el sistema de medicion (un evento clave sin disparo y una version live que referencia cambios sin publicar); confianza alta porque ambos hechos vienen de evidencia directa de GA4/GTM en esta misma pasada; esfuerzo bajo porque son verificaciones puntuales (DebugView y estado de publicacion), no cambios estructurales.",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-3"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 6,
+      "title": "Auditoria de meta titles/descriptions para el patron sistemico de CTR 0%",
+      "rationale": "Impacto medio porque afecta a multiples paginas con impresiones reales pero sin clics; confianza alta porque el patron esta documentado con evidencia directa en varias paginas distintas; esfuerzo medio porque requiere revisar y reescribir metadatos pagina por pagina.",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "dependsOn": [],
+      "evidenceRefs": [
+        "dept-seo-action-8"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    },
+    {
+      "rank": 7,
+      "title": "Validar intencion de busqueda real antes de redactar la landing 'industrial'",
+      "rationale": "Impacto medio porque es una oportunidad de captacion B2B nueva, pero confianza baja-media porque la propia keyword ('industrial') es una unica palabra generica sin modificador y el propio content-strategist admite que la clasificacion de intencion comercial y la asignacion de marca requieren revision manual; esfuerzo medio porque implica redaccion de una pagina nueva con tabla comparativa. Ademas debe evitar el mismo problema de pobreza visual que causo el rechazo humano de otras paginas de staging.",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "dependsOn": [
+        "Revision manual humana de la clasificacion Zentry vs Tukandado",
+        "Evitar repetir el patron de rechazo por falta de riqueza visual"
+      ],
+      "evidenceRefs": [
+        "dept-content-summary",
+        "dept-content-risks",
+        "human-decision-staging-publish-rejected"
+      ],
+      "decision": "blocked",
+      "blockedBy": [
+        "qa-reviewer marco el conjunto como BLOCKED (reviewStatus=fail, hallazgos critical=1, safetyConcerns=0). Ninguna recomendacion se promueve a web-engineer."
+      ],
+      "qaWarnings": []
+    }
+  ],
+  "unattributedBlockingSignals": [],
+  "qaSummary": {
+    "criticalFindings": 1,
+    "warningFindings": 3,
+    "safetyConcerns": 0,
+    "contradictions": 1,
+    "unsupportedClaims": 2,
+    "requiredCorrections": 4
+  }
+}

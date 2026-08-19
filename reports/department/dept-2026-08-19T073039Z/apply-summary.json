@@ -1,0 +1,449 @@
+{
+  "contractVersion": "department-apply/v2",
+  "departmentRunId": "dept-2026-08-19T073039Z",
+  "generatedAt": "2026-08-19T07:47:44.993Z",
+  "items": [
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-19T073039Z#apply-1",
+      "recommendationId": "dept-2026-08-19T073039Z#rec-1",
+      "recommendationRank": 1,
+      "departmentRunId": "dept-2026-08-19T073039Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Corregir el enrutado roto antes de invertir mas esfuerzo (URL en papelera + cannibalizacion de melamina)",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "Impacto alto porque cualquier optimizacion sobre la URL en papelera o la pagina de combinacion mal enrutada se pierde; confianza alta porque ambos hallazgos vienen de evidencia directa del catalogo de clusters (301 documentado, decision O29.1 ya aprobada); esfuerzo bajo porque es solo correccion de enrutado, no contenido nuevo. Depende de confirmar si scripts/o291-resolve-melamina-cannibalization.ts ya se ejecuto, dato que el propio seo-specialist marca como desconocido.",
+      "evidenceRefs": [
+        "dept-seo-action-1",
+        "dept-seo-action-2",
+        "dept-seo-opportunity-2",
+        "dept-seo-opportunity-3"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-19T07:47:44.993Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #1 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-19T07:47:44.993Z",
+      "updatedAt": "2026-08-19T07:47:44.993Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-19T073039Z#apply-2",
+      "recommendationId": "dept-2026-08-19T073039Z#rec-2",
+      "recommendationRank": 2,
+      "departmentRunId": "dept-2026-08-19T073039Z",
+      "sourceAgents": [
+        "growth-director-v2 (contexto determinista del departamento)",
+        "seo-specialist"
+      ],
+      "title": "Resolver la solicitud de aprobacion critica pendiente sobre la pagina de melamina-fenolico",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "Es la unica solicitud de aprobacion pendiente en todo el backlog y esta marcada como riesgo critico; ademas coincide directamente con la pagina implicada en la cannibalizacion de melamina detectada por seo-specialist, por lo que resolverla junto con el enrutado evita revision duplicada. Impacto alto por el nivel de riesgo declarado, confianza media porque no hay detalle del contenido exacto del plan de despliegue en este contexto, esfuerzo bajo-medio porque es una revision humana puntual.",
+      "evidenceRefs": [
+        "approvals-pending",
+        "dept-seo-action-2"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "high",
+      "confidence": "medium",
+      "effort": "low",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-19T07:47:44.993Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #2 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-19T07:47:44.993Z",
+      "updatedAt": "2026-08-19T07:47:44.993Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-19T073039Z#apply-3",
+      "recommendationId": "dept-2026-08-19T073039Z#rec-3",
+      "recommendationRank": 3,
+      "departmentRunId": "dept-2026-08-19T073039Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Quick win on-page en 'cerraduras inteligentes para taquillas'",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "Impacto medio-alto por estar a un empujon de top 10 con impresiones ya reales; confianza alta por venir de evidencia directa de Search Console; esfuerzo medio porque implica reescritura de contenido, H1/H2 y enlazado interno, no solo metadatos.",
+      "evidenceRefs": [
+        "dept-seo-opportunity-1",
+        "dept-seo-action-3"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "medium",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-19T07:47:44.993Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #3 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-19T07:47:44.993Z",
+      "updatedAt": "2026-08-19T07:47:44.993Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-19T073039Z#apply-4",
+      "recommendationId": "dept-2026-08-19T073039Z#rec-4",
+      "recommendationRank": 4,
+      "departmentRunId": "dept-2026-08-19T073039Z",
+      "sourceAgents": [
+        "seo-specialist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "NO publicar aun las paginas de staging (metalicas, vestuarios, universidades); primero una segunda iteracion visual/de contenido",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "seo-specialist las recomienda publicar dando por hecho que estan 'visualmente aprobadas' (dept-seo-action-6), pero una decision humana reciente rechazo exactamente esa publicacion por considerarlas demasiado basicas en imagenes/fotografias. Ante esta contradiccion, la prioridad correcta no es publicar sino iterar visualmente antes de volver a proponerlo; impacto medio porque desbloquea contenido ya casi listo, confianza alta porque se basa en una decision humana explicita y literal, esfuerzo medio porque requiere trabajo visual/de contenido adicional, no solo aprobacion.",
+      "evidenceRefs": [
+        "dept-seo-action-6",
+        "human-decision-staging-publish-rejected"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-19T07:47:44.993Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #4 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-19T07:47:44.993Z",
+      "updatedAt": "2026-08-19T07:47:44.993Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-19T073039Z#apply-5",
+      "recommendationId": "dept-2026-08-19T073039Z#rec-5",
+      "recommendationRank": 5,
+      "departmentRunId": "dept-2026-08-19T073039Z",
+      "sourceAgents": [
+        "analytics-specialist"
+      ],
+      "title": "Validar y corregir la medicion de click_phone y el estado real de publicacion de GTM",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "Impacto alto porque afecta a la fiabilidad de todo el sistema de medicion (un evento clave sin disparo y una version live que referencia cambios sin publicar); confianza alta porque ambos hechos vienen de evidencia directa de GA4/GTM en esta misma pasada; esfuerzo bajo porque son verificaciones puntuales (DebugView y estado de publicacion), no cambios estructurales.",
+      "evidenceRefs": [
+        "dept-analytics-action-1",
+        "dept-analytics-action-2",
+        "dept-analytics-tracking-issue-1",
+        "dept-analytics-tracking-issue-3"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "high",
+      "confidence": "high",
+      "effort": "low",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-19T07:47:44.993Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #5 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-19T07:47:44.993Z",
+      "updatedAt": "2026-08-19T07:47:44.993Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-19T073039Z#apply-6",
+      "recommendationId": "dept-2026-08-19T073039Z#rec-6",
+      "recommendationRank": 6,
+      "departmentRunId": "dept-2026-08-19T073039Z",
+      "sourceAgents": [
+        "seo-specialist"
+      ],
+      "title": "Auditoria de meta titles/descriptions para el patron sistemico de CTR 0%",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "Impacto medio porque afecta a multiples paginas con impresiones reales pero sin clics; confianza alta porque el patron esta documentado con evidencia directa en varias paginas distintas; esfuerzo medio porque requiere revisar y reescribir metadatos pagina por pagina.",
+      "evidenceRefs": [
+        "dept-seo-action-8"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "medium",
+      "confidence": "high",
+      "effort": "medium",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-19T07:47:44.993Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #6 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-19T07:47:44.993Z",
+      "updatedAt": "2026-08-19T07:47:44.993Z"
+    },
+    {
+      "contractVersion": "department-apply/v2",
+      "applyItemId": "dept-2026-08-19T073039Z#apply-7",
+      "recommendationId": "dept-2026-08-19T073039Z#rec-7",
+      "recommendationRank": 7,
+      "departmentRunId": "dept-2026-08-19T073039Z",
+      "sourceAgents": [
+        "content-strategist",
+        "growth-director-v2 (contexto determinista del departamento)"
+      ],
+      "title": "Validar intencion de busqueda real antes de redactar la landing 'industrial'",
+      "target": "(sin objetivo tecnico declarado en esta pasada)",
+      "proposedChange": "Impacto medio porque es una oportunidad de captacion B2B nueva, pero confianza baja-media porque la propia keyword ('industrial') es una unica palabra generica sin modificador y el propio content-strategist admite que la clasificacion de intencion comercial y la asignacion de marca requieren revision manual; esfuerzo medio porque implica redaccion de una pagina nueva con tabla comparativa. Ademas debe evitar el mismo problema de pobreza visual que causo el rechazo humano de otras paginas de staging.",
+      "evidenceRefs": [
+        "dept-content-summary",
+        "dept-content-risks",
+        "human-decision-staging-publish-rejected"
+      ],
+      "qaStatus": "BLOCKED",
+      "impact": "medium",
+      "confidence": "medium",
+      "effort": "medium",
+      "webEngineerSpecification": null,
+      "humanApproval": {
+        "status": "none",
+        "approvalRequestId": null,
+        "answeredBy": null,
+        "answeredAt": null,
+        "reason": "Todavia no se ha pedido ninguna aprobacion humana: la solicitud se crea DESPUES de aplicar y validar el cambio en staging, y se refiere a esa version concreta."
+      },
+      "applyCapability": {
+        "id": null,
+        "supported": false,
+        "reason": "Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.",
+        "target": null
+      },
+      "executableChangePlan": null,
+      "applyStatus": "blocked",
+      "validationStatus": "not_run",
+      "rollbackStatus": "not_needed",
+      "traceability": {
+        "changeId": null,
+        "version": null,
+        "stagingChangeId": null,
+        "stagingUrl": null,
+        "telegramApprovalId": null,
+        "telegramMessageId": null,
+        "productionApplyId": null,
+        "productionUrl": null,
+        "stagingVersionHash": null
+      },
+      "auditTrail": [
+        {
+          "at": "2026-08-19T07:47:44.993Z",
+          "event": "planned",
+          "detail": "Elemento de apply construido a partir de la recomendacion #7 de esta pasada. QA=BLOCKED. Capacidad de apply: ninguna (Recomendacion bloqueada por QA en esta pasada: no se evalua ninguna capacidad de apply para ella.)"
+        }
+      ],
+      "createdAt": "2026-08-19T07:47:44.993Z",
+      "updatedAt": "2026-08-19T07:47:44.993Z"
+    }
+  ],
+  "counts": {
+    "proposed": 0,
+    "staging_applying": 0,
+    "staging_applied": 0,
+    "staging_validation_failed": 0,
+    "staging_rolled_back": 0,
+    "awaiting_approval": 0,
+    "awaiting_rejection_reason": 0,
+    "rejected": 0,
+    "approved": 0,
+    "approval_stale": 0,
+    "production_queued": 0,
+    "production_applying": 0,
+    "production_applied": 0,
+    "production_validation_failed": 0,
+    "production_rolled_back": 0,
+    "blocked": 7,
+    "requires_manual_staging_implementation": 0
+  },
+  "externalWritesPerformed": false,
+  "productionWritesPerformed": false,
+  "applyNotAttemptedReason": "Fase de planificacion: no se ha aplicado nada todavia. El apply real en staging es la fase \"stage\"."
+}

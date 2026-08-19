@@ -1,0 +1,258 @@
+```json
+{
+  "runSummary": {
+    "departmentRunId": "dept-2026-08-19T073039Z",
+    "reportGeneratedAt": "2026-08-19T07:30:59.399Z",
+    "ga4Connected": true,
+    "gtmConnected": true
+  },
+  "measurementFindings": [
+    {
+      "claimType": "FACT",
+      "statement": "En esta pasada, ga4Connected y gtmConnected son true, y watcherWarnings esta vacio, es decir, analytics-watcher no genero avisos en esta lectura.",
+      "evidenceIds": []
+    },
+    {
+      "claimType": "FACT",
+      "statement": "Del catalogo de 7 eventos clave, 6 se dispararon al menos una vez en el periodo 2026-07-21 a 2026-08-18 (generate_lead_form_submit, click_whatsapp, click_request_quote, click_catalog_download, view_quote_page, view_contact_page) y 1 no se disparo ninguna vez (click_phone).",
+      "evidenceIds": ["E10", "E11", "E12", "E13", "E14", "E15", "E16"]
+    },
+    {
+      "claimType": "OBSERVATION",
+      "statement": "El contenedor GTM tiene un tag gaawe configurado para cada uno de los 7 eventos del catalogo, mas un tag base googtag, y ninguno de los 8 tags esta marcado como pausado, lo que sugiere una cobertura de tags completa a nivel de configuracion.",
+      "evidenceIds": ["E20", "E22"]
+    },
+    {
+      "claimType": "OBSERVATION",
+      "statement": "La suma de conversiones por canal en channelTraffic coincide exactamente con la suma de conversiones de los eventos clave del periodo, lo que sugiere que las conversiones reportadas por canal se construyen directamente a partir de estos 7 eventos, sin discrepancia numerica visible entre ambas vistas.",
+      "evidenceIds": ["E24"]
+    }
+  ],
+  "funnelObservations": [
+    {
+      "claimType": "FACT",
+      "statement": "En el periodo, view_quote_page se registro 12 veces y click_request_quote 66 veces.",
+      "evidenceIds": ["E12", "E11"]
+    },
+    {
+      "claimType": "FACT",
+      "statement": "view_contact_page se registro 40 veces en el periodo, muy por encima de las 2 sesiones registradas con landing page '/contacto'.",
+      "evidenceIds": ["E13", "E8"]
+    },
+    {
+      "claimType": "OBSERVATION",
+      "statement": "La pagina '/solicitar-presupuesto/' no aparece en el listado de landing pages principales de GA4, aunque los eventos view_quote_page y click_request_quote (asociados por nombre a esa URL en los triggers de GTM) se dispararon 12 y 66 veces respectivamente, lo que indica que esos disparos ocurren en navegacion interna y no como entrada directa.",
+      "evidenceIds": ["E9", "E12", "E11", "E23"]
+    },
+    {
+      "claimType": "FACT",
+      "statement": "generate_lead_form_submit se registro 6 veces con 6 conversiones en el periodo, muy por debajo de las 66 ocurrencias de click_request_quote.",
+      "evidenceIds": ["E15", "E11"]
+    }
+  ],
+  "trafficObservations": [
+    {
+      "claimType": "FACT",
+      "statement": "El canal Direct concentro 174 sesiones y 68 usuarios activos, por encima del resto de canales listados: Organic Search (10 sesiones), Referral (3), AI Assistant (2) y Unassigned (1).",
+      "evidenceIds": ["E1", "E2", "E3", "E4", "E5"]
+    },
+    {
+      "claimType": "FACT",
+      "statement": "La landing page '/' concentro 116 de las sesiones registradas en el periodo, con una tasa de rebote del 32.8%.",
+      "evidenceIds": ["E6"]
+    },
+    {
+      "claimType": "FACT",
+      "statement": "El source/medium '(direct)/(none)' registro 174 sesiones, la misma cifra que el canal Direct en channelTraffic.",
+      "evidenceIds": ["E17", "E1"]
+    },
+    {
+      "claimType": "FACT",
+      "statement": "El canal AI Assistant (fuente chatgpt.com, medio ai-assistant) registro 2 sesiones y 0 conversiones en el periodo.",
+      "evidenceIds": ["E4", "E19"]
+    }
+  ],
+  "conversionObservations": [
+    {
+      "claimType": "OBSERVATION",
+      "statement": "El canal Direct aporto 81 de las conversiones totales entre los canales listados, frente a 4 de Organic Search, 2 de Referral, y 0 de AI Assistant y Unassigned.",
+      "evidenceIds": ["E1", "E2", "E3", "E4", "E5"]
+    },
+    {
+      "claimType": "FACT",
+      "statement": "La suma de conversiones por canal (81+4+2+0+0=87) coincide con la suma de conversiones de los eventos clave (6+15+0+66+0+0+0=87).",
+      "evidenceIds": ["E24"]
+    },
+    {
+      "claimType": "OBSERVATION",
+      "statement": "Varias landing pages tuvieron sesiones registradas pero 0 conversiones en el periodo: /cerraduras-para-taquillas, /taquillas-metalicas, /digitalizacion-taquillas, /taquillas-para-colegios y /taquillas-para-empresas.",
+      "evidenceIds": ["E25"]
+    }
+  ],
+  "trackingIssues": [
+    {
+      "claimType": "FACT",
+      "statement": "El evento clave click_phone tiene fired=false, 0 occurrences y 0 conversions en el periodo, pese a que el contenedor GTM tiene un tag no pausado 'GA4 Event - click_phone' y un trigger linkClick llamado 'click_phone'.",
+      "evidenceIds": ["E10", "E20"]
+    },
+    {
+      "claimType": "OBSERVATION",
+      "statement": "click_catalog_download, view_quote_page y view_contact_page se dispararon con ocurrencias (4, 12 y 40 respectivamente) pero registraron 0 conversiones, a diferencia de generate_lead_form_submit, click_whatsapp y click_request_quote, cuyas conversiones igualan sus ocurrencias.",
+      "evidenceIds": ["E14", "E12", "E13", "E15", "E16", "E11"]
+    },
+    {
+      "claimType": "FACT",
+      "statement": "El nombre de la version live del contenedor GTM es 'O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5)', texto que hace referencia a cambios sin publicar dentro de la version reportada como live.",
+      "evidenceIds": ["E21"]
+    },
+    {
+      "claimType": "FACT",
+      "statement": "El contexto entrega tags y triggers de GTM como listas separadas, sin ningun campo que indique que trigger dispara cada tag, por lo que la asociacion real tag-trigger no puede confirmarse con estos datos.",
+      "evidenceIds": ["E22", "E23"]
+    }
+  ],
+  "anomalyCandidates": [
+    {
+      "claimType": "OBSERVATION",
+      "statement": "La landing page '/product/taquilla-2-puertas-modulo-1-melamina' registro 11 conversiones a partir de solo 4 sesiones en el periodo.",
+      "evidenceIds": ["E7"]
+    },
+    {
+      "claimType": "OBSERVATION",
+      "statement": "El source/medium 'tagassistant.google.com / referral' produjo 2 conversiones a partir de 3 sesiones, con un nombre de dominio que coincide con la herramienta de depuracion de tags de Google.",
+      "evidenceIds": ["E18"]
+    },
+    {
+      "claimType": "OBSERVATION",
+      "statement": "El canal Direct concentra la gran mayoria de sesiones y conversiones del periodo frente al resto de canales combinados.",
+      "evidenceIds": ["E1", "E2", "E3", "E4", "E5"]
+    },
+    {
+      "claimType": "OBSERVATION",
+      "statement": "view_quote_page se registro 12 veces mientras que click_request_quote se registro 66 veces en el mismo periodo, es decir, mas ocurrencias del evento de clic que del evento de vista de pagina asociado por nombre.",
+      "evidenceIds": ["E12", "E11"]
+    }
+  ],
+  "hypotheses": [
+    {
+      "claimType": "HYPOTHESIS",
+      "statement": "Una posible explicacion de que click_request_quote (66 ocurrencias) supere a view_quote_page (12 ocurrencias) es que el evento de clic se dispare tambien desde paginas distintas a la de presupuesto, y no exclusivamente tras una vista previa de esa pagina.",
+      "evidenceIds": ["E12", "E11"]
+    },
+    {
+      "claimType": "HYPOTHESIS",
+      "statement": "Una posible explicacion de que click_phone no se haya disparado ninguna vez pese a existir tag y trigger configurados es que el elemento de clic a telefono no este presente actualmente en el sitio, o que el trigger no coincida con el elemento real de la pagina; esto no puede confirmarse con este contexto.",
+      "evidenceIds": ["E10", "E20"]
+    },
+    {
+      "claimType": "HYPOTHESIS",
+      "statement": "Las sesiones con source 'tagassistant.google.com' podrian corresponder a pruebas internas de configuracion de tags, dado el nombre del dominio, en lugar de trafico real de clientes, lo que podria estar afectando las cifras del canal Referral.",
+      "evidenceIds": ["E18", "E3"]
+    },
+    {
+      "claimType": "HYPOTHESIS",
+      "statement": "La ausencia de conversiones en view_quote_page, view_contact_page y click_catalog_download, a diferencia de los demas eventos clave, podria deberse a que estos tres eventos no esten marcados como evento de conversion en la configuracion de GA4, y no necesariamente a un fallo de disparo.",
+      "evidenceIds": ["E12", "E13", "E14"]
+    }
+  ],
+  "recommendedMeasurements": [
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Validar en GA4 DebugView si el evento click_phone se dispara correctamente al interactuar con el elemento de telefono, dado que el tag y el trigger existen en GTM pero no se registraron ocurrencias en el periodo.",
+      "evidenceIds": ["E10", "E20"]
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Confirmar en la configuracion de eventos de GA4 si view_quote_page, view_contact_page y click_catalog_download estan marcados como eventos de conversion, dado que registran ocurrencias pero 0 conversiones.",
+      "evidenceIds": ["E12", "E13", "E14"]
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Documentar en GTM que trigger dispara cada tag, ya que el contexto actual no permite confirmar la asociacion tag-trigger real de los 8 tags y 7 triggers existentes.",
+      "evidenceIds": ["E22", "E23"]
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Verificar el estado real de publicacion del contenedor GTM, dado que el nombre de la version live referencia cambios 'sin publicar, pendiente aprobacion Pau'.",
+      "evidenceIds": ["E21"]
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Crear una segmentacion en GA4 que identifique por separado las sesiones con source 'tagassistant.google.com' para evitar mezclarlas con trafico real del canal Referral.",
+      "evidenceIds": ["E18"]
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Construir una segmentacion o exploracion en GA4 que siga la secuencia view_quote_page - click_request_quote - generate_lead_form_submit para medir la tasa de avance real entre estos pasos del recorrido de presupuesto.",
+      "evidenceIds": ["E12", "E11", "E15"]
+    }
+  ],
+  "prioritizedActions": [
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Validar en GA4 DebugView el disparo de click_phone: es un evento del catalogo con tag y trigger configurados en GTM pero sin ninguna ocurrencia registrada en el periodo.",
+      "evidenceIds": ["E10", "E20"],
+      "priority": "high"
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Verificar el estado real de publicacion del contenedor GTM, dado que el nombre de la version live incluye la referencia 'sin publicar, pendiente aprobacion Pau'.",
+      "evidenceIds": ["E21"],
+      "priority": "high"
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Confirmar si view_quote_page, view_contact_page y click_catalog_download deben marcarse como eventos de conversion en GA4, dado que registran ocurrencias pero 0 conversiones.",
+      "evidenceIds": ["E12", "E13", "E14"],
+      "priority": "medium"
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Documentar la asociacion tag-trigger real en GTM para los 8 tags y 7 triggers existentes.",
+      "evidenceIds": ["E22", "E23"],
+      "priority": "medium"
+    },
+    {
+      "claimType": "RECOMMENDATION",
+      "statement": "Segmentar en GA4 las sesiones procedentes de 'tagassistant.google.com' para separarlas del trafico real de Referral.",
+      "evidenceIds": ["E18"],
+      "priority": "low"
+    }
+  ],
+  "evidence": [
+    { "id": "E1", "source": "ga4_channel_traffic", "description": "Canal Direct: 174 sesiones, 68 usuarios activos, 81 conversiones en el periodo 2026-07-21 a 2026-08-18." },
+    { "id": "E2", "source": "ga4_channel_traffic", "description": "Canal Organic Search: 10 sesiones, 6 usuarios activos, 4 conversiones." },
+    { "id": "E3", "source": "ga4_channel_traffic", "description": "Canal Referral: 3 sesiones, 1 usuario activo, 2 conversiones." },
+    { "id": "E4", "source": "ga4_channel_traffic", "description": "Canal AI Assistant: 2 sesiones, 2 usuarios activos, 0 conversiones." },
+    { "id": "E5", "source": "ga4_channel_traffic", "description": "Canal Unassigned: 1 sesion, 1 usuario activo, 0 conversiones." },
+    { "id": "E6", "source": "ga4_landing_pages", "description": "Landing page '/': 116 sesiones, 58 conversiones, 32.8% de tasa de rebote." },
+    { "id": "E7", "source": "ga4_landing_pages", "description": "Landing page '/product/taquilla-2-puertas-modulo-1-melamina': 4 sesiones, 11 conversiones, 25% de tasa de rebote." },
+    { "id": "E8", "source": "ga4_landing_pages", "description": "Landing page '/contacto': 2 sesiones, 0 conversiones, 100% de tasa de rebote." },
+    { "id": "E9", "source": "ga4_landing_pages", "description": "El listado de topLandingPages no incluye ninguna entrada para '/solicitar-presupuesto/'." },
+    { "id": "E10", "source": "ga4_key_events", "description": "Evento clave click_phone: fired=false, occurrences=0, conversions=0." },
+    { "id": "E11", "source": "ga4_key_events", "description": "Evento clave click_request_quote: fired=true, occurrences=66, conversions=66." },
+    { "id": "E12", "source": "ga4_key_events", "description": "Evento clave view_quote_page: fired=true, occurrences=12, conversions=0." },
+    { "id": "E13", "source": "ga4_key_events", "description": "Evento clave view_contact_page: fired=true, occurrences=40, conversions=0." },
+    { "id": "E14", "source": "ga4_key_events", "description": "Evento clave click_catalog_download: fired=true, occurrences=4, conversions=0." },
+    { "id": "E15", "source": "ga4_key_events", "description": "Evento clave generate_lead_form_submit: fired=true, occurrences=6, conversions=6." },
+    { "id": "E16", "source": "ga4_key_events", "description": "Evento clave click_whatsapp: fired=true, occurrences=15, conversions=15." },
+    { "id": "E17", "source": "ga4_source_medium", "description": "Source/medium '(direct)/(none)': 174 sesiones, 81 conversiones." },
+    { "id": "E18", "source": "ga4_source_medium", "description": "Source/medium 'tagassistant.google.com/referral': 3 sesiones, 2 conversiones." },
+    { "id": "E19", "source": "ga4_source_medium", "description": "Source/medium 'chatgpt.com/ai-assistant': 2 sesiones, 0 conversiones." },
+    { "id": "E20", "source": "gtm_tags", "description": "Tag 'GA4 Event - click_phone', tipo gaawe, paused=false." },
+    { "id": "E21", "source": "gtm_container", "description": "liveVersionName: 'O44 - Eventos CTA nuevos (sin publicar, pendiente aprobacion Pau) (id 5)'." },
+    { "id": "E22", "source": "gtm_tags", "description": "8 tags en total en el contenedor (7 gaawe + 1 googtag), ninguno marcado como paused=true." },
+    { "id": "E23", "source": "gtm_triggers", "description": "7 triggers listados (tipos linkClick y pageview: click_phone, /solicitar-presupuesto/, click_whatsapp, Vista de una pagina - /gracias, click_catalog_download, Page Path equals /solicitar-presupuesto/, visita contacto) sin campo que indique a que tag esta asociado cada uno." },
+    { "id": "E24", "source": "ga4_key_events", "description": "Suma de conversiones de los eventos clave: 6+15+0+66+0+0+0=87, igual a la suma de conversiones por canal: 81+4+2+0+0=87." },
+    { "id": "E25", "source": "ga4_landing_pages", "description": "Landing pages con sesiones pero 0 conversiones: /cerraduras-para-taquillas (4 sesiones), /taquillas-metalicas (4), /digitalizacion-taquillas (3), /taquillas-para-colegios (3), /taquillas-para-empresas (3)." }
+  ],
+  "unknowns": [
+    "No se indica que trigger dispara cada tag de GTM en el contexto entregado, por lo que no puede confirmarse la configuracion real de disparo de cada evento.",
+    "No se especifica si view_quote_page, view_contact_page y click_catalog_download estan marcados como eventos de conversion en la configuracion de GA4.",
+    "No se conoce el motivo por el que click_phone no registro ocurrencias en el periodo; el contexto no incluye datos de DebugView ni de errores de tag.",
+    "No se puede confirmar si las sesiones de 'tagassistant.google.com' corresponden a pruebas internas o a trafico real, ya que el contexto no distingue trafico de prueba.",
+    "No se dispone de datos de periodos anteriores en el contexto para comparar tendencias o confirmar si las cifras actuales (por ejemplo, Direct con 174 sesiones) son atipicas respecto al historico.",
+    "No se indica el motivo por el que el nombre de la version live de GTM incluye la referencia 'sin publicar, pendiente aprobacion Pau'."
+  ]
+}
+```
